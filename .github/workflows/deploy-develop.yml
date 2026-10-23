@@ -1,0 +1,299 @@
+name: Build and Deploy — Develop
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/rabotka-business
+
+on:
+  pull_request:
+    branches:
+      - develop
+    types:
+      - closed
+
+# One deploy at a time. Three PRs merged seconds apart raced each other on the
+# VPS: concurrent `git fetch` in the same checkout failed with "cannot lock ref
+# 'refs/remotes/origin/develop'" and two of the three deploys died.
+#
+# Queue rather than cancel — killing a run mid `docker compose up` can leave the
+# VPS on a half-swapped container. GitHub keeps only the newest pending run, so
+# a burst of merges converges on the latest commit instead of replaying each.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # JOB 1: Build Docker image and push to GHCR.
+  # BACKEND_URL is injected at runtime via .env — src/proxy.ts reads it per
+  # request, it is never compiled into the bundle. A single image can therefore
+  # serve both environments.
+  # ───────────────────────────────────────────────────────────────────────────
+  build-and-push:
+    name: Build and Push Image
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      actions: write
+
+    outputs:
+      image-digest: ${{ steps.push.outputs.digest }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          # Pin a recent BuildKit so type=gha cache uses the current GitHub
+          # Actions Cache backend (the legacy v1/v2 backend was retired in 2025).
+          # Without this, an older BuildKit calls the deprecated reserve API and
+          # fails on cache export with "failed to reserve cache".
+          driver-opts: image=moby/buildkit:v0.19.0
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=sha-,format=short
+
+      - name: Build and push
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Registry-backed layer cache stored in GHCR (a :buildcache tag), not
+          # GitHub's Actions Cache — which returned 400 outages and gave 0% hit,
+          # forcing full rebuilds. mode=max caches every intermediate layer, so a
+          # code-only change reuses the install/build layers. ignore-error keeps
+          # export best-effort.
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max,ignore-error=true
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # JOB 2: Deploy pre-built image to VPS
+  # ───────────────────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy to VPS (develop)
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Fetch secrets from Vault
+        id: vault
+        run: |
+          LOGIN_RESPONSE=$(curl -s --request POST \
+            --data "{\"role_id\":\"${{ secrets.VAULT_ROLE_ID }}\",\"secret_id\":\"${{ secrets.VAULT_SECRET_ID }}\"}" \
+            "${{ secrets.VAULT_ADDR }}/v1/auth/approle/login")
+          TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.auth.client_token')
+
+          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+            echo "::error::Vault AppRole login failed. Response keys: $(echo "$LOGIN_RESPONSE" | jq -r 'keys | join(", ")')"
+            echo "::error::Vault errors: $(echo "$LOGIN_RESPONSE" | jq -r '.errors // [] | join(", ")')"
+            exit 1
+          fi
+          echo "Vault login OK, token acquired"
+
+          SECRET_RESPONSE=$(curl -s \
+            --header "X-Vault-Token: $TOKEN" \
+            "${{ secrets.VAULT_ADDR }}/v1/secret/data/apps/rabotka-business-develop")
+
+          SECRET_KEYS=$(echo "$SECRET_RESPONSE" | jq -r '.data.data | keys | join(", ")' 2>/dev/null || echo "none")
+          echo "Secret keys found: $SECRET_KEYS"
+
+          VAULT_SECRET=$(echo "$SECRET_RESPONSE" | jq -r '.data.data')
+
+          BACKEND_URL=$(echo "$VAULT_SECRET" | jq -r '.BACKEND_URL')
+          if [ -z "$BACKEND_URL" ] || [ "$BACKEND_URL" = "null" ]; then
+            echo "::error::BACKEND_URL not found in Vault secret. Available keys: $SECRET_KEYS"
+            exit 1
+          fi
+          echo "backend_url=$BACKEND_URL" >> $GITHUB_OUTPUT
+
+          PORT=$(echo "$VAULT_SECRET" | jq -r '.PORT')
+          if [ -z "$PORT" ] || [ "$PORT" = "null" ]; then
+            echo "::error::PORT not found in Vault secret. Available keys: $SECRET_KEYS"
+            exit 1
+          fi
+          echo "port=$PORT" >> $GITHUB_OUTPUT
+
+          curl -sf --request POST \
+            --header "X-Vault-Token: $TOKEN" \
+            "${{ secrets.VAULT_ADDR }}/v1/auth/token/revoke-self" > /dev/null || true
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "${{ secrets.VPS_PORT }}" -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      # Runner→GHCR is reliable; this login is only used by the SSH-stream
+      # fallback below (runner pulls the image, then streams it to the VPS).
+      - name: Log in to GHCR (for fallback)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull image on VPS (native, SSH-stream fallback)
+        run: |
+          IMAGE="ghcr.io/${{ github.repository_owner }}/rabotka-business:latest"
+          DEST="${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
+          SSHOPTS="-i $HOME/.ssh/deploy_key -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=20 -p ${{ secrets.VPS_PORT }}"
+          # Fast path: native pull on the VPS. Short 90s timeout × 3 so a
+          # VPS→GHCR blackhole fails fast (~5 min) instead of hanging ~30 min.
+          if ssh $SSHOPTS "$DEST" "ok=0; for i in 1 2 3; do timeout 90 docker pull '$IMAGE' && { ok=1; break; }; echo \"native pull attempt \$i stalled...\"; sleep 5; done; [ \$ok = 1 ]"; then
+            echo "✅ Native pull succeeded"
+          else
+            # Fallback: the VPS can't pull from GHCR, but the runner can. Pull
+            # here, then stream the image to the VPS over the (IPv4) SSH channel,
+            # which is unaffected by the registry blackhole.
+            echo "⚠️ Native pull stalled — streaming image to VPS over SSH"
+            docker pull "$IMAGE"
+            docker save "$IMAGE" | gzip -1 | ssh $SSHOPTS "$DEST" "gunzip | docker load"
+            echo "✅ Image loaded on VPS via SSH stream"
+          fi
+
+      - name: Write .env and deploy on VPS
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            -o ServerAliveInterval=60 \
+            -o ServerAliveCountMax=10 \
+            -p "${{ secrets.VPS_PORT }}" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "cat > ~/rabotka-business/.env << 'EOF'
+          BUSINESS_IMAGE=ghcr.io/${{ github.repository_owner }}/rabotka-business:latest
+          APP_ENV=develop
+          BUSINESS_DOMAIN=business-rabotka.${{ secrets.INFRA_DOMAIN }}
+          BACKEND_URL=${{ steps.vault.outputs.backend_url }}
+          PORT=${{ steps.vault.outputs.port }}
+          EOF
+          sed -i 's/^[[:space:]]*//' ~/rabotka-business/.env
+          cd ~/rabotka-business && git fetch origin develop && git reset --hard origin/develop && \
+          docker compose -f docker-compose.prod.yml up -d --remove-orphans && \
+          docker image prune -af"
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # JOB 3: Smoke test
+  # ───────────────────────────────────────────────────────────────────────────
+  smoke-test:
+    name: Smoke Test (develop)
+    runs-on: ubuntu-latest
+    needs: deploy
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check business app is reachable
+        run: |
+          # Short initial wait, then poll tightly so a healthy container is
+          # detected in ~10-16s while still tolerating a slow start:
+          # 10s + 24×6s ≈ 2.5 min ceiling. Exits on first 200/302.
+          sleep 10
+          for i in $(seq 1 24); do
+            STATUS=$(curl -o /dev/null -s -w "%{http_code}" \
+              --max-time 20 \
+              "https://business-rabotka.${{ secrets.INFRA_DOMAIN }}")
+            echo "Attempt $i — HTTP status: $STATUS"
+            [[ "$STATUS" = "200" || "$STATUS" = "302" ]] && exit 0
+            sleep 6
+          done
+          echo "Agent app did not return 200 or 302 after 24 attempts"
+          exit 1
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # JOB 4: Slack notification
+  # Its own job, not steps inside the smoke test: a failed build-and-push skips
+  # every later job, and notify steps living in one of them never ran — a
+  # broken deploy posted nothing. always() runs this whatever happened above;
+  # the merged gate keeps a PR closed without merging silent.
+  # ───────────────────────────────────────────────────────────────────────────
+  notify:
+    name: Notify Slack
+    runs-on: ubuntu-latest
+    needs: [build-and-push, deploy, smoke-test]
+    if: always() && github.event.pull_request.merged == true
+    permissions: {}
+
+    steps:
+      - name: Collect job results
+        id: result
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          FAILED=$(echo "$NEEDS" | jq -r '[to_entries[] | select(.value.result != "success") | "\(.key) (\(.value.result))"] | join(", ")')
+          if [ -z "$FAILED" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Slack notify success
+        if: steps.result.outputs.ok == 'true'
+        env:
+          MESSAGE: |
+            Deployment Succeeded (business develop)
+            ${{ github.event.pull_request.title }}
+            Branch: ${{ github.ref_name }}
+            Author: ${{ github.actor }}
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "attachments": [
+                {
+                  "color": "#00B32C",
+                  "text": ${{ toJSON(env.MESSAGE) }}
+                }
+              ]
+            }
+
+      - name: Slack notify failure
+        if: steps.result.outputs.ok != 'true'
+        env:
+          MESSAGE: |
+            Deployment Failed (business develop)
+            Failed at: ${{ steps.result.outputs.failed }}
+            ${{ github.event.pull_request.title }}
+            Branch: ${{ github.ref_name }}
+            Author: ${{ github.actor }}
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "attachments": [
+                {
+                  "color": "#B3000C",
+                  "text": ${{ toJSON(env.MESSAGE) }}
+                }
+              ]
+            }

@@ -1,0 +1,21 @@
+services:
+  business:
+    image: ${BUSINESS_IMAGE:-ghcr.io/brx-hashcode/rabotka-business:latest}
+    container_name: rabotka_business_${APP_ENV:-prod}
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      - public
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=hashcode-public"
+      - "traefik.http.routers.rabotka-business-${APP_ENV:-prod}.rule=Host(`${BUSINESS_DOMAIN}`)"
+      - "traefik.http.routers.rabotka-business-${APP_ENV:-prod}.entrypoints=websecure"
+      - "traefik.http.routers.rabotka-business-${APP_ENV:-prod}.tls.certresolver=letsencrypt"
+      - "traefik.http.services.rabotka-business-${APP_ENV:-prod}.loadbalancer.server.port=${PORT:-3500}"
+
+networks:
+  public:
+    name: hashcode-public
+    external: true
