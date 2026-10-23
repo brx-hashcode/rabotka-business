@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { IconChevronDown, IconMenu2 } from "@tabler/icons-react";
 
-import { BrandLogo } from "#/components/brand-logo";
+import { BusinessLockup } from "#/components/business-lockup";
 import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
@@ -36,12 +36,8 @@ export function LandingHeader() {
   return (
     <header className="sticky top-[env(safe-area-inset-top)] z-40 bg-header/95 text-header-foreground backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-6 px-4 sm:px-6">
-        <Link href="/" aria-label="Rabotka Business — accueil" className="flex shrink-0 items-center gap-2">
-          <BrandLogo tone="dark" />
-          {/* Below sm the header has no room for it beside « Créer un compte ». */}
-          <span className="hidden rounded-full bg-ink px-2 py-0.5 font-medium text-[11px] text-white sm:inline">
-            Business
-          </span>
+        <Link href="/" aria-label="Rabotka Business — accueil" className="shrink-0">
+          <BusinessLockup compact />
         </Link>
 
         <nav aria-label="Navigation principale" className="hidden items-center gap-1 lg:flex">
