@@ -57,7 +57,7 @@ export function LandingHero() {
         {HIRING_PATHS.map((path) => (
           <div key={path.title} className="flex flex-col gap-4 overflow-hidden rounded-3xl bg-card text-foreground sm:flex-row">
             <div className="relative aspect-[16/9] shrink-0 sm:aspect-auto sm:w-2/5">
-              <Image src={path.photo} alt="" fill sizes="(min-width: 768px) 20vw, 100vw" className="object-cover" />
+              <Image src={path.photo} alt="" fill sizes="(min-width: 768px) 30vw, 100vw" className="object-cover" />
             </div>
             <div className="flex flex-1 flex-col gap-4 p-6 pt-2 sm:p-7">
               <div className="space-y-2">

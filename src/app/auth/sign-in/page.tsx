@@ -33,7 +33,7 @@ export default function SignInPage() {
         <HeroCarousel
           className="absolute inset-0"
           photos={PHOTOS}
-          sizes="60vw"
+          sizes="150vh"
           imageClassName="object-cover"
         />
         {/* Darkens the lower part only, for the text; the photo stays clear above. */}

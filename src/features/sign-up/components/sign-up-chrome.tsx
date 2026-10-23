@@ -33,7 +33,10 @@ export function StepPhotoPanel({ index, done }: Readonly<{ index: number; done: 
           style={focus ? { objectPosition: focus } : undefined}
           alt=""
           fill
-          sizes="50vw"
+          // Drawn at the panel's full height: a 3:2 photo then renders about
+          // 1.5 × the viewport height wide, far more than its 50vw column.
+          // Sizing by the column fetched a file too small to fill the panel.
+          sizes="150vh"
           priority={i === 0}
           loading={i === 0 ? undefined : "eager"}
           className={cn(
