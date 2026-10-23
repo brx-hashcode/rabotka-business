@@ -141,3 +141,81 @@ export type UpdateMyBusiness = Partial<{
   website: string | null;
   description: string | null;
 }>;
+
+export type SubscriptionStatus = "TRIAL" | "ACTIVE" | "EXPIRED" | "CANCELLED";
+export type BillingPeriod = "TRIAL" | "MONTHLY" | "ANNUAL";
+
+/** A business plan (`GET business/plans`). Null quota: unlimited. */
+export type BusinessPlan = {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  monthlyPriceFcfa: number;
+  annualPriceFcfa: number;
+  unlocksPerPeriod: number | null;
+  activeOffersLimit: number | null;
+  includesPreselection: boolean;
+  includesFieldAgents: boolean;
+  priorityVisibility: boolean;
+};
+
+export type SubscriptionPeriod = {
+  id: string;
+  planName: string;
+  planCode: string;
+  status: SubscriptionStatus;
+  billingPeriod: BillingPeriod;
+  startsAt: string;
+  endsAt: string;
+  unlocksUsed: number;
+  paid: boolean;
+  granted: boolean;
+};
+
+/** `GET business/me/subscription`. */
+export type MySubscription = {
+  entitlements: {
+    plan: { id: string; code: string; name: string } | null;
+    status: SubscriptionStatus | null;
+    endsAt: string | null;
+    unlocksRemaining: number | null;
+    unlocksQuota: number | null;
+    unlocksUsed: number;
+    activeOffersLimit: number | null;
+    activeOffers: number;
+    includesPreselection: boolean;
+    includesFieldAgents: boolean;
+    priorityVisibility: boolean;
+  };
+  upcoming: SubscriptionPeriod[];
+  history: SubscriptionPeriod[];
+  plans: BusinessPlan[];
+  trialUsed: boolean;
+};
+
+/** One mobile-money network the active gateway charges (`GET payment-gateways`). */
+export type PaymentOperator = {
+  code: string;
+  label: string;
+  country?: string;
+  countryName?: string;
+  dialCode?: string;
+  logo?: string;
+  currency?: string;
+};
+
+export type PaymentGateways = {
+  active: string | null;
+  gateways: { key: string; label: string; requiresOperator: boolean; operators: PaymentOperator[] }[];
+};
+
+/** `GET pay/:token` (fails once the request is settled). */
+export type PaymentByToken = {
+  id: string;
+  status: "PENDING" | "PROCESSING" | "APPROVED" | "REJECTED";
+  gateway: string | null;
+  amount: number | null;
+  description: string | null;
+  payerCountry?: string | null;
+};

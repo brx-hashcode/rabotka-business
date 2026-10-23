@@ -4,6 +4,7 @@ import Link from "next/link";
 import { IconBriefcase, IconBuilding, IconUsers } from "@tabler/icons-react";
 
 import { useSessionUser } from "#/hooks/use-session-user";
+import { SubscriptionBanner } from "#/features/subscription/components/subscription-banner";
 
 const NEXT_UP = [
   {
@@ -38,6 +39,8 @@ export function HomeOverview() {
           Votre espace pour recruter avec Rabotka.
         </p>
       </div>
+
+      <SubscriptionBanner />
 
       <div className="grid gap-4 sm:grid-cols-3">
         {NEXT_UP.map(({ icon: Icon, title, text, href }) => {
