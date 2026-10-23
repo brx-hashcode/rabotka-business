@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import Link from "next/link";
-import { IconCircleCheckFilled, IconPencil } from "@tabler/icons-react";
+import { useRouter } from "next/navigation";
+import { IconArrowRight, IconCircleCheckFilled, IconPencil } from "@tabler/icons-react";
 
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
@@ -150,55 +150,72 @@ function Row({ label, children }: Readonly<{ label: string; children: ReactNode 
 }
 
 /**
- * After the send: what happens next, and the way in — straight into the
- * space, or by an email code when the account was created without a session.
+ * After the send: what happens next, and the way in. Nothing moves until the
+ * person clicks — the session already exists, and refreshing the page here
+ * would let the auth gate send them to /espace before they read this.
  */
 export function SignUpDone({
   email,
   signInRequired,
   onLeave,
 }: Readonly<{ email: string; signInRequired: boolean; onLeave: () => void }>) {
+  const router = useRouter();
+
+  function enter() {
+    onLeave();
+    router.replace("/espace");
+    router.refresh();
+  }
+
   return (
     <div className="space-y-8">
-      <span className="flex size-14 items-center justify-center rounded-2xl bg-chip-green text-whatsapp-dark">
-        <IconCircleCheckFilled className="size-7" />
-      </span>
       <StepHeading
-        title="Votre demande a bien été envoyée"
+        title="Votre compte entreprise est créé"
         text={
           signInRequired
-            ? "Votre compte entreprise est créé et nos équipes examinent les pièces de votre organisation. Saisissez le code reçu par email pour accéder à votre espace."
-            : "Votre compte entreprise est créé. Nos équipes examinent maintenant les pièces de votre organisation ; votre compte sera activé dès leur validation."
+            ? "Il ne reste qu'à vous connecter : saisissez le code que nous venons d'envoyer par email."
+            : "Merci ! Nos équipes examinent maintenant les pièces de votre organisation. Vous serez informé par email dès que votre compte sera activé."
         }
       />
-      <ol className="space-y-3 text-sm">
-        {[
-          "Vérification de vos documents par nos équipes",
-          "Activation de votre compte entreprise",
-          "Publication de vos premières offres",
-        ].map((item, i) => (
-          <li key={item} className="flex items-center gap-3 rounded-2xl bg-page p-4">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-card font-semibold text-xs">
-              {i + 1}
-            </span>
-            {item}
-          </li>
-        ))}
-      </ol>
-      {!signInRequired && (
-        <p className="text-muted-foreground text-sm">
-          Pour vous reconnecter, saisissez simplement <span className="font-medium text-foreground">{email}</span> : un code vous sera envoyé.
-        </p>
-      )}
+      <div className="space-y-3">
+        <p className="font-semibold text-sm">Les prochaines étapes</p>
+        <ol className="space-y-3 text-sm">
+          {[
+            {
+              title: "Vérification de votre organisation",
+              text: "Nos équipes examinent vos pièces justificatives.",
+            },
+            {
+              title: "Activation de votre compte",
+              text: "Vous êtes prévenu par email et dans votre espace.",
+            },
+            {
+              title: "Vos premiers recrutements",
+              text: "Publiez vos offres et recevez des profils présélectionnés.",
+            },
+          ].map((item, i) => (
+            <li key={item.title} className="flex items-start gap-3 rounded-2xl bg-page p-4">
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-card font-semibold text-xs">
+                {i + 1}
+              </span>
+              <span>
+                <span className="block font-medium">{item.title}</span>
+                <span className="block text-muted-foreground">{item.text}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+      </div>
       {signInRequired ? (
         <InlineSignIn email={email} onSignedIn={onLeave} />
       ) : (
         <Button
           variant="ghost"
-          render={<Link href="/espace" onClick={onLeave} />}
-          className="h-12 rounded-full border-0 bg-ink px-6 text-white hover:bg-ink/90 sm:h-12"
+          onClick={enter}
+          className="h-12 rounded-full border-0 bg-ink px-6 text-[15px] text-white hover:bg-ink/90 sm:h-12 sm:text-[15px]"
         >
-          Accéder à mon espace
+          Découvrir mon espace entreprise
+          <IconArrowRight />
         </Button>
       )}
     </div>
