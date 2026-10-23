@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { IconArrowRight, IconCheck } from "@tabler/icons-react";
+import { IconArrowRight } from "@tabler/icons-react";
 
 import { HeroCarousel } from "#/components/hero-carousel";
 import { Button } from "#/components/ui/button";
@@ -74,10 +74,6 @@ export function LandingHero() {
                 >
                   {path.cta}
                 </Button>
-                <a href="#solutions" className="inline-flex items-center gap-1 font-medium text-sm hover:underline">
-                  <IconCheck className="size-4 text-whatsapp-dark" />
-                  Voir ce qui est inclus
-                </a>
               </div>
             </div>
           </div>
