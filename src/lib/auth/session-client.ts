@@ -1,5 +1,5 @@
 import { httpStatusOf } from "#/lib/api/friendly-error";
-import type { SessionUser } from "#/lib/api/types";
+import type { BusinessSignUpBody, SessionUser } from "#/lib/api/types";
 
 /** An error shaped like mvc-front-sdk's ApiError, so friendlyError reads it. */
 export class SessionError extends Error {
@@ -45,6 +45,14 @@ export function verifySession(input: {
   otp: string;
 }): Promise<{ user: SessionUser }> {
   return postSession<{ user: SessionUser }>("/session/verify", input).then((result) => {
+    signedOut = false;
+    return result;
+  });
+}
+
+/** Create the business profile and sign in with it (src/app/session/sign-up). */
+export function signUpSession(body: BusinessSignUpBody): Promise<{ user: SessionUser }> {
+  return postSession<{ user: SessionUser }>("/session/sign-up", body).then((result) => {
     signedOut = false;
     return result;
   });

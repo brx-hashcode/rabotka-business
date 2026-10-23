@@ -488,3 +488,15 @@ body::-webkit-scrollbar,
   opacity: 1;
   transform: rotate(3deg) translate(0, -4px);
 }
+
+/* Smooth scrolling: in-page links (the landing's menus) and the sign-up's
+   return to the top between steps. Off for anyone who asked for less motion. */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
