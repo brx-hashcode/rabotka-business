@@ -284,16 +284,19 @@ export function SignUpWizard() {
         <StepPhotoPanel index={step} done={done} />
       </div>
 
-      <section className="flex min-h-svh min-w-0 flex-col px-5 py-6 sm:px-10">
+      <section className="flex min-h-svh min-w-0 flex-col px-5 pb-6 sm:px-10">
         <div className="mx-auto flex w-full max-w-136 flex-1 flex-col">
           {/* Below lg there is no photo panel, and so no brand: it goes here. */}
-          <Link href="/" aria-label="Rabotka Business — accueil" className="mb-8 self-start lg:hidden">
+          <Link href="/" aria-label="Rabotka Business — accueil" className="mt-6 mb-2 self-start lg:hidden">
             <BusinessLockup compact />
           </Link>
 
-          <ProgressHeader index={step} done={done} />
+          {/* Pinned while the form scrolls under it: where you are stays in view. */}
+          <div className="sticky top-0 z-20 bg-card pt-6 pb-4">
+            <ProgressHeader index={step} done={done} />
+          </div>
 
-          <div className="flex-1 pt-12 pb-10 lg:pt-[9vh]">
+          <div className="flex-1 pt-8 pb-10 lg:pt-[7vh]">
             <div
               key={done ? "done" : step}
               className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-right-4 motion-safe:duration-300"
