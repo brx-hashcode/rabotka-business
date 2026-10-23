@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { IconChevronDown, IconLogout } from "@tabler/icons-react";
+import Link from "next/link";
+import { IconBuilding, IconChevronDown, IconLogout } from "@tabler/icons-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import {
@@ -63,6 +64,15 @@ export function AccountMenu() {
           </div>
 
           <div aria-hidden className="mx-3 my-1 h-px bg-border/70" />
+
+          <DropdownMenuItem asChild className="cursor-pointer gap-3 rounded-2xl px-3 py-2.5 text-sm focus:bg-page">
+            <Link href="/espace/organisation">
+              <span className="flex size-8 items-center justify-center rounded-full bg-page">
+                <IconBuilding className="size-4" />
+              </span>
+              Mon organisation
+            </Link>
+          </DropdownMenuItem>
 
           <DropdownMenuItem
             onSelect={() => setConfirmLogout(true)}

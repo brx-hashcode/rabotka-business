@@ -76,3 +76,66 @@ export type BusinessSignUpBody = {
     }[];
   };
 };
+
+export type VerificationStatus = "PENDING" | "VERIFIED" | "REJECTED";
+
+export type BusinessDocumentVersion = {
+  id: string;
+  documentType: string;
+  label: string;
+  fileName: string | null;
+  mimeType: string | null;
+  verificationStatus: VerificationStatus;
+  rejectionReason: string | null;
+  createdAt: string;
+  verifiedAt: string | null;
+};
+
+/** `GET business/me` (the same shape the admin reviews). */
+export type MyBusiness = {
+  id: string;
+  name: string;
+  category: string;
+  categoryLabel: string;
+  legalForm: string | null;
+  legalFormLabel: string | null;
+  size: string | null;
+  registrationNumber: string | null;
+  taxId: string | null;
+  statisticalId: string | null;
+  address: string;
+  countryCode: string | null;
+  countryName: string | null;
+  city: string | null;
+  email: string | null;
+  phone: string | null;
+  website: string | null;
+  description: string | null;
+  verificationStatus: VerificationStatus;
+  verifiedAt: string | null;
+  rejectionReason: string | null;
+  createdAt: string;
+  /** The current papers, each with what it replaced (newest first). */
+  documents: (BusinessDocumentVersion & {
+    resubmitted: boolean;
+    previousVersions: BusinessDocumentVersion[];
+  })[];
+  requiredDocuments: { type: string; label: string }[][];
+  missingDocuments: { type: string; label: string }[][];
+};
+
+/** `PATCH business/me`: only what changed; null empties an optional field. */
+export type UpdateMyBusiness = Partial<{
+  name: string;
+  category: string;
+  legalForm: string | null;
+  size: string | null;
+  registrationNumber: string | null;
+  taxId: string | null;
+  statisticalId: string | null;
+  address: string;
+  countryCode: string;
+  city: string | null;
+  website: string | null;
+  description: string | null;
+}>;
