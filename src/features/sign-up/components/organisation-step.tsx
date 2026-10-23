@@ -1,24 +1,18 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 import { useForm, useWatch, type Control, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import { Skeleton } from "#/components/ui/skeleton";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "#/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "#/components/ui/select";
 import { Textarea } from "#/components/ui/textarea";
 import { useCities } from "#/hooks/use-geo";
 import type { BusinessCatalog } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
-import { FIELD_CLASS, FieldLabel, StepActions, StepHeading, TextField } from "./form-bits";
+import { Combobox, type ComboboxOption } from "./combobox";
+import { FieldLabel, StepActions, StepHeading, TextField } from "./form-bits";
 
 const optional = (max: number) => z.string().trim().max(max).optional().or(z.literal(""));
 
@@ -58,9 +52,36 @@ const EMPTY: OrganisationValues = {
 };
 
 /**
- * The organisation itself. Categories and the legal forms each one takes come
- * from the catalog the server checks against; choosing a category narrows the
- * legal forms, and clears one that no longer fits.
+ * How the type list is grouped in the picker. Presentation only: the values
+ * and labels come from the catalog, and a value missing here lands in
+ * « Autres » rather than disappearing.
+ */
+const CATEGORY_GROUPS: Record<string, string> = {
+  INDIVIDUAL_BUSINESS: "Entreprises",
+  TPE: "Entreprises",
+  PME: "Entreprises",
+  LARGE_COMPANY: "Entreprises",
+  STARTUP: "Entreprises",
+  COOPERATIVE: "Entreprises",
+  GIE: "Entreprises",
+  ASSOCIATION: "Associations et ONG",
+  NGO: "Associations et ONG",
+  INTERNATIONAL_NGO: "Associations et ONG",
+  FOUNDATION: "Associations et ONG",
+  RELIGIOUS: "Associations et ONG",
+  SCHOOL: "Enseignement et formation",
+  HIGHER_EDUCATION: "Enseignement et formation",
+  TRAINING_CENTER: "Enseignement et formation",
+  HEALTH: "Santé",
+  PUBLIC_ADMINISTRATION: "Secteur public et international",
+  PUBLIC_ENTERPRISE: "Secteur public et international",
+  INTERNATIONAL_ORG: "Secteur public et international",
+};
+
+/**
+ * The organisation itself. Types and the legal forms each takes come from
+ * the catalog the server checks against; choosing a type narrows the legal
+ * forms, and clears one that no longer fits.
  */
 export function OrganisationStep({
   catalog,
@@ -101,77 +122,72 @@ export function OrganisationStep({
     );
   }
 
+  const categoryOptions: ComboboxOption[] = catalog.categories.map((c) => ({
+    value: c.value,
+    label: c.label,
+    group: CATEGORY_GROUPS[c.value] ?? "Autres",
+  }));
   const formLabel = new Map(catalog.legalForms.map((f) => [f.value, f.label]));
+  const legalFormOptions = allowedForms.map((value) => ({ value, label: formLabel.get(value) ?? value }));
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onDone)} noValidate className="space-y-8">
+      <form onSubmit={form.handleSubmit(onDone)} noValidate className="space-y-10">
         <StepHeading
           title="Votre organisation"
           text="Ces informations apparaissent sur votre profil entreprise et servent à sa vérification."
         />
 
-        <section className="space-y-5">
+        <Section title="Identité">
           <TextField control={form.control} name="name" label="Raison sociale" autoComplete="organization" autoFocus />
+          <ComboboxField
+            control={form.control}
+            name="category"
+            label="Type d'organisation"
+            placeholder="Choisir le type d'organisation"
+            searchPlaceholder="Rechercher : PME, école, ONG…"
+            options={categoryOptions}
+          />
+          <ComboboxField
+            control={form.control}
+            name="legalForm"
+            label="Forme juridique"
+            optional
+            placeholder={category ? "Choisir la forme juridique" : "Choisissez d'abord le type"}
+            disabled={!category}
+            options={legalFormOptions}
+          />
+          <SizeField control={form.control} sizes={catalog.sizes} />
+        </Section>
+
+        <Section title="Identifiants officiels" note="facultatif" text="Ils facilitent la vérification de votre organisation.">
           <div className="grid gap-5 sm:grid-cols-2">
-            <SelectField
-              control={form.control}
-              name="category"
-              label="Type d'organisation"
-              placeholder="Choisir…"
-              options={catalog.categories.map((c) => ({ value: c.value, label: c.label }))}
-              className="sm:col-span-2"
-            />
-            <SelectField
-              control={form.control}
-              name="legalForm"
-              label="Forme juridique"
-              optional
-              placeholder={category ? "Choisir…" : "Choisissez d'abord le type"}
-              disabled={!category}
-              options={allowedForms.map((value) => ({ value, label: formLabel.get(value) ?? value }))}
-            />
-            <SelectField
-              control={form.control}
-              name="size"
-              label="Effectif"
-              optional
-              placeholder="Choisir…"
-              options={catalog.sizes.map((s) => ({ value: s, label: `${s} salariés` }))}
-            />
+            <TextField control={form.control} name="registrationNumber" label="N° RCCM" placeholder="CG-BZV-01-2024-B12-00123" />
+            <TextField control={form.control} name="taxId" label="NIU" placeholder="M2024000123456A" />
+            <TextField control={form.control} name="statisticalId" label="SCIEN / SCIET" className="sm:col-span-2" />
           </div>
-        </section>
+        </Section>
 
-        <section className="space-y-5">
-          <p className="font-semibold text-sm">
-            Identifiants officiels <span className="font-normal text-muted-foreground">(facultatif)</span>
-          </p>
-          <div className="grid gap-5 sm:grid-cols-3">
-            <TextField control={form.control} name="registrationNumber" label="N° RCCM" placeholder="CG-BZV-…" />
-            <TextField control={form.control} name="taxId" label="NIU" />
-            <TextField control={form.control} name="statisticalId" label="SCIEN / SCIET" />
-          </div>
-        </section>
+        <Section title="Siège">
+          <TextField control={form.control} name="address" label="Adresse" autoComplete="street-address" placeholder="Rue, quartier, arrondissement" />
+          <ComboboxField
+            control={form.control}
+            name="city"
+            label="Ville"
+            placeholder="Choisir la ville"
+            searchPlaceholder="Rechercher une ville"
+            options={(cities ?? []).map((c) => ({ value: c, label: c }))}
+          />
+        </Section>
 
-        <section className="space-y-5">
-          <p className="font-semibold text-sm">Siège et présentation</p>
-          <div className="grid gap-5 sm:grid-cols-[2fr_1fr]">
-            <TextField control={form.control} name="address" label="Adresse" autoComplete="street-address" placeholder="Rue, quartier, arrondissement" />
-            <SelectField
-              control={form.control}
-              name="city"
-              label="Ville"
-              placeholder="Choisir…"
-              options={(cities ?? []).map((c) => ({ value: c, label: c }))}
-            />
-          </div>
-          <TextField control={form.control} name="website" label="Site web" optional type="url" placeholder="https://" />
+        <Section title="Présentation" note="facultatif">
+          <TextField control={form.control} name="website" label="Site web" type="url" placeholder="https://" />
           <FormField
             control={form.control}
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FieldLabel optional>Présentation</FieldLabel>
+                <FieldLabel>Présentation de l&apos;organisation</FieldLabel>
                 <FormControl>
                   <Textarea
                     {...field}
@@ -184,7 +200,7 @@ export function OrganisationStep({
               </FormItem>
             )}
           />
-        </section>
+        </Section>
 
         <StepActions onBack={onBack} />
       </form>
@@ -192,47 +208,93 @@ export function OrganisationStep({
   );
 }
 
-function SelectField({
+/** A titled group of fields, with a hairline running from its title. */
+function Section({
+  title,
+  note,
+  text,
+  children,
+}: Readonly<{ title: string; note?: string; text?: string; children: ReactNode }>) {
+  return (
+    <section className="space-y-5">
+      <div className="space-y-1">
+        <div className="flex items-center gap-3">
+          <h2 className="shrink-0 font-semibold text-base">
+            {title}
+            {note && <span className="font-normal text-muted-foreground"> ({note})</span>}
+          </h2>
+          <span aria-hidden className="h-px flex-1 bg-page" />
+        </div>
+        {text && <p className="text-muted-foreground text-sm">{text}</p>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function ComboboxField({
   control,
   name,
   label,
-  placeholder,
-  options,
   optional: isOptional,
-  disabled,
-  className,
+  ...combobox
 }: Readonly<{
   control: Control<OrganisationValues>;
   name: FieldPath<OrganisationValues>;
   label: string;
-  placeholder: string;
-  options: { value: string; label: string }[];
   optional?: boolean;
+  placeholder: string;
+  searchPlaceholder?: string;
+  options: ComboboxOption[];
   disabled?: boolean;
-  className?: string;
 }>) {
   return (
     <FormField
       control={control}
       name={name}
-      render={({ field }) => (
-        <FormItem className={className}>
+      render={({ field, fieldState }) => (
+        <FormItem>
           <FieldLabel optional={isOptional}>{label}</FieldLabel>
-          <Select value={field.value || ""} onValueChange={field.onChange} disabled={disabled}>
-            <FormControl>
-              <SelectTrigger className={cn(FIELD_CLASS, "w-full data-[size=default]:h-12")}>
-                <SelectValue placeholder={placeholder} />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent className="max-h-80 rounded-xl border-0 shadow-soft">
-              {options.map((o) => (
-                <SelectItem key={o.value} value={o.value} className="rounded-lg py-2">
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Combobox value={field.value ?? ""} onChange={field.onChange} invalid={!!fieldState.error} {...combobox} />
           <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+/** The headcount brackets as a row of choices: four options need no list. */
+function SizeField({ control, sizes }: Readonly<{ control: Control<OrganisationValues>; sizes: string[] }>) {
+  return (
+    <FormField
+      control={control}
+      name="size"
+      render={({ field }) => (
+        <FormItem>
+          <FieldLabel optional>Effectif</FieldLabel>
+          <div role="radiogroup" aria-label="Effectif" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {sizes.map((size) => {
+              const active = field.value === size;
+              return (
+                <button
+                  key={size}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => field.onChange(active ? "" : size)}
+                  className={cn(
+                    "flex h-12 flex-col items-center justify-center rounded-xl text-sm transition-colors",
+                    active ? "bg-ink text-white" : "bg-page hover:bg-page/70",
+                  )}
+                >
+                  <span className="font-semibold">{size}</span>
+                  <span className={cn("text-[11px] leading-none", active ? "text-white/70" : "text-muted-foreground")}>
+                    salariés
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </FormItem>
       )}
     />
