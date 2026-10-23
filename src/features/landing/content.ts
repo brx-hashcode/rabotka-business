@@ -12,7 +12,7 @@ import {
  * no figures (fees are runtime config, and stats would need a source), no
  * testimonials until a real customer gives one.
  *
- * Photos in public/photos come from Unsplash, free licence (no attribution
+ * Photos in public/media come from Unsplash, free licence (no attribution
  * required) — the id after each name, to find the original:
  *   boardroom 1573164574511, team-laptops 1573167101669, executive
  *   1666866834805, interview 1573496267526, meeting-table 1573164574397,
@@ -26,10 +26,10 @@ export const SIGN_IN_HREF = "/auth/sign-in";
 export const PUBLIC_SITE = "https://www.rabotka.work";
 
 export const HERO_PHOTOS = [
-  "/photos/boardroom.jpg",
-  "/photos/team-laptops.jpg",
-  "/photos/executive.jpg",
-  "/photos/meeting-table.jpg",
+  "/media/boardroom.jpg",
+  "/media/team-laptops.jpg",
+  "/media/executive.jpg",
+  "/media/meeting-table.jpg",
 ];
 
 export type NavLink = { href: string; label: string; description?: string };
@@ -79,14 +79,14 @@ export const HIRING_PATHS = [
     title: "Renforcez vos équipes rapidement",
     text: "Pic d'activité, remplacement, mission de courte durée : publiez votre besoin et mobilisez sans délai des profils disponibles et qualifiés.",
     cta: "Publier une offre",
-    photo: "/photos/desk-manager.jpg",
+    photo: "/media/desk-manager.jpg",
   },
   {
     kicker: "Recrutement continu",
     title: "Structurez votre acquisition de talents",
     text: "CDD, CDI, stages : centralisez l'ensemble de vos offres, suivez chaque candidature et pilotez vos recrutements depuis un espace unique.",
     cta: "Ouvrir un compte entreprise",
-    photo: "/photos/interview.jpg",
+    photo: "/media/interview.jpg",
   },
 ];
 
@@ -110,7 +110,7 @@ export const SOLUTIONS: Solution[] = [
       "Ciblage par ville et par métier",
       "Suivi centralisé des candidatures",
     ],
-    photo: "/photos/team-laptops.jpg",
+    photo: "/media/team-laptops.jpg",
   },
   {
     id: "preselection",
@@ -122,7 +122,7 @@ export const SOLUTIONS: Solution[] = [
       "Identité des candidats vérifiée",
       "Mise en relation directe et sécurisée",
     ],
-    photo: "/photos/candidates-panel.jpg",
+    photo: "/media/candidates-panel.jpg",
   },
   {
     id: "accompagnement",
@@ -134,7 +134,7 @@ export const SOLUTIONS: Solution[] = [
       "Connaissance fine du marché local",
       "La décision finale vous appartient",
     ],
-    photo: "/photos/interview-room.jpg",
+    photo: "/media/interview-room.jpg",
   },
   {
     id: "verification",
@@ -146,7 +146,7 @@ export const SOLUTIONS: Solution[] = [
       "Documents conservés de manière confidentielle",
       "Activation du compte après validation",
     ],
-    photo: "/photos/documents.jpg",
+    photo: "/media/documents.jpg",
   },
 ];
 

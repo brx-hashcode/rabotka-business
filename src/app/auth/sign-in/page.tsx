@@ -6,9 +6,9 @@ import { BrandLogo } from "#/components/brand-logo";
 import { SignInFlow } from "#/features/auth/components/sign-in-flow";
 import { HeroCarousel } from "#/components/hero-carousel";
 
-/** The landing's photos (public/photos, sources in features/landing/content.ts). */
+/** The landing's photos (public/media, sources in features/landing/content.ts). */
 const PHOTOS = ["boardroom", "executive", "interview", "meeting-table"].map(
-  (n) => `/photos/${n}.jpg`,
+  (n) => `/media/${n}.jpg`,
 );
 
 const POINTS = [

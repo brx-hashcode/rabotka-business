@@ -31,7 +31,7 @@ export default async function OpengraphImage() {
     asset("fonts/Gilroy-ExtraBold.otf"),
     asset("fonts/Gilroy-Light.otf"),
     asset("rabotka-logo.png"),
-    asset("photos/executive.jpg"),
+    asset("media/executive.jpg"),
   ]);
 
   return new ImageResponse(
