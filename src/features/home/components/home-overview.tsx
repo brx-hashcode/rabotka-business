@@ -39,7 +39,7 @@ export function HomeOverview() {
 
       <div className="grid gap-4 sm:grid-cols-3">
         {NEXT_UP.map(({ icon: Icon, title, text }) => (
-          <div key={title} className="space-y-3 rounded-2xl bg-card p-5 shadow-soft">
+          <div key={title} className="space-y-3 rounded-2xl bg-card p-5">
             <span className="flex size-10 items-center justify-center rounded-full bg-page">
               <Icon className="size-5" />
             </span>
