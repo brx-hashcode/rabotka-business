@@ -185,10 +185,10 @@ export function SignUpWizard() {
         </div>
       );
     }
-    if (done && account) {
+    if (done && store.doneEmail) {
       return (
         <SignUpDone
-          email={account.email}
+          email={store.doneEmail}
           signInRequired={store.signInRequired}
           onLeave={() => store.reset()}
         />
