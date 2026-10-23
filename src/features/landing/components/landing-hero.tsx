@@ -13,7 +13,7 @@ import { HERO_PHOTOS, HIRING_PATHS, SIGN_UP_HREF } from "../content";
 export function LandingHero() {
   return (
     <section className="bg-header text-header-foreground">
-      <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 pt-10 pb-16 sm:px-6 md:grid-cols-2 md:pt-16 md:pb-24">
+      <div className="mx-auto grid w-full max-w-7xl items-center gap-10 px-4 pt-10 pb-16 sm:px-6 md:grid-cols-2 md:pt-16 md:pb-24">
         <div className="space-y-6">
           <span className="inline-flex rounded-full bg-ink/10 px-3 py-1 font-medium text-xs">
             Solutions de recrutement pour les organisations
@@ -52,7 +52,7 @@ export function LandingHero() {
         </div>
       </div>
 
-      <div className="mx-auto grid w-full max-w-6xl gap-4 px-4 pb-16 sm:px-6 md:-mt-8 md:grid-cols-2 md:pb-20">
+      <div className="mx-auto grid w-full max-w-7xl gap-4 px-4 pb-16 sm:px-6 md:-mt-8 md:grid-cols-2 md:pb-20">
         {HIRING_PATHS.map((path) => (
           <div key={path.title} className="flex flex-col gap-4 overflow-hidden rounded-3xl bg-card text-foreground sm:flex-row">
             <div className="relative aspect-[16/9] shrink-0 sm:aspect-auto sm:w-2/5">

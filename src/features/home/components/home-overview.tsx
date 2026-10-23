@@ -27,7 +27,7 @@ export function HomeOverview() {
   const { data: user } = useSessionUser();
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-8 px-4 py-10 sm:px-6">
+    <div className="mx-auto w-full max-w-7xl space-y-8 px-4 py-10 sm:px-6">
       <div className="space-y-1.5">
         <h1 className="font-semibold text-3xl tracking-tight">
           {user?.first_name ? `Bonjour ${user.first_name}` : "Bienvenue"}

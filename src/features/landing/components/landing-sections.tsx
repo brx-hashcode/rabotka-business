@@ -25,7 +25,7 @@ function SectionHeading({
 export function SolutionsSection() {
   return (
     <section id="solutions" className="scroll-mt-20 bg-card py-20 md:py-28">
-      <div className="mx-auto w-full max-w-6xl space-y-16 px-4 sm:px-6 md:space-y-24">
+      <div className="mx-auto w-full max-w-7xl space-y-16 px-4 sm:px-6 md:space-y-24">
         <SectionHeading
           kicker="Nos solutions"
           title="Une plateforme complète pour piloter vos recrutements"
@@ -85,7 +85,7 @@ export function SolutionsSection() {
 export function StepsSection() {
   return (
     <section id="demarche" className="scroll-mt-20 py-20 md:py-28">
-      <div className="mx-auto w-full max-w-6xl space-y-12 px-4 sm:px-6">
+      <div className="mx-auto w-full max-w-7xl space-y-12 px-4 sm:px-6">
         <SectionHeading kicker="Notre démarche" title="Trois étapes pour démarrer vos recrutements" center />
         <ol className="grid gap-4 md:grid-cols-3">
           {STEPS.map((step, i) => (
@@ -107,7 +107,7 @@ export function StepsSection() {
 export function AudiencesSection() {
   return (
     <section id="secteurs" className="scroll-mt-20 bg-card py-20 md:py-28">
-      <div className="mx-auto w-full max-w-6xl space-y-12 px-4 sm:px-6">
+      <div className="mx-auto w-full max-w-7xl space-y-12 px-4 sm:px-6">
         <SectionHeading
           kicker="Secteurs"
           title="Une solution adaptée à chaque type d'organisation"

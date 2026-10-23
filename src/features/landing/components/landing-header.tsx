@@ -35,7 +35,7 @@ const MENUS: { label: string; links: NavLink[]; wide?: boolean }[] = [
 export function LandingHeader() {
   return (
     <header className="sticky top-[env(safe-area-inset-top)] z-40 bg-header/95 text-header-foreground backdrop-blur">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-6 px-4 sm:px-6">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-6 px-4 sm:px-6">
         <Link href="/" aria-label="Rabotka Business — accueil" className="flex shrink-0 items-center gap-2">
           <BrandLogo tone="dark" />
           {/* Below sm the header has no room for it beside « Créer un compte ». */}
