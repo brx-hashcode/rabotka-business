@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { IconBuilding, IconChevronDown, IconLogout } from "@tabler/icons-react";
+import { IconBuilding, IconChevronDown, IconCreditCard, IconLogout } from "@tabler/icons-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import {
@@ -77,6 +77,14 @@ export function AccountMenu() {
                 <IconBuilding className="size-4" />
               </span>
               Mon organisation
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild className="cursor-pointer gap-3 rounded-2xl px-3 py-2.5 text-sm focus:bg-page">
+            <Link href="/espace/abonnement">
+              <span className="flex size-8 items-center justify-center rounded-full bg-page">
+                <IconCreditCard className="size-4" />
+              </span>
+              Abonnement
             </Link>
           </DropdownMenuItem>
 

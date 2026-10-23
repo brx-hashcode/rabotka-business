@@ -1,6 +1,6 @@
 import { appConfig } from "#/config";
 import { BusinessBaseController } from "./base-controller";
-import type { MyBusiness, UpdateMyBusiness } from "./types";
+import type { MyBusiness, MySubscription, UpdateMyBusiness } from "./types";
 
 /** The signed-in business's own routes (`business/*`, BusinessProfileGuard). */
 class BusinessController extends BusinessBaseController {
@@ -18,6 +18,15 @@ class BusinessController extends BusinessBaseController {
     const form = new FormData();
     form.append("avatar", file);
     return this.post("/profile/avatar", form);
+  }
+
+  getSubscription(): Promise<MySubscription> {
+    return this.get("/business/me/subscription");
+  }
+
+  /** Buys a period of a plan: the token of its payment page. */
+  subscribe(planId: string, billingPeriod: "MONTHLY" | "ANNUAL"): Promise<{ token: string; amount: number }> {
+    return this.post("/business/me/subscription", { planId, billingPeriod });
   }
 
   /** A new paper, or the replacement of a refused one (`replacesId`). */
@@ -39,6 +48,10 @@ export const getMyBusiness = controller.getMe.bind(controller);
 export const updateMyBusiness = controller.updateMe.bind(controller);
 export const uploadMyBusinessDocument = controller.uploadDocument.bind(controller);
 export const uploadMyBusinessLogo = controller.uploadLogo.bind(controller);
+export const getMySubscription = controller.getSubscription.bind(controller);
+export const subscribeToPlan = controller.subscribe.bind(controller);
+
+export const mySubscriptionKey = ["business", "me", "subscription"] as const;
 
 /** A paper's bytes, same-origin: the proxy adds the session. */
 export function myBusinessDocumentUrl(documentId: string): string {
