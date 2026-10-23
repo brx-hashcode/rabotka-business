@@ -16,17 +16,21 @@ const DONE_STEP = {
 
 
 export function StepPhotoPanel({ index, done }: Readonly<{ index: number; done: boolean }>) {
-  const photos = [...STEPS.map((s) => s.photo), DONE_PHOTO];
+  const photos: { src: string; focus?: string }[] = [
+    ...STEPS.map((s) => ({ src: s.photo, focus: "focus" in s ? s.focus : undefined })),
+    { src: DONE_PHOTO },
+  ];
   const active = done ? photos.length - 1 : index;
   const step = done ? DONE_STEP : STEPS[index];
   const current = done ? STEPS.length : index;
 
   return (
     <aside className="relative flex h-full w-full flex-col overflow-hidden rounded-[28px] bg-ink p-8 text-white xl:p-10">
-      {photos.map((src, i) => (
+      {photos.map(({ src, focus }, i) => (
         <Image
           key={src}
           src={src}
+          style={focus ? { objectPosition: focus } : undefined}
           alt=""
           fill
           sizes="50vw"
