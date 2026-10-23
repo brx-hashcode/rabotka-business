@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
 import { IconArrowRight, IconCircleCheckFilled, IconPencil } from "@tabler/icons-react";
 
 import { Button } from "#/components/ui/button";
@@ -159,12 +158,14 @@ export function SignUpDone({
   signInRequired,
   onLeave,
 }: Readonly<{ email: string; signInRequired: boolean; onLeave: () => void }>) {
-  const router = useRouter();
-
+  // A full page load, not a client-side navigation: the request then carries
+  // the session cookies just set, and if there were none the gate's redirect
+  // lands on the sign-in PAGE. A soft navigation to /auth/sign-in is
+  // intercepted into the sign-in dialog (src/app/@modal), which is wrong here.
   function enter() {
     onLeave();
-    router.replace("/espace");
-    router.refresh();
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- deliberate full load, see above
+    globalThis.location.assign("/espace");
   }
 
   return (
