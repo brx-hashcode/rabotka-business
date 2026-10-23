@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import type { Control, FieldPath, FieldValues } from "react-hook-form";
 import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react";
+import { Loader } from "lucide-react";
 
 import { Button } from "#/components/ui/button";
 import {
@@ -122,13 +123,25 @@ export function StepActions({
       <Button
         type={type}
         onClick={onContinue}
-        loading={pending}
         disabled={disabled || pending}
-        className="h-12 min-w-44 rounded-full border-0 bg-ink px-6 text-[15px] text-white shadow-none hover:bg-ink/90 hover:brightness-100 sm:h-12 sm:text-[15px]"
+        aria-busy={pending || undefined}
+        className={cn(
+          "h-12 min-w-44 rounded-full border-0 bg-ink px-6 text-[15px] text-white shadow-none hover:bg-ink/90 hover:brightness-100 sm:h-12 sm:text-[15px]",
+          // Waiting is not unavailable: full strength while it loads.
+          pending && "disabled:opacity-100",
+        )}
         variant="ghost"
       >
-        {continueLabel}
-        <IconArrowRight />
+        {/* Not Button's `loading`: its spinner takes the ghost variant's dark
+            text colour, invisible on this ink button. */}
+        {pending ? (
+          <Loader aria-label="Chargement" className="size-5 animate-spin text-white opacity-100" />
+        ) : (
+          <>
+            {continueLabel}
+            <IconArrowRight />
+          </>
+        )}
       </Button>
     </div>
   );
