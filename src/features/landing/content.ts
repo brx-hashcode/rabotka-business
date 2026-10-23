@@ -25,12 +25,8 @@ export const SIGN_UP_HREF = "/auth/sign-up";
 export const SIGN_IN_HREF = "/auth/sign-in";
 export const PUBLIC_SITE = "https://www.rabotka.work";
 
-export const HERO_PHOTOS = [
-  "/media/boardroom.jpg",
-  "/media/team-laptops.jpg",
-  "/media/executive.jpg",
-  "/media/meeting-table.jpg",
-];
+/** One photo, not a carousel: a manager at work, in an office. */
+export const HERO_PHOTO = "/media/manager-office.jpg";
 
 export type NavLink = { href: string; label: string; description?: string };
 
@@ -79,7 +75,7 @@ export const HIRING_PATHS = [
     title: "Renforcez vos équipes rapidement",
     text: "Pic d'activité, remplacement, mission de courte durée : publiez votre besoin et mobilisez sans délai des profils disponibles et qualifiés.",
     cta: "Publier une offre",
-    photo: "/media/manager-office.jpg",
+    photo: "/media/executive.jpg",
   },
   {
     kicker: "Recrutement continu",

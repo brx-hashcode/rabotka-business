@@ -2,9 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { IconArrowRight } from "@tabler/icons-react";
 
-import { HeroCarousel } from "#/components/hero-carousel";
 import { Button } from "#/components/ui/button";
-import { HERO_PHOTOS, HIRING_PATHS, SIGN_UP_HREF } from "../content";
+import { HERO_PHOTO, HIRING_PATHS, SIGN_UP_HREF } from "../content";
 
 /**
  * The opening: headline and one call to action beside a photo, then the two
@@ -43,11 +42,13 @@ export function LandingHero() {
         </div>
 
         <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-ink md:aspect-[5/4]">
-          <HeroCarousel
-            className="absolute inset-0"
-            photos={HERO_PHOTOS}
+          <Image
+            src={HERO_PHOTO}
+            alt=""
+            fill
+            priority
             sizes="(min-width: 768px) 50vw, 100vw"
-            imageClassName="object-cover object-center"
+            className="object-cover object-center"
           />
         </div>
       </div>
