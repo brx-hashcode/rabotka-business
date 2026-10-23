@@ -31,7 +31,7 @@ export default async function OpengraphImage() {
     asset("fonts/Gilroy-ExtraBold.otf"),
     asset("fonts/Gilroy-Light.otf"),
     asset("rabotka-logo.png"),
-    asset("hero/worker-1.jpg"),
+    asset("media/executive.jpg"),
   ]);
 
   return new ImageResponse(
@@ -60,7 +60,7 @@ export default async function OpengraphImage() {
             Recrutez avec Rabotka
           </span>
           <span style={{ fontSize: 30, fontWeight: 300, lineHeight: 1.3, color: MUTED, marginTop: 24 }}>
-            PME, écoles, ONG et administrations : recrutez les bons profils au Congo.
+            Diffusez vos offres, accédez à des candidats vérifiés, pilotez vos recrutements.
           </span>
         </div>
 

@@ -27,7 +27,7 @@ export function HomeOverview() {
   const { data: user } = useSessionUser();
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-8 px-4 py-10 sm:px-6">
+    <div className="mx-auto w-full max-w-7xl space-y-8 px-4 py-10 sm:px-6">
       <div className="space-y-1.5">
         <h1 className="font-semibold text-3xl tracking-tight">
           {user?.first_name ? `Bonjour ${user.first_name}` : "Bienvenue"}
@@ -39,7 +39,7 @@ export function HomeOverview() {
 
       <div className="grid gap-4 sm:grid-cols-3">
         {NEXT_UP.map(({ icon: Icon, title, text }) => (
-          <div key={title} className="space-y-3 rounded-2xl bg-card p-5 shadow-soft">
+          <div key={title} className="space-y-3 rounded-2xl bg-card p-5">
             <span className="flex size-10 items-center justify-center rounded-full bg-page">
               <Icon className="size-5" />
             </span>

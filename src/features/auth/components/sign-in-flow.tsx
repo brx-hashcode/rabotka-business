@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 import { friendlyError } from "#/lib/api/friendly-error";
+import { appConfig } from "#/config";
 import { safeRedirectPath } from "#/lib/safe-redirect";
 import { cn } from "#/lib/utils";
 import {
@@ -34,7 +35,7 @@ export function SignInFlow({
 }>) {
   const split = layout === "split";
   const searchParams = useSearchParams();
-  const redirectTo = safeRedirectPath(searchParams.get("next")) ?? "/";
+  const redirectTo = safeRedirectPath(searchParams.get("next")) ?? appConfig.homePath;
 
   const [email, setEmail] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);

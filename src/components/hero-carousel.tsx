@@ -5,22 +5,19 @@ import Image from "next/image";
 
 import { cn } from "#/lib/utils";
 
-/** The home hero's photos (640px squares). */
-const HOME_PHOTOS = [1, 2, 3, 4, 5, 6].map((n) => `/hero/worker-${n}.jpg`);
-
 const INTERVAL_MS = 4500;
 
 
 export function HeroCarousel({
   className,
   style,
-  photos = HOME_PHOTOS,
+  photos,
   sizes = "230px",
   imageClassName,
 }: Readonly<{
   className?: string;
   style?: React.CSSProperties;
-  photos?: readonly string[];
+  photos: readonly string[];
   sizes?: string;
   imageClassName?: string;
 }>) {
@@ -46,6 +43,9 @@ export function HeroCarousel({
           fill
           sizes={sizes}
           priority={i === 0}
+          // Not lazy: every slide must be loaded before it fades in, or the
+          // frame shows its dark background until the photo arrives.
+          loading={i === 0 ? undefined : "eager"}
           className={cn(
             "object-cover transition-opacity duration-1000 ease-in-out",
             imageClassName,

@@ -5,7 +5,7 @@ import { IconLogout } from "@tabler/icons-react";
 import { ActionDialog } from "#/components/action-dialog";
 import { useLogoutMutation } from "#/hooks/use-auth-mutations";
 
-/** Asks before signing out; the mutation then leaves for the sign-in page. */
+/** Asks before signing out; the mutation then leaves for the landing page. */
 export function LogoutDialog({
   open,
   onOpenChange,

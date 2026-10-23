@@ -2,11 +2,15 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { ACCESS_COOKIE, REFRESH_COOKIE } from "#/lib/auth/cookies";
 import { safeRedirectPath } from "#/lib/safe-redirect";
+import { appConfig } from "#/config";
+
+const HOME = appConfig.homePath;
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (pathname.startsWith("/api/")) return forwardApi(request);
   if (pathname.startsWith("/auth/")) return redirectSignedIn(request);
+  if (pathname === "/") return landing(request);
   return requireSession(request);
 }
 
@@ -32,12 +36,18 @@ function forwardApi(request: NextRequest) {
 
 function redirectSignedIn(request: NextRequest) {
   if (!request.cookies.has(REFRESH_COOKIE)) return NextResponse.next();
-  const next = safeRedirectPath(request.nextUrl.searchParams.get("next")) ?? "/";
+  const next = safeRedirectPath(request.nextUrl.searchParams.get("next")) ?? HOME;
   return NextResponse.redirect(new URL(next, request.url));
 }
 
+/** The public landing page; a signed-in business goes straight to its space. */
+function landing(request: NextRequest) {
+  if (!request.cookies.has(REFRESH_COOKIE)) return NextResponse.next();
+  return NextResponse.redirect(new URL(HOME, request.url));
+}
+
 /**
- * Every page is for a signed-in business. Without a session the visitor goes
+ * Every page but the landing is for a signed-in business. Without a session the visitor goes
  * to sign-in, and `next` brings them back. Whether the account really is a
  * business is the backend's answer (BusinessProfileGuard), not this cookie's.
  */
@@ -45,13 +55,13 @@ function requireSession(request: NextRequest) {
   if (request.cookies.has(REFRESH_COOKIE)) return NextResponse.next();
   const { pathname, search } = request.nextUrl;
   const url = new URL("/auth/sign-in", request.url);
-  if (pathname !== "/") url.searchParams.set("next", `${pathname}${search}`);
+  if (pathname !== HOME) url.searchParams.set("next", `${pathname}${search}`);
   return NextResponse.redirect(url);
 }
 
 export const config = {
   // Pages and the API; never Next's assets, the session routes or files in public/.
   matcher: [
-    "/((?!_next/|session/|favicon.ico|icon|apple-icon|opengraph-image|twitter-image|manifest.json|robots.txt|fonts/|hero/|sign-in/|rabotka-).*)",
+    "/((?!_next/|session/|favicon.ico|icon|apple-icon|opengraph-image|twitter-image|manifest.json|robots.txt|fonts/|media/|rabotka-).*)",
   ],
 };
