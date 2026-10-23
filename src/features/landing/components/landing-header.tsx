@@ -24,7 +24,7 @@ import {
 
 const MENUS: { label: string; links: NavLink[]; wide?: boolean }[] = [
   { label: "Solutions", links: SOLUTION_LINKS, wide: true },
-  { label: "Pour qui", links: AUDIENCE_LINKS },
+  { label: "Secteurs", links: AUDIENCE_LINKS },
   { label: "Aide", links: HELP_LINKS },
 ];
 
@@ -63,7 +63,7 @@ export function LandingHeader() {
             render={<Link href={SIGN_UP_HREF} />}
             className="rounded-full bg-ink px-5 text-white hover:bg-ink/90"
           >
-            Créer un compte
+            Ouvrir un compte
           </Button>
           <MobileMenu />
         </div>

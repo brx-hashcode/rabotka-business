@@ -62,6 +62,6 @@ function requireSession(request: NextRequest) {
 export const config = {
   // Pages and the API; never Next's assets, the session routes or files in public/.
   matcher: [
-    "/((?!_next/|session/|favicon.ico|icon|apple-icon|opengraph-image|twitter-image|manifest.json|robots.txt|fonts/|hero/|sign-in/|rabotka-).*)",
+    "/((?!_next/|session/|favicon.ico|icon|apple-icon|opengraph-image|twitter-image|manifest.json|robots.txt|fonts/|photos/|rabotka-).*)",
   ],
 };

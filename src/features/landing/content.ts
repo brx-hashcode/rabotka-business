@@ -1,12 +1,12 @@
 import {
   IconBriefcase,
   IconBuildingBank,
-  IconBuildingStore,
-  IconCertificate,
+  IconBuildingSkyscraper,
   IconHeartHandshake,
   IconSchool,
   IconShieldCheck,
   IconSparkles,
+  IconStethoscope,
   IconUsersGroup,
   type Icon,
 } from "@tabler/icons-react";
@@ -15,63 +15,82 @@ import {
  * Landing copy in one place. What Rabotka does today, nothing it does not:
  * no figures (fees are runtime config, and stats would need a source), no
  * testimonials until a real customer gives one.
+ *
+ * Photos in public/photos come from Unsplash, free licence (no attribution
+ * required) — the id after each name, to find the original:
+ *   boardroom 1573164574511, team-laptops 1573167101669, executive
+ *   1666866834805, interview 1573496267526, meeting-table 1573164574397,
+ *   desk-manager 1758876202610, candidates-panel 1573497701240,
+ *   interview-room 1573496130407, handshake 1521791136064, documents
+ *   1622295023825, classroom 1698827623362.
  */
 
 export const SIGN_UP_HREF = "/auth/sign-up";
 export const SIGN_IN_HREF = "/auth/sign-in";
 export const PUBLIC_SITE = "https://www.rabotka.work";
 
+export const HERO_PHOTOS = [
+  "/photos/boardroom.jpg",
+  "/photos/team-laptops.jpg",
+  "/photos/executive.jpg",
+  "/photos/meeting-table.jpg",
+];
+
 export type NavLink = { href: string; label: string; description?: string };
 
 export const SOLUTION_LINKS: NavLink[] = [
   {
-    href: "#publier",
-    label: "Publier une offre",
-    description: "Mission, CDD, CDI ou stage, en quelques minutes.",
+    href: "#diffusion",
+    label: "Diffusion d'offres",
+    description: "Missions, CDD, CDI et stages, publiés en quelques minutes.",
   },
   {
-    href: "#profils",
-    label: "Profils suggérés",
-    description: "Les travailleurs qui correspondent à votre besoin.",
+    href: "#preselection",
+    label: "Présélection des candidats",
+    description: "Les profils les plus pertinents pour chaque poste, en priorité.",
   },
   {
-    href: "#agents",
+    href: "#accompagnement",
     label: "Recrutement accompagné",
-    description: "Des agents Rabotka mobilisent les candidats sur le terrain.",
+    description: "Un réseau d'agents qui mobilise les candidats sur le terrain.",
   },
   {
     href: "#verification",
-    label: "Organisation vérifiée",
-    description: "Vos documents contrôlés, un badge de confiance.",
+    label: "Compte entreprise vérifié",
+    description: "Votre organisation authentifiée sur pièces officielles.",
   },
 ];
 
 export const AUDIENCE_LINKS: NavLink[] = [
-  { href: "#pour-qui", label: "PME, TPE et commerces" },
-  { href: "#pour-qui", label: "Écoles et centres de formation" },
-  { href: "#pour-qui", label: "ONG et associations" },
-  { href: "#pour-qui", label: "Administrations et entreprises publiques" },
+  { href: "#secteurs", label: "Entreprises, PME et TPE" },
+  { href: "#secteurs", label: "Établissements d'enseignement" },
+  { href: "#secteurs", label: "ONG et organisations internationales" },
+  { href: "#secteurs", label: "Administrations et établissements publics" },
+  { href: "#secteurs", label: "Structures de santé" },
 ];
 
 export const HELP_LINKS: NavLink[] = [
-  { href: "#comment", label: "Comment ça marche" },
-  { href: "#contact", label: "Nous contacter" },
+  { href: "#demarche", label: "Notre démarche" },
+  { href: "#faq", label: "Questions fréquentes" },
+  { href: "#contact", label: "Contacter nos équipes" },
   { href: PUBLIC_SITE, label: "www.rabotka.work" },
 ];
 
-/** The two paths under the hero, as « occasional » and « regular » hiring. */
+/** The two paths under the hero, as « occasional » and « continuous » hiring. */
 export const HIRING_PATHS = [
   {
-    kicker: "Besoin ponctuel",
-    title: "Une mission, un renfort",
-    text: "Un chantier, un événement, un remplacement : publiez la mission et recevez des candidats disponibles près de chez vous.",
-    cta: "Publier une mission",
+    kicker: "Recrutement ponctuel",
+    title: "Renforcez vos équipes rapidement",
+    text: "Pic d'activité, remplacement, mission de courte durée : publiez votre besoin et mobilisez sans délai des profils disponibles et qualifiés.",
+    cta: "Publier une offre",
+    photo: "/photos/desk-manager.jpg",
   },
   {
-    kicker: "Recrutements réguliers",
-    title: "Constituez vos équipes",
-    text: "CDD, CDI, stages : gérez toutes vos offres depuis un seul espace et retrouvez les profils qui vous intéressent.",
-    cta: "Créer mon espace",
+    kicker: "Recrutement continu",
+    title: "Structurez votre acquisition de talents",
+    text: "CDD, CDI, stages : centralisez l'ensemble de vos offres, suivez chaque candidature et pilotez vos recrutements depuis un espace unique.",
+    cta: "Ouvrir un compte entreprise",
+    photo: "/photos/interview.jpg",
   },
 ];
 
@@ -87,71 +106,71 @@ export type Solution = {
 
 export const SOLUTIONS: Solution[] = [
   {
-    id: "publier",
-    kicker: "Offres d'emploi",
-    title: "Publiez vos offres là où sont les travailleurs",
-    text: "Vos offres sont proposées aux travailleurs de votre ville, jusque sur WhatsApp, l'application qu'ils utilisent déjà.",
+    id: "diffusion",
+    kicker: "Diffusion d'offres",
+    title: "Diffusez vos offres auprès des bons candidats",
+    text: "Vos offres sont relayées auprès des candidats de votre zone et de votre secteur d'activité, y compris sur WhatsApp, le canal qu'ils consultent au quotidien.",
     points: [
-      "Mission, CDD, CDI ou stage",
-      "Par ville et par métier",
-      "Vos offres et leurs candidats au même endroit",
+      "Missions, CDD, CDI et stages",
+      "Ciblage par ville et par métier",
+      "Suivi centralisé des candidatures",
     ],
-    photo: "/sign-in/craftsman.jpg",
+    photo: "/photos/team-laptops.jpg",
     icon: IconBriefcase,
   },
   {
-    id: "profils",
-    kicker: "Mise en relation",
-    title: "Les bons profils, suggérés pour chaque offre",
-    text: "Rabotka rapproche votre offre des travailleurs dont le métier, l'expérience et la ville correspondent, pour que vous commenciez par les meilleurs.",
+    id: "preselection",
+    kicker: "Présélection",
+    title: "Une présélection fondée sur la pertinence",
+    text: "Notre moteur de correspondance croise compétences, expérience et localisation pour vous présenter en priorité les profils les plus adaptés à chaque poste.",
     points: [
-      "Profils classés selon votre besoin",
-      "Identité des travailleurs vérifiée",
-      "Contact direct une fois la mise en relation acceptée",
+      "Candidats classés par pertinence",
+      "Identité des candidats vérifiée",
+      "Mise en relation directe et sécurisée",
     ],
-    photo: "/sign-in/seamstresses.jpg",
+    photo: "/photos/candidates-panel.jpg",
     icon: IconSparkles,
   },
   {
-    id: "agents",
+    id: "accompagnement",
     kicker: "Recrutement accompagné",
-    title: "Des agents sur le terrain, pour vous",
-    text: "Dans votre ville, des agents Rabotka appellent et mobilisent les travailleurs adaptés à vos offres — y compris ceux qui ne sont pas encore en ligne.",
+    title: "Un réseau d'agents au service de vos recrutements",
+    text: "Nos agents de terrain identifient et mobilisent les candidats adaptés à vos postes, y compris les talents encore absents des plateformes en ligne.",
     points: [
-      "Des candidats contactés pour vous",
-      "Un relais local qui connaît le terrain",
-      "Vous gardez la décision finale",
+      "Sourcing actif des candidats",
+      "Connaissance fine du marché local",
+      "La décision finale vous appartient",
     ],
-    photo: "/sign-in/cook.jpg",
+    photo: "/photos/interview-room.jpg",
     icon: IconUsersGroup,
   },
   {
     id: "verification",
-    kicker: "Confiance",
-    title: "Une organisation vérifiée par Rabotka",
-    text: "Vos documents (RCCM, NIU, agrément, récépissé…) sont contrôlés par notre équipe. Les travailleurs savent à qui ils ont affaire.",
+    kicker: "Conformité",
+    title: "Un compte entreprise vérifié",
+    text: "Votre organisation est authentifiée sur la base de ses documents officiels — RCCM, NIU, agrément, récépissé de déclaration. Un gage de crédibilité auprès des candidats.",
     points: [
-      "Les pièces adaptées à votre type d'organisation",
-      "Documents conservés de façon privée",
-      "Un compte activé dès la validation",
+      "Pièces justificatives adaptées à votre statut",
+      "Documents conservés de manière confidentielle",
+      "Activation du compte après validation",
     ],
-    photo: "/sign-in/weaver.jpg",
+    photo: "/photos/documents.jpg",
     icon: IconShieldCheck,
   },
 ];
 
 export const STEPS = [
   {
-    title: "Créez votre espace",
-    text: "Avec l'adresse email de votre organisation : un code vous est envoyé, sans mot de passe.",
+    title: "Ouvrez votre compte entreprise",
+    text: "Avec l'adresse email professionnelle de votre organisation. Connexion par code à usage unique, sans mot de passe.",
   },
   {
-    title: "Faites vérifier votre organisation",
-    text: "Indiquez votre type d'organisation et joignez ses documents. Notre équipe les valide.",
+    title: "Authentifiez votre organisation",
+    text: "Renseignez votre statut juridique et transmettez les pièces justificatives correspondantes. Nos équipes les examinent.",
   },
   {
     title: "Publiez et recrutez",
-    text: "Publiez vos offres, consultez les profils suggérés et contactez les candidats retenus.",
+    text: "Diffusez vos offres, consultez les profils présélectionnés et entrez en contact avec les candidats retenus.",
   },
 ];
 
@@ -159,47 +178,51 @@ export type Audience = { title: string; text: string; icon: Icon };
 
 export const AUDIENCES: Audience[] = [
   {
-    title: "PME, TPE et commerces",
-    text: "Boulangeries, ateliers, boutiques, entreprises de service : du renfort ponctuel à l'embauche.",
-    icon: IconBuildingStore,
+    title: "Entreprises, PME et TPE",
+    text: "Commerce, industrie, services, BTP : du renfort ponctuel au recrutement de collaborateurs permanents.",
+    icon: IconBuildingSkyscraper,
   },
   {
-    title: "Écoles et formation",
-    text: "Écoles privées, universités, centres de formation : enseignants, encadrement, personnel d'appui.",
+    title: "Enseignement et formation",
+    text: "Établissements privés, universités, centres de formation professionnelle : corps enseignant, encadrement et personnel administratif.",
     icon: IconSchool,
   },
   {
-    title: "ONG et associations",
-    text: "Équipes de projet, agents de terrain, missions courtes : recrutez localement.",
+    title: "ONG et organisations internationales",
+    text: "Chefs de projet, agents de terrain, consultants : des recrutements locaux pour vos programmes.",
     icon: IconHeartHandshake,
   },
   {
-    title: "Administrations",
-    text: "Ministères, mairies, établissements publics : des profils qualifiés, des démarches suivies.",
+    title: "Secteur public",
+    text: "Ministères, collectivités locales, établissements publics : des profils qualifiés et un processus traçable.",
     icon: IconBuildingBank,
   },
   {
     title: "Santé",
-    text: "Cliniques, pharmacies, laboratoires : personnel soignant et d'accueil.",
-    icon: IconCertificate,
+    text: "Cliniques, cabinets médicaux, pharmacies, laboratoires : personnel soignant, technique et d'accueil.",
+    icon: IconStethoscope,
   },
 ];
 
 export const FAQ = [
   {
-    q: "Quels types d'organisations peuvent s'inscrire ?",
-    a: "Entreprises de toute taille, startups, coopératives, écoles, centres de formation, ONG, associations, confessions religieuses, structures de santé, administrations et organisations internationales.",
+    q: "Quelles organisations peuvent ouvrir un compte entreprise ?",
+    a: "Les entreprises de toute taille, startups, coopératives et GIE, les établissements d'enseignement et de formation, les ONG, associations et fondations, les structures de santé, les administrations, les établissements publics et les organisations internationales.",
   },
   {
-    q: "Quels documents dois-je fournir ?",
-    a: "Cela dépend de votre organisation : RCCM et NIU pour une entreprise, récépissé et statuts pour une association, autorisation d'ouverture ou agrément pour une école… Le formulaire vous indique exactement lesquels.",
+    q: "Quelles pièces justificatives sont demandées ?",
+    a: "Elles dépendent de votre statut : RCCM et NIU pour une société, récépissé de déclaration et statuts pour une association ou une ONG, autorisation d'ouverture ou agrément pour un établissement d'enseignement ou de santé, acte de création pour une entité publique. Le formulaire vous indique précisément les pièces attendues.",
   },
   {
-    q: "Combien de temps prend la vérification ?",
-    a: "Notre équipe examine vos documents dès leur réception. Vous êtes prévenu par email dès que votre organisation est validée.",
+    q: "Comment se déroule la vérification de mon organisation ?",
+    a: "Nos équipes examinent vos pièces dès leur réception. Votre compte est activé une fois la vérification validée, et vous en êtes informé par email.",
   },
   {
-    q: "Comment se passe la connexion ?",
-    a: "Avec l'adresse email de votre compte : vous recevez un code à 6 chiffres à chaque connexion. Pas de mot de passe à retenir.",
+    q: "Comment se connecter à l'espace entreprise ?",
+    a: "Avec l'adresse email du compte : un code à usage unique est envoyé à chaque connexion. Aucun mot de passe à gérer.",
+  },
+  {
+    q: "Mes documents sont-ils protégés ?",
+    a: "Vos pièces justificatives sont conservées dans un espace de stockage privé et ne sont consultées que par les équipes chargées de la vérification.",
   },
 ];

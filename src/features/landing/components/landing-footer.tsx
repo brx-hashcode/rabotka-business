@@ -17,11 +17,11 @@ export function ClosingCta() {
       <div className="mx-auto w-full max-w-6xl space-y-4">
         <div className="flex flex-col items-center gap-6 rounded-3xl bg-header px-6 py-14 text-center text-header-foreground sm:py-20">
           <h2 className="max-w-2xl font-semibold text-3xl tracking-tight sm:text-5xl">
-            Prêt à recruter ?
+            Prêt à renforcer vos équipes ?
           </h2>
           <p className="max-w-xl text-header-muted text-lg">
-            Créez votre espace en quelques minutes avec l&apos;adresse email de
-            votre organisation.
+            Ouvrez votre compte entreprise en quelques minutes avec
+            l&apos;adresse email professionnelle de votre organisation.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Button
@@ -30,7 +30,7 @@ export function ClosingCta() {
               render={<Link href={SIGN_UP_HREF} />}
               className="rounded-full bg-ink px-6 text-white hover:bg-ink/90"
             >
-              Créer mon espace entreprise
+              Ouvrir un compte entreprise
             </Button>
             <Button
               variant="ghost"
@@ -45,9 +45,10 @@ export function ClosingCta() {
 
         <div className="grid gap-4 md:grid-cols-[1.2fr_1fr_1fr]">
           <div className="space-y-1 rounded-3xl bg-card p-6">
-            <h3 className="font-semibold text-lg">Une question avant de vous lancer ?</h3>
+            <h3 className="font-semibold text-lg">Besoin d&apos;un accompagnement ?</h3>
             <p className="text-muted-foreground text-sm">
-              Notre équipe vous répond et vous aide à créer votre espace.
+              Nos équipes vous conseillent et vous accompagnent dans la mise en
+              place de votre compte.
             </p>
           </div>
           {contact?.email && (
@@ -56,7 +57,7 @@ export function ClosingCta() {
                 <IconMail className="size-5" />
               </span>
               <span className="min-w-0">
-                <span className="block font-medium">Écrivez-nous</span>
+                <span className="block font-medium">Écrire à nos équipes</span>
                 <span className="block truncate text-muted-foreground text-sm">{contact.email}</span>
               </span>
             </a>
@@ -67,7 +68,7 @@ export function ClosingCta() {
                 <IconPhone className="size-5" />
               </span>
               <span className="min-w-0">
-                <span className="block font-medium">Appelez-nous</span>
+                <span className="block font-medium">Nous appeler</span>
                 <span className="block truncate text-muted-foreground text-sm">{contact.phone}</span>
               </span>
             </a>

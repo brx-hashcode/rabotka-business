@@ -6,18 +6,15 @@ import { BrandLogo } from "#/components/brand-logo";
 import { SignInFlow } from "#/features/auth/components/sign-in-flow";
 import { HeroCarousel } from "#/components/hero-carousel";
 
-/**
- * Unsplash, in full colour, cross-fading like the home hero: chair maker
- * (photo-1688241320695-6ca991df8818), basket weaver (photo-1688240817677-
- * d28b8e232dd4), cook (photo-1784459996808-d44b40f78616), seamstresses
- * (photo-1790943780822-9918073fe9f1).
- */
-const PHOTOS = ["craftsman", "weaver", "cook", "seamstresses"].map((n) => `/sign-in/${n}.jpg`);
+/** The landing's photos (public/photos, sources in features/landing/content.ts). */
+const PHOTOS = ["boardroom", "executive", "interview", "meeting-table"].map(
+  (n) => `/photos/${n}.jpg`,
+);
 
 const POINTS = [
-  "Publiez vos offres depuis votre ordinateur",
-  "Les profils qui correspondent à vos besoins",
-  "Votre organisation vérifiée par Rabotka",
+  "Diffusez et pilotez vos offres d'emploi",
+  "Accédez à des candidats présélectionnés et vérifiés",
+  "Un compte entreprise authentifié par Rabotka",
 ];
 
 /**
@@ -37,7 +34,7 @@ export default function SignInPage() {
           className="absolute inset-0"
           photos={PHOTOS}
           sizes="60vw"
-          imageClassName="object-[50%_30%]"
+          imageClassName="object-cover"
         />
         {/* Darkens the lower part only, for the text; the photo stays clear above. */}
         <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/90 via-black/65 to-transparent" />
@@ -52,11 +49,12 @@ export default function SignInPage() {
 
         <div className="relative mt-auto flex max-w-xl flex-col gap-6 p-12">
           <h1 className="font-semibold text-4xl leading-tight tracking-tight">
-            Rabotka pour les entreprises
+            L&apos;espace recrutement des organisations
           </h1>
           <p className="text-white/80">
-            PME, écoles, ONG et administrations : recrutez les bons profils au
-            Congo, depuis un seul espace.
+            Entreprises, établissements d&apos;enseignement, ONG et
+            institutions publiques : pilotez vos recrutements depuis une
+            plateforme unique.
           </p>
           <ul className="flex flex-col gap-3">
             {POINTS.map((point) => (

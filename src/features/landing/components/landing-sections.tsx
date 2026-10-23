@@ -27,9 +27,9 @@ export function SolutionsSection() {
     <section id="solutions" className="scroll-mt-20 bg-card py-20 md:py-28">
       <div className="mx-auto w-full max-w-6xl space-y-16 px-4 sm:px-6 md:space-y-24">
         <SectionHeading
-          kicker="Solutions"
-          title="Tout ce qu'il faut pour recruter, au même endroit"
-          text="De la publication de l'offre au premier contact avec le candidat."
+          kicker="Nos solutions"
+          title="Une plateforme complète pour piloter vos recrutements"
+          text="De la diffusion de l'offre à la prise de contact avec le candidat retenu."
         />
 
         {SOLUTIONS.map((solution, i) => {
@@ -46,7 +46,7 @@ export function SolutionsSection() {
                   alt=""
                   fill
                   sizes="(min-width: 768px) 50vw, 100vw"
-                  className="object-cover object-[50%_30%]"
+                  className="object-cover"
                 />
               </div>
               <div className="space-y-5">
@@ -71,7 +71,7 @@ export function SolutionsSection() {
                   render={<Link href={SIGN_UP_HREF} />}
                   className="-ml-3 rounded-full px-3 font-medium hover:bg-page"
                 >
-                  Commencer
+                  Ouvrir un compte entreprise
                   <IconArrowRight />
                 </Button>
               </div>
@@ -86,9 +86,9 @@ export function SolutionsSection() {
 /** Three numbered steps, from sign-up to the first hire. */
 export function StepsSection() {
   return (
-    <section id="comment" className="scroll-mt-20 py-20 md:py-28">
+    <section id="demarche" className="scroll-mt-20 py-20 md:py-28">
       <div className="mx-auto w-full max-w-6xl space-y-12 px-4 sm:px-6">
-        <SectionHeading kicker="Comment ça marche" title="Trois étapes pour recruter" center />
+        <SectionHeading kicker="Notre démarche" title="Trois étapes pour démarrer vos recrutements" center />
         <ol className="grid gap-4 md:grid-cols-3">
           {STEPS.map((step, i) => (
             <li key={step.title} className="space-y-4 rounded-3xl bg-card p-6 sm:p-8">
@@ -105,15 +105,15 @@ export function StepsSection() {
   );
 }
 
-/** Which organisations it is for — the question the menu's « Pour qui » answers. */
+/** Which organisations it is for — the question the menu's « Secteurs » answers. */
 export function AudiencesSection() {
   return (
-    <section id="pour-qui" className="scroll-mt-20 bg-card py-20 md:py-28">
+    <section id="secteurs" className="scroll-mt-20 bg-card py-20 md:py-28">
       <div className="mx-auto w-full max-w-6xl space-y-12 px-4 sm:px-6">
         <SectionHeading
-          kicker="Pour qui"
-          title="Quelle que soit votre organisation"
-          text="Rabotka s'adapte à votre type de structure, jusqu'aux documents demandés pour la vérifier."
+          kicker="Secteurs"
+          title="Une solution adaptée à chaque type d'organisation"
+          text="Du statut juridique aux pièces justificatives, Rabotka s'adapte à la nature de votre structure."
         />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {AUDIENCES.map(({ title, text, icon: Icon }) => (
@@ -129,9 +129,9 @@ export function AudiencesSection() {
             href={SIGN_UP_HREF}
             className="group flex flex-col justify-between gap-6 rounded-3xl bg-ink p-6 text-white"
           >
-            <p className="font-semibold text-lg">Votre organisation n&apos;est pas dans la liste ?</p>
+            <p className="font-semibold text-lg">Votre secteur n&apos;apparaît pas ?</p>
             <span className="inline-flex items-center gap-1.5 font-medium text-sm">
-              Créez votre espace, nous l&apos;ajoutons
+              Ouvrez votre compte, nous vous accompagnons
               <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </span>
           </Link>
@@ -144,9 +144,9 @@ export function AudiencesSection() {
 /** Questions, answered in place (native details/summary, no script). */
 export function FaqSection() {
   return (
-    <section className="py-20 md:py-28">
+    <section id="faq" className="scroll-mt-20 py-20 md:py-28">
       <div className="mx-auto w-full max-w-3xl space-y-10 px-4 sm:px-6">
-        <SectionHeading kicker="Questions fréquentes" title="Vous vous demandez…" center />
+        <SectionHeading kicker="Questions fréquentes" title="Tout savoir avant de commencer" center />
         <div className="space-y-3">
           {FAQ.map((item) => (
             <details key={item.q} className="group rounded-2xl bg-card px-5 py-4 open:pb-5">
