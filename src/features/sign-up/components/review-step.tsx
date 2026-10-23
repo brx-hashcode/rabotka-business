@@ -13,6 +13,7 @@ import type { AccountValues } from "./account-step";
 import { DocumentPreviewDialog } from "./document-preview";
 import type { DocumentsValue } from "./documents-step";
 import { FormError, StepActions, StepHeading } from "./form-bits";
+import { InlineSignIn } from "./inline-sign-in";
 import type { OrganisationValues } from "./organisation-step";
 
 /** Everything entered, by step, with a way back to each; then the terms and the send. */
@@ -166,7 +167,7 @@ export function SignUpDone({
         title="Votre demande a bien été envoyée"
         text={
           signInRequired
-            ? "Votre compte entreprise est créé. Connectez-vous avec votre adresse email pour y accéder ; nos équipes examinent les pièces de votre organisation."
+            ? "Votre compte entreprise est créé et nos équipes examinent les pièces de votre organisation. Saisissez le code reçu par email pour accéder à votre espace."
             : "Votre compte entreprise est créé. Nos équipes examinent maintenant les pièces de votre organisation ; votre compte sera activé dès leur validation."
         }
       />
@@ -184,16 +185,22 @@ export function SignUpDone({
           </li>
         ))}
       </ol>
-      <p className="text-muted-foreground text-sm">
-        Pour vous reconnecter, saisissez simplement <span className="font-medium text-foreground">{email}</span> : un code vous sera envoyé.
-      </p>
-      <Button
-        variant="ghost"
-        render={<Link href={signInRequired ? "/auth/sign-in" : "/espace"} onClick={onLeave} />}
-        className="h-12 rounded-full border-0 bg-ink px-6 text-white hover:bg-ink/90 sm:h-12"
-      >
-        {signInRequired ? "Se connecter" : "Accéder à mon espace"}
-      </Button>
+      {!signInRequired && (
+        <p className="text-muted-foreground text-sm">
+          Pour vous reconnecter, saisissez simplement <span className="font-medium text-foreground">{email}</span> : un code vous sera envoyé.
+        </p>
+      )}
+      {signInRequired ? (
+        <InlineSignIn email={email} onSignedIn={onLeave} />
+      ) : (
+        <Button
+          variant="ghost"
+          render={<Link href="/espace" onClick={onLeave} />}
+          className="h-12 rounded-full border-0 bg-ink px-6 text-white hover:bg-ink/90 sm:h-12"
+        >
+          Accéder à mon espace
+        </Button>
+      )}
     </div>
   );
 }
