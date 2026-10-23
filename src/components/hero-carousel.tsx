@@ -43,6 +43,9 @@ export function HeroCarousel({
           fill
           sizes={sizes}
           priority={i === 0}
+          // Not lazy: every slide must be loaded before it fades in, or the
+          // frame shows its dark background until the photo arrives.
+          loading={i === 0 ? undefined : "eager"}
           className={cn(
             "object-cover transition-opacity duration-1000 ease-in-out",
             imageClassName,

@@ -16,9 +16,9 @@ import {
  * required) — the id after each name, to find the original:
  *   boardroom 1573164574511, team-laptops 1573167101669, executive
  *   1666866834805, interview 1573496267526, meeting-table 1573164574397,
- *   desk-manager 1758876202610, candidates-panel 1573497701240,
- *   interview-room 1573496130407, handshake 1521791136064, documents
- *   1622295023825, classroom 1698827623362.
+ *   manager-office 1758519290996, candidates-panel 1573497701240,
+ *   interview-room 1573496130407, compliance-officer 1653669486816.
+ * Office and recruitment scenes only — no informal-sector photos here.
  */
 
 export const SIGN_UP_HREF = "/auth/sign-up";
@@ -79,7 +79,7 @@ export const HIRING_PATHS = [
     title: "Renforcez vos équipes rapidement",
     text: "Pic d'activité, remplacement, mission de courte durée : publiez votre besoin et mobilisez sans délai des profils disponibles et qualifiés.",
     cta: "Publier une offre",
-    photo: "/media/desk-manager.jpg",
+    photo: "/media/manager-office.jpg",
   },
   {
     kicker: "Recrutement continu",
@@ -146,7 +146,7 @@ export const SOLUTIONS: Solution[] = [
       "Documents conservés de manière confidentielle",
       "Activation du compte après validation",
     ],
-    photo: "/media/documents.jpg",
+    photo: "/media/compliance-officer.jpg",
   },
 ];
 
