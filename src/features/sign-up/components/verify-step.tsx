@@ -100,7 +100,7 @@ export function VerifyStep({
         text={`Nous avons envoyé un code à 6 chiffres à ${account.email}. Il est valable quelques minutes.`}
       />
 
-      <div className="flex gap-2 sm:gap-3">
+      <div className="flex gap-2 sm:gap-2.5">
         {digits.map((digit, i) => (
           <input
             key={i}
@@ -118,7 +118,7 @@ export function VerifyStep({
             aria-label={`Chiffre ${i + 1}`}
             disabled={pending}
             className={cn(
-              "h-14 w-full min-w-0 rounded-xl bg-page text-center font-semibold text-xl outline-none transition-shadow sm:h-16 sm:text-2xl",
+              "size-12 shrink-0 rounded-xl bg-page text-center font-semibold text-lg outline-none transition-shadow sm:size-14 sm:text-xl",
               "focus-visible:ring-2 focus-visible:ring-whatsapp/40",
             )}
           />
