@@ -15,9 +15,10 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import { uploadSignUpDocument } from "#/lib/api/signup-controller";
 import type { BusinessCatalog } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
+import { DocumentPreviewDialog } from "./document-preview";
 import { FormError, StepActions, StepHeading } from "./form-bits";
 
-export type UploadedDocument = { url: string; key: string; fileName: string };
+export type UploadedDocument = { url: string; key: string; fileName: string; mimeType?: string };
 /** By document type: one file each. */
 export type DocumentsValue = Record<string, UploadedDocument>;
 
@@ -35,7 +36,9 @@ export function DocumentsStep({
   category,
   signupToken,
   value,
+  previews,
   onChange,
+  onPreview,
   onBack,
   onDone,
 }: Readonly<{
@@ -43,7 +46,10 @@ export function DocumentsStep({
   category: string;
   signupToken: string;
   value: DocumentsValue;
+  previews: Record<string, string>;
   onChange: (next: DocumentsValue) => void;
+  /** A local object URL for a file just picked, to preview without a request. */
+  onPreview: (key: string, url: string) => void;
   onBack: () => void;
   onDone: () => void;
 }>) {
@@ -58,6 +64,9 @@ export function DocumentsStep({
   );
 
   const missing = requirement.required.filter((group) => !group.some((t) => value[t]));
+  const [viewing, setViewing] = useState<string | null>(null);
+  const viewed = viewing ? value[viewing] : undefined;
+  const rowProps = { signupToken, onError: setError, onPreview, onView: setViewing };
 
   function set(type: string, doc: UploadedDocument | null) {
     const next = { ...value };
@@ -82,9 +91,8 @@ export function DocumentsStep({
               group={group}
               label={label}
               value={value}
-              signupToken={signupToken}
               onSet={set}
-              onError={setError}
+              {...rowProps}
             />
           ))}
         </section>
@@ -103,9 +111,8 @@ export function DocumentsStep({
                   type={type}
                   title={label.get(type) ?? type}
                   doc={value[type]}
-                  signupToken={signupToken}
                   onSet={set}
-                  onError={setError}
+                  {...rowProps}
                 />
               ))}
             </>
@@ -123,6 +130,14 @@ export function DocumentsStep({
       )}
 
       <FormError message={error} />
+      <DocumentPreviewDialog
+        title={viewing ? (label.get(viewing) ?? viewing) : ""}
+        doc={viewed ?? null}
+        src={viewed ? (previews[viewed.key] ?? viewed.url) : undefined}
+        onOpenChange={(open) => {
+          if (!open) setViewing(null);
+        }}
+      />
       <StepActions
         type="button"
         onBack={onBack}
@@ -139,17 +154,14 @@ function RequiredGroup({
   group,
   label,
   value,
-  signupToken,
   onSet,
-  onError,
+  ...rowProps
 }: Readonly<{
   group: string[];
   label: Map<string, string>;
   value: DocumentsValue;
-  signupToken: string;
   onSet: (type: string, doc: UploadedDocument | null) => void;
-  onError: (message: string | null) => void;
-}>) {
+} & RowCallbacks>) {
   const uploaded = group.find((t) => value[t]);
   const [chosen, setChosen] = useState(uploaded ?? group[0]);
 
@@ -179,15 +191,21 @@ function RequiredGroup({
         title={label.get(uploaded ?? chosen) ?? chosen}
         required
         doc={value[uploaded ?? chosen]}
-        signupToken={signupToken}
         onSet={onSet}
-        onError={onError}
+        {...rowProps}
       />
     </div>
   );
 }
 
-/** One paper: its name, and upload / replace / remove. */
+type RowCallbacks = {
+  signupToken: string;
+  onError: (message: string | null) => void;
+  onPreview: (key: string, url: string) => void;
+  onView: (type: string) => void;
+};
+
+/** One paper: its name (click to preview once uploaded), and upload / replace / remove. */
 function DocumentRow({
   type,
   title,
@@ -196,15 +214,15 @@ function DocumentRow({
   signupToken,
   onSet,
   onError,
+  onPreview,
+  onView,
 }: Readonly<{
   type: string;
   title: string;
   required?: boolean;
   doc: UploadedDocument | undefined;
-  signupToken: string;
   onSet: (type: string, doc: UploadedDocument | null) => void;
-  onError: (message: string | null) => void;
-}>) {
+} & RowCallbacks>) {
   const input = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -217,7 +235,8 @@ function DocumentRow({
     setUploading(true);
     try {
       const result = await uploadSignUpDocument(file, signupToken);
-      onSet(type, { url: result.url, key: result.key, fileName: file.name });
+      onPreview(result.key, URL.createObjectURL(file));
+      onSet(type, { url: result.url, key: result.key, fileName: file.name, mimeType: file.type });
     } catch (err) {
       onError(friendlyError(err, `« ${file.name} » n'a pas pu être envoyé. Réessayez.`));
     } finally {
@@ -228,16 +247,26 @@ function DocumentRow({
 
   return (
     <div className={cn("flex items-center gap-4 rounded-2xl p-4 transition-colors", doc ? "bg-chip-green" : "bg-page")}>
-      <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-xl", doc ? "bg-whatsapp text-white" : "bg-card")}>
-        {doc ? <IconCircleCheckFilled className="size-5" /> : <IconFileText className="size-5 text-muted-foreground" />}
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="font-medium text-sm">
-          {title}
-          {required && !doc && <span className="text-destructive"> *</span>}
-        </p>
-        <p className="truncate text-muted-foreground text-xs">{doc ? doc.fileName : "Aucun fichier"}</p>
-      </div>
+      <button
+        type="button"
+        disabled={!doc}
+        onClick={() => onView(type)}
+        aria-label={doc ? `Aperçu : ${title}` : undefined}
+        className="group flex min-w-0 flex-1 items-center gap-4 rounded-xl text-left disabled:cursor-default"
+      >
+        <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-xl", doc ? "bg-whatsapp text-white" : "bg-card")}>
+          {doc ? <IconCircleCheckFilled className="size-5" /> : <IconFileText className="size-5 text-muted-foreground" />}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-medium text-sm">
+            {title}
+            {required && !doc && <span className="text-destructive"> *</span>}
+          </span>
+          <span className="block truncate text-muted-foreground text-xs group-enabled:group-hover:text-foreground group-enabled:group-hover:underline">
+            {doc ? `${doc.fileName} · Aperçu` : "Aucun fichier"}
+          </span>
+        </span>
+      </button>
       <input
         ref={input}
         type="file"

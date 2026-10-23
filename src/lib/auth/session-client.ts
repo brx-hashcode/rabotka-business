@@ -51,8 +51,10 @@ export function verifySession(input: {
 }
 
 /** Create the business profile and sign in with it (src/app/session/sign-up). */
-export function signUpSession(body: BusinessSignUpBody): Promise<{ user: SessionUser }> {
-  return postSession<{ user: SessionUser }>("/session/sign-up", body).then((result) => {
+export function signUpSession(
+  body: BusinessSignUpBody,
+): Promise<{ user: SessionUser | null; signInRequired: boolean }> {
+  return postSession<{ user: SessionUser | null; signInRequired: boolean }>("/session/sign-up", body).then((result) => {
     signedOut = false;
     return result;
   });

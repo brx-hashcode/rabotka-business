@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { toast } from "sonner";
 
 import { BusinessLockup } from "#/components/business-lockup";
+import { Skeleton } from "#/components/ui/skeleton";
 import { sessionUserKey } from "#/hooks/use-session-user";
 import { friendlyError, httpStatusOf } from "#/lib/api/friendly-error";
 import {
@@ -16,21 +18,28 @@ import {
 } from "#/lib/api/signup-controller";
 import { signUpSession } from "#/lib/auth/session-client";
 import { toInternational } from "#/lib/phone";
-import { AccountStep, type AccountValues } from "./account-step";
-import { DocumentsStep, type DocumentsValue } from "./documents-step";
-import { OrganisationStep, type OrganisationValues } from "./organisation-step";
+import { useSignUpStore } from "#/stores/sign-up-store";
+import { STEPS, type StepId } from "../steps";
+import { AccountStep } from "./account-step";
+import { DocumentsStep } from "./documents-step";
+import { OrganisationStep } from "./organisation-step";
 import { ReviewStep, SignUpDone } from "./review-step";
 import { ProgressHeader, StepPhotoPanel } from "./sign-up-chrome";
 import { VerifyStep } from "./verify-step";
 
+const STEP_IDS = STEPS.map((s) => s.id) as StepId[];
+const stepParser = parseAsStringLiteral(STEP_IDS).withDefault("account");
+
 /**
  * The business sign-up: account holder → email code → organisation →
- * documents → review. Everything stays in this component's state until the
- * last step, which creates the profile, the business and its documents in
- * one request (src/app/session/sign-up) and signs the person in.
+ * documents → review. The last step creates the profile, the business and
+ * its documents in one request (src/app/session/sign-up) and signs in.
  *
- * Not persisted: the signup token behind the uploads lives an hour and is
- * not something to leave in storage. A reload starts over.
+ * The data lives in the sign-up store (zustand, this tab's sessionStorage),
+ * the step in the URL (nuqs, `?etape=`): a reload resumes, and the browser's
+ * back button goes back a step. A step the data does not reach yet — a link
+ * to `?etape=documents` before the email is verified — shows the furthest
+ * one that it does.
  */
 export function SignUpWizard() {
   const router = useRouter();
@@ -41,21 +50,30 @@ export function SignUpWizard() {
     staleTime: Infinity,
   });
 
-  const [step, setStep] = useState(0);
-  const [account, setAccount] = useState<AccountValues>();
-  const [token, setToken] = useState<string | null>(null);
-  const [organisation, setOrganisation] = useState<OrganisationValues>();
-  const [documents, setDocuments] = useState<DocumentsValue>({});
+  const [etape, setEtape] = useQueryState("etape", stepParser.withOptions({ history: "push" }));
+  const store = useSignUpStore();
+  const { account, token, organisation, documents, previews, done } = store;
+  const [hydrated, setHydrated] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [done, setDone] = useState(false);
   /** Where to go once the email is verified again (an expired token). */
-  const [resumeAt, setResumeAt] = useState<number | null>(null);
+  const [resumeAt, setResumeAt] = useState<StepId | null>(null);
 
-  function applyPreview(preview: string) {
-    setAccount({ firstName: "Awa", lastName: "Mabiala", email: "awa.mabiala@ecole-lauriers.cg", phone: "06 123 45 67" });
-    setToken("preview");
-    setOrganisation({
+  // sessionStorage is read after the first render (see the store).
+  useEffect(() => {
+    void Promise.resolve(useSignUpStore.persist.rehydrate()).then(() => setHydrated(true));
+  }, []);
+
+  // Development only: ?preview=<1-5|done> fills the store with sample data,
+  // to review a screen without filling the ones before it.
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development" || !hydrated) return;
+    const preview = new URLSearchParams(globalThis.location.search).get("preview");
+    if (!preview) return;
+    const s = useSignUpStore.getState();
+    s.setAccount({ firstName: "Awa", lastName: "Mabiala", email: "awa.mabiala@ecole-lauriers.cg", phone: "06 123 45 67" });
+    s.setToken("preview");
+    s.setOrganisation({
       name: "École Les Lauriers",
       category: "SCHOOL",
       legalForm: "ASSOCIATION",
@@ -69,26 +87,17 @@ export function SignUpWizard() {
       website: "https://ecole-lauriers.cg",
       description: "",
     });
-    setDocuments(
+    s.setDocuments(
       Number(preview) >= 5 || preview === "done"
-        ? { AGREMENT: { url: "", key: "", fileName: "agrement-ministere-2024.pdf" } }
+        ? { AGREMENT: { url: "", key: "preview", fileName: "agrement-ministere-2024.pdf", mimeType: "application/pdf" } }
         : {},
     );
-    if (preview === "done") setDone(true);
-    else setStep(Math.min(Math.max(Number(preview) - 1, 0), 4));
-  }
+    if (preview === "done") s.finish(false);
+    else void setEtape(STEP_IDS[Math.min(Math.max(Number(preview) - 1, 0), 4)]);
+  }, [hydrated, setEtape]);
 
-  // Development only: /auth/sign-up?preview=<1-5|done> opens that step with
-  // sample data, to review a screen without filling the ones before it.
-  // Dead code in a production build (NODE_ENV is inlined).
-  useEffect(() => {
-    if (process.env.NODE_ENV !== "development") return;
-    const preview = new URLSearchParams(globalThis.location.search).get("preview");
-    if (!preview) return;
-    const timer = setTimeout(() => applyPreview(preview), 0);
-    return () => clearTimeout(timer);
-  }, []);
-
+  const reachable = !account ? 0 : !token ? 1 : !organisation ? 2 : 4;
+  const step = Math.min(STEP_IDS.indexOf(etape), reachable);
 
   // Each step starts at the top of the form, not where the last one ended.
   useEffect(() => {
@@ -97,7 +106,7 @@ export function SignUpWizard() {
 
   function go(next: number) {
     setSubmitError(null);
-    setStep(next);
+    void setEtape(STEP_IDS[next]);
     if (token && next === 3) void reportSignUpProgress("DOCUMENTS", token);
     if (token && next === 4) void reportSignUpProgress("CONFIRMATION", token);
   }
@@ -108,7 +117,7 @@ export function SignUpWizard() {
     setSubmitError(null);
     const phone = toInternational(account.phone, "CG");
     try {
-      const { user } = await signUpSession({
+      const { user, signInRequired } = await signUpSession({
         firstName: account.firstName,
         lastName: account.lastName,
         email: account.email,
@@ -140,28 +149,132 @@ export function SignUpWizard() {
           })),
         },
       });
-      queryClient.setQueryData(sessionUserKey, user);
-      setDone(true);
+      if (user) queryClient.setQueryData(sessionUserKey, user);
+      store.finish(signInRequired);
       router.refresh();
     } catch (err) {
       // The signup token lives an hour; past that the email has to be
       // verified again. A new code goes out and, once it is entered, the
       // review comes back with everything as it was.
       if (httpStatusOf(err) === 403) {
-        setToken(null);
-        setResumeAt(4);
+        store.setToken(null);
+        setResumeAt("review");
         await sendSignUpCode({
           email: account.email,
           firstName: account.firstName,
           lastName: account.lastName,
         }).catch(() => undefined);
         toast.info("Pour finaliser, confirmez à nouveau votre adresse : un nouveau code vous a été envoyé.");
-        setStep(1);
+        void setEtape("verify");
         return;
       }
       setSubmitError(friendlyError(err, "La création du compte a échoué. Réessayez."));
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  function renderStep() {
+    if (!hydrated) {
+      return (
+        <div className="space-y-6">
+          <Skeleton className="h-16 w-3/4 rounded-xl" />
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-12 rounded-xl" />
+          ))}
+        </div>
+      );
+    }
+    if (done && account) {
+      return (
+        <SignUpDone
+          email={account.email}
+          signInRequired={store.signInRequired}
+          onLeave={() => store.reset()}
+        />
+      );
+    }
+    switch (step) {
+      case 0:
+        return (
+          <AccountStep
+            defaultValues={account}
+            onDone={async (values) => {
+              // The same, already verified address keeps its token: no
+              // second code for correcting a name.
+              if (token && values.email === account?.email) {
+                store.setAccount(values);
+                go(organisation ? 4 : 2);
+                return;
+              }
+              await sendSignUpCode({
+                email: values.email,
+                firstName: values.firstName,
+                lastName: values.lastName,
+              });
+              store.setToken(null);
+              store.setAccount(values);
+              go(1);
+            }}
+          />
+        );
+      case 1:
+        return account ? (
+          <VerifyStep
+            account={account}
+            onBack={() => go(0)}
+            onDone={(signupToken) => {
+              store.setToken(signupToken);
+              go(resumeAt ? STEP_IDS.indexOf(resumeAt) : 2);
+              setResumeAt(null);
+            }}
+          />
+        ) : null;
+      case 2:
+        return (
+          <OrganisationStep
+            catalog={catalog}
+            defaultValues={organisation}
+            onBack={() => go(0)}
+            onDone={(values) => {
+              // Another type asks for other papers.
+              if (values.category !== organisation?.category) store.setDocuments({});
+              store.setOrganisation(values);
+              go(3);
+            }}
+          />
+        );
+      case 3:
+        return catalog && organisation && token ? (
+          <DocumentsStep
+            catalog={catalog}
+            category={organisation.category}
+            signupToken={token}
+            value={documents}
+            previews={previews}
+            onChange={store.setDocuments}
+            onPreview={store.setPreview}
+            onBack={() => go(2)}
+            onDone={() => go(4)}
+          />
+        ) : null;
+      case 4:
+        return catalog && account && organisation ? (
+          <ReviewStep
+            catalog={catalog}
+            account={account}
+            organisation={organisation}
+            documents={documents}
+            previews={previews}
+            pending={submitting}
+            error={submitError}
+            onEdit={go}
+            onBack={() => go(3)}
+            onSubmit={() => void submit()}
+          />
+        ) : null;
+      default:
+        return null;
     }
   }
 
@@ -172,7 +285,7 @@ export function SignUpWizard() {
       </div>
 
       <section className="flex min-h-svh min-w-0 flex-col px-5 py-6 sm:px-10">
-        <div className="mx-auto flex w-full max-w-[34rem] flex-1 flex-col">
+        <div className="mx-auto flex w-full max-w-136 flex-1 flex-col">
           {/* Below lg there is no photo panel, and so no brand: it goes here. */}
           <Link href="/" aria-label="Rabotka Business — accueil" className="mb-8 self-start lg:hidden">
             <BusinessLockup compact />
@@ -181,75 +294,11 @@ export function SignUpWizard() {
           <ProgressHeader index={step} done={done} />
 
           <div className="flex-1 pt-12 pb-10 lg:pt-[9vh]">
-            <div key={done ? "done" : step} className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-right-4 motion-safe:duration-300">
-              {done && account ? (
-                <SignUpDone email={account.email} />
-              ) : step === 0 ? (
-                <AccountStep
-                  defaultValues={account}
-                  onDone={async (values) => {
-                    // The same, already verified address keeps its token: no
-                    // second code for correcting a name.
-                    if (token && values.email === account?.email) {
-                      setAccount(values);
-                      go(organisation ? 4 : 2);
-                      return;
-                    }
-                    await sendSignUpCode({
-                      email: values.email,
-                      firstName: values.firstName,
-                      lastName: values.lastName,
-                    });
-                    setToken(null);
-                    setAccount(values);
-                    go(1);
-                  }}
-                />
-              ) : step === 1 && account ? (
-                <VerifyStep
-                  account={account}
-                  onBack={() => go(0)}
-                  onDone={(signupToken) => {
-                    setToken(signupToken);
-                    go(resumeAt ?? 2);
-                    setResumeAt(null);
-                  }}
-                />
-              ) : step === 2 ? (
-                <OrganisationStep
-                  catalog={catalog}
-                  defaultValues={organisation}
-                  onBack={() => go(0)}
-                  onDone={(values) => {
-                    // Another category asks for other papers.
-                    if (values.category !== organisation?.category) setDocuments({});
-                    setOrganisation(values);
-                    go(3);
-                  }}
-                />
-              ) : step === 3 && catalog && organisation && token ? (
-                <DocumentsStep
-                  catalog={catalog}
-                  category={organisation.category}
-                  signupToken={token}
-                  value={documents}
-                  onChange={setDocuments}
-                  onBack={() => go(2)}
-                  onDone={() => go(4)}
-                />
-              ) : step === 4 && catalog && account && organisation ? (
-                <ReviewStep
-                  catalog={catalog}
-                  account={account}
-                  organisation={organisation}
-                  documents={documents}
-                  pending={submitting}
-                  error={submitError}
-                  onEdit={go}
-                  onBack={() => go(3)}
-                  onSubmit={() => void submit()}
-                />
-              ) : null}
+            <div
+              key={done ? "done" : step}
+              className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-right-4 motion-safe:duration-300"
+            >
+              {renderStep()}
             </div>
           </div>
 

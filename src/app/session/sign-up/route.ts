@@ -21,17 +21,15 @@ export async function POST(req: NextRequest) {
   const upstream = await backendPost(req, "/profile", body, { "x-session": "bearer" });
   const data = await readJson(upstream);
   if (!upstream.ok) return NextResponse.json(data, { status: upstream.status });
-  // A backend that ignored `X-Session: bearer` created the account but set
-  // its own cookie: no tokens to keep. Say so rather than store empty ones —
-  // the account exists, and signing in by email code works.
+  // A backend that ignored `X-Session: bearer` (one older than #934) created
+  // the account and set its own cookie: no tokens to keep. That is still a
+  // success — the account exists, and a retry would fail on the spent token
+  // and the taken email — so say it, and let the person sign in by code.
   if (typeof data.token !== "string" || typeof data.refreshToken !== "string") {
-    return NextResponse.json(
-      { message: "Votre compte est créé. Connectez-vous avec votre adresse email pour y accéder." },
-      { status: 502 },
-    );
+    return NextResponse.json({ user: null, signInRequired: true });
   }
 
-  const res = NextResponse.json({ user: data.user });
+  const res = NextResponse.json({ user: data.user, signInRequired: false });
   setSessionCookies(res, data as unknown as SessionTokens);
   return res;
 }

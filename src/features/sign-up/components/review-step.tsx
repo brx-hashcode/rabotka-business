@@ -10,6 +10,7 @@ import { useCountries } from "#/hooks/use-geo";
 import type { BusinessCatalog } from "#/lib/api/types";
 import { PUBLIC_SITE } from "#/features/landing/content";
 import type { AccountValues } from "./account-step";
+import { DocumentPreviewDialog } from "./document-preview";
 import type { DocumentsValue } from "./documents-step";
 import { FormError, StepActions, StepHeading } from "./form-bits";
 import type { OrganisationValues } from "./organisation-step";
@@ -20,6 +21,7 @@ export function ReviewStep({
   account,
   organisation,
   documents,
+  previews,
   pending,
   error,
   onEdit,
@@ -30,6 +32,7 @@ export function ReviewStep({
   account: AccountValues;
   organisation: OrganisationValues;
   documents: DocumentsValue;
+  previews: Record<string, string>;
   pending: boolean;
   error: string | null;
   onEdit: (step: number) => void;
@@ -37,6 +40,8 @@ export function ReviewStep({
   onSubmit: () => void;
 }>) {
   const [accepted, setAccepted] = useState(false);
+  const [viewing, setViewing] = useState<string | null>(null);
+  const viewed = viewing ? documents[viewing] : undefined;
   const { data: countries } = useCountries();
   const countryName = countries?.find((c) => c.code === organisation.country)?.name ?? organisation.country;
   const categoryLabel = catalog.categories.find((c) => c.value === organisation.category)?.label;
@@ -77,10 +82,14 @@ export function ReviewStep({
       <Summary title="Documents" onEdit={() => onEdit(3)}>
         {Object.entries(documents).map(([type, doc]) => (
           <Row key={type} label={docLabel.get(type) ?? type}>
-            <span className="inline-flex items-center gap-1.5">
-              <IconCircleCheckFilled className="size-4 text-whatsapp" />
+            <button
+              type="button"
+              onClick={() => setViewing(type)}
+              className="inline-flex max-w-full items-center gap-1.5 text-left underline-offset-4 hover:underline"
+            >
+              <IconCircleCheckFilled className="size-4 shrink-0 text-whatsapp" />
               <span className="truncate">{doc.fileName}</span>
-            </span>
+            </button>
           </Row>
         ))}
       </Summary>
@@ -99,6 +108,15 @@ export function ReviewStep({
           de Rabotka, et certifie être habilité(e) à représenter cette organisation.
         </span>
       </label>
+
+      <DocumentPreviewDialog
+        title={viewing ? (docLabel.get(viewing) ?? viewing) : ""}
+        doc={viewed ?? null}
+        src={viewed ? (previews[viewed.key] ?? (viewed.url || undefined)) : undefined}
+        onOpenChange={(open) => {
+          if (!open) setViewing(null);
+        }}
+      />
 
       <FormError message={error} />
       <StepActions onBack={onBack} continueLabel="Envoyer ma demande" pending={pending} disabled={!accepted} />
@@ -130,8 +148,15 @@ function Row({ label, children }: Readonly<{ label: string; children: ReactNode 
   );
 }
 
-/** After the send: what happens next, and the way into the space. */
-export function SignUpDone({ email }: Readonly<{ email: string }>) {
+/**
+ * After the send: what happens next, and the way in — straight into the
+ * space, or by an email code when the account was created without a session.
+ */
+export function SignUpDone({
+  email,
+  signInRequired,
+  onLeave,
+}: Readonly<{ email: string; signInRequired: boolean; onLeave: () => void }>) {
   return (
     <div className="space-y-8">
       <span className="flex size-14 items-center justify-center rounded-2xl bg-chip-green text-whatsapp-dark">
@@ -139,7 +164,11 @@ export function SignUpDone({ email }: Readonly<{ email: string }>) {
       </span>
       <StepHeading
         title="Votre demande a bien été envoyée"
-        text="Votre compte entreprise est créé. Nos équipes examinent maintenant les pièces de votre organisation ; votre compte sera activé dès leur validation."
+        text={
+          signInRequired
+            ? "Votre compte entreprise est créé. Connectez-vous avec votre adresse email pour y accéder ; nos équipes examinent les pièces de votre organisation."
+            : "Votre compte entreprise est créé. Nos équipes examinent maintenant les pièces de votre organisation ; votre compte sera activé dès leur validation."
+        }
       />
       <ol className="space-y-3 text-sm">
         {[
@@ -160,10 +189,10 @@ export function SignUpDone({ email }: Readonly<{ email: string }>) {
       </p>
       <Button
         variant="ghost"
-        render={<Link href="/espace" />}
+        render={<Link href={signInRequired ? "/auth/sign-in" : "/espace"} onClick={onLeave} />}
         className="h-12 rounded-full border-0 bg-ink px-6 text-white hover:bg-ink/90 sm:h-12"
       >
-        Accéder à mon espace
+        {signInRequired ? "Se connecter" : "Accéder à mon espace"}
       </Button>
     </div>
   );
