@@ -85,17 +85,26 @@ const CATEGORY_GROUPS: Record<string, string> = {
  * The organisation itself. Types and the legal forms each takes come from
  * the catalog the server checks against; choosing a type narrows the legal
  * forms, and clears one that no longer fits.
+ *
+ * Also the dashboard's edit form (/espace/organisation): no heading, no
+ * back button, its own submit label.
  */
 export function OrganisationStep({
   catalog,
   defaultValues,
   onBack,
   onDone,
+  heading = true,
+  submitLabel,
+  pending,
 }: Readonly<{
   catalog: BusinessCatalog | undefined;
   defaultValues?: OrganisationValues;
-  onBack: () => void;
+  onBack?: () => void;
   onDone: (values: OrganisationValues) => void;
+  heading?: boolean;
+  submitLabel?: string;
+  pending?: boolean;
 }>) {
   const form = useForm<OrganisationValues>({
     resolver: zodResolver(schema),
@@ -144,13 +153,13 @@ export function OrganisationStep({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onDone)} noValidate className="space-y-10">
-        <StepHeading
+        {heading && <StepHeading
           title="Votre organisation"
           text="Ces informations apparaissent sur votre profil entreprise et servent à sa vérification."
-        />
+        />}
 
         <Section title="Identité">
-          <TextField control={form.control} name="name" label="Raison sociale" autoComplete="organization" autoFocus />
+          <TextField control={form.control} name="name" label="Raison sociale" autoComplete="organization" autoFocus={heading} />
           <ComboboxField
             control={form.control}
             name="category"
@@ -224,7 +233,7 @@ export function OrganisationStep({
           />
         </Section>
 
-        <StepActions onBack={onBack} />
+        <StepActions onBack={onBack} continueLabel={submitLabel} pending={pending} />
       </form>
     </Form>
   );

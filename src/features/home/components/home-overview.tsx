@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { IconBriefcase, IconBuilding, IconUsers } from "@tabler/icons-react";
 
 import { useSessionUser } from "#/hooks/use-session-user";
@@ -9,6 +10,7 @@ const NEXT_UP = [
     icon: IconBuilding,
     title: "Votre organisation",
     text: "Les informations et documents de votre entreprise, et leur vérification.",
+    href: "/espace/organisation",
   },
   {
     icon: IconBriefcase,
@@ -38,17 +40,26 @@ export function HomeOverview() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        {NEXT_UP.map(({ icon: Icon, title, text }) => (
-          <div key={title} className="space-y-3 rounded-2xl bg-card p-5">
-            <span className="flex size-10 items-center justify-center rounded-full bg-page">
-              <Icon className="size-5" />
-            </span>
-            <div className="space-y-1">
-              <p className="font-medium">{title}</p>
-              <p className="text-muted-foreground text-sm">{text}</p>
+        {NEXT_UP.map(({ icon: Icon, title, text, href }) => {
+          const card = (
+            <div className="h-full space-y-3 rounded-2xl bg-card p-5 transition-colors group-hover:bg-card/70">
+              <span className="flex size-10 items-center justify-center rounded-full bg-page">
+                <Icon className="size-5" />
+              </span>
+              <div className="space-y-1">
+                <p className="font-medium">{title}</p>
+                <p className="text-muted-foreground text-sm">{text}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+          return href ? (
+            <Link key={title} href={href} className="group">
+              {card}
+            </Link>
+          ) : (
+            <div key={title}>{card}</div>
+          );
+        })}
       </div>
     </div>
   );
