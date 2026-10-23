@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { toast } from "sonner";
@@ -42,7 +41,6 @@ const stepParser = parseAsStringLiteral(STEP_IDS).withDefault("account");
  * one that it does.
  */
 export function SignUpWizard() {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const { data: catalog } = useQuery({
     queryKey: ["business-catalog"],
@@ -150,8 +148,10 @@ export function SignUpWizard() {
         },
       });
       if (user) queryClient.setQueryData(sessionUserKey, user);
+      // No router.refresh() here: the session cookie now exists, and a
+      // refresh re-runs the auth gate, which sends a signed-in visitor of
+      // /auth/* to /espace — before the done screen could be read.
       store.finish(signInRequired);
-      router.refresh();
     } catch (err) {
       // The signup token lives an hour; past that the email has to be
       // verified again. A new code goes out and, once it is entered, the
