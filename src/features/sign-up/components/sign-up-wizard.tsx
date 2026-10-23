@@ -291,8 +291,11 @@ export function SignUpWizard() {
             <BusinessLockup compact />
           </Link>
 
-          {/* Pinned while the form scrolls under it: where you are stays in view. */}
-          <div className="sticky top-0 z-20 bg-card pt-6 pb-4">
+          {/* Pinned while the form scrolls under it: where you are stays in
+              view. Frosted rather than opaque, with a short fade below, so
+              the fields blur away under it instead of being cut off; a
+              little wider than the column so focus rings vanish too. */}
+          <div className="sticky top-0 z-20 -mx-3 bg-card/70 px-3 pt-6 pb-4 backdrop-blur-xl backdrop-saturate-150 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-8 after:bg-linear-to-b after:from-card/80 after:to-transparent">
             <ProgressHeader index={step} done={done} />
           </div>
 
