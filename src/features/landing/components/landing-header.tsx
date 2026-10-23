@@ -35,7 +35,7 @@ const MENUS: { label: string; links: NavLink[]; wide?: boolean }[] = [
 export function LandingHeader() {
   return (
     <header className="sticky top-[env(safe-area-inset-top)] z-40 bg-header/95 text-header-foreground backdrop-blur">
-      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-6 px-4 sm:px-6">
+      <div className="mx-auto flex h-18 w-full max-w-7xl items-center gap-6 px-4 sm:px-6">
         <Link href="/" aria-label="Rabotka Business — accueil" className="shrink-0">
           <BusinessLockup compact />
         </Link>
@@ -50,14 +50,14 @@ export function LandingHeader() {
           <Button
             variant="ghost"
             render={<Link href={SIGN_IN_HREF} />}
-            className="hidden rounded-full px-4 hover:bg-black/5 sm:inline-flex"
+            className="hidden h-12 rounded-full px-6 py-3 text-[15px] hover:bg-black/5 sm:inline-flex sm:h-12 sm:text-[15px]"
           >
             Se connecter
           </Button>
           <Button
             variant="ghost"
             render={<Link href={SIGN_UP_HREF} />}
-            className="rounded-full bg-ink px-5 text-white hover:bg-ink/90"
+            className="h-12 rounded-full bg-ink px-7 py-3 text-[15px] text-white hover:bg-ink/90 sm:h-12 sm:text-[15px]"
           >
             Ouvrir un compte
           </Button>

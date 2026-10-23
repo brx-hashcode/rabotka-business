@@ -21,3 +21,58 @@ export type Paginated<T> = {
   page: number;
   limit: number;
 };
+
+/** `GET public/business/catalog` (businessCatalog in rabotka-backend). */
+export type DocumentRequirement = {
+  /** « One of » groups: any one type of a group satisfies it. */
+  required: string[][];
+  optional: string[];
+};
+
+export type BusinessCatalog = {
+  categories: {
+    value: string;
+    label: string;
+    legalForms: string[];
+    documents: DocumentRequirement;
+  }[];
+  legalForms: { value: string; label: string }[];
+  documentTypes: { value: string; label: string }[];
+  sizes: string[];
+};
+
+/** `POST profile/kyc-upload`: the stored file. `url` is a preview that expires. */
+export type UploadedFile = { url: string; key: string };
+
+export type BusinessSignUpBody = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  countryCode: string;
+  city?: string;
+  profileType: "EMPLOYER";
+  readAndApprovedPolicies: true;
+  signupToken: string;
+  business: {
+    name: string;
+    category: string;
+    legalForm?: string;
+    size?: string;
+    registrationNumber?: string;
+    taxId?: string;
+    statisticalId?: string;
+    address: string;
+    email?: string;
+    phone?: string;
+    website?: string;
+    description?: string;
+    documents: {
+      documentType: string;
+      url: string;
+      key: string;
+      fileName?: string;
+    }[];
+  };
+};

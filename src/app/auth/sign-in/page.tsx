@@ -7,7 +7,7 @@ import { SignInFlow } from "#/features/auth/components/sign-in-flow";
 import { HeroCarousel } from "#/components/hero-carousel";
 
 /** The landing's photos (public/media, sources in features/landing/content.ts). */
-const PHOTOS = ["boardroom", "executive", "interview", "meeting-table"].map(
+const PHOTOS = ["boardroom", "interview", "meeting-table", "manager-office"].map(
   (n) => `/media/${n}.jpg`,
 );
 
@@ -33,7 +33,7 @@ export default function SignInPage() {
         <HeroCarousel
           className="absolute inset-0"
           photos={PHOTOS}
-          sizes="60vw"
+          sizes="150vh"
           imageClassName="object-cover"
         />
         {/* Darkens the lower part only, for the text; the photo stays clear above. */}

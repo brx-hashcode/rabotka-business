@@ -33,8 +33,8 @@ export function AuthDialog({ children }: Readonly<{ children: ReactNode }>) {
           className={cn(
             "fixed z-50 overflow-y-auto bg-background outline-none",
             // Desktop: centered card.
-            "md:top-1/2 md:left-1/2 md:w-full md:max-w-sm md:-translate-x-1/2 md:-translate-y-1/2",
-            "md:rounded-2xl md:bg-card md:p-8 md:shadow-soft",
+            "md:top-1/2 md:left-1/2 md:w-full md:max-w-md md:-translate-x-1/2 md:-translate-y-1/2",
+            "md:rounded-3xl md:bg-card md:p-10 md:shadow-soft",
             "md:data-[state=open]:animate-in md:data-[state=open]:fade-in-0 md:data-[state=open]:zoom-in-95",
             // Mobile: a full page.
             "max-md:inset-0 max-md:flex max-md:flex-col max-md:px-4 max-md:pt-3 max-md:pb-8",
@@ -59,7 +59,7 @@ export function AuthDialog({ children }: Readonly<{ children: ReactNode }>) {
             <IconX className="size-4" />
           </DialogPrimitive.Close>
 
-          <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center max-md:pb-10">
+          <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center max-md:pb-10">
             {children}
           </div>
         </DialogPrimitive.Content>

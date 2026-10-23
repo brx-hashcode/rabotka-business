@@ -25,8 +25,16 @@ function forwardApi(request: NextRequest) {
 
   // The session lives in httpOnly cookies on this origin; the backend only
   // understands a bearer token, and never needs to see our cookies.
+  //
+  // Origin and Referer go too. The backend refuses a cookie-less POST whose
+  // Origin is not in its ALLOW_ORIGINS — a CSRF check on ITS session cookie,
+  // which never travels from here. Without this the anonymous sign-up calls
+  // (send-otp, uploads) would need this site listed there; with it, the
+  // request is what it is, a server-to-server call.
   const headers = new Headers(request.headers);
   headers.delete("cookie");
+  headers.delete("origin");
+  headers.delete("referer");
   const token = request.cookies.get(ACCESS_COOKIE)?.value;
   if (token) headers.set("authorization", `Bearer ${token}`);
 
