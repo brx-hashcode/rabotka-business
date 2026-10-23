@@ -1,8 +1,7 @@
 /**
  * The business sign-up, step by step. Each step has its own photo on the left
  * panel, chosen for what the step asks (public/media, sources in
- * features/landing/content.ts; verification is Unsplash 1573166953836,
- * account-manager 1642257834579).
+ * features/landing/content.ts; verification is Unsplash 1573166953836).
  */
 export const STEPS = [
   {
@@ -11,9 +10,10 @@ export const STEPS = [
     kicker: "Responsable du compte",
     title: "La personne qui pilotera vos recrutements",
     text: "Le compte entreprise est rattaché à une personne : c'est elle qui se connecte, publie les offres et échange avec les candidats.",
-    photo: "/media/account-manager.jpg",
-    // Keeps the face clear of the step list in the panel's top-left corner.
-    focus: "25% center",
+    photo: "/media/interview-room.jpg",
+    // The panel is tall and the photo wide: keep the right of the table, so
+    // no face sits behind the step list.
+    focus: "78% center",
   },
   {
     id: "verify",

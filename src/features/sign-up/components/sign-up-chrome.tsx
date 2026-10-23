@@ -17,7 +17,7 @@ const DONE_STEP = {
 
 export function StepPhotoPanel({ index, done }: Readonly<{ index: number; done: boolean }>) {
   const photos: { src: string; focus?: string }[] = [
-    ...STEPS.map((s) => ({ src: s.photo, focus: "focus" in s ? s.focus : undefined })),
+    ...STEPS.map((s) => ({ src: s.photo, focus: (s as { focus?: string }).focus })),
     { src: DONE_PHOTO },
   ];
   const active = done ? photos.length - 1 : index;
