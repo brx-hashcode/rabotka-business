@@ -6,14 +6,15 @@ import { toast } from "sonner";
 
 import { Skeleton } from "#/components/ui/skeleton";
 import { OrganisationStep, type OrganisationValues } from "#/features/sign-up/components/organisation-step";
-import { getMyBusiness, updateMyBusiness } from "#/lib/api/business-controller";
+import { getMyBusiness, myBusinessKey, updateMyBusiness } from "#/lib/api/business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { getBusinessCatalog } from "#/lib/api/signup-controller";
 import type { MyBusiness, UpdateMyBusiness } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
+import { sessionUserKey } from "#/hooks/use-session-user";
+import type { SessionUser } from "#/lib/api/types";
 import { OrganisationDocuments } from "./organisation-documents";
-
-export const myBusinessKey = ["business", "me"] as const;
+import { OrganisationLogo } from "./organisation-logo";
 
 function toValues(b: MyBusiness): OrganisationValues {
   return {
@@ -55,6 +56,11 @@ export function OrganisationPage() {
   const { data: catalog } = useQuery({ queryKey: ["business", "catalog"], queryFn: getBusinessCatalog, staleTime: Infinity });
 
   const setBusiness = (next: MyBusiness) => queryClient.setQueryData(myBusinessKey, next);
+  const setLogo = (url: string) => {
+    queryClient.setQueryData<MyBusiness>(myBusinessKey, (b) => (b ? { ...b, logoUrl: url } : b));
+    // The header's avatar is the same picture.
+    queryClient.setQueryData<SessionUser | null>(sessionUserKey, (u) => (u ? { ...u, avatar_url: url } : u));
+  };
 
   const save = useMutation({
     mutationFn: (body: UpdateMyBusiness) => updateMyBusiness(body),
@@ -93,6 +99,8 @@ export function OrganisationPage() {
           <ReviewBanner business={business} />
           <div className="grid items-start gap-6 lg:grid-cols-[1fr_26rem]">
             <section className="order-2 space-y-6 rounded-3xl bg-card p-5 sm:p-8 lg:order-1">
+              <OrganisationLogo name={business.name} logoUrl={business.logoUrl} onUploaded={setLogo} />
+              <div aria-hidden className="h-px bg-page" />
               <div className="space-y-1">
                 <h2 className="font-semibold text-lg">Informations</h2>
                 {business.verificationStatus === "VERIFIED" && (
