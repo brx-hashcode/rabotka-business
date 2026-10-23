@@ -296,7 +296,7 @@ export function SignUpWizard() {
               the fields blur away under it instead of being cut off; a
               little wider than the column so focus rings vanish too. */}
           <div className="sticky top-0 z-20 -mx-3 bg-card/70 px-3 pt-6 pb-4 backdrop-blur-xl backdrop-saturate-150 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-8 after:bg-linear-to-b after:from-card/80 after:to-transparent">
-            <ProgressHeader index={step} done={done} />
+            <ProgressHeader index={step} done={done} onBack={hydrated && step > 0 ? () => go(step - 1) : undefined} />
           </div>
 
           <div className="flex-1 pt-8 pb-10 lg:pt-[7vh]">
