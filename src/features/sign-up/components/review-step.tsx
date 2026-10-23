@@ -6,6 +6,7 @@ import { IconCircleCheckFilled, IconPencil } from "@tabler/icons-react";
 
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
+import { useCountries } from "#/hooks/use-geo";
 import type { BusinessCatalog } from "#/lib/api/types";
 import { PUBLIC_SITE } from "#/features/landing/content";
 import type { AccountValues } from "./account-step";
@@ -36,6 +37,8 @@ export function ReviewStep({
   onSubmit: () => void;
 }>) {
   const [accepted, setAccepted] = useState(false);
+  const { data: countries } = useCountries();
+  const countryName = countries?.find((c) => c.code === organisation.country)?.name ?? organisation.country;
   const categoryLabel = catalog.categories.find((c) => c.value === organisation.category)?.label;
   const legalFormLabel = catalog.legalForms.find((f) => f.value === organisation.legalForm)?.label;
   const docLabel = new Map(catalog.documentTypes.map((d) => [d.value, d.label]));
@@ -67,7 +70,7 @@ export function ReviewStep({
         {organisation.size && <Row label="Effectif">{`${organisation.size} salariés`}</Row>}
         {organisation.registrationNumber && <Row label="RCCM">{organisation.registrationNumber}</Row>}
         {organisation.taxId && <Row label="NIU">{organisation.taxId}</Row>}
-        <Row label="Adresse">{`${organisation.address}, ${organisation.city}`}</Row>
+        <Row label="Adresse">{`${organisation.address}, ${organisation.city}, ${countryName}`}</Row>
         {organisation.website && <Row label="Site web">{organisation.website}</Row>}
       </Summary>
 

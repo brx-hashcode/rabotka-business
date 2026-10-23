@@ -8,7 +8,7 @@ import { z } from "zod";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "#/components/ui/form";
 import { Textarea } from "#/components/ui/textarea";
-import { useCities } from "#/hooks/use-geo";
+import { useCities, useCountries } from "#/hooks/use-geo";
 import type { BusinessCatalog } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { Combobox, type ComboboxOption } from "./combobox";
@@ -25,6 +25,7 @@ const schema = z.object({
   taxId: optional(100),
   statisticalId: optional(100),
   address: z.string().trim().min(3, "Indiquez l'adresse").max(500),
+  country: z.string().length(2, "Choisissez le pays"),
   city: z.string().min(1, "Choisissez la ville"),
   website: z
     .string()
@@ -46,6 +47,8 @@ const EMPTY: OrganisationValues = {
   taxId: "",
   statisticalId: "",
   address: "",
+  // Congo-Brazzaville first: the catalog's types and papers are Congo's.
+  country: "CG",
   city: "",
   website: "",
   description: "",
@@ -100,7 +103,15 @@ export function OrganisationStep({
   });
   const category = useWatch({ control: form.control, name: "category" });
   const legalForm = useWatch({ control: form.control, name: "legalForm" });
-  const { data: cities } = useCities("CG");
+  const country = useWatch({ control: form.control, name: "country" });
+  // Both lists from the backend's public geo API (as the agent app's picker).
+  const { data: countries } = useCountries();
+  const { data: cities } = useCities(country);
+  const city = useWatch({ control: form.control, name: "city" });
+  useEffect(() => {
+    // A city from the previous country is not one of this country's.
+    if (cities && city && !cities.includes(city)) form.setValue("city", "");
+  }, [cities, city, form]);
 
   const allowedForms = useMemo(
     () => catalog?.categories.find((c) => c.value === category)?.legalForms ?? [],
@@ -170,14 +181,25 @@ export function OrganisationStep({
 
         <Section title="Siège">
           <TextField control={form.control} name="address" label="Adresse" autoComplete="street-address" placeholder="Rue, quartier, arrondissement" />
-          <ComboboxField
-            control={form.control}
-            name="city"
-            label="Ville"
-            placeholder="Choisir la ville"
-            searchPlaceholder="Rechercher une ville"
-            options={(cities ?? []).map((c) => ({ value: c, label: c }))}
-          />
+          <div className="grid gap-5 sm:grid-cols-2">
+            <ComboboxField
+              control={form.control}
+              name="country"
+              label="Pays"
+              placeholder="Choisir le pays"
+              searchPlaceholder="Rechercher un pays"
+              options={(countries ?? []).map((c) => ({ value: c.code, label: c.name }))}
+            />
+            <ComboboxField
+              control={form.control}
+              name="city"
+              label="Ville"
+              placeholder={country ? "Choisir la ville" : "Choisissez d'abord le pays"}
+              searchPlaceholder="Rechercher une ville"
+              disabled={!country}
+              options={(cities ?? []).map((c) => ({ value: c, label: c }))}
+            />
+          </div>
         </Section>
 
         <Section title="Présentation" note="facultatif">
