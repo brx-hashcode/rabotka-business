@@ -1,13 +1,9 @@
 import {
-  IconBriefcase,
   IconBuildingBank,
   IconBuildingSkyscraper,
   IconHeartHandshake,
   IconSchool,
-  IconShieldCheck,
-  IconSparkles,
   IconStethoscope,
-  IconUsersGroup,
   type Icon,
 } from "@tabler/icons-react";
 
@@ -101,7 +97,6 @@ export type Solution = {
   text: string;
   points: string[];
   photo: string;
-  icon: Icon;
 };
 
 export const SOLUTIONS: Solution[] = [
@@ -116,7 +111,6 @@ export const SOLUTIONS: Solution[] = [
       "Suivi centralisé des candidatures",
     ],
     photo: "/photos/team-laptops.jpg",
-    icon: IconBriefcase,
   },
   {
     id: "preselection",
@@ -129,7 +123,6 @@ export const SOLUTIONS: Solution[] = [
       "Mise en relation directe et sécurisée",
     ],
     photo: "/photos/candidates-panel.jpg",
-    icon: IconSparkles,
   },
   {
     id: "accompagnement",
@@ -142,7 +135,6 @@ export const SOLUTIONS: Solution[] = [
       "La décision finale vous appartient",
     ],
     photo: "/photos/interview-room.jpg",
-    icon: IconUsersGroup,
   },
   {
     id: "verification",
@@ -155,7 +147,6 @@ export const SOLUTIONS: Solution[] = [
       "Activation du compte après validation",
     ],
     photo: "/photos/documents.jpg",
-    icon: IconShieldCheck,
   },
 ];
 

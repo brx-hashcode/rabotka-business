@@ -33,7 +33,6 @@ export function SolutionsSection() {
         />
 
         {SOLUTIONS.map((solution, i) => {
-          const Icon = solution.icon;
           return (
             <div
               key={solution.id}
@@ -50,8 +49,7 @@ export function SolutionsSection() {
                 />
               </div>
               <div className="space-y-5">
-                <span className="inline-flex items-center gap-2 rounded-full bg-chip-green px-3 py-1 font-medium text-chip-green-foreground text-xs">
-                  <Icon className="size-4" />
+                <span className="inline-flex rounded-full bg-chip-green px-3 py-1 font-medium text-chip-green-foreground text-xs">
                   {solution.kicker}
                 </span>
                 <h3 className="font-semibold text-2xl tracking-tight sm:text-3xl">{solution.title}</h3>
