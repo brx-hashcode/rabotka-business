@@ -16,6 +16,8 @@ type SignUpState = {
   done: boolean;
   /** The account exists but no session came back: sign in by email code. */
   signInRequired: boolean;
+  /** The email the account was created with, for the done screen only. */
+  doneEmail: string | null;
 
   setAccount: (account: AccountValues) => void;
   setToken: (token: string | null) => void;
@@ -34,6 +36,7 @@ const INITIAL = {
   previews: {},
   done: false,
   signInRequired: false,
+  doneEmail: null,
 };
 
 /**
@@ -58,7 +61,18 @@ export const useSignUpStore = create<SignUpState>()(
       setOrganisation: (organisation) => set({ organisation }),
       setDocuments: (documents) => set({ documents }),
       setPreview: (key, url) => set({ previews: { ...get().previews, [key]: url } }),
-      finish: (signInRequired) => set({ done: true, signInRequired, token: null }),
+      // The form is emptied the moment the account exists: nothing of it
+      // stays in the tab, and coming back to the sign-up starts afresh. Only
+      // the email survives, in memory, for the done screen.
+      finish: (signInRequired) => {
+        for (const url of Object.values(get().previews)) URL.revokeObjectURL(url);
+        set({
+          ...INITIAL,
+          done: true,
+          signInRequired,
+          doneEmail: get().account?.email ?? null,
+        });
+      },
       reset: () => {
         for (const url of Object.values(get().previews)) URL.revokeObjectURL(url);
         set(INITIAL);
@@ -71,6 +85,11 @@ export const useSignUpStore = create<SignUpState>()(
       partialize: (state) => {
         const persisted: Partial<SignUpState> = { ...state };
         delete persisted.previews;
+        // Not kept either: a reload after the account exists shows an empty
+        // form, not the done screen with nothing behind it.
+        delete persisted.done;
+        delete persisted.signInRequired;
+        delete persisted.doneEmail;
         return persisted;
       },
     },
