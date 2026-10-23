@@ -7,7 +7,7 @@ import { SignInFlow } from "#/features/auth/components/sign-in-flow";
 import { HeroCarousel } from "#/components/hero-carousel";
 
 /** The landing's photos (public/media, sources in features/landing/content.ts). */
-const PHOTOS = ["boardroom", "executive", "interview", "meeting-table"].map(
+const PHOTOS = ["boardroom", "interview", "meeting-table", "manager-office"].map(
   (n) => `/media/${n}.jpg`,
 );
 
