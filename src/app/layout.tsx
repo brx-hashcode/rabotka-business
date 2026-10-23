@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { cookies, headers } from "next/headers";
 
 import { Providers } from "#/app/providers";
-import { SplashScreen } from "#/components/splash-screen";
 import { REFRESH_COOKIE } from "#/lib/auth/cookies";
 import "./globals.css";
 
@@ -78,7 +77,6 @@ export default async function RootLayout({ children, modal }: LayoutProps<"/">) 
       {/* Extensions such as Grammarly add attributes to <body> before React
           hydrates; only this element's own attributes are exempt. */}
       <body className="min-h-svh bg-header antialiased" suppressHydrationWarning>
-        <SplashScreen />
         {/* Behind the iPhone status bar in the installed app (zero tall
             anywhere else), fixed so scrolled content never slides under the
             clock. The wrapper below starts beneath it. */}
