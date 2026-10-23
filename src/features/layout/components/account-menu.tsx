@@ -11,19 +11,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { useQuery } from "@tanstack/react-query";
+
 import { useSessionUser } from "#/hooks/use-session-user";
+import { getMyBusiness, myBusinessKey } from "#/lib/api/business-controller";
 import { getInitials } from "#/lib/utils";
 import { LogoutDialog } from "./logout-dialog";
 
 /** The signed-in person in the header: avatar, name, email, sign-out. */
 export function AccountMenu() {
   const { data: user } = useSessionUser();
+  // The organisation, for its logo: the login's cache is gone after a reload.
+  const { data: business } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
+  const picture = user?.avatar_url ?? business?.logoUrl ?? null;
   const [confirmLogout, setConfirmLogout] = useState(false);
   const name = user ? `${user.first_name} ${user.last_name}`.trim() : "";
 
   const avatar = (size: string) => (
     <Avatar className={size}>
-      {user?.avatar_url && <AvatarImage src={user.avatar_url} alt={name} />}
+      {picture && <AvatarImage src={picture} alt={name} className="object-cover" />}
       <AvatarFallback className="bg-whatsapp/15 font-medium text-whatsapp-dark">
         {name ? getInitials(name) : ""}
       </AvatarFallback>

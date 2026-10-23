@@ -95,6 +95,8 @@ export type BusinessDocumentVersion = {
 export type MyBusiness = {
   id: string;
   name: string;
+  /** The account's profile picture, used as the logo. */
+  logoUrl: string | null;
   category: string;
   categoryLabel: string;
   legalForm: string | null;
