@@ -50,14 +50,14 @@ export function LandingHeader() {
           <Button
             variant="ghost"
             render={<Link href={SIGN_IN_HREF} />}
-            className="hidden rounded-full px-4 hover:bg-black/5 sm:inline-flex"
+            className="hidden h-11 rounded-full px-5 text-[15px] hover:bg-black/5 sm:inline-flex sm:h-11 sm:text-[15px]"
           >
             Se connecter
           </Button>
           <Button
             variant="ghost"
             render={<Link href={SIGN_UP_HREF} />}
-            className="rounded-full bg-ink px-5 text-white hover:bg-ink/90"
+            className="h-11 rounded-full bg-ink px-6 text-[15px] text-white hover:bg-ink/90 sm:h-11 sm:text-[15px]"
           >
             Ouvrir un compte
           </Button>
