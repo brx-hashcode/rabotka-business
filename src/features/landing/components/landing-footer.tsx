@@ -1,12 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { IconMail, IconPhone } from "@tabler/icons-react";
+import { IconMail, IconMapPin, IconPhone } from "@tabler/icons-react";
 
 import { BrandLogo } from "#/components/brand-logo";
 import { Button } from "#/components/ui/button";
 import { useSupportContact } from "#/hooks/use-support-contact";
+import type { SupportContact } from "#/lib/api/public-controller";
 import { PUBLIC_SITE, SIGN_IN_HREF, SIGN_UP_HREF } from "../content";
+
+function contactCards(contact: SupportContact | undefined) {
+  if (!contact) return [];
+  return [
+    contact.email && {
+      label: "Écrire à nos équipes",
+      value: contact.email,
+      href: `mailto:${contact.email}`,
+      icon: IconMail,
+    },
+    contact.phone && {
+      label: "Nous appeler",
+      value: contact.phone,
+      href: `tel:${contact.phone.replace(/\s/g, "")}`,
+      icon: IconPhone,
+    },
+    contact.address && {
+      label: "Nous rendre visite",
+      value: contact.address,
+      href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.address)}`,
+      icon: IconMapPin,
+    },
+  ].filter((card) => !!card);
+}
 
 /** The closing call to action, then Rabotka's contact as admins set it. */
 export function ClosingCta() {
@@ -43,36 +68,32 @@ export function ClosingCta() {
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-[1.2fr_1fr_1fr]">
-          <div className="space-y-1 rounded-3xl bg-card p-6">
+        {/* Rabotka's contact as admins set it (GET public/config/contact):
+            a card per field that is filled in, none of it in the code. */}
+        <div className="flex flex-col gap-4 md:flex-row">
+          <div className="space-y-1 rounded-3xl bg-card p-6 md:flex-[1.2]">
             <h3 className="font-semibold text-lg">Besoin d&apos;un accompagnement ?</h3>
             <p className="text-muted-foreground text-sm">
               Nos équipes vous conseillent et vous accompagnent dans la mise en
               place de votre compte.
             </p>
           </div>
-          {contact?.email && (
-            <a href={`mailto:${contact.email}`} className="flex items-center gap-4 rounded-3xl bg-card p-6 transition-colors hover:bg-card/70">
+          {contactCards(contact).map((card) => (
+            <a
+              key={card.label}
+              href={card.href}
+              {...(card.href.startsWith("https:") ? { target: "_blank", rel: "noreferrer" } : {})}
+              className="flex items-center gap-4 rounded-3xl bg-card p-6 transition-colors hover:bg-card/70 md:flex-1"
+            >
               <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-page">
-                <IconMail className="size-5" />
+                <card.icon className="size-5" />
               </span>
               <span className="min-w-0">
-                <span className="block font-medium">Écrire à nos équipes</span>
-                <span className="block truncate text-muted-foreground text-sm">{contact.email}</span>
+                <span className="block font-medium">{card.label}</span>
+                <span className="block truncate text-muted-foreground text-sm">{card.value}</span>
               </span>
             </a>
-          )}
-          {contact?.phone && (
-            <a href={`tel:${contact.phone.replace(/\s/g, "")}`} className="flex items-center gap-4 rounded-3xl bg-card p-6 transition-colors hover:bg-card/70">
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-page">
-                <IconPhone className="size-5" />
-              </span>
-              <span className="min-w-0">
-                <span className="block font-medium">Nous appeler</span>
-                <span className="block truncate text-muted-foreground text-sm">{contact.phone}</span>
-              </span>
-            </a>
-          )}
+          ))}
         </div>
       </div>
     </section>
