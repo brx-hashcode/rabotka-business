@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { IconChevronDown, IconMenu2 } from "@tabler/icons-react";
+import { IconArrowRight, IconChevronDown, IconMenu2 } from "@tabler/icons-react";
 
 import { BusinessLockup } from "#/components/business-lockup";
 import { Button } from "#/components/ui/button";
@@ -75,32 +76,102 @@ function DesktopMenu({ label, links, wide }: Readonly<{ label: string; links: Na
         {label}
         <IconChevronDown className="size-4 transition-transform group-data-[state=open]:rotate-180" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="start"
-        sideOffset={8}
-        onCloseAutoFocus={(e) => e.preventDefault()}
-        className={
-          wide
-            ? "grid w-[34rem] grid-cols-2 gap-1 rounded-3xl border-0 bg-card p-3 shadow-soft"
-            : "w-72 rounded-3xl border-0 bg-card p-2 shadow-soft"
-        }
-      >
+      {wide ? (
+        <SolutionsPanel links={links} />
+      ) : (
+        <DropdownMenuContent
+          align="start"
+          sideOffset={8}
+          onCloseAutoFocus={(e) => e.preventDefault()}
+          className="w-72 rounded-3xl border-0 bg-card p-2 shadow-soft"
+        >
+          {links.map((link) => (
+            <DropdownMenuItem
+              key={link.label}
+              asChild
+              className="cursor-pointer flex-col items-start gap-0.5 rounded-2xl px-3 py-2.5 focus:bg-page"
+            >
+              <a href={link.href}>
+                <span className="font-medium text-sm">{link.label}</span>
+                {link.description && (
+                  <span className="text-muted-foreground text-xs leading-snug">{link.description}</span>
+                )}
+              </a>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      )}
+    </DropdownMenu>
+  );
+}
+
+/**
+ * The Solutions menu as a small mega-menu: each solution with its photo from
+ * the page, and a featured panel to open an account.
+ */
+function SolutionsPanel({ links }: Readonly<{ links: NavLink[] }>) {
+  return (
+    <DropdownMenuContent
+      align="start"
+      sideOffset={8}
+      onCloseAutoFocus={(e) => e.preventDefault()}
+      className="grid w-[46rem] grid-cols-[1fr_15rem] gap-3 rounded-3xl border-0 bg-card p-3 shadow-soft"
+    >
+      <div className="grid grid-cols-1 gap-1">
         {links.map((link) => (
           <DropdownMenuItem
             key={link.label}
             asChild
-            className="cursor-pointer flex-col items-start gap-0.5 rounded-2xl px-3 py-2.5 focus:bg-page"
+            className="group cursor-pointer items-center gap-4 rounded-2xl p-2.5 focus:bg-page"
           >
             <a href={link.href}>
-              <span className="font-medium text-sm">{link.label}</span>
-              {link.description && (
-                <span className="text-muted-foreground text-xs leading-snug">{link.description}</span>
+              {link.photo && (
+                <span className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-page">
+                  <Image
+                    src={link.photo}
+                    alt=""
+                    fill
+                    sizes="64px"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105 group-focus:scale-105"
+                  />
+                </span>
               )}
+              <span className="min-w-0">
+                <span className="block font-medium text-sm">{link.label}</span>
+                {link.description && (
+                  <span className="block text-muted-foreground text-xs leading-snug">{link.description}</span>
+                )}
+              </span>
             </a>
           </DropdownMenuItem>
         ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </div>
+
+      <DropdownMenuItem
+        asChild
+        className="group relative cursor-pointer flex-col items-stretch justify-end overflow-hidden rounded-2xl bg-ink p-4 text-white focus:bg-ink focus:text-white"
+      >
+        <Link href={SIGN_UP_HREF}>
+          <Image
+            src="/media/boardroom.jpg"
+            alt=""
+            fill
+            sizes="240px"
+            className="object-cover opacity-90 transition-transform duration-500 group-hover:scale-105"
+          />
+          <span className="absolute inset-0 bg-linear-to-t from-black/85 via-black/40 to-transparent" />
+          <span className="relative space-y-2">
+            <span className="block font-semibold text-base leading-snug">
+              Toutes vos solutions de recrutement, en un seul espace
+            </span>
+            <span className="inline-flex items-center gap-1.5 font-medium text-sm text-white">
+              Ouvrir un compte entreprise
+              <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+            </span>
+          </span>
+        </Link>
+      </DropdownMenuItem>
+    </DropdownMenuContent>
   );
 }
 

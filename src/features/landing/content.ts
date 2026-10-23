@@ -28,28 +28,38 @@ export const PUBLIC_SITE = "https://www.rabotka.work";
 /** One photo, not a carousel: a manager at work, in an office. */
 export const HERO_PHOTO = "/media/manager-office.jpg";
 
-export type NavLink = { href: string; label: string; description?: string };
+export type NavLink = {
+  href: string;
+  label: string;
+  description?: string;
+  /** A thumbnail in the Solutions menu: the solution's own photo on the page. */
+  photo?: string;
+};
 
 export const SOLUTION_LINKS: NavLink[] = [
   {
     href: "#diffusion",
     label: "Diffusion d'offres",
     description: "Missions, CDD, CDI et stages, publiés en quelques minutes.",
+    photo: "/media/team-laptops.jpg",
   },
   {
     href: "#preselection",
     label: "Présélection des candidats",
     description: "Les profils les plus pertinents pour chaque poste, en priorité.",
+    photo: "/media/candidates-panel.jpg",
   },
   {
     href: "#accompagnement",
     label: "Recrutement accompagné",
     description: "Un réseau d'agents qui mobilise les candidats sur le terrain.",
+    photo: "/media/interview-room.jpg",
   },
   {
     href: "#verification",
     label: "Compte entreprise vérifié",
     description: "Votre organisation authentifiée sur pièces officielles.",
+    photo: "/media/compliance-officer.jpg",
   },
 ];
 
