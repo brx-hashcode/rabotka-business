@@ -58,7 +58,7 @@ export function LandingHeader() {
           <Button
             variant="ghost"
             render={<Link href={SIGN_UP_HREF} />}
-            className="h-12 rounded-full bg-ink px-7 py-3 text-[15px] text-white hover:bg-ink/90 sm:h-12 sm:text-[15px]"
+            className="h-10 rounded-full bg-ink px-4 py-2 text-sm text-white hover:bg-ink/90 sm:h-12 sm:px-7 sm:py-3 sm:text-[15px]"
           >
             Ouvrir un compte
           </Button>
