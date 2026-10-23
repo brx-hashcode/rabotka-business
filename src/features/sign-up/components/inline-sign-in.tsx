@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -21,7 +20,6 @@ const RESEND_SECONDS = 60;
  * — no detour through the sign-in page.
  */
 export function InlineSignIn({ email, onSignedIn }: Readonly<{ email: string; onSignedIn: () => void }>) {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -54,8 +52,9 @@ export function InlineSignIn({ email, onSignedIn }: Readonly<{ email: string; on
       const { user } = await verifySession({ email, otp });
       queryClient.setQueryData(sessionUserKey, user);
       onSignedIn();
-      router.replace("/espace");
-      router.refresh();
+      // A full load, for the reason SignUpDone gives: never the sign-in dialog.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- deliberate full load, see above
+      globalThis.location.assign("/espace");
     } catch (err) {
       setError(friendlyError(err, "Ce code n'a pas fonctionné. Réessayez.", { keepUnauthorized: true }));
       setPending(false);
