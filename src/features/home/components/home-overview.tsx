@@ -45,7 +45,7 @@ export function HomeOverview() {
   const s = subscription.data;
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6 pt-2">
+    <div className="w-full space-y-6 pt-2">
       <Hero firstName={user?.first_name} business={b} subscription={s} loading={business.isLoading || subscription.isLoading} />
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -89,8 +89,12 @@ function Hero({
       </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {loading || !e || !business ? (
+        {loading ? (
           [0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-32 rounded-2xl" />)
+        ) : !e || !business ? (
+          <p className="rounded-2xl bg-page p-5 text-muted-foreground text-sm sm:col-span-2 xl:col-span-4">
+            Ces informations sont indisponibles pour le moment. Réessayez dans un instant.
+          </p>
         ) : (
           <>
             <StatTile
@@ -149,7 +153,11 @@ function SubscriptionCard({ subscription, loading }: Readonly<{ subscription?: M
   if (loading || !subscription) {
     return (
       <Card title="Abonnement">
-        <Skeleton className="h-52 rounded-2xl" />
+        {loading ? (
+          <Skeleton className="h-52 rounded-2xl" />
+        ) : (
+          <p className="text-muted-foreground text-sm">Votre abonnement est indisponible pour le moment.</p>
+        )}
       </Card>
     );
   }
