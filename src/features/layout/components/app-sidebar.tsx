@@ -4,11 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { IconHelpCircle, IconLogout } from "@tabler/icons-react";
+import { IconLogout } from "@tabler/icons-react";
 
 import { BusinessLockup } from "#/components/business-lockup";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
-import { useSupportContact } from "#/hooks/use-support-contact";
 import { getMyBusiness, myBusinessKey } from "#/lib/api/business-controller";
 import { cn, getInitials } from "#/lib/utils";
 import { LogoutDialog } from "./logout-dialog";
@@ -16,13 +15,12 @@ import { isActive, NAV_ITEMS } from "./nav-items";
 
 /**
  * The space's white rail: the brand, the pages (the ones still to come
- * greyed « Bientôt »), help, and the organisation's card with sign-out.
+ * greyed « Bientôt ») and the organisation's card with sign-out.
  * `onNavigate` closes the mobile sheet after a tap.
  */
 export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>) {
   const pathname = usePathname();
   const { data: business } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
-  const { data: contact } = useSupportContact();
   const [confirmLogout, setConfirmLogout] = useState(false);
 
   return (
@@ -72,16 +70,9 @@ export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>
         })}
       </nav>
 
-      <div className="mt-auto flex flex-col gap-1 pt-6">
-        <a
-          href={contact?.email ? `mailto:${contact.email}` : "mailto:contact@rabotka.work"}
-          className="flex h-12 items-center gap-3 rounded-2xl px-3 text-[15px] text-muted-foreground transition-colors hover:bg-page hover:text-foreground"
-        >
-          <IconHelpCircle className="size-5" />
-          Aide
-        </a>
+      <div className="mt-auto pt-6">
 
-        <div className="mt-3 flex items-center gap-3 rounded-2xl bg-page p-3">
+        <div className="flex items-center gap-3 rounded-2xl bg-page p-3">
           <Avatar className="size-10 rounded-xl">
             {business?.logoUrl && <AvatarImage src={business.logoUrl} alt="" className="object-cover" />}
             <AvatarFallback className="rounded-xl bg-brand-lime font-semibold text-[#0f2414]">
