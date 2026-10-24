@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   IconChevronLeft,
@@ -13,7 +14,6 @@ import {
 } from "@tabler/icons-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
 import { Skeleton } from "#/components/ui/skeleton";
 import { getCandidate, getCandidatePortfolio } from "#/lib/api/candidate-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
@@ -141,7 +141,7 @@ export function CandidateProfile({ workerId }: Readonly<{ workerId: string }>) {
               return (
                 <article key={item.id} className="space-y-2 rounded-2xl bg-page p-3">
                   {urls.length > 0 && (
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                       {urls.map((url, index) => (
                         <button
                           key={url}
@@ -150,12 +150,8 @@ export function CandidateProfile({ workerId }: Readonly<{ workerId: string }>) {
                           className="group relative aspect-square overflow-hidden rounded-xl bg-card"
                           aria-label="Agrandir l'image"
                         >
-                          {/* Remote storage images of any size: not for next/image. */}
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
+                          <SafeImage
                             src={url}
-                            alt=""
-                            loading="lazy"
                             className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
                           />
                         </button>
@@ -176,6 +172,31 @@ export function CandidateProfile({ workerId }: Readonly<{ workerId: string }>) {
   );
 }
 
+/**
+ * A remote image (storage, any size: not for next/image) that says so when
+ * the file is gone rather than leaving a blank space.
+ */
+function SafeImage({
+  src,
+  className,
+  fallbackClassName,
+  eager,
+}: Readonly<{ src: string; className?: string; fallbackClassName?: string; eager?: boolean }>) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <span className={cn("flex flex-col items-center justify-center gap-1 text-muted-foreground text-xs", fallbackClassName ?? "size-full")}>
+        <IconPhoto className="size-6" />
+        Image indisponible
+      </span>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt="" loading={eager ? "eager" : "lazy"} onError={() => setFailed(true)} className={className} />
+  );
+}
+
 function Figure({ label, value }: Readonly<{ label: string; value: React.ReactNode }>) {
   return (
     <div className="rounded-2xl bg-page p-4">
@@ -186,9 +207,11 @@ function Figure({ label, value }: Readonly<{ label: string; value: React.ReactNo
 }
 
 /**
- * A realisation's images, large, one at a time, inside the space. Its own
- * (nested) dialog: inside the profile dialog a `fixed` overlay would be
- * confined to that dialog's box, and this way Escape closes only the image.
+ * A realisation's images, large, one at a time, inside the space. Portalled
+ * to <body>: inside the profile dialog (a transformed box) a `fixed` layer is
+ * confined to that box and scrolls with it. The profile dialog ignores clicks
+ * on it (`data-image-viewer`, see CandidateDialog), and Escape — caught before
+ * the dialog's own handler — closes the image only.
  */
 function ImageViewer({ images, index, onClose }: Readonly<{ images: string[]; index: number; onClose: () => void }>) {
   const [i, setI] = useState(index);
@@ -197,37 +220,59 @@ function ImageViewer({ images, index, onClose }: Readonly<{ images: string[]; in
   const nav =
     "absolute top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#0f2414] hover:bg-white";
 
-  return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent
-        showClose={false}
-        onKeyDown={(e) => {
-          if (e.key === "ArrowRight") step(1);
-          if (e.key === "ArrowLeft") step(-1);
-        }}
-        className="top-0 left-0 flex h-svh w-screen max-w-none translate-x-0 translate-y-0 items-center justify-center rounded-none border-0 bg-black/90 p-4 shadow-none sm:max-w-none"
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        onClose();
+      } else if (e.key === "ArrowRight") setI((x) => (x + 1) % images.length);
+      else if (e.key === "ArrowLeft") setI((x) => (x - 1 + images.length) % images.length);
+    };
+    globalThis.addEventListener("keydown", onKey, true);
+    return () => globalThis.removeEventListener("keydown", onKey, true);
+  }, [images.length, onClose]);
+
+  return createPortal(
+    <div
+      data-image-viewer
+      role="dialog"
+      aria-modal
+      aria-label={`Image ${i + 1} sur ${images.length}`}
+      // A modal dialog sets pointer-events: none on <body>; this layer sits there.
+      style={{ pointerEvents: "auto" }}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 sm:p-10"
+    >
+      <button type="button" aria-label="Fermer" onClick={onClose} className="absolute inset-0 cursor-default" />
+      <SafeImage
+        key={images[i]}
+        src={images[i]}
+        eager
+        className="relative max-h-full max-w-full rounded-2xl object-contain"
+        fallbackClassName="relative h-64 w-80 max-w-full rounded-2xl bg-white/10 text-white/70"
+      />
+      <button
+        type="button"
+        aria-label="Fermer"
+        onClick={onClose}
+        className="absolute top-4 right-4 flex size-11 items-center justify-center rounded-full bg-white/90 text-[#0f2414]"
       >
-        <DialogTitle className="sr-only">Image {i + 1} sur {images.length}</DialogTitle>
-        <DialogDescription className="sr-only">Réalisation du candidat</DialogDescription>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={images[i]} alt="" className="max-h-full max-w-full rounded-2xl object-contain" />
-        <DialogClose
-          aria-label="Fermer"
-          className="absolute top-4 right-4 flex size-11 items-center justify-center rounded-full bg-white/90 text-[#0f2414]"
-        >
-          <IconX className="size-5" />
-        </DialogClose>
-        {many && (
-          <>
-            <button type="button" aria-label="Image précédente" className={cn(nav, "left-4")} onClick={() => step(-1)}>
-              <IconChevronLeft className="size-5" />
-            </button>
-            <button type="button" aria-label="Image suivante" className={cn(nav, "right-4")} onClick={() => step(1)}>
-              <IconChevronRight className="size-5" />
-            </button>
-          </>
-        )}
-      </DialogContent>
-    </Dialog>
+        <IconX className="size-5" />
+      </button>
+      {many && (
+        <>
+          <button type="button" aria-label="Image précédente" className={cn(nav, "left-4")} onClick={() => step(-1)}>
+            <IconChevronLeft className="size-5" />
+          </button>
+          <button type="button" aria-label="Image suivante" className={cn(nav, "right-4")} onClick={() => step(1)}>
+            <IconChevronRight className="size-5" />
+          </button>
+          <p className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-3 py-1 font-medium text-[#0f2414] text-sm">
+            {i + 1} / {images.length}
+          </p>
+        </>
+      )}
+    </div>,
+    document.body,
   );
 }
