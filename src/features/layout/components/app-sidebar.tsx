@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { getMyBusiness, myBusinessKey } from "#/lib/api/business-controller";
 import { cn, getInitials } from "#/lib/utils";
 import { LogoutDialog } from "./logout-dialog";
-import { isActive, NAV_ITEMS } from "./nav-items";
+import { isActive, NAV_GROUPS } from "./nav-items";
 
 /**
  * The space's white rail: the brand, the pages (the ones still to come
@@ -35,43 +35,49 @@ export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>
         </span>
       </Link>
 
-      <p className="mt-8 mb-3 px-3 text-muted-foreground text-sm">Navigation</p>
-      <nav className="flex flex-col gap-1">
-        {NAV_ITEMS.map(({ label, href, icon: Icon, soon }) => {
-          if (soon) {
-            return (
-              <span
-                key={href}
-                aria-disabled
-                className="flex h-12 cursor-not-allowed items-center gap-3 rounded-2xl px-3 text-[15px] text-muted-foreground/60"
-              >
-                <Icon className="size-5" />
-                <span className="flex-1">{label}</span>
-                <span className="rounded-full bg-page px-2 py-0.5 text-[11px] text-muted-foreground">Bientôt</span>
-              </span>
-            );
-          }
-          const active = isActive(pathname, href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              onClick={onNavigate}
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "flex h-12 items-center gap-3 rounded-2xl px-3 font-medium text-[15px] transition-colors",
-                active ? "bg-brand-lime text-[#0f2414]" : "text-muted-foreground hover:bg-page hover:text-foreground",
-              )}
-            >
-              <Icon className="size-5" />
-              {label}
-            </Link>
-          );
-        })}
+      <nav className="mt-6 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto">
+        {NAV_GROUPS.map((group) => (
+          <div key={group.title ?? "home"} className="flex flex-col gap-0.5">
+            {group.title && (
+              <p className="mb-1 px-3 font-medium text-[11px] text-muted-foreground uppercase tracking-wider">{group.title}</p>
+            )}
+            {group.items.map(({ label, href, icon: Icon, soon }) => {
+              if (soon) {
+                return (
+                  <span
+                    key={href}
+                    aria-disabled
+                    title="Bientôt disponible"
+                    className="flex h-10 cursor-not-allowed items-center gap-3 rounded-xl px-3 text-muted-foreground/55 text-sm"
+                  >
+                    <Icon className="size-[18px] shrink-0" />
+                    <span className="flex-1 truncate">{label}</span>
+                    <span className="shrink-0 rounded-full bg-page px-1.5 py-px text-[10px] text-muted-foreground">Bientôt</span>
+                  </span>
+                );
+              }
+              const active = isActive(pathname, href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={onNavigate}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "flex h-10 items-center gap-3 rounded-xl px-3 font-medium text-sm transition-colors",
+                    active ? "bg-brand-lime text-[#0f2414]" : "text-foreground/80 hover:bg-page hover:text-foreground",
+                  )}
+                >
+                  <Icon className="size-[18px] shrink-0" />
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
-      <div className="mt-auto pt-6">
-
+      <div className="pt-4">
         <div className="flex items-center gap-3 rounded-2xl bg-page p-3">
           <Avatar className="size-10 rounded-xl">
             {business?.logoUrl && <AvatarImage src={business.logoUrl} alt="" className="object-cover" />}

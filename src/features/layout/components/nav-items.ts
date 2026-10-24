@@ -1,9 +1,14 @@
 import {
+  IconAlertCircle,
   IconBriefcase,
   IconBuilding,
+  IconCalendarCheck,
   IconCreditCard,
+  IconFileInvoice,
   IconLayoutDashboard,
-  IconMessage,
+  IconMessageCircle,
+  IconSearch,
+  IconUserCheck,
   IconUsers,
   type Icon,
 } from "@tabler/icons-react";
@@ -16,15 +21,48 @@ export type NavItem = {
   soon?: boolean;
 };
 
-/** The business space's pages, in sidebar order (also the ⌘K list). */
-export const NAV_ITEMS: NavItem[] = [
-  { label: "Tableau de bord", href: "/espace", icon: IconLayoutDashboard },
-  { label: "Mon organisation", href: "/espace/organisation", icon: IconBuilding },
-  { label: "Abonnement", href: "/espace/abonnement", icon: IconCreditCard },
-  { label: "Offres", href: "/espace/offres", icon: IconBriefcase, soon: true },
-  { label: "Candidats", href: "/espace/candidats", icon: IconUsers, soon: true },
-  { label: "Messages", href: "/espace/messages", icon: IconMessage, soon: true },
+export type NavGroup = { title: string | null; items: NavItem[] };
+
+/**
+ * The business space's pages, grouped as an employer works: the employer
+ * options of the client app (offres, candidatures, missions, discussions,
+ * profils contactés, réclamations) plus what is a business's own
+ * (organisation, abonnement, factures). Pages not built yet are « Bientôt ».
+ */
+export const NAV_GROUPS: NavGroup[] = [
+  {
+    title: null,
+    items: [{ label: "Tableau de bord", href: "/espace", icon: IconLayoutDashboard }],
+  },
+  {
+    title: "Recrutement",
+    items: [
+      { label: "Mes offres", href: "/espace/offres", icon: IconBriefcase, soon: true },
+      { label: "Candidatures", href: "/espace/candidatures", icon: IconUsers, soon: true },
+      { label: "Recherche", href: "/espace/recherche", icon: IconSearch, soon: true },
+      { label: "Missions", href: "/espace/missions", icon: IconCalendarCheck, soon: true },
+    ],
+  },
+  {
+    title: "Échanges",
+    items: [
+      { label: "Discussions", href: "/espace/discussions", icon: IconMessageCircle, soon: true },
+      { label: "Profils contactés", href: "/espace/profils-contactes", icon: IconUserCheck, soon: true },
+    ],
+  },
+  {
+    title: "Mon compte",
+    items: [
+      { label: "Mon organisation", href: "/espace/organisation", icon: IconBuilding },
+      { label: "Abonnement", href: "/espace/abonnement", icon: IconCreditCard },
+      { label: "Factures", href: "/espace/factures", icon: IconFileInvoice, soon: true },
+      { label: "Réclamations", href: "/espace/reclamations", icon: IconAlertCircle, soon: true },
+    ],
+  },
 ];
+
+/** Every page, in sidebar order (also the ⌘K list). */
+export const NAV_ITEMS: NavItem[] = NAV_GROUPS.flatMap((g) => g.items);
 
 /** Whether `href` is the page shown (the dashboard only on its own path). */
 export function isActive(pathname: string, href: string): boolean {
