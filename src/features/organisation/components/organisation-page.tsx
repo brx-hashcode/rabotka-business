@@ -128,7 +128,7 @@ export function OrganisationPage() {
                 }}
               />
             </section>
-            <div className="order-1 lg:sticky lg:top-6 lg:order-2">
+            <div className="order-1 lg:sticky lg:top-24 lg:order-2">
               <OrganisationDocuments business={business} catalog={catalog} onChange={setBusiness} />
             </div>
           </div>
