@@ -1,15 +1,10 @@
-import { SiteHeader } from "#/features/layout/components/site-header";
+import { AppShell } from "#/features/layout/components/app-shell";
 
 /**
- * Pages under the header. The sign-in page sits outside this group so it can
- * fill the screen without it — while the sign-in dialog, opened over a page
- * when the session expires, keeps that page's header behind it.
+ * The business space: sidebar, top bar, page. The sign-in page sits outside
+ * this group so it can fill the screen — while the sign-in dialog, opened over
+ * a page when the session expires, keeps that page and its shell behind it.
  */
 export default function SiteLayout({ children }: LayoutProps<"/">) {
-  return (
-    <>
-      <SiteHeader />
-      <main>{children}</main>
-    </>
-  );
+  return <AppShell>{children}</AppShell>;
 }

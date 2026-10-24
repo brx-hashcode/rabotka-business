@@ -63,6 +63,9 @@
   --header-muted: #3f5f3a;
   /* Dark ink for fills that need white on top (ticked checkboxes, active tabs). */
   --ink: #0f2414;
+  /* The brand lime as a fill (active nav pill, toggles), the same in both
+     themes — unlike --header, which darkens with the dark theme. */
+  --brand-lime: #cbffa5;
   /* Soft job-card chips. */
   --chip-violet: #f1ecfd;
   --chip-violet-foreground: #6b46c1;
@@ -105,7 +108,8 @@
   --destructive-foreground: var(--color-red-700);
 }
 
-:root[data-theme="dark"] {
+:root[data-theme="dark"],
+:root.dark {
   --sea-ink: #d7ece8;
   --sea-ink-soft: #afcdc8;
   --lagoon: #60d7cf;
@@ -355,6 +359,7 @@ a {
   --color-header-foreground: var(--header-foreground);
   --color-header-muted: var(--header-muted);
   --color-ink: var(--ink);
+  --color-brand-lime: var(--brand-lime);
   --color-chip-violet: var(--chip-violet);
   --color-chip-violet-foreground: var(--chip-violet-foreground);
   --color-chip-green: var(--chip-green);
@@ -397,6 +402,8 @@ a {
 
 .dark {
   --page: #0b1114;
+  /* Buttons filled with ink stay readable on the dark page. */
+  --ink: #2c7a45;
   --header: #05080a;
   --chip-violet: rgb(139 92 246 / 0.16);
   --chip-violet-foreground: #c4b5fd;

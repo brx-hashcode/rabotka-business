@@ -36,7 +36,7 @@ export function SubscriptionPage() {
   const { data, isLoading, error } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-8 px-4 py-10 sm:px-6">
+    <div className="mx-auto w-full max-w-7xl space-y-8 pt-2">
       <div className="space-y-1.5">
         <h1 className="font-semibold text-3xl tracking-tight">Abonnement</h1>
         <p className="text-muted-foreground">Votre formule Rabotka Business, son utilisation et son renouvellement.</p>

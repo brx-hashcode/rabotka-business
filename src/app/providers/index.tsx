@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
@@ -46,6 +46,7 @@ type ProvidersProps = Readonly<{
 export function Providers({ children, isAuthenticated }: ProvidersProps) {
   const queryClient = getQueryClient();
   const router = useRouter();
+  const pathname = usePathname();
 
   // The session could not be refreshed (cookies already cleared by
   // /session/refresh): drop cached data and open sign-in. A soft
@@ -64,13 +65,15 @@ export function Providers({ children, isAuthenticated }: ProvidersProps) {
     <QueryClientProvider client={queryClient}>
       <SessionProvider isAuthenticated={isAuthenticated}>
         {/*
-          Light only, by design: the header band is the contrast, and the
-          pages below stay light grey with white cards whatever the system
-          theme. The dark tokens remain in globals.css for a later toggle.
+          Light by default; the business space (/espace) has a toggle and
+          remembers the choice. The landing and sign-in stay light whatever
+          was chosen there: their lime band and photos are designed for it.
         */}
         <ThemeProvider
           attribute="class"
-          forcedTheme="light"
+          defaultTheme="light"
+          enableSystem={false}
+          forcedTheme={pathname.startsWith("/espace") ? undefined : "light"}
           storageKey="theme"
           disableTransitionOnChange
         >

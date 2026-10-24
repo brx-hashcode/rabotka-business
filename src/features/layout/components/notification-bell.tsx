@@ -1,0 +1,124 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { IconBell } from "@tabler/icons-react";
+
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
+import {
+  getUnreadCount,
+  listNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+  notificationsKey,
+  timeAgo,
+  type AppNotification,
+} from "#/lib/api/notification-controller";
+import { cn } from "#/lib/utils";
+
+/**
+ * The bell: the unread count (refreshed every minute) and the latest
+ * notifications. A notification opens the page it is about when that page is
+ * in this space.
+ */
+export function NotificationBell() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const unread = useQuery({
+    queryKey: [...notificationsKey, "unread"],
+    queryFn: getUnreadCount,
+    refetchInterval: 60_000,
+  });
+  const feed = useQuery({
+    queryKey: [...notificationsKey, "list", 20],
+    queryFn: () => listNotifications(20),
+    enabled: open,
+  });
+  const refresh = () => queryClient.invalidateQueries({ queryKey: notificationsKey });
+  const readAll = useMutation({ mutationFn: markAllNotificationsRead, onSuccess: refresh });
+
+  async function openOne(n: AppNotification) {
+    if (!n.readAt) await markNotificationRead(n.id).catch(() => undefined);
+    void refresh();
+    if (n.link?.startsWith("/espace")) {
+      setOpen(false);
+      router.push(n.link);
+    }
+  }
+
+  const count = unread.data?.count ?? 0;
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        aria-label={count > 0 ? `Notifications, ${count} non lues` : "Notifications"}
+        className="relative flex size-12 items-center justify-center rounded-2xl bg-card text-foreground transition-colors hover:bg-card/70"
+      >
+        <IconBell className="size-5" />
+        {count > 0 && (
+          <span className="absolute top-2 right-2 flex min-w-4 items-center justify-center rounded-full bg-destructive px-1 font-semibold text-[10px] text-white leading-4">
+            {count > 9 ? "9+" : count}
+          </span>
+        )}
+      </PopoverTrigger>
+      <PopoverContent align="end" sideOffset={10} className="w-[min(24rem,calc(100vw-2rem))] rounded-3xl border-0 shadow-soft">
+        <div className="flex items-center justify-between gap-3 pb-3">
+          <p className="font-semibold">Notifications</p>
+          {count > 0 && (
+            <button
+              type="button"
+              onClick={() => readAll.mutate()}
+              className="font-medium text-muted-foreground text-xs hover:text-foreground"
+            >
+              Tout marquer comme lu
+            </button>
+          )}
+        </div>
+        <NotificationList items={feed.data?.items} loading={feed.isLoading} onOpen={(n) => void openOne(n)} />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+/** The feed's rows; shared by the bell and the dashboard card. */
+export function NotificationList({
+  items,
+  loading,
+  onOpen,
+  max,
+}: Readonly<{
+  items: AppNotification[] | undefined;
+  loading: boolean;
+  onOpen?: (n: AppNotification) => void;
+  max?: number;
+}>) {
+  if (loading) return <p className="py-6 text-center text-muted-foreground text-sm">Chargement…</p>;
+  if (!items?.length) return <p className="py-6 text-center text-muted-foreground text-sm">Aucune notification pour le moment.</p>;
+  return (
+    <ul className="flex flex-col gap-1">
+      {items.slice(0, max).map((n) => (
+        <li key={n.id}>
+          <button
+            type="button"
+            onClick={() => onOpen?.(n)}
+            className="flex w-full items-start gap-3 rounded-2xl p-2.5 text-left transition-colors hover:bg-page"
+          >
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-page">
+              <IconBell className="size-4" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center gap-2">
+                <span className={cn("truncate text-sm", n.readAt ? "font-medium" : "font-semibold")}>{n.title}</span>
+                {!n.readAt && <span aria-label="Non lue" className="size-2 shrink-0 rounded-full bg-whatsapp" />}
+              </span>
+              <span className="line-clamp-2 text-muted-foreground text-sm">{n.body}</span>
+              <span className="text-muted-foreground text-xs">{timeAgo(n.createdAt)}</span>
+            </span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}

@@ -110,7 +110,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
   const amount = payment.data?.amount ?? null;
 
   return (
-    <div className="mx-auto w-full max-w-xl px-4 py-10 sm:px-6">
+    <div className="mx-auto w-full max-w-xl pt-6">
       <div className="space-y-6 rounded-3xl bg-card p-6 sm:p-8">
         {step === "approved" ? (
           <Result
