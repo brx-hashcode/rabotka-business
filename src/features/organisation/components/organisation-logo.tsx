@@ -65,9 +65,9 @@ export function OrganisationLogo({
         </button>
       </div>
       <div className="min-w-0 space-y-1">
-        <p className="font-medium">Logo</p>
+        <p className="truncate font-semibold text-xl tracking-tight">{name}</p>
         <p className="text-muted-foreground text-sm">
-          Visible par les candidats sur vos offres. JPG, PNG ou WEBP, 5 Mo maximum.
+          Logo visible par les candidats sur vos offres. JPG, PNG ou WEBP, 5 Mo maximum.
         </p>
       </div>
       <input
