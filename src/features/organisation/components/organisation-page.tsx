@@ -76,7 +76,7 @@ export function OrganisationPage() {
   });
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-10 sm:px-6">
+    <div className="mx-auto w-full max-w-7xl space-y-6 pt-2">
       <div className="space-y-1.5">
         <h1 className="font-semibold text-3xl tracking-tight">Mon organisation</h1>
         <p className="text-muted-foreground">Les informations et documents de votre organisation, et leur vérification.</p>

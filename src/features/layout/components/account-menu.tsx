@@ -30,8 +30,8 @@ export function AccountMenu() {
   const avatar = (size: string) => (
     <Avatar className={size}>
       {picture && <AvatarImage src={picture} alt={name} className="object-cover" />}
-      <AvatarFallback className="bg-whatsapp/15 font-medium text-whatsapp-dark">
-        {name ? getInitials(name) : ""}
+      <AvatarFallback className="rounded-[inherit] bg-brand-lime font-medium text-[#0f2414]">
+        {name ? getInitials(name) : business?.name ? getInitials(business.name) : ""}
       </AvatarFallback>
     </Avatar>
   );
@@ -40,17 +40,15 @@ export function AccountMenu() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger
-          className="group flex items-center gap-2.5 rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ink/50 focus-visible:ring-offset-2 focus-visible:ring-offset-header sm:py-1 sm:pr-2 sm:pl-3 sm:hover:bg-black/5"
+          className="group flex h-12 items-center gap-2.5 rounded-2xl bg-card pr-2 pl-1.5 outline-none transition-colors hover:bg-card/70 focus-visible:ring-2 focus-visible:ring-ink/40 sm:pr-3"
           aria-label="Mon compte"
         >
-          {user && (
-            <span className="hidden min-w-0 flex-col items-end text-right leading-tight sm:flex">
-              <span className="max-w-48 truncate font-medium text-sm">{name}</span>
-              <span className="max-w-48 truncate text-header-muted text-xs">{user.email}</span>
-            </span>
-          )}
-          {avatar("size-9 ring-2 ring-black/10")}
-          <IconChevronDown className="hidden size-4 text-header-muted transition-transform group-data-[state=open]:rotate-180 sm:block" />
+          {avatar("size-9 rounded-xl")}
+          <span className="hidden min-w-0 flex-col text-left leading-tight md:flex">
+            <span className="max-w-44 truncate font-medium text-sm">{name || business?.name || "Mon compte"}</span>
+            <span className="max-w-44 truncate text-muted-foreground text-xs">{user?.email ?? "Compte entreprise"}</span>
+          </span>
+          <IconChevronDown className="hidden size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180 sm:block" />
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
