@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { BadgeCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import {
   IconChevronLeft,
   IconChevronRight,
-  IconCircleCheckFilled,
   IconMapPin,
   IconPhoto,
   IconStarFilled,
@@ -69,10 +69,15 @@ export function CandidateProfile({ workerId }: Readonly<{ workerId: string }>) {
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 space-y-1">
-          <h2 className="flex items-center gap-2 font-semibold text-2xl tracking-tight">
-            <span className="truncate">{name}</span>
-            {c.isVerified && <IconCircleCheckFilled aria-label="Profil vérifié" className="size-5 shrink-0 text-whatsapp-dark" />}
-          </h2>
+          <h2 className="truncate font-semibold text-2xl tracking-tight">{name}</h2>
+          {/* As the client app: only when verified — a pending or refused
+              review is never shown to employers. */}
+          {c.isVerified && (
+            <span className="inline-flex items-center gap-1 font-medium text-whatsapp text-xs">
+              <BadgeCheck className="size-3.5" />
+              Identité vérifiée
+            </span>
+          )}
           {c.categoryName && <p className="text-muted-foreground">{c.categoryName}</p>}
           {location && (
             <p className="flex items-center gap-1.5 text-muted-foreground text-sm">
