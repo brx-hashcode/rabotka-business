@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { IconAlertTriangle, IconCircleCheck, IconClock } from "@tabler/icons-react";
+import { IconAlertTriangle, IconClock } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { Skeleton } from "#/components/ui/skeleton";
@@ -138,18 +138,13 @@ export function OrganisationPage() {
   );
 }
 
-/** Where the review stands, in one line, with what to do about it. */
+/** Where the review stands and what to do — shown only while there is something to do. */
 function ReviewBanner({ business }: Readonly<{ business: MyBusiness }>) {
   const refusedDocs = business.documents.some((d) => d.verificationStatus === "REJECTED");
+  // Verified and nothing to fix: nothing to say — the page is just the details.
+  if (business.verificationStatus === "VERIFIED" && !refusedDocs) return null;
   const state =
-    business.verificationStatus === "VERIFIED"
-      ? {
-          icon: IconCircleCheck,
-          tone: "bg-chip-green text-chip-green-foreground",
-          title: `${business.name} est vérifiée`,
-          text: "Votre compte entreprise est actif.",
-        }
-      : business.verificationStatus === "REJECTED"
+    business.verificationStatus === "REJECTED"
         ? {
             icon: IconAlertTriangle,
             tone: "bg-destructive/8 text-destructive",
