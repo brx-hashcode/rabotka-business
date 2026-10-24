@@ -12,11 +12,26 @@ export type Candidate = {
   categoryName: string | null;
   categoryNames: string[];
   description: string | null;
+  /** Often a home: never shown (reaching a worker is what a contact unlock sells). */
   address: string | null;
   isVerified: boolean;
   completedMissions: number;
   portfolioSlug: string | null;
   matchScore: number | null;
+};
+
+/** A worker's public portfolio (`GET public/workers/:slug`): no contact field. */
+export type CandidatePortfolio = {
+  slug: string;
+  /** « Ville, Pays » — never a street address. */
+  location: string | null;
+  completedMissionsCount: number;
+  portfolio: {
+    id: string;
+    description: string | null;
+    createdAt: string;
+    images: { id: string; imageUrl: string; position: number }[];
+  }[];
 };
 
 /**
@@ -37,9 +52,14 @@ class CandidateController extends BusinessBaseController {
     );
     return worker;
   }
+
+  portfolio(slug: string): Promise<CandidatePortfolio> {
+    return this.get(`/public/workers/${encodeURIComponent(slug)}`);
+  }
 }
 
 const controller = new CandidateController();
 
 export const searchCandidates = controller.search.bind(controller);
 export const getCandidate = controller.detail.bind(controller);
+export const getCandidatePortfolio = controller.portfolio.bind(controller);

@@ -15,7 +15,6 @@ import {
   CommandItem,
   CommandList,
 } from "#/components/ui/command";
-import { CandidateSheet } from "#/features/candidates/components/candidate-sheet";
 import { searchCandidates } from "#/lib/api/candidate-controller";
 import { friendlyError, httpStatusOf } from "#/lib/api/friendly-error";
 import { getInitials } from "#/lib/utils";
@@ -29,14 +28,13 @@ const plain = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerC
  * full-text worker search — then the space's pages. An employer does not
  * know a worker's name: it describes the job (trade, skill, description),
  * so each result shows the description it matched on. A candidate opens in
- * a side panel.
+ * a dialog (/espace/candidats/[id], intercepted). Never an address.
  */
 export function CommandSearch() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
-  const [workerId, setWorkerId] = useState<string | null>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -123,7 +121,7 @@ export function CommandSearch() {
                       value={`candidate-${c.id}`}
                       onSelect={() => {
                         close();
-                        setWorkerId(c.id);
+                        router.push(`/espace/candidats/${c.id}`);
                       }}
                       className="gap-3"
                     >
@@ -134,7 +132,7 @@ export function CommandSearch() {
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-medium">{name}</span>
                         <span className="block truncate text-muted-foreground text-xs">
-                          {[c.categoryName, c.address].filter(Boolean).join(" · ") || "—"}
+                          {c.categoryNames.slice(0, 3).join(" · ") || "—"}
                         </span>
                         {c.description && (
                           <span className="mt-0.5 line-clamp-1 text-muted-foreground text-xs">{c.description}</span>
@@ -180,7 +178,6 @@ export function CommandSearch() {
         </CommandList>
       </CommandDialog>
 
-      <CandidateSheet workerId={workerId} onOpenChange={(o) => !o && setWorkerId(null)} />
     </>
   );
 }
