@@ -7,6 +7,9 @@ export const EMPLOYMENT_TYPES: { value: EmploymentType; label: string; hint: str
   { value: "STAGE", label: "Stage", hint: "Stage ou alternance" },
 ];
 
+/** Only missions can be published from the space for now; the others show as coming. */
+export const AVAILABLE_EMPLOYMENT_TYPES: EmploymentType[] = ["MISSION"];
+
 export const EMPLOYMENT_LABEL: Record<EmploymentType, string> = {
   MISSION: "Mission",
   CDD: "CDD",

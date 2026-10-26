@@ -14,7 +14,7 @@ import { FIELD_CLASS, FieldLabel, StepActions, TextField } from "#/features/sign
 import { useCities, useCountries } from "#/hooks/use-geo";
 import { getJobCategories, type EmploymentType, type Offer, type OfferInput, type PaymentFlow } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
-import { EMPLOYMENT_TYPES, isDatedMission, PAYMENT_FLOWS } from "../offer-labels";
+import { AVAILABLE_EMPLOYMENT_TYPES, EMPLOYMENT_TYPES, isDatedMission, PAYMENT_FLOWS } from "../offer-labels";
 import { OfferSummary } from "./offer-summary";
 
 /** Mirrors the server (and the client app): a new date is at least 4 h ahead. */
@@ -225,7 +225,13 @@ export function OfferForm({
               control={form.control}
               name="employmentType"
               label="Type d'engagement"
-              options={EMPLOYMENT_TYPES.map((t) => ({ value: t.value, label: t.label, hint: t.hint }))}
+              options={EMPLOYMENT_TYPES.map((t) => ({
+                value: t.value,
+                label: t.label,
+                hint: t.hint,
+                // An offer already of that type (made in the app) keeps it.
+                disabled: !AVAILABLE_EMPLOYMENT_TYPES.includes(t.value) && t.value !== defaultValues.employmentType,
+              }))}
             />
             <div className="grid gap-5 sm:grid-cols-2">
               <FormField
@@ -404,7 +410,7 @@ function Choice({
   control: Control<OfferFormValues>;
   name: FieldPath<OfferFormValues>;
   label: string;
-  options: { value: string; label: string; hint?: string }[];
+  options: { value: string; label: string; hint?: string; disabled?: boolean }[];
 }>) {
   return (
     <FormField
@@ -422,11 +428,13 @@ function Choice({
                   type="button"
                   role="radio"
                   aria-checked={active}
-                  title={o.hint}
+                  disabled={o.disabled}
+                  title={o.disabled ? "Bientôt disponible" : o.hint}
                   onClick={() => field.onChange(o.value)}
                   className={cn(
                     "flex h-12 items-center justify-center rounded-xl font-medium text-sm transition-colors",
                     active ? "bg-ink text-white" : "bg-page hover:bg-page/70",
+                    o.disabled && "cursor-not-allowed opacity-50 hover:bg-page",
                   )}
                 >
                   {o.label}
