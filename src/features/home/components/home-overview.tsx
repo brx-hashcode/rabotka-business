@@ -36,9 +36,9 @@ import { ApplicationsChart } from "./applications-chart";
 import { StatTile } from "./stat-tile";
 
 const PERIODS: { days: StatsPeriod; label: string }[] = [
-  { days: 7, label: "7 j" },
-  { days: 30, label: "30 j" },
-  { days: 90, label: "90 j" },
+  { days: 7, label: "7 jours" },
+  { days: 30, label: "30 jours" },
+  { days: 90, label: "90 jours" },
 ];
 
 const date = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
@@ -178,15 +178,15 @@ function PeriodPicker({ value, onChange }: Readonly<{ value: StatsPeriod; onChan
   );
 }
 
-/** « +25 % vs 30 j précédents », green when it is good news, red when not. */
+/** « +25 % vs les 30 jours précédents », green when it is good news, red when not. */
 function TrendLine({ trend: t, days }: Readonly<{ trend: Trend | null; days: number }>) {
   if (!t) return null;
   const Icon = t.direction === "up" ? IconArrowUpRight : t.direction === "down" ? IconArrowDownRight : IconMinus;
   return (
-    <p className="flex items-center gap-1 text-muted-foreground text-sm">
+    <p className="text-muted-foreground text-sm">
       <span
         className={cn(
-          "inline-flex items-center gap-0.5 font-medium",
+          "mr-1 inline-flex items-center gap-0.5 whitespace-nowrap font-medium",
           t.good === true && "text-chip-green-foreground",
           t.good === false && "text-destructive",
         )}
@@ -194,7 +194,7 @@ function TrendLine({ trend: t, days }: Readonly<{ trend: Trend | null; days: num
         <Icon className="size-4" />
         {t.label}
       </span>
-      vs {days} j précédents
+      vs les {days} jours précédents
     </p>
   );
 }

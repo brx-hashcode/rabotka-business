@@ -7,7 +7,7 @@ describe("formatDelay", () => {
     expect(formatDelay(null)).toBe("—");
     expect(formatDelay(0.4)).toBe("< 1 h");
     expect(formatDelay(5.4)).toBe("5 h");
-    expect(formatDelay(60)).toBe("2,5 j");
+    expect(formatDelay(60)).toBe("2,5 jours");
   });
 });
 
