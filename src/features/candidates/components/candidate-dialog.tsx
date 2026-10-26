@@ -14,9 +14,9 @@ export function CandidateDialog({ workerId }: Readonly<{ workerId: string }>) {
   return (
     <Dialog open onOpenChange={(open) => !open && router.back()}>
       <DialogContent
-        // Clicks on the image viewer (portalled outside) are not « outside ».
+        // Clicks on the photo panel (portalled outside) are not « outside ».
         onInteractOutside={(e) => {
-          if ((e.target as HTMLElement | null)?.closest("[data-image-viewer]")) e.preventDefault();
+          if ((e.target as HTMLElement | null)?.closest("[data-preview-sheet]")) e.preventDefault();
         }}
         className="max-h-[90svh] w-[calc(100vw-2rem)] gap-0 overflow-y-auto rounded-3xl border-0 bg-card p-6 shadow-soft sm:max-w-3xl sm:p-8">
         <DialogTitle className="sr-only">Profil du candidat</DialogTitle>

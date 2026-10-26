@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Skeleton } from "#/components/ui/skeleton";
 import { getCandidate, getCandidatePortfolio } from "#/lib/api/candidate-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
-import { ImageViewer } from "#/components/image-viewer";
+import { ImageGallerySheet } from "#/components/image-gallery-sheet";
 import { KeepButton } from "#/features/talents/components/keep-button";
 import { SafeImage } from "#/components/safe-image";
 import { getInitials } from "#/lib/utils";
@@ -32,7 +32,7 @@ export function CandidateProfile({ workerId }: Readonly<{ workerId: string }>) {
     queryFn: () => getCandidatePortfolio(c!.portfolioSlug!),
     enabled: !!c?.portfolioSlug,
   });
-  const [viewer, setViewer] = useState<{ images: string[]; index: number } | null>(null);
+  const [viewer, setViewer] = useState<{ images: string[]; index: number; title: string } | null>(null);
 
   if (isLoading) {
     return (
@@ -147,7 +147,7 @@ export function CandidateProfile({ workerId }: Readonly<{ workerId: string }>) {
                         <button
                           key={url}
                           type="button"
-                          onClick={() => setViewer({ images: urls, index })}
+                          onClick={() => setViewer({ images: urls, index, title: "Réalisation" })}
                           className="group relative aspect-square overflow-hidden rounded-xl bg-card"
                           aria-label="Agrandir l'image"
                         >
@@ -168,7 +168,7 @@ export function CandidateProfile({ workerId }: Readonly<{ workerId: string }>) {
         )}
       </section>
 
-      {viewer && <ImageViewer images={viewer.images} index={viewer.index} onClose={() => setViewer(null)} />}
+      {viewer && <ImageGallerySheet images={viewer.images} index={viewer.index} title={viewer.title} onClose={() => setViewer(null)} />}
     </div>
   );
 }
