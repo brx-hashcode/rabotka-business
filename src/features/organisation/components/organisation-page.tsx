@@ -1,7 +1,8 @@
 "use client";
 
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { IconAlertTriangle, IconClock } from "@tabler/icons-react";
+import Link from "next/link";
+import { IconAlertTriangle, IconClock, IconLock } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { Bone } from "#/components/page-skeletons";
@@ -15,6 +16,7 @@ import { sessionUserKey } from "#/hooks/use-session-user";
 import type { SessionUser } from "#/lib/api/types";
 import { OrganisationDocuments } from "./organisation-documents";
 import { OrganisationLogo } from "./organisation-logo";
+import { OrganisationOwner } from "./organisation-owner";
 
 function toValues(b: MyBusiness): OrganisationValues {
   return {
@@ -45,16 +47,17 @@ function changes(before: OrganisationValues, after: OrganisationValues): UpdateM
 }
 
 /**
- * « Mon organisation »: where the review stands, the papers (a refused one is
- * replaced here), and the details. Changing what the review checked — name,
- * type, legal form, official numbers — sends a decided business back to
- * review; the server decides, and says so.
+ * « Mon organisation »: where the review stands, the account holder, the
+ * papers (a refused one is replaced here), and the details. Once verified,
+ * what the review checked — name, type, legal form, official numbers, papers
+ * — is locked: a change goes through the team (Aide).
  */
 export function OrganisationPage() {
   const queryClient = useQueryClient();
   const { data: business, isLoading, error } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
   const { data: catalog } = useQuery({ queryKey: ["business", "catalog"], queryFn: getBusinessCatalog, staleTime: Infinity });
 
+  const verified = business?.verificationStatus === "VERIFIED";
   const setBusiness = (next: MyBusiness) => queryClient.setQueryData(myBusinessKey, next);
   const setLogo = (url: string) => {
     queryClient.setQueryData<MyBusiness>(myBusinessKey, (b) => (b ? { ...b, logoUrl: url } : b));
@@ -121,10 +124,17 @@ export function OrganisationPage() {
               <div aria-hidden className="h-px bg-page" />
               <div className="space-y-1">
                 <h2 className="font-semibold text-lg">Informations</h2>
-                {business.verificationStatus === "VERIFIED" && (
-                  <p className="text-muted-foreground text-sm">
-                    Modifier la raison sociale, le type, la forme juridique ou les identifiants officiels relance la
-                    vérification de votre organisation.
+                {verified && (
+                  <p className="flex items-start gap-2 rounded-2xl bg-page px-4 py-3 text-muted-foreground text-sm">
+                    <IconLock className="mt-0.5 size-4 shrink-0" />
+                    <span>
+                      Votre organisation est vérifiée : son identité, ses identifiants officiels et ses documents ne se
+                      modifient plus ici. Pour un changement,{" "}
+                      <Link href="/espace/reclamations/nouvelle" className="font-medium text-foreground underline underline-offset-2">
+                        faites une demande à l&apos;équipe
+                      </Link>
+                      . Le siège, l&apos;effectif et la présentation restent modifiables.
+                    </span>
                   </p>
                 )}
               </div>
@@ -136,6 +146,7 @@ export function OrganisationPage() {
                 heading={false}
                 submitLabel="Enregistrer"
                 pending={save.isPending}
+                lockIdentity={verified}
                 onDone={(values) => {
                   const body = changes(toValues(business), values);
                   if (Object.keys(body).length === 0) {
@@ -146,7 +157,8 @@ export function OrganisationPage() {
                 }}
               />
             </section>
-            <div className="order-1 lg:sticky lg:top-24 lg:order-2">
+            <div className="order-1 space-y-6 lg:sticky lg:top-24 lg:order-2">
+              {business.owner && <OrganisationOwner owner={business.owner} />}
               <OrganisationDocuments business={business} catalog={catalog} onChange={setBusiness} />
             </div>
           </div>

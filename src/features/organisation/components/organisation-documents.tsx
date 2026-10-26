@@ -52,15 +52,19 @@ export function OrganisationDocuments({
     (t) => !provided.has(t),
   );
   const refused = business.documents.filter((d) => d.verificationStatus === "REJECTED").length;
+  // Verified: the papers are settled; another one goes through the team.
+  const locked = business.verificationStatus === "VERIFIED";
 
   return (
     <section className="space-y-4 rounded-3xl bg-card p-5 sm:p-6">
       <div className="space-y-1">
         <h2 className="font-semibold text-lg">Documents</h2>
         <p className="text-muted-foreground text-sm">
-          {refused > 0
-            ? `${refused} document${refused > 1 ? "s" : ""} à remplacer.`
-            : "PDF, JPG, PNG ou WEBP, 10 Mo maximum. Vos documents restent confidentiels."}
+          {locked
+            ? "Ceux de votre vérification. Pour en ajouter un, faites une demande à l'équipe. Vos documents restent confidentiels."
+            : refused > 0
+              ? `${refused} document${refused > 1 ? "s" : ""} à remplacer.`
+              : "PDF, JPG, PNG ou WEBP, 10 Mo maximum. Vos documents restent confidentiels."}
         </p>
       </div>
 
@@ -96,7 +100,7 @@ export function OrganisationDocuments({
                 <IconEye className="size-4" />
                 Voir
               </button>
-              {doc.verificationStatus !== "VERIFIED" && (
+              {!locked && doc.verificationStatus !== "VERIFIED" && (
                 <UploadButton
                   documentType={doc.documentType}
                   replacesId={doc.id}
@@ -111,7 +115,7 @@ export function OrganisationDocuments({
         ))}
       </ul>
 
-      {business.missingDocuments.map((group) => (
+      {!locked && business.missingDocuments.map((group) => (
         <div key={group.map((d) => d.type).join("|")} className="space-y-3 rounded-2xl bg-chip-amber/60 p-4">
           <p className="font-medium text-sm">
             À fournir : {group.map((d) => d.label).join(" ou ")}
@@ -131,7 +135,7 @@ export function OrganisationDocuments({
         </div>
       ))}
 
-      {optional.length > 0 &&
+      {!locked && optional.length > 0 &&
         (showOptional ? (
           <div className="space-y-2">
             <p className="font-medium text-sm">
