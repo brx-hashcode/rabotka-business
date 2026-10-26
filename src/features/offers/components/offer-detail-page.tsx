@@ -9,7 +9,6 @@ import {
   IconBriefcase,
   IconCalendarEvent,
   IconCash,
-  IconChevronRight,
   IconInbox,
   IconInfoCircle,
   IconMapPin,
@@ -51,6 +50,7 @@ import {
   STATUS,
   type ApplicationStage,
 } from "../offer-labels";
+import { ApplicationActions } from "./application-actions";
 import { scheduledIso } from "./offer-form";
 
 /**
@@ -364,27 +364,22 @@ function ApplicantsCard({
               {shown.map((a) => {
                 const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
                 return (
-                  <li key={a.applicationId}>
-                    <Link
-                      href={`/espace/candidats/${a.worker.id}`}
-                      className="flex items-center gap-4 rounded-2xl bg-page p-3 pr-4 transition-colors hover:bg-page/70"
-                    >
+                  <li
+                    key={a.applicationId}
+                    className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl bg-page p-3 pr-4"
+                  >
+                    <Link href={`/espace/candidats/${a.worker.id}`} className="group flex min-w-0 flex-1 items-center gap-4">
                       <Avatar className="size-11 rounded-xl">
                         {a.worker.avatarUrl && <AvatarImage src={a.worker.avatarUrl} alt="" className="object-cover" />}
                         <AvatarFallback className="rounded-xl bg-card font-medium">{getInitials(name)}</AvatarFallback>
                       </Avatar>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium">{name}</span>
+                        <span className="block truncate font-medium group-hover:underline">{name}</span>
                         <span className="block text-muted-foreground text-xs">
                           Candidature du {new Date(a.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
+                          {a.worker.reliabilityScore !== null && ` · fiabilité ${a.worker.reliabilityScore}/100`}
                         </span>
                       </span>
-                      {a.worker.reliabilityScore !== null && (
-                        <span className="hidden shrink-0 text-right sm:block">
-                          <span className="block font-semibold text-sm tabular-nums">{a.worker.reliabilityScore}/100</span>
-                          <span className="block text-muted-foreground text-xs">Fiabilité</span>
-                        </span>
-                      )}
                       <span
                         className={cn(
                           "shrink-0 rounded-full px-2.5 py-1 font-medium text-xs",
@@ -393,8 +388,8 @@ function ApplicantsCard({
                       >
                         {APPLICATION_STATUS[a.status] ?? a.status}
                       </span>
-                      <IconChevronRight className="size-4 shrink-0 text-muted-foreground" />
                     </Link>
+                    <ApplicationActions applicant={a} name={name} />
                   </li>
                 );
               })}
