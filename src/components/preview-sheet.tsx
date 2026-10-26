@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { IconDownload, IconMinus, IconPlus, IconPrinter, IconX } from "@tabler/icons-react";
+import { IconChevronLeft, IconChevronRight, IconDownload, IconMinus, IconPlus, IconPrinter, IconX } from "@tabler/icons-react";
 import { Dialog as SheetPrimitive } from "radix-ui";
 import { toast } from "sonner";
+import { cn } from "#/lib/utils";
 import { DocumentPageSkeleton } from "./page-skeletons";
 
 const PdfPages = dynamic(() => import("./pdf-pages"), { ssr: false });
@@ -20,6 +21,7 @@ export function PreviewSheet({
   kind,
   fileName,
   unavailable = "L'aperçu n'est plus disponible.",
+  nav,
 }: Readonly<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -31,6 +33,8 @@ export function PreviewSheet({
   /** The name a download is saved under. */
   fileName?: string;
   unavailable?: string;
+  /** Several files in one panel (a claim's photos): arrows, keys and « 1 / 3 ». */
+  nav?: { label: string; onPrev: () => void; onNext: () => void };
 }>) {
   const file = useBlobUrl(open ? src : undefined, kind);
   const [zoom, setZoom] = useState(1);
@@ -64,6 +68,16 @@ export function PreviewSheet({
     document.body.appendChild(frame);
   }
 
+  useEffect(() => {
+    if (!open || !nav) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") nav.onPrev();
+      else if (e.key === "ArrowRight") nav.onNext();
+    };
+    globalThis.addEventListener("keydown", onKey);
+    return () => globalThis.removeEventListener("keydown", onKey);
+  }, [open, nav]);
+
   const step = (d: number) => setZoom((z) => ZOOMS[Math.min(ZOOMS.length - 1, Math.max(0, ZOOMS.indexOf(z) + d))] ?? 1);
 
   return (
@@ -79,8 +93,9 @@ export function PreviewSheet({
       }}
     >
       <SheetPrimitive.Portal>
-        <SheetPrimitive.Overlay className="data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50" />
+        <SheetPrimitive.Overlay data-preview-sheet className="data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50" />
         <SheetPrimitive.Content
+          data-preview-sheet
           aria-describedby={undefined}
           className="data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-card shadow-soft outline-none data-[state=closed]:duration-300 data-[state=open]:duration-500 sm:w-[min(56rem,92vw)]"
         >
@@ -89,6 +104,27 @@ export function PreviewSheet({
               <SheetPrimitive.Title className="truncate font-semibold text-lg">{title}</SheetPrimitive.Title>
               {subtitle && <p className="truncate text-muted-foreground text-sm">{subtitle}</p>}
             </div>
+            {nav && (
+              <div className="flex items-center rounded-full bg-page p-1">
+                <button
+                  type="button"
+                  onClick={nav.onPrev}
+                  aria-label="Précédente"
+                  className="flex size-8 items-center justify-center rounded-full hover:bg-card"
+                >
+                  <IconChevronLeft className="size-4" />
+                </button>
+                <span className="min-w-12 text-center font-medium text-xs tabular-nums">{nav.label}</span>
+                <button
+                  type="button"
+                  onClick={nav.onNext}
+                  aria-label="Suivante"
+                  className="flex size-8 items-center justify-center rounded-full hover:bg-card"
+                >
+                  <IconChevronRight className="size-4" />
+                </button>
+              </div>
+            )}
             {file.url && !failed && (
               <div className="flex items-center gap-2">
                 <div className="flex items-center rounded-full bg-page p-1">
@@ -151,7 +187,8 @@ export function PreviewSheet({
                 {pages > 1 && <p className="mt-4 text-center text-muted-foreground text-xs">{pages} pages</p>}
               </div>
             ) : (
-              <div className="flex min-h-full items-center justify-center p-6">
+              // At 100 % the photo fits the panel; zoomed in, it scrolls.
+              <div className={cn("flex items-center justify-center p-6", zoom === 1 ? "h-full" : "min-h-full")}>
                 {/* A local blob, a signed URL or the API route: nothing next/image could optimise. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img

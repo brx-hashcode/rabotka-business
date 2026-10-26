@@ -6,7 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IconArrowLeft, IconHeadset, IconLock, IconSend2 } from "@tabler/icons-react";
 import { toast } from "sonner";
 
-import { ImageViewer } from "#/components/image-viewer";
+import { ImageGallerySheet } from "#/components/image-gallery-sheet";
 import { SafeImage } from "#/components/safe-image";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Bone, ThreadSkeleton } from "#/components/page-skeletons";
@@ -164,7 +164,7 @@ export function ClaimDetailPage({ id }: Readonly<{ id: string }>) {
         </div>
       )}
 
-      {viewer && <ImageViewer images={viewer.images} index={viewer.index} onClose={() => setViewer(null)} />}
+      {viewer && <ImageGallerySheet images={viewer.images} index={viewer.index} title={c?.title ?? "Photos"} onClose={() => setViewer(null)} />}
     </div>
   );
 }
