@@ -10,8 +10,8 @@ import { cn } from "#/lib/utils";
 export const CLAIM_STATUS: Record<ClaimStatus, { label: string; className: string }> = {
   CREATED: { label: "Envoyée", className: "bg-chip-amber text-chip-amber-foreground" },
   IN_PROGRESS: { label: "En cours", className: "bg-chip-violet text-chip-violet-foreground" },
-  COMPLETED: { label: "Traitée", className: "bg-chip-green text-chip-green-foreground" },
-  REJECTED: { label: "Rejetée", className: "bg-page text-muted-foreground" },
+  COMPLETED: { label: "Résolue", className: "bg-chip-green text-chip-green-foreground" },
+  REJECTED: { label: "Refusée", className: "bg-page text-muted-foreground" },
 };
 
 export const isClosed = (s: ClaimStatus) => s === "COMPLETED" || s === "REJECTED";

@@ -47,7 +47,7 @@ export function OfferSummary({
   const checks = [
     { label: "Intitulé", done: v.title.trim().length >= 5 },
     { label: "Description (20 caractères au moins)", done: v.description.trim().length >= 20 },
-    { label: "Domaine", done: !!v.categoryId },
+    { label: "Métier", done: !!v.categoryId },
     { label: isDatedMission(type) ? "Date de la mission" : "Date de clôture", done: !!v.scheduledDate },
     { label: "Lieu", done: v.isRemote || (!!v.countryCode && !!v.city) },
   ];

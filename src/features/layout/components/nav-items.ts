@@ -35,28 +35,28 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [{ label: "Tableau de bord", href: "/espace", icon: IconLayoutDashboard }],
   },
   {
-    title: "Recrutement",
+    title: "Recruter",
     items: [
-      { label: "Mes offres", href: "/espace/offres", icon: IconBriefcase },
+      { label: "Offres", href: "/espace/offres", icon: IconBriefcase },
       { label: "Candidatures", href: "/espace/candidatures", icon: IconUsers },
-      { label: "Recherche", href: "/espace/recherche", icon: IconSearch },
-      { label: "Vivier", href: "/espace/vivier", icon: IconBookmark },
+      { label: "Messages", href: "/espace/discussions", icon: IconMessageCircle },
       { label: "Missions", href: "/espace/missions", icon: IconCalendarCheck },
     ],
   },
   {
-    title: "Échanges",
+    title: "Profils",
     items: [
-      { label: "Discussions", href: "/espace/discussions", icon: IconMessageCircle },
+      { label: "Trouver des profils", href: "/espace/recherche", icon: IconSearch },
+      { label: "Vivier", href: "/espace/vivier", icon: IconBookmark },
     ],
   },
   {
     title: "Mon compte",
     items: [
-      { label: "Mon organisation", href: "/espace/organisation", icon: IconBuilding },
+      { label: "Organisation", href: "/espace/organisation", icon: IconBuilding },
       { label: "Abonnement", href: "/espace/abonnement", icon: IconCreditCard },
       { label: "Factures", href: "/espace/factures", icon: IconFileInvoice },
-      { label: "Réclamations", href: "/espace/reclamations", icon: IconAlertCircle },
+      { label: "Aide", href: "/espace/reclamations", icon: IconAlertCircle },
     ],
   },
 ];

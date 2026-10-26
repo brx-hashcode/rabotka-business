@@ -84,17 +84,16 @@ export function SearchPage() {
     <div className="w-full space-y-6 pt-2">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1.5">
-          <h1 className="font-semibold text-3xl tracking-tight">Recherche</h1>
-          <p className="text-muted-foreground">Trouvez des travailleurs vérifiés par métier, ville et fiabilité, et contactez-les directement.</p>
+          <h1 className="font-semibold text-3xl tracking-tight">Trouver des profils</h1>
+          <p className="text-muted-foreground">Des profils vérifiés, par métier, ville et fiabilité : contactez-les directement.</p>
         </div>
         {e?.plan && (
           <p className="rounded-full bg-card px-4 py-2 font-medium text-sm">
-            Contacts :{" "}
+            Contacts inclus :{" "}
             <span className="tabular-nums">
               {e.unlocksUsed}
-              {e.unlocksQuota === null ? "" : `/${e.unlocksQuota}`}
-            </span>{" "}
-            <span className="font-normal text-muted-foreground">cette période</span>
+              {e.unlocksQuota === null ? "" : ` sur ${e.unlocksQuota}`}
+            </span>
           </p>
         )}
       </div>
@@ -106,7 +105,7 @@ export function SearchPage() {
           </span>
           <p className="font-medium">La recherche de profils n&apos;est pas incluse dans votre formule</p>
           <p className="max-w-md text-muted-foreground text-sm">
-            Passez à une formule avec la présélection pour chercher des travailleurs et les contacter directement.
+            Passez à une formule qui l&apos;inclut pour chercher des profils et les contacter directement.
           </p>
           <Link href="/espace/abonnement" className="mt-1 inline-flex h-11 items-center rounded-full bg-ink px-5 font-medium text-sm text-white hover:bg-ink/90">
             Voir les formules

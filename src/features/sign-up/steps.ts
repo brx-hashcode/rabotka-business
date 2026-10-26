@@ -20,7 +20,7 @@ export const STEPS = [
     label: "Vérification",
     kicker: "Sécurité",
     title: "Votre adresse professionnelle, confirmée",
-    text: "Un code à usage unique garantit que l'adresse email vous appartient. C'est aussi ainsi que vous vous connecterez : sans mot de passe.",
+    text: "Un code à usage unique garantit que l'adresse e-mail vous appartient. C'est aussi ainsi que vous vous connecterez : sans mot de passe.",
     photo: "/media/verification.jpg",
   },
   {

@@ -12,7 +12,7 @@ import { FormError, StepActions, StepHeading, TextField } from "./form-bits";
 const schema = z.object({
   firstName: z.string().trim().min(1, "Indiquez votre prénom").max(100),
   lastName: z.string().trim().min(1, "Indiquez votre nom").max(100),
-  email: z.email("Saisissez une adresse email valide").trim().toLowerCase(),
+  email: z.email("Saisissez une adresse e-mail valide").trim().toLowerCase(),
   phone: z
     .string()
     .trim()
@@ -61,7 +61,7 @@ export function AccountStep({
           <TextField
             control={form.control}
             name="email"
-            label="Adresse email professionnelle"
+            label="Adresse e-mail professionnelle"
             type="email"
             autoComplete="email"
             placeholder="prenom.nom@organisation.cg"

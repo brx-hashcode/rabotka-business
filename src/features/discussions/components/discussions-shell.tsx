@@ -93,7 +93,7 @@ function DiscussionList({ activeId }: Readonly<{ activeId?: string }>) {
             ))}
           </div>
         ) : !all ? (
-          <p className="px-3 py-6 text-muted-foreground text-sm">{friendlyError(error, "Vos discussions sont indisponibles.")}</p>
+          <p className="px-3 py-6 text-muted-foreground text-sm">{friendlyError(error, "Vos messages sont indisponibles.")}</p>
         ) : all.length === 0 ? (
           <div className="flex flex-col items-center gap-3 px-6 py-12 text-center">
             <span className="flex size-12 items-center justify-center rounded-2xl bg-page">

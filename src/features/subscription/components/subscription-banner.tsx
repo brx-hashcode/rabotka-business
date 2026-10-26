@@ -25,7 +25,7 @@ export function SubscriptionBanner({ className }: Readonly<{ className?: string 
   const day = (d: Date) => d.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
 
   let text: string | null = null;
-  if (!e.plan) text = "Choisissez une formule pour publier vos offres et débloquer vos contacts inclus.";
+  if (!e.plan) text = "Choisissez une formule pour publier vos offres et obtenir vos contacts inclus.";
   else if (e.status === "TRIAL" && ends) text = `Votre essai gratuit de la formule ${e.plan.name} se termine le ${day(ends)}.`;
   else if (ends && !queued && ends.getTime() - now < SOON_MS)
     text = `Votre abonnement ${e.plan.name} se termine le ${day(ends)}. Renouvelez-le pour garder vos avantages.`;

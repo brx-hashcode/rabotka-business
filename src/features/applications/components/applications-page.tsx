@@ -134,7 +134,7 @@ export function ApplicationsPage() {
             <p className="font-medium">{all.length === 0 ? "Aucune candidature pour le moment" : "Aucune candidature ici"}</p>
             <p className="max-w-sm text-muted-foreground text-sm">
               {all.length === 0
-                ? "Publiez une offre : les travailleurs correspondants en sont prévenus et leurs candidatures arrivent ici."
+                ? "Publiez une offre : les profils correspondants en sont prévenus et leurs candidatures arrivent ici."
                 : tab === "new"
                   ? "Vous avez répondu à tout le monde."
                   : "Changez d'étape ou de filtre pour en voir d'autres."}

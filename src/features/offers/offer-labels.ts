@@ -33,7 +33,7 @@ export const PAYMENT_SUFFIX: Record<PaymentFlow, string> = {
 
 export const STATUS: Record<OfferStatus, { label: string; className: string }> = {
   DRAFT: { label: "Brouillon", className: "bg-page text-muted-foreground" },
-  ACTIVE: { label: "Active", className: "bg-chip-green text-chip-green-foreground" },
+  ACTIVE: { label: "En ligne", className: "bg-chip-green text-chip-green-foreground" },
   PARTIALLY_FILLED: { label: "En partie pourvue", className: "bg-chip-violet text-chip-violet-foreground" },
   FILLED: { label: "Pourvue", className: "bg-chip-violet text-chip-violet-foreground" },
   IN_PROGRESS: { label: "En cours", className: "bg-chip-amber text-chip-amber-foreground" },
@@ -45,8 +45,8 @@ export const STATUS: Record<OfferStatus, { label: string; className: string }> =
 export const APPLICATION_STATUS: Record<string, string> = {
   PENDING: "Nouvelle",
   VIEWED: "Vue",
-  WAITING_PAYMENT: "Déblocage en cours",
-  ACCEPTED: "Acceptée",
+  WAITING_PAYMENT: "En attente du candidat",
+  ACCEPTED: "Retenue",
   STARTED: "En mission",
   END: "Terminée",
   REJECTED: "Refusée",

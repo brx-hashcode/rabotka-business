@@ -14,7 +14,7 @@ import { EMPLOYMENT_LABEL, fcfa, offerDate, PAYMENT_SUFFIX, STATUS } from "../of
 
 const TABS: { key: string; label: string; statuses?: OfferStatus[] }[] = [
   { key: "all", label: "Toutes" },
-  { key: "active", label: "Actives", statuses: ["ACTIVE"] },
+  { key: "active", label: "En ligne", statuses: ["ACTIVE"] },
   { key: "running", label: "En cours", statuses: ["PARTIALLY_FILLED", "FILLED", "IN_PROGRESS"] },
   { key: "done", label: "Terminées", statuses: ["COMPLETED"] },
   { key: "expired", label: "Expirées", statuses: ["EXPIRED", "CANCELLED"] },
@@ -36,11 +36,11 @@ export function OffersPage() {
     <div className="w-full space-y-6 pt-2">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1.5">
-          <h1 className="font-semibold text-3xl tracking-tight">Mes offres</h1>
+          <h1 className="font-semibold text-3xl tracking-tight">Offres</h1>
           <p className="text-muted-foreground">
             {e
               ? e.plan
-                ? `${e.activeOffers} offre${e.activeOffers > 1 ? "s" : ""} active${e.activeOffers > 1 ? "s" : ""} sur ${e.activeOffersLimit ?? "∞"} incluses dans votre formule ${e.plan.name}.`
+                ? `${e.activeOffers} offre${e.activeOffers > 1 ? "s" : ""} en ligne sur ${e.activeOffersLimit ?? "∞"} incluses dans votre formule ${e.plan.name}.`
                 : "Choisissez une formule pour publier vos offres."
               : "Publiez vos offres et suivez les candidatures."}
           </p>

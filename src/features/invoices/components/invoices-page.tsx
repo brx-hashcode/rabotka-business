@@ -12,8 +12,8 @@ import { cn } from "#/lib/utils";
 
 const REASON: Record<string, string> = {
   BUSINESS_SUBSCRIPTION: "Abonnement Rabotka Business",
-  CONTACT_UNLOCK: "Déblocage de contact",
-  PENALTY: "Régularisation",
+  CONTACT_UNLOCK: "Accès à un contact",
+  PENALTY: "Pénalité",
   WALLET_TOP_UP: "Recharge du solde",
   OTHER: "Autre",
 };
@@ -43,7 +43,7 @@ export function InvoicesPage() {
     <div className="w-full space-y-6 pt-2">
       <div className="space-y-1.5">
         <h1 className="font-semibold text-3xl tracking-tight">Factures</h1>
-        <p className="text-muted-foreground">Une facture par paiement — abonnement, déblocage de contact… — à télécharger en PDF.</p>
+        <p className="text-muted-foreground">Une facture par paiement — abonnement, accès à un contact… — à télécharger en PDF.</p>
       </div>
 
       {invoices.isLoading ? (
@@ -56,7 +56,7 @@ export function InvoicesPage() {
             <IconFileInvoice className="size-6 text-muted-foreground" />
           </span>
           <p className="font-medium">Aucune facture pour le moment</p>
-          <p className="max-w-md text-muted-foreground text-sm">Chaque paiement — votre abonnement, un déblocage de contact — fait l&apos;objet d&apos;une facture ici.</p>
+          <p className="max-w-md text-muted-foreground text-sm">Chaque paiement — votre abonnement, l&apos;accès à un contact — fait l&apos;objet d&apos;une facture ici.</p>
         </section>
       ) : (
         <>

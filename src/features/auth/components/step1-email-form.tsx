@@ -53,7 +53,7 @@ export function Step1EmailForm({
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="font-medium text-sm">Adresse email</FormLabel>
+              <FormLabel className="font-medium text-sm">Adresse e-mail</FormLabel>
               <FormControl>
                 <Input
                   {...field}

@@ -29,7 +29,7 @@ import { Input } from "#/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Textarea } from "#/components/ui/textarea";
-import { ReachButton } from "#/features/candidates/components/candidate-card";
+import { ReachButton, RELIABILITY_HINT } from "#/features/candidates/components/candidate-card";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { listOffers, offersKey } from "#/lib/api/offer-controller";
 import { inviteTalent, listTalents, removeTalent, saveTalent, talentsKey, type Talent } from "#/lib/api/talent-controller";
@@ -66,7 +66,7 @@ export function TalentsPage() {
       <div className="space-y-1.5">
         <h1 className="font-semibold text-3xl tracking-tight">Vivier</h1>
         <p className="text-muted-foreground">
-          Les travailleurs que vous gardez et ceux qui ont déjà travaillé pour vous : invitez-les sur une nouvelle offre.
+          Les profils que vous gardez et ceux qui ont déjà travaillé pour vous : invitez-les sur une nouvelle offre.
         </p>
       </div>
 
@@ -101,7 +101,7 @@ export function TalentsPage() {
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Nom, métier, ville, note, étiquette…"
+              placeholder="Nom, métier, ville, note, mot-clé…"
               className="h-11 rounded-full border-0 bg-page pl-10 shadow-none focus-visible:ring-2 focus-visible:ring-ink/10"
             />
           </div>
@@ -141,8 +141,8 @@ export function TalentsPage() {
             <p className="font-medium">{all.length === 0 ? "Votre vivier est vide" : "Personne ici"}</p>
             <p className="max-w-md text-muted-foreground text-sm">
               {all.length === 0
-                ? "Gardez un profil avec le signet, depuis la recherche ou une fiche : il apparaît ici, comme ceux que vous avez déjà recrutés."
-                : "Changez d'onglet, d'étiquette ou de recherche."}
+                ? "Gardez un profil avec le bouton « Garder », depuis la recherche ou une fiche : il apparaît ici, comme ceux que vous avez déjà recrutés."
+                : "Changez d'onglet, de mot-clé ou de recherche."}
             </p>
             {all.length === 0 && (
               <Link href="/espace/recherche" className="font-medium text-sm text-whatsapp-dark hover:underline">
@@ -172,7 +172,7 @@ function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
     mutationFn: () => saveTalent(t.workerId),
     onSuccess: () => {
       refresh();
-      toast.success(`${name} est gardé·e dans votre vivier.`);
+      toast.success(`${name} fait partie de votre vivier.`);
     },
     onError: (err) => toast.error(friendlyError(err, "Le vivier n'a pas pu être mis à jour.")),
   });
@@ -181,7 +181,7 @@ function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
     onSuccess: () => {
       refresh();
       setDialog(null);
-      toast.success(`${name} n'est plus gardé·e.`);
+      toast.success(`${name} ne fait plus partie de votre vivier.`);
     },
     onError: (err) => toast.error(friendlyError(err, "Le vivier n'a pas pu être mis à jour.")),
   });
@@ -210,7 +210,7 @@ function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
               </span>
             )}
             {t.reliabilityScore !== null && (
-              <span className="inline-flex items-center gap-1 font-medium">
+              <span className="inline-flex items-center gap-1 font-medium" title={RELIABILITY_HINT}>
                 <IconShieldCheck className="size-3.5 text-whatsapp-dark" />
                 {t.reliabilityScore}/100
               </span>
@@ -226,7 +226,7 @@ function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
               <>
                 <DropdownMenuItem onSelect={() => setDialog("note")} className="cursor-pointer gap-2.5 rounded-xl px-3 py-2.5 text-sm focus:bg-page">
                   <IconNote className="size-4" />
-                  Note et étiquettes
+                  Note et mots-clés
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onSelect={() => setDialog("remove")}
@@ -295,7 +295,7 @@ function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
         tone="warning"
         icon={<IconTrash className="size-5" />}
         title={`Ne plus garder ${name} ?`}
-        description={t.missionsWithUs > 0 ? "Votre note et vos étiquettes seront effacées. Il restera parmi les déjà recrutés." : "Votre note et vos étiquettes seront effacées."}
+        description={t.missionsWithUs > 0 ? "Votre note et vos mots-clés seront effacés. Ce profil restera parmi les déjà recrutés." : "Votre note et vos mots-clés seront effacés."}
         confirmLabel="Ne plus garder"
         pending={remove.isPending}
         onConfirm={() => remove.mutate()}
@@ -371,7 +371,7 @@ function NoteDialog({
             }}
             onBlur={addDraft}
             maxLength={30}
-            placeholder={tags.length < 8 ? "Ajouter une étiquette…" : "8 étiquettes au plus"}
+            placeholder={tags.length < 8 ? "Ajouter un mot-clé…" : "8 mots-clés au plus"}
             disabled={tags.length >= 8}
             className="min-w-32 flex-1 bg-transparent px-1.5 py-1 text-sm outline-none placeholder:text-muted-foreground"
           />
@@ -399,7 +399,7 @@ function InviteDialog({
     onSuccess: () => {
       onOpenChange(false);
       setOfferId("");
-      toast.success(`${name} est invité·e à postuler.`);
+      toast.success(`Invitation envoyée à ${name}.`);
     },
     onError: (err) => toast.error(friendlyError(err, "L'invitation n'a pas pu être envoyée.")),
   });
@@ -411,7 +411,7 @@ function InviteDialog({
       onOpenChange={onOpenChange}
       icon={<IconSend className="size-5" />}
       title={`Inviter ${name} à postuler`}
-      description="Il ou elle reçoit l'invitation dans ses notifications et postule en un geste."
+      description="L'invitation arrive dans ses notifications : un geste suffit pour postuler."
       confirmLabel="Envoyer l'invitation"
       confirmDisabled={!offerId}
       pending={invite.isPending}

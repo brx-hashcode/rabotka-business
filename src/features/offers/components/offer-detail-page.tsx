@@ -106,7 +106,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
     <div className="w-full space-y-6 pt-2">
       <Link href="/espace/offres" className="inline-flex items-center gap-1.5 text-muted-foreground text-sm hover:text-foreground">
         <IconArrowLeft className="size-4" />
-        Mes offres
+        Offres
       </Link>
 
       {offer.isLoading ? (
@@ -344,7 +344,7 @@ function ApplicantsCard({
           <p className="font-medium">Aucune candidature pour le moment</p>
           <p className="max-w-sm text-muted-foreground text-sm">
             {open
-              ? "Les travailleurs correspondants ont été prévenus de votre offre. Les candidatures apparaîtront ici."
+              ? "Les profils correspondants ont été prévenus de votre offre. Les candidatures apparaîtront ici."
               : "Cette offre n'a reçu aucune candidature."}
           </p>
         </div>
@@ -443,7 +443,7 @@ function SuggestedCard({ offer: o, exclude }: Readonly<{ offer: Offer; exclude: 
           <h2 className="font-semibold text-xl">Profils suggérés</h2>
         </div>
         <Link href={`/espace/recherche?${more}`} className="font-medium text-sm text-whatsapp-dark hover:underline">
-          Voir plus dans Recherche
+          Voir plus de profils
         </Link>
       </div>
       <p className="-mt-2 text-muted-foreground text-sm">Ils correspondent à cette offre et n&apos;ont pas encore postulé : contactez-les directement.</p>
@@ -471,7 +471,7 @@ function DetailsCard({ offer: o, category }: Readonly<{ offer: Offer; category?:
       label: "Rémunération",
       value: o.amount === null ? "À discuter avec le candidat" : `${fcfa(o.amount)}${o.paymentFlow ? ` ${PAYMENT_SUFFIX[o.paymentFlow]}` : ""}`,
     },
-    { icon: IconBriefcase, label: "Type et domaine", value: [EMPLOYMENT_LABEL[o.employmentType], category].filter(Boolean).join(" · ") },
+    { icon: IconBriefcase, label: "Type et métier", value: [EMPLOYMENT_LABEL[o.employmentType], category].filter(Boolean).join(" · ") },
   ];
   return (
     <section className="space-y-4 rounded-3xl bg-card p-6">

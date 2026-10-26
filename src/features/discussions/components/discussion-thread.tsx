@@ -100,7 +100,7 @@ export function DiscussionThread({ id }: Readonly<{ id: string }>) {
   return (
     <>
       <header className="flex items-center gap-3 border-page border-b-2 p-4 sm:px-6">
-        <Link href="/espace/discussions" aria-label="Retour aux discussions" className="-ml-1 rounded-full p-2 hover:bg-page lg:hidden">
+        <Link href="/espace/discussions" aria-label="Retour aux messages" className="-ml-1 rounded-full p-2 hover:bg-page lg:hidden">
           <IconArrowLeft className="size-5" />
         </Link>
         {d ? (
@@ -168,7 +168,7 @@ export function DiscussionThread({ id }: Readonly<{ id: string }>) {
             <Skeleton className="h-16 w-3/5 rounded-2xl" />
           </div>
         ) : !thread.data ? (
-          <p className="py-10 text-center text-muted-foreground text-sm">{friendlyError(thread.error, "Cette discussion est indisponible.")}</p>
+          <p className="py-10 text-center text-muted-foreground text-sm">{friendlyError(thread.error, "Cette conversation est indisponible.")}</p>
         ) : messages.length === 0 ? (
           <p className="py-10 text-center text-muted-foreground text-sm">{content.empty}</p>
         ) : (

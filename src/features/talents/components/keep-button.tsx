@@ -21,7 +21,7 @@ export function KeepButton({ workerId, name, className }: Readonly<{ workerId: s
     mutationFn: () => (kept ? removeTalent(workerId) : saveTalent(workerId)),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: talentsKey });
-      toast.success(kept ? `${name} n'est plus dans votre vivier.` : `${name} est ajouté·e à votre vivier.`);
+      toast.success(kept ? `${name} ne fait plus partie de votre vivier.` : `${name} fait partie de votre vivier.`);
     },
     onError: (err) => toast.error(friendlyError(err, "Le vivier n'a pas pu être mis à jour.")),
   });

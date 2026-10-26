@@ -46,7 +46,7 @@ export function ApplicationsChart({ series }: Readonly<{ series: BusinessStats["
               <button
                 key={d.date}
                 type="button"
-                aria-label={`${shortDay(d.date)} : ${plural(d.applications, "candidature")}, ${plural(d.hires, "recrutement")}`}
+                aria-label={`${shortDay(d.date)} : ${plural(d.applications, "candidature")}, ${plural(d.hires, "retenu")}`}
                 onMouseEnter={() => setActive(i)}
                 onFocus={() => setActive(i)}
                 onBlur={() => setActive(null)}
@@ -73,7 +73,7 @@ export function ApplicationsChart({ series }: Readonly<{ series: BusinessStats["
             >
               <p className="font-medium">{shortDay(day.date)}</p>
               <p className="text-muted-foreground">{plural(day.applications, "candidature")}</p>
-              <p className="text-muted-foreground">{plural(day.hires, "recrutement")}</p>
+              <p className="text-muted-foreground">{plural(day.hires, "retenu")}</p>
             </div>
           )}
         </div>
@@ -86,12 +86,12 @@ export function ApplicationsChart({ series }: Readonly<{ series: BusinessStats["
       </div>
 
       <table className="sr-only">
-        <caption>Candidatures et recrutements par jour</caption>
+        <caption>Candidatures et candidats retenus par jour</caption>
         <thead>
           <tr>
             <th>Jour</th>
             <th>Candidatures</th>
-            <th>Recrutements</th>
+            <th>Retenus</th>
           </tr>
         </thead>
         <tbody>

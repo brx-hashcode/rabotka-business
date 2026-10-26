@@ -26,7 +26,7 @@ export function ContactDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[calc(100vw-2rem)] gap-0 rounded-3xl border-0 bg-card p-6 shadow-soft sm:max-w-md">
         <DialogTitle className="sr-only">Contact de {name}</DialogTitle>
-        <DialogDescription className="sr-only">Téléphone et e-mail débloqués</DialogDescription>
+        <DialogDescription className="sr-only">Téléphone et e-mail</DialogDescription>
         {contacts.isLoading ? (
           <div className="space-y-4">
             <Skeleton className="h-14 w-2/3 rounded-2xl" />
@@ -43,7 +43,7 @@ export function ContactDialog({
             <p className="text-muted-foreground text-sm">
               {contacts.error
                 ? friendlyError(contacts.error, "Les coordonnées sont indisponibles pour le moment.")
-                : `Elles apparaissent dès que ${name} a réglé sa part du déblocage.`}
+                : `Elles apparaissent dès que ${name} a confirmé.`}
             </p>
           </div>
         )}
