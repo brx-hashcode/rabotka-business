@@ -42,9 +42,10 @@ export function NotificationBell() {
   async function openOne(n: AppNotification) {
     if (!n.readAt) await markNotificationRead(n.id).catch(() => undefined);
     void refresh();
-    if (n.link?.startsWith("/espace")) {
+    const link = espaceLink(n.link);
+    if (link) {
       setOpen(false);
-      router.push(n.link);
+      router.push(link);
     }
   }
 
@@ -123,4 +124,17 @@ export function NotificationList({
       ))}
     </ul>
   );
+}
+
+/**
+ * Where a notification opens in the space. Business notifications already
+ * point into `/espace`; a new message carries the client app's
+ * `/discussions/:id`, the same conversation here. Anything else has no page
+ * in the space.
+ */
+export function espaceLink(link: string | null | undefined): string | null {
+  if (!link) return null;
+  if (link.startsWith("/espace")) return link;
+  if (link.startsWith("/discussions/")) return `/espace${link}`;
+  return null;
 }
