@@ -29,6 +29,7 @@ import { Input } from "#/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Textarea } from "#/components/ui/textarea";
+import { CardGridSkeleton } from "#/components/page-skeletons";
 import { ReachButton, RELIABILITY_HINT } from "#/features/candidates/components/candidate-card";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { listOffers, offersKey } from "#/lib/api/offer-controller";
@@ -126,11 +127,7 @@ export function TalentsPage() {
         )}
 
         {talents.isLoading ? (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {[0, 1, 2].map((i) => (
-              <Skeleton key={i} className="h-60 rounded-3xl" />
-            ))}
-          </div>
+          <CardGridSkeleton kind="talent" />
         ) : !talents.data ? (
           <p className="text-muted-foreground">{friendlyError(talents.error, "Vos profils sont indisponibles pour le moment.")}</p>
         ) : shown.length === 0 ? (

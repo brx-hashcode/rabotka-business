@@ -82,7 +82,7 @@ export function OffersPage() {
       </div>
 
       {isLoading ? (
-        <CardGridSkeleton count={6} />
+        <CardGridSkeleton kind="offer" />
       ) : error ? (
         <p className="rounded-3xl bg-card p-6 text-muted-foreground">{friendlyError(error, "Vos offres n'ont pas pu être chargées.")}</p>
       ) : !data?.items.length ? (

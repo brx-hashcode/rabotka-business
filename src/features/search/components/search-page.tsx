@@ -8,7 +8,7 @@ import { IconLock, IconRefresh, IconSearch } from "@tabler/icons-react";
 
 import { Input } from "#/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
-import { Skeleton } from "#/components/ui/skeleton";
+import { CardGridSkeleton } from "#/components/page-skeletons";
 import { CandidateCard } from "#/features/candidates/components/candidate-card";
 import { useCities } from "#/hooks/use-geo";
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
@@ -190,7 +190,7 @@ export function SearchPage() {
                 <span className="text-muted-foreground text-sm">d&apos;après vos offres</span>
               </div>
               {suggested.isLoading ? (
-                <Skeleton className="h-48 rounded-2xl" />
+                <CardGridSkeleton kind="profile" count={3} />
               ) : (
                 <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {suggested.data!.map((c) => (
@@ -213,11 +213,7 @@ export function SearchPage() {
               )}
             </div>
             {results.isLoading ? (
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {[0, 1, 2].map((i) => (
-                  <Skeleton key={i} className="h-52 rounded-3xl" />
-                ))}
-              </div>
+              <CardGridSkeleton kind="profile" />
             ) : !results.data ? (
               <p className="text-muted-foreground">{friendlyError(results.error, "La recherche est indisponible pour le moment.")}</p>
             ) : items.length === 0 ? (

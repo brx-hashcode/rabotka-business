@@ -7,9 +7,18 @@ import { cn } from "#/lib/utils";
  * pieces, so nothing jumps between the two.
  */
 
-/** One grey shape. On a card it is the page's grey; on the page, the card's. */
+/**
+ * One grey shape: a tint of the text colour, so it reads the same on a card,
+ * on the page and in dark mode. `onPage` marks the ones drawn on the page's
+ * grey (a touch stronger there).
+ */
 export function Bone({ className, onPage }: Readonly<{ className?: string; onPage?: boolean }>) {
-  return <div aria-hidden className={cn("animate-pulse rounded-xl", onPage ? "bg-card" : "bg-page", className)} />;
+  return (
+    <div
+      aria-hidden
+      className={cn("animate-pulse rounded-xl", onPage ? "bg-foreground/[0.08]" : "bg-foreground/[0.06]", className)}
+    />
+  );
 }
 
 function Card({ className, children }: Readonly<{ className?: string; children?: React.ReactNode }>) {
@@ -55,18 +64,78 @@ export function TilesSkeleton({ count = 4 }: Readonly<{ count?: number }>) {
   );
 }
 
-/** A person or offer card: picture, two lines, a box, buttons. */
-function CardBones() {
+// ── Cards, each the shape of the real one ──
+
+export type CardKind = "offer" | "application" | "profile" | "talent" | "mission" | "contact";
+
+/** An offer in « Offres »: type and status, title, date, place, seats, pay. */
+function OfferCardBones() {
   return (
-    <div className="space-y-4 rounded-3xl bg-page p-5">
-      <div className="flex items-center gap-3.5">
+    <div className="flex flex-col gap-4 rounded-3xl bg-card p-6">
+      <div className="flex justify-between">
+        <Bone className="h-6 w-20 rounded-full" />
+        <Bone className="h-6 w-24 rounded-full" />
+      </div>
+      <div className="space-y-2">
+        <Bone className="h-5 w-11/12" />
+        <Bone className="h-5 w-3/5" />
+      </div>
+      <div className="space-y-2">
+        <Bone className="h-3.5 w-3/4" />
+        <Bone className="h-3.5 w-1/2" />
+        <Bone className="h-3.5 w-2/5" />
+      </div>
+      <Bone className="h-5 w-32" />
+    </div>
+  );
+}
+
+/** A candidature: picture, name with status and age, reliability, the offer box, the decision. */
+function ApplicationCardBones() {
+  return (
+    <div className="flex flex-col gap-4 rounded-3xl bg-page p-5">
+      <div className="flex items-start gap-3.5">
         <Bone onPage className="size-14 rounded-2xl" />
         <div className="flex-1 space-y-2">
           <Bone onPage className="h-4 w-3/5" />
-          <Bone onPage className="h-3 w-2/5" />
+          <div className="flex gap-2">
+            <Bone onPage className="h-5 w-16 rounded-full" />
+            <Bone onPage className="h-5 w-20" />
+          </div>
+          <Bone onPage className="h-3.5 w-28" />
         </div>
       </div>
-      <Bone onPage className="h-16 rounded-2xl" />
+      <div className="space-y-2 rounded-2xl bg-card p-3">
+        <Bone className="h-3 w-20" />
+        <Bone className="h-4 w-4/5" />
+        <Bone className="h-3 w-28" />
+      </div>
+      <div className="flex gap-2">
+        <Bone onPage className="size-9 rounded-full" />
+        <Bone onPage className="h-9 flex-1 rounded-full" />
+        <Bone onPage className="h-9 flex-1 rounded-full" />
+      </div>
+    </div>
+  );
+}
+
+/** A profile in the search: picture, name, trade, figures, description, profile and contact. */
+function ProfileCardBones() {
+  return (
+    <div className="flex flex-col gap-4 rounded-3xl bg-page p-5">
+      <div className="flex items-start gap-3.5">
+        <Bone onPage className="size-14 rounded-2xl" />
+        <div className="flex-1 space-y-2">
+          <Bone onPage className="h-4 w-3/5" />
+          <Bone onPage className="h-3.5 w-2/5" />
+          <Bone onPage className="h-3 w-4/5" />
+        </div>
+        <Bone onPage className="size-9 rounded-full" />
+      </div>
+      <div className="space-y-2">
+        <Bone onPage className="h-3.5" />
+        <Bone onPage className="h-3.5 w-3/4" />
+      </div>
       <div className="flex gap-2">
         <Bone onPage className="h-10 flex-1 rounded-full" />
         <Bone onPage className="h-10 flex-1 rounded-full" />
@@ -75,12 +144,128 @@ function CardBones() {
   );
 }
 
-/** Cards three to a row (two, one on smaller screens). */
-export function CardGridSkeleton({ count = 6 }: Readonly<{ count?: number }>) {
+/** A worker in « Mes profils »: picture, name, figures, the menu, tags, the last mission, invite and contact. */
+function TalentCardBones() {
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <div className="flex flex-col gap-4 rounded-3xl bg-page p-5">
+      <div className="flex items-start gap-3.5">
+        <Bone onPage className="size-14 rounded-2xl" />
+        <div className="flex-1 space-y-2">
+          <Bone onPage className="h-4 w-3/5" />
+          <Bone onPage className="h-3.5 w-2/5" />
+          <Bone onPage className="h-3 w-1/3" />
+        </div>
+        <Bone onPage className="size-9 rounded-full" />
+      </div>
+      <div className="flex gap-1.5">
+        <Bone onPage className="h-5 w-32 rounded-full" />
+        <Bone onPage className="h-5 w-16 rounded-full" />
+      </div>
+      <Bone onPage className="h-3 w-4/5" />
+      <div className="flex gap-2">
+        <Bone onPage className="h-10 flex-1 rounded-full" />
+        <Bone onPage className="h-10 flex-1 rounded-full" />
+      </div>
+    </div>
+  );
+}
+
+/** A mission: date block, title and status, the offer's box, the team's seats and people. */
+function MissionCardBones() {
+  return (
+    <div className="flex flex-col gap-5 rounded-3xl bg-card p-5">
+      <div className="flex items-start gap-3.5">
+        <Bone className="h-[3.75rem] w-14 rounded-2xl" />
+        <div className="flex-1 space-y-2">
+          <Bone className="h-4 w-4/5" />
+          <Bone className="h-3 w-1/2" />
+        </div>
+        <Bone className="h-5 w-20 rounded-full" />
+      </div>
+      <div className="space-y-2 rounded-2xl bg-page p-3">
+        <Bone onPage className="h-3.5" />
+        <Bone onPage className="h-3.5 w-3/5" />
+        <Bone onPage className="h-3 w-2/5" />
+      </div>
+      <div className="space-y-1.5">
+        <div className="flex justify-between">
+          <Bone className="h-3 w-14" />
+          <Bone className="h-3 w-16" />
+        </div>
+        <Bone className="h-1.5 rounded-full" />
+      </div>
+      <div className="space-y-1.5">
+        {[0, 1].map((i) => (
+          <div key={i} className="flex items-center gap-2.5 rounded-2xl bg-page p-2">
+            <Bone onPage className="size-9" />
+            <div className="flex-1 space-y-1.5">
+              <Bone onPage className="h-3.5 w-1/2" />
+              <Bone onPage className="h-3 w-16 rounded-full" />
+            </div>
+            <Bone onPage className="size-9 rounded-full" />
+          </div>
+        ))}
+      </div>
+      <Bone className="h-4 w-28" />
+    </div>
+  );
+}
+
+/** A contact: who, phone and e-mail, the offers, since when. */
+function ContactCardBones() {
+  return (
+    <div className="flex flex-col gap-5 rounded-3xl bg-card p-6">
+      <div className="flex items-center gap-4">
+        <Bone className="size-14 rounded-2xl" />
+        <div className="flex-1 space-y-2">
+          <Bone className="h-5 w-3/5" />
+          <Bone className="h-3.5 w-2/5" />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Bone className="h-11 rounded-2xl" />
+        <Bone className="h-11 rounded-2xl" />
+      </div>
+      <Bone className="h-5 w-40 rounded-full" />
+      <Bone className="h-3 w-32" />
+    </div>
+  );
+}
+
+const CARD: Record<CardKind, () => React.ReactElement> = {
+  offer: OfferCardBones,
+  application: ApplicationCardBones,
+  profile: ProfileCardBones,
+  talent: TalentCardBones,
+  mission: MissionCardBones,
+  contact: ContactCardBones,
+};
+
+/** Cards of one kind, three to a row (two, one on smaller screens). */
+export function CardGridSkeleton({ kind, count = 6 }: Readonly<{ kind: CardKind; count?: number }>) {
+  const Card = CARD[kind];
+  return (
+    <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
       {Array.from({ length: count }, (_, i) => (
-        <CardBones key={i} />
+        <Card key={i} />
+      ))}
+    </div>
+  );
+}
+
+/** Aide's claims: title and status, a line of text, the date. */
+export function ClaimRowsSkeleton({ count = 3 }: Readonly<{ count?: number }>) {
+  return (
+    <div className="space-y-2">
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="space-y-2 rounded-2xl bg-page p-4">
+          <div className="flex items-center gap-2">
+            <Bone onPage className="h-4 w-1/3" />
+            <Bone onPage className="h-5 w-16 rounded-full" />
+          </div>
+          <Bone onPage className="h-3.5 w-3/4" />
+          <Bone onPage className="h-3 w-32" />
+        </div>
       ))}
     </div>
   );
@@ -175,8 +360,17 @@ export function DashboardSkeleton() {
   );
 }
 
-/** Candidatures, Trouver des profils, Mes profils, Missions, Offres. */
-export function GridPageSkeleton({ tiles, filters = true, action }: Readonly<{ tiles?: number; filters?: boolean; action?: boolean }>) {
+/**
+ * Candidatures, Trouver des profils, Mes profils (cards in a section with
+ * its filters), Offres, Missions, contacts (cards on the page).
+ */
+export function GridPageSkeleton({
+  kind,
+  tiles,
+  filters = true,
+  action,
+}: Readonly<{ kind: CardKind; tiles?: number; filters?: boolean; action?: boolean }>) {
+  const onPage = kind === "offer" || kind === "mission" || kind === "contact";
   return (
     <Status>
       <HeaderSkeleton action={action} />
@@ -185,16 +379,23 @@ export function GridPageSkeleton({ tiles, filters = true, action }: Readonly<{ t
           <TilesSkeleton count={tiles} />
         </Card>
       )}
-      <Card className="space-y-5">
-        {filters && <FiltersBones />}
-        <CardGridSkeleton />
-      </Card>
+      {onPage ? (
+        <>
+          {filters && <Bone onPage className="h-11 w-full max-w-md rounded-full" />}
+          <CardGridSkeleton kind={kind} />
+        </>
+      ) : (
+        <Card className="space-y-5">
+          {filters && <FiltersBones />}
+          <CardGridSkeleton kind={kind} />
+        </Card>
+      )}
     </Status>
   );
 }
 
-/** Factures, Aide. */
-export function ListPageSkeleton({ tiles, action }: Readonly<{ tiles?: number; action?: boolean }>) {
+/** Factures (rows with an icon), Aide (claims). */
+export function ListPageSkeleton({ tiles, action, claims }: Readonly<{ tiles?: number; action?: boolean; claims?: boolean }>) {
   return (
     <Status>
       <HeaderSkeleton action={action} />
@@ -204,8 +405,8 @@ export function ListPageSkeleton({ tiles, action }: Readonly<{ tiles?: number; a
         </Card>
       )}
       <Card className="space-y-4">
-        <Bone className="h-6 w-36" />
-        <RowsSkeleton />
+        {claims ? <Bone className="h-10 w-56 rounded-full" /> : <Bone className="h-6 w-36" />}
+        {claims ? <ClaimRowsSkeleton /> : <RowsSkeleton />}
       </Card>
     </Status>
   );
