@@ -272,7 +272,10 @@ export type ContactedProfile = {
   firstName: string;
   lastName: string;
   avatarUrl: string | null;
+  /** The number WhatsApp runs on. */
   phone: string;
+  /** A number for calls, when it is not the WhatsApp one. */
+  directPhone?: string | null;
   email: string | null;
   city: string | null;
   categoryName: string | null;
