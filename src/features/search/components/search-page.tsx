@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { IconLock, IconRefresh, IconSearch, IconSparkles, IconUsersGroup } from "@tabler/icons-react";
+import { IconLock, IconRefresh, IconSearch } from "@tabler/icons-react";
 
 import { Input } from "#/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
@@ -186,8 +186,7 @@ export function SearchPage() {
 
           {!asking && (suggested.isLoading || (suggested.data?.length ?? 0) > 0) && (
             <section className="space-y-4 rounded-3xl bg-card p-5 sm:p-6">
-              <div className="flex items-center gap-2">
-                <IconSparkles className="size-5 text-whatsapp-dark" />
+              <div className="flex items-baseline gap-2">
                 <h2 className="font-semibold text-xl">Suggérés pour vous</h2>
                 <span className="text-muted-foreground text-sm">d&apos;après vos offres</span>
               </div>
@@ -205,8 +204,7 @@ export function SearchPage() {
 
           <section className="space-y-4 rounded-3xl bg-card p-5 sm:p-6">
             <div className="flex items-baseline justify-between gap-3">
-              <h2 className="flex items-center gap-2 font-semibold text-xl">
-                <IconUsersGroup className="size-5" />
+              <h2 className="font-semibold text-xl">
                 {asking ? "Résultats" : "Tous les profils"}
               </h2>
               {results.data && (

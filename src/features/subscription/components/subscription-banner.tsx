@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { IconArrowRight, IconSparkles } from "@tabler/icons-react";
+import { IconArrowRight } from "@tabler/icons-react";
 
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
 import { cn } from "#/lib/utils";
@@ -39,7 +39,6 @@ export function SubscriptionBanner({ className }: Readonly<{ className?: string 
         className,
       )}
     >
-      <IconSparkles className="size-6 shrink-0" />
       <p className="flex-1 font-medium text-sm">{text}</p>
       <IconArrowRight className="size-5 shrink-0" />
     </Link>
