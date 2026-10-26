@@ -2,12 +2,13 @@
 
 const nf = (n: number, digits = 1) => n.toLocaleString("fr-FR", { maximumFractionDigits: digits });
 
-/** A delay in hours, said the way people say it: « 5 h », « 2,5 j ». */
+/** A delay in hours, said the way people say it: « 5 h », « 2,5 jours ». */
 export function formatDelay(hours: number | null): string {
   if (hours === null) return "—";
   if (hours < 1) return "< 1 h";
   if (hours < 48) return `${nf(Math.round(hours), 0)} h`;
-  return `${nf(hours / 24)} j`;
+  const d = hours / 24;
+  return `${nf(d)} jour${d >= 2 ? "s" : ""}`;
 }
 
 export type Trend = { label: string; direction: "up" | "down" | "flat"; good: boolean | null };
