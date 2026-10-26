@@ -91,6 +91,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
   const [sending, setSending] = useState(false);
   const [sentAt, setSentAt] = useState(0);
   const [phoneLabel, setPhoneLabel] = useState("");
+  const [startsAt, setStartsAt] = useState<string | null>(null);
   const paidBefore = useRef<number | null>(null);
   const polls = useRef(0);
 
@@ -162,11 +163,16 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
       }
       const sub = await queryClient.fetchQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription, staleTime: 0 });
       const paidNow = sub.history.filter((p) => p.paid).length;
-      if (paidNow > (paidBefore.current ?? 0)) setPhase("approved");
+      if (paidNow > (paidBefore.current ?? 0)) {
+        // A lower plan or a renewal is queued: say when it starts, not « now ».
+        const queued = sub.upcoming.find((p) => p.planName.toLowerCase() === what?.planName.toLowerCase());
+        setStartsAt(queued?.startsAt ?? null);
+        setPhase("approved");
+      }
       else if (polls.current > POLL_LIMIT) setPhase("failed");
     }, POLL_MS);
     return () => clearInterval(timer);
-  }, [phase, token, queryClient, sentAt]);
+  }, [phase, token, queryClient, sentAt, what?.planName]);
 
   return (
     <div className="w-full space-y-6 pt-2">
@@ -331,6 +337,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
             operator={selected}
             sentAt={sentAt}
             planName={what?.planName ?? null}
+            startsAt={startsAt}
             onClose={() => {
               if (phase === "waiting") {
                 toast("Si vous validez la demande sur votre téléphone, votre formule s'activera quand même.");

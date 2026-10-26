@@ -128,7 +128,7 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
 
       {data.upcoming.length > 0 && (
         <p className="rounded-2xl bg-page px-4 py-3 text-sm">
-          Déjà payé : {data.upcoming.map((p) => `${p.planName} du ${date(p.startsAt)} au ${date(p.endsAt)}`).join(" ; ")}.
+          À suivre : {data.upcoming.map((p) => `${p.planName} du ${date(p.startsAt)} au ${date(p.endsAt)}`).join(" ; ")}, déjà payé.
         </p>
       )}
     </section>
@@ -175,6 +175,13 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
   const router = useRouter();
   const [period, setPeriod] = useState<Period>("MONTHLY");
   const current = data.entitlements.status === "ACTIVE" ? data.entitlements.plan?.id : null;
+  const currentPlan = data.plans.find((p) => p.id === current) ?? null;
+  // Where a queued period would start: after the running one and anything already paid.
+  const lastEnd = [data.entitlements.endsAt, ...data.upcoming.map((p) => p.endsAt)]
+    .filter((d): d is string => !!d)
+    .sort()
+    .at(-1);
+  const scheduled = new Set(data.upcoming.map((p) => p.planName));
 
   const buy = useMutation({
     mutationFn: (plan: BusinessPlan) => subscribeToPlan(plan.id, period),
@@ -189,7 +196,9 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
         <div className="space-y-1">
           <h2 className="font-semibold text-xl">{current ? "Renouveler ou changer de formule" : "Choisir une formule"}</h2>
           <p className="text-muted-foreground text-sm">
-            Payée par mobile money. Un renouvellement anticipé s&apos;ajoute à la période en cours.
+            {current
+              ? "Payée par mobile money. Une formule supérieure démarre tout de suite ; un renouvellement ou une formule inférieure prend la suite de la formule en cours."
+              : "Payée par mobile money, active dès le paiement."}
           </p>
         </div>
         <div role="radiogroup" aria-label="Période" className="inline-flex rounded-full bg-card p-1">
@@ -220,16 +229,29 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
         {data.plans.map((plan) => {
           const price = period === "ANNUAL" ? plan.annualPriceFcfa : plan.monthlyPriceFcfa;
           const isCurrent = plan.id === current;
+          const change = !currentPlan || isCurrent ? null : plan.monthlyPriceFcfa > currentPlan.monthlyPriceFcfa ? "up" : "down";
+          const when = isCurrent
+            ? lastEnd && `S'ajoute à la suite, à partir du ${date(lastEnd)}.`
+            : change === "up"
+              ? `Démarre aujourd'hui. Les jours restants de ${currentPlan?.name} sont convertis en jours de ${plan.name}.`
+              : change === "down"
+                ? lastEnd &&
+                  `Démarre le ${date(lastEnd)}, ${data.upcoming.length > 0 ? "après les périodes déjà payées" : "à la fin de votre formule actuelle"}.`
+                : null;
           const pending = buy.isPending && buy.variables?.id === plan.id;
           return (
             <article key={plan.id} className={cn("flex flex-col gap-5 rounded-3xl bg-card p-6", isCurrent && "ring-2 ring-ink")}>
               <div className="space-y-1">
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="font-semibold text-lg">{plan.name}</h3>
-                  {isCurrent && (
+                  {isCurrent ? (
                     <span className="rounded-full bg-chip-green px-2.5 py-1 font-medium text-chip-green-foreground text-xs">
                       Votre formule
                     </span>
+                  ) : (
+                    scheduled.has(plan.name) && (
+                      <span className="rounded-full bg-page px-2.5 py-1 font-medium text-muted-foreground text-xs">Programmée</span>
+                    )
                   )}
                 </div>
                 {plan.description && <p className="text-muted-foreground text-sm">{plan.description}</p>}
@@ -251,13 +273,14 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
                 {plan.includesFieldAgents && <PlanLine>Aide d&apos;un agent sur le terrain</PlanLine>}
                 {plan.priorityVisibility && <PlanLine>Offres affichées en premier</PlanLine>}
               </ul>
+              {when && <p className="text-muted-foreground text-xs">{when}</p>}
               <button
                 type="button"
                 onClick={() => buy.mutate(plan)}
                 disabled={buy.isPending || price <= 0}
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-ink px-6 font-medium text-[15px] text-white transition-colors hover:bg-ink/90 disabled:opacity-60"
               >
-                {pending ? <Loader className="size-5 animate-spin text-white" /> : isCurrent ? "Renouveler" : "Choisir"}
+                {pending ? <Loader className="size-5 animate-spin text-white" /> : isCurrent ? "Renouveler" : change === "up" ? `Passer à ${plan.name}` : change === "down" ? "Programmer" : "Choisir"}
               </button>
             </article>
           );
