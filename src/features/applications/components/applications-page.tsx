@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { IconInbox, IconSearch } from "@tabler/icons-react";
+import { IconCalendarEvent, IconClock, IconInbox, IconSearch, IconShieldCheck } from "@tabler/icons-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Input } from "#/components/ui/input";
@@ -133,9 +133,9 @@ export function ApplicationsPage() {
             </p>
           </div>
         ) : (
-          <ul className="flex flex-col gap-2">
+          <ul className="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
             {shown.map((a) => (
-              <Row key={a.applicationId} application={a} />
+              <ApplicationCard key={a.applicationId} application={a} />
             ))}
           </ul>
         )}
@@ -157,34 +157,72 @@ export function ApplicationsPage() {
   );
 }
 
-function Row({ application: a }: Readonly<{ application: ReceivedApplication }>) {
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Whole days since `iso`. A module helper: reading the clock is not render's business. */
+function daysSince(iso: string): number {
+  return Math.floor((Date.now() - new Date(iso).getTime()) / DAY_MS);
+}
+
+function ago(iso: string): string {
+  const days = daysSince(iso);
+  if (days <= 0) return "aujourd'hui";
+  if (days === 1) return "hier";
+  return `il y a ${days} jours`;
+}
+
+/** One application: who, for which offer, how long it has waited — and the decision. */
+function ApplicationCard({ application: a }: Readonly<{ application: ReceivedApplication }>) {
   const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
+  const waitingDays = a.status === "PENDING" ? daysSince(a.createdAt) : 0;
+  const at = a.offer.scheduledAt ? new Date(a.offer.scheduledAt) : null;
   return (
-    <li className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl bg-page p-3 pr-4">
-      <Link href={`/espace/candidats/${a.worker.id}`} className="group flex min-w-0 flex-1 items-center gap-4">
-        <Avatar className="size-11 rounded-xl">
-          {a.worker.avatarUrl && <AvatarImage src={a.worker.avatarUrl} alt="" className="object-cover" />}
-          <AvatarFallback className="rounded-xl bg-card font-medium">{getInitials(name)}</AvatarFallback>
-        </Avatar>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate font-medium group-hover:underline">{name}</span>
-          <span className="block truncate text-muted-foreground text-xs">
-            {new Date(a.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
-            {a.worker.reliabilityScore !== null && ` · fiabilité ${a.worker.reliabilityScore}/100`}
-          </span>
+    <li className="flex flex-col gap-4 rounded-3xl bg-page p-5">
+      <div className="flex items-start gap-3.5">
+        <Link href={`/espace/candidats/${a.worker.id}`} className="shrink-0">
+          <Avatar className="size-14 rounded-2xl">
+            {a.worker.avatarUrl && <AvatarImage src={a.worker.avatarUrl} alt="" className="object-cover" />}
+            <AvatarFallback className="rounded-2xl bg-brand-lime font-semibold text-[#0f2414]">{getInitials(name)}</AvatarFallback>
+          </Avatar>
+        </Link>
+        <div className="min-w-0 flex-1">
+          <Link href={`/espace/candidats/${a.worker.id}`} className="block truncate font-semibold hover:underline">
+            {name}
+          </Link>
+          <p className="text-muted-foreground text-xs">Candidature {ago(a.createdAt)}</p>
+          {a.worker.reliabilityScore !== null && (
+            <p className="mt-1 inline-flex items-center gap-1 font-medium text-xs">
+              <IconShieldCheck className="size-3.5 text-whatsapp-dark" />
+              Fiabilité {a.worker.reliabilityScore}/100
+            </p>
+          )}
+        </div>
+        <span className={cn("shrink-0 rounded-full px-2.5 py-1 font-medium text-xs", STAGE_CLASS[applicationStage(a.status)])}>
+          {APPLICATION_STATUS[a.status] ?? a.status}
         </span>
+      </div>
+
+      <Link href={`/espace/offres/${a.offer.id}`} className="group space-y-0.5 rounded-2xl bg-card p-3">
+        <span className="block text-muted-foreground text-[11px] uppercase tracking-wide">Pour l&apos;offre</span>
+        <span className="line-clamp-1 font-medium text-sm group-hover:underline">{a.offer.title}</span>
+        {at && (
+          <span className="flex items-center gap-1 text-muted-foreground text-xs">
+            <IconCalendarEvent className="size-3.5" />
+            {at.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "long" })}
+          </span>
+        )}
       </Link>
-      <Link
-        href={`/espace/offres/${a.offer.id}`}
-        className="hidden max-w-56 truncate rounded-full bg-card px-3 py-1 font-medium text-xs hover:underline md:block"
-        title={a.offer.title}
-      >
-        {a.offer.title}
-      </Link>
-      <span className={cn("shrink-0 rounded-full px-2.5 py-1 font-medium text-xs", STAGE_CLASS[applicationStage(a.status)])}>
-        {APPLICATION_STATUS[a.status] ?? a.status}
-      </span>
-      <ApplicationActions applicant={a} name={name} />
+
+      {waitingDays >= 2 && (
+        <p className="-mt-1 flex items-center gap-1.5 text-chip-amber-foreground text-xs">
+          <IconClock className="size-3.5" />
+          En attente de votre réponse depuis {waitingDays} jours
+        </p>
+      )}
+
+      <div className="mt-auto">
+        <ApplicationActions applicant={a} name={name} variant="card" />
+      </div>
     </li>
   );
 }

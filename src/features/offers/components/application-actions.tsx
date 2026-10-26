@@ -4,12 +4,18 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconAddressBook, IconCheck, IconMessageCircle, IconStar, IconStarFilled, IconCircleCheckFilled, IconCircleDashed, IconLockOpen, IconX } from "@tabler/icons-react";
+import { IconAddressBook, IconCheck, IconDots, IconMessageCircle, IconStar, IconStarFilled, IconCircleCheckFilled, IconCircleDashed, IconLockOpen, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
 import { chattableApplicationId } from "#/features/discussions/chattable";
 import { useOpenDiscussion } from "#/features/discussions/use-discussions";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Textarea } from "#/components/ui/textarea";
 import {
@@ -29,14 +35,53 @@ import { fcfa } from "../offer-labels";
 
 type Dialog = "accept" | "reject" | "cancel" | "unlock" | "rate" | null;
 
-const button = "inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 font-medium text-sm transition-colors";
+type Action = {
+  key: string;
+  label: string;
+  icon: typeof IconCheck;
+  tone: "primary" | "accent" | "default" | "danger";
+  onClick?: () => void;
+  href?: string;
+};
+
+const TONE: Record<Action["tone"], string> = {
+  primary: "bg-ink text-white hover:bg-ink/90",
+  accent: "bg-brand-lime text-[#0f2414] hover:bg-brand-lime/80",
+  default: "bg-card hover:bg-card/70",
+  danger: "bg-card hover:text-destructive",
+};
+
+const button = "inline-flex h-9 items-center justify-center gap-1.5 rounded-full px-3.5 font-medium text-sm transition-colors";
+
+function ActionButton({ action: a, stretch, label }: Readonly<{ action: Action; stretch?: boolean; label?: string }>) {
+  const className = cn(button, TONE[a.tone], stretch && "flex-1");
+  const body = (
+    <>
+      <a.icon className="size-4" />
+      {label ?? a.label}
+    </>
+  );
+  return a.href ? (
+    <Link href={a.href} className={className}>
+      {body}
+    </Link>
+  ) : (
+    <button type="button" onClick={a.onClick} className={className}>
+      {body}
+    </button>
+  );
+}
 
 /**
  * What the employer can do with one application, by its stage: retain or
  * turn down a new one; follow the contact unlock of a retained one; undo a
  * hire. The server decides — these only ask.
  */
-export function ApplicationActions({ applicant, name }: Readonly<{ applicant: OfferApplicant; name: string }>) {
+export function ApplicationActions({
+  applicant,
+  name,
+  variant = "inline",
+}: Readonly<{ applicant: OfferApplicant; name: string; variant?: "inline" | "card" | "compact" }>) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const openChat = useOpenDiscussion();
@@ -82,60 +127,94 @@ export function ApplicationActions({ applicant, name }: Readonly<{ applicant: Of
 
   const status = applicant.status;
   const chatId = chattableApplicationId(id, status);
+  const hired = ["ACCEPTED", "STARTED", "END"].includes(status);
+  const contactHref = `/espace/contacts#w-${applicant.worker.id}`;
+
+  // What this stage allows, most useful first; the layout decides how they show.
+  const actions: Action[] = [];
+  if (status === "PENDING" || status === "VIEWED") {
+    actions.push({ key: "accept", label: "Retenir", icon: IconCheck, tone: "primary", onClick: () => setDialog("accept") });
+    actions.push({ key: "reject", label: "Refuser", icon: IconX, tone: "danger", onClick: () => setDialog("reject") });
+  }
+  if (status === "WAITING_PAYMENT") {
+    actions.push({ key: "unlock", label: "Suivre le déblocage", icon: IconLockOpen, tone: "default", onClick: () => setDialog("unlock") });
+    actions.push({ key: "cancel", label: "Annuler le recrutement", icon: IconX, tone: "danger", onClick: () => setDialog("cancel") });
+  }
+  if (status === "END" && !applicant.ratedByEmployer) {
+    actions.push({ key: "rate", label: "Noter", icon: IconStar, tone: "accent", onClick: () => setDialog("rate") });
+  }
+  if (hired) actions.push({ key: "contact", label: "Voir le contact", icon: IconAddressBook, tone: "primary", href: contactHref });
+  if (status === "ACCEPTED") {
+    actions.push({ key: "cancel", label: "Annuler le recrutement", icon: IconX, tone: "danger", onClick: () => setDialog("cancel") });
+  }
+
+  const chat = chatId && (
+    <button
+      type="button"
+      disabled={openChat.isPending}
+      onClick={() =>
+        openChat.mutate(chatId, {
+          onSuccess: ({ conversation }) => router.push(`/espace/discussions/${conversation.id}`),
+          onError: (err) => toast.error(friendlyError(err, "La discussion n'a pas pu être ouverte.")),
+        })
+      }
+      aria-label={`Écrire à ${name}`}
+      title="Écrire"
+      className={cn(button, "shrink-0 bg-card px-2.5 hover:bg-card/70")}
+    >
+      <IconMessageCircle className="size-4" />
+    </button>
+  );
+
+  // Rows: everything as buttons, the danger one first (it was so before).
+  // Cards: the same, stretched to the card's width.
+  // Compact: the main action, the contact as an icon, the rest in a menu.
+  const main = variant === "compact" ? actions.find((a) => a.tone !== "danger" && a.key !== "contact") : undefined;
+  const contact = actions.find((a) => a.key === "contact");
+  const rest = variant === "compact" ? actions.filter((a) => a !== main && a !== contact) : [];
+
   return (
     <>
-      {chatId && (
-        <button
-          type="button"
-          disabled={openChat.isPending}
-          onClick={() =>
-            openChat.mutate(chatId, {
-              onSuccess: ({ conversation }) => router.push(`/espace/discussions/${conversation.id}`),
-              onError: (err) => toast.error(friendlyError(err, "La discussion n'a pas pu être ouverte.")),
-            })
-          }
-          aria-label={`Écrire à ${name}`}
-          title="Écrire"
-          className={cn(button, "bg-card px-2.5 hover:bg-card/70")}
-        >
-          <IconMessageCircle className="size-4" />
-        </button>
-      )}
-      {(status === "PENDING" || status === "VIEWED") && (
-        <div className="flex gap-2">
-          <button type="button" onClick={() => setDialog("reject")} className={cn(button, "bg-card hover:text-destructive")}>
-            <IconX className="size-4" />
-            Refuser
-          </button>
-          <button type="button" onClick={() => setDialog("accept")} className={cn(button, "bg-ink text-white hover:bg-ink/90")}>
-            <IconCheck className="size-4" />
-            Retenir
-          </button>
+      {variant === "compact" ? (
+        <div className="flex shrink-0 items-center gap-1.5">
+          {chat}
+          {contact && (
+            <Link href={contact.href!} aria-label={`Voir le contact de ${name}`} title="Voir le contact" className={cn(button, "bg-card px-2.5 hover:bg-card/70")}>
+              <IconAddressBook className="size-4" />
+            </Link>
+          )}
+          {main && <ActionButton action={main} />}
+          {rest.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger aria-label="Plus d'actions" className={cn(button, "bg-card px-2.5 outline-none hover:bg-card/70")}>
+                <IconDots className="size-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60 rounded-2xl border-0 bg-card p-1.5 shadow-soft">
+                {rest.map((a) => (
+                  <DropdownMenuItem
+                    key={a.key}
+                    onSelect={a.onClick}
+                    className={cn(
+                      "cursor-pointer gap-2.5 rounded-xl px-3 py-2.5 text-sm focus:bg-page",
+                      a.tone === "danger" && "text-destructive focus:bg-destructive/10 focus:text-destructive",
+                    )}
+                  >
+                    <a.icon className="size-4" />
+                    {a.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
-      )}
-      {status === "WAITING_PAYMENT" && (
-        <button type="button" onClick={() => setDialog("unlock")} className={cn(button, "bg-card hover:bg-card/70")}>
-          <IconLockOpen className="size-4" />
-          Suivre le déblocage
-        </button>
-      )}
-      {["ACCEPTED", "STARTED", "END"].includes(status) && (
-        <div className="flex gap-2">
-          {status === "ACCEPTED" && (
-            <button type="button" onClick={() => setDialog("cancel")} className={cn(button, "bg-card hover:text-destructive")}>
-              Annuler
-            </button>
-          )}
-          {status === "END" && !applicant.ratedByEmployer && (
-            <button type="button" onClick={() => setDialog("rate")} className={cn(button, "bg-brand-lime text-[#0f2414] hover:bg-brand-lime/80")}>
-              <IconStar className="size-4" />
-              Noter
-            </button>
-          )}
-          <Link href={`/espace/contacts#w-${applicant.worker.id}`} className={cn(button, "bg-ink text-white hover:bg-ink/90")}>
-            <IconAddressBook className="size-4" />
-            Voir le contact
-          </Link>
+      ) : (
+        <div className={cn("flex gap-2", variant === "card" && "w-full")}>
+          {chat}
+          {[...actions]
+            .sort((a, b) => Number(b.tone === "danger") - Number(a.tone === "danger"))
+            .map((a) => (
+              <ActionButton key={a.key} action={a} stretch={variant === "card"} label={a.key === "cancel" && variant === "inline" ? "Annuler" : undefined} />
+            ))}
         </div>
       )}
 

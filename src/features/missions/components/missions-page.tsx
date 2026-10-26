@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { IconCalendarCheck, IconCalendarEvent, IconChevronRight, IconMapPin, IconStar, IconUsers } from "@tabler/icons-react";
+import { IconCalendarCheck, IconCalendarEvent, IconChevronRight, IconStar, IconUsers } from "@tabler/icons-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Skeleton } from "#/components/ui/skeleton";
@@ -123,7 +123,7 @@ export function MissionsPage() {
                 </Link>
               </div>
             ) : (
-              <div className="grid gap-4 2xl:grid-cols-2">
+              <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {shown.map((o) => (
                   <MissionCard key={o.id} offer={o} />
                 ))}
@@ -144,79 +144,83 @@ function MissionCard({ offer: o }: Readonly<{ offer: OfferListItem }>) {
   const at = o.scheduledAt ? new Date(o.scheduledAt) : null;
   const days = at ? Math.ceil((at.getTime() - new Date().setHours(0, 0, 0, 0)) / DAY_MS) - 1 : null;
   const place = o.isRemote ? "À distance" : [o.city, o.countryName].filter(Boolean).join(", ");
+  const filled = Math.min(hired.length, o.quantity);
 
   return (
-    <article className="space-y-5 rounded-3xl bg-card p-6">
-      <div className="flex items-start gap-4">
-        <div className="flex w-16 shrink-0 flex-col items-center rounded-2xl bg-page py-2.5">
-          <span className="font-semibold text-2xl leading-none">{at ? at.getDate() : "—"}</span>
-          <span className="mt-1 text-muted-foreground text-xs uppercase">
-            {at ? at.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "") : ""}
-          </span>
+    <article className="flex h-full flex-col gap-5 rounded-3xl bg-card p-5">
+      <div className="flex items-start gap-3.5">
+        <div className="flex w-14 shrink-0 flex-col items-center rounded-2xl bg-brand-lime py-2 text-[#0f2414]">
+          <span className="font-semibold text-xl leading-none">{at ? at.getDate() : "—"}</span>
+          <span className="mt-1 font-medium text-[11px] uppercase">{at ? at.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "") : ""}</span>
         </div>
-        <div className="min-w-0 flex-1 space-y-1.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className={cn("rounded-full px-2.5 py-0.5 font-medium text-xs", STATUS[o.status].className)}>{STATUS[o.status].label}</span>
-            {days !== null && days >= 0 && o.status !== "COMPLETED" && (
-              <span className="rounded-full bg-page px-2.5 py-0.5 font-medium text-xs">
-                {days === 0 ? "Aujourd'hui" : days === 1 ? "Demain" : `Dans ${days} jours`}
-              </span>
-            )}
-            {toRate > 0 && (
-              <span className="rounded-full bg-chip-amber px-2.5 py-0.5 font-medium text-chip-amber-foreground text-xs">
-                {toRate} à noter
-              </span>
-            )}
-          </div>
-          <Link href={`/espace/offres/${o.id}`} className="group flex items-center gap-1">
-            <h2 className="truncate font-semibold text-lg group-hover:underline">{o.title}</h2>
-            <IconChevronRight className="size-4 shrink-0 text-muted-foreground" />
+        <div className="min-w-0 flex-1 space-y-1">
+          <Link href={`/espace/offres/${o.id}`} className="line-clamp-2 font-semibold leading-snug hover:underline">
+            {o.title}
           </Link>
-          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground text-sm">
-            {at && (
-              <span className="inline-flex items-center gap-1">
-                <IconCalendarEvent className="size-4" />
-                {at.toLocaleString("fr-FR", { weekday: "short", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}
-              </span>
-            )}
-            {place && (
-              <span className="inline-flex items-center gap-1">
-                <IconMapPin className="size-4" />
-                {place}
-              </span>
-            )}
-            <span className="inline-flex items-center gap-1">
-              <IconUsers className="size-4" />
-              {hired.length || "…"}/{o.quantity}
-            </span>
+          <p className="truncate text-muted-foreground text-xs">
+            {at ? at.toLocaleString("fr-FR", { weekday: "short", hour: "2-digit", minute: "2-digit" }) : ""}
+            {place && ` · ${place}`}
           </p>
         </div>
       </div>
 
+      <div className="flex flex-wrap gap-1.5">
+        <span className={cn("rounded-full px-2.5 py-0.5 font-medium text-xs", STATUS[o.status].className)}>{STATUS[o.status].label}</span>
+        {days !== null && days >= 0 && o.status !== "COMPLETED" && (
+          <span className="rounded-full bg-page px-2.5 py-0.5 font-medium text-xs">
+            {days === 0 ? "Aujourd'hui" : days === 1 ? "Demain" : `Dans ${days} jours`}
+          </span>
+        )}
+        {toRate > 0 && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-chip-amber px-2.5 py-0.5 font-medium text-chip-amber-foreground text-xs">
+            <IconStar className="size-3" />
+            {toRate} à noter
+          </span>
+        )}
+      </div>
+
+      <div className="space-y-1.5">
+        <div className="flex items-baseline justify-between text-xs">
+          <span className="text-muted-foreground">Équipe</span>
+          <span className="font-medium tabular-nums">
+            {team.isLoading ? "…" : filled}/{o.quantity} poste{o.quantity > 1 ? "s" : ""}
+          </span>
+        </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-page">
+          <div className="h-full rounded-full bg-whatsapp-dark" style={{ width: `${(filled / o.quantity) * 100}%` }} />
+        </div>
+      </div>
+
       {team.isLoading ? (
-        <Skeleton className="h-16 rounded-2xl" />
+        <Skeleton className="h-28 rounded-2xl" />
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-1.5">
           {hired.map((a) => {
             const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
+            const stage = a.status === "END" && a.ratedByEmployer ? "Terminée · notée" : (APPLICATION_STATUS[a.status] ?? a.status);
             return (
-              <li key={a.applicationId} className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl bg-page p-3">
-                <Link href={`/espace/candidats/${a.worker.id}`} className="group flex min-w-0 flex-1 items-center gap-3">
-                  <Avatar className="size-10 rounded-xl">
+              <li key={a.applicationId} className="flex items-center gap-2.5 rounded-2xl bg-page p-2 pl-2.5">
+                <Link href={`/espace/candidats/${a.worker.id}`} className="group flex min-w-0 flex-1 items-center gap-2.5">
+                  <Avatar className="size-9 rounded-xl">
                     {a.worker.avatarUrl && <AvatarImage src={a.worker.avatarUrl} alt="" className="object-cover" />}
-                    <AvatarFallback className="rounded-xl bg-card font-medium text-sm">{getInitials(name)}</AvatarFallback>
+                    <AvatarFallback className="rounded-xl bg-card font-medium text-xs">{getInitials(name)}</AvatarFallback>
                   </Avatar>
-                  <span className="min-w-0 flex-1 truncate font-medium text-sm group-hover:underline">{name}</span>
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium text-sm group-hover:underline">{name}</span>
+                    <span className={cn("mt-0.5 inline-block rounded-full px-1.5 font-medium text-[11px]", STAGE_CLASS[applicationStage(a.status)])}>{stage}</span>
+                  </span>
                 </Link>
-                <span className={cn("shrink-0 rounded-full px-2.5 py-1 font-medium text-xs", STAGE_CLASS[applicationStage(a.status)])}>
-                  {a.status === "END" && a.ratedByEmployer ? "Terminée · notée" : (APPLICATION_STATUS[a.status] ?? a.status)}
-                </span>
-                <ApplicationActions applicant={a} name={name} />
+                <ApplicationActions applicant={a} name={name} variant="compact" />
               </li>
             );
           })}
         </ul>
       )}
+
+      <Link href={`/espace/offres/${o.id}`} className="mt-auto inline-flex items-center gap-1 font-medium text-sm text-whatsapp-dark hover:underline">
+        Voir la mission
+        <IconChevronRight className="size-4" />
+      </Link>
     </article>
   );
 }
