@@ -7,6 +7,7 @@ import { IconCalendarEvent, IconClock, IconInbox, IconSearch, IconShieldCheck } 
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Input } from "#/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { Skeleton } from "#/components/ui/skeleton";
 import { ApplicationActions } from "#/features/offers/components/application-actions";
 import { APPLICATION_STATUS, applicationStage, STAGE_CLASS, type ApplicationStage } from "#/features/offers/offer-labels";
@@ -75,23 +76,30 @@ export function ApplicationsPage() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Rechercher un candidat, une offre…"
-              className="h-11 rounded-full border-0 bg-page pl-10 shadow-none"
+              className="h-11 rounded-full border-0 bg-page pl-10 shadow-none focus-visible:ring-2 focus-visible:ring-ink/10"
             />
           </div>
           {offers.length > 1 && (
-            <select
-              value={offerId}
-              onChange={(e) => setOfferId(e.target.value)}
-              aria-label="Offre"
-              className="h-11 max-w-full rounded-full bg-page px-4 font-medium text-sm outline-none sm:max-w-80"
-            >
-              <option value="all">Toutes les offres</option>
-              {offers.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.title} ({o.n})
-                </option>
-              ))}
-            </select>
+            <Select value={offerId} onValueChange={setOfferId}>
+              <SelectTrigger
+                aria-label="Offre"
+                className="h-11 w-full gap-3 rounded-full border-0 bg-page px-4 font-medium shadow-none focus-visible:ring-2 focus-visible:ring-ink/10 sm:w-80 dark:bg-page"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent position="popper" align="end" sideOffset={8} className="max-h-96 w-[var(--radix-select-trigger-width)] min-w-80">
+                <SelectItem value="all" className="[&>span:last-child]:flex-1 [&>span:last-child]:gap-3">
+                  <span className="flex-1">Toutes les offres</span>
+                  <span className="text-muted-foreground tabular-nums">{all.length}</span>
+                </SelectItem>
+                {offers.map((o) => (
+                  <SelectItem key={o.id} value={o.id} className="[&>span:last-child]:min-w-0 [&>span:last-child]:flex-1 [&>span:last-child]:gap-3">
+                    <span className="min-w-0 flex-1 truncate">{o.title}</span>
+                    <span className="text-muted-foreground tabular-nums">{o.n}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
         </div>
 
