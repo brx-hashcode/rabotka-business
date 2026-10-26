@@ -1,5 +1,6 @@
 import {
   IconAlertCircle,
+  IconBookmark,
   IconBriefcase,
   IconBuilding,
   IconCalendarCheck,
@@ -39,6 +40,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Mes offres", href: "/espace/offres", icon: IconBriefcase },
       { label: "Candidatures", href: "/espace/candidatures", icon: IconUsers },
       { label: "Recherche", href: "/espace/recherche", icon: IconSearch },
+      { label: "Vivier", href: "/espace/vivier", icon: IconBookmark },
       { label: "Missions", href: "/espace/missions", icon: IconCalendarCheck },
     ],
   },

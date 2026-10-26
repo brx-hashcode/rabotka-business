@@ -11,6 +11,7 @@ import { ActionDialog } from "#/components/action-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Skeleton } from "#/components/ui/skeleton";
 import { ContactDialog } from "#/features/contacts/components/contact-dialog";
+import { KeepButton } from "#/features/talents/components/keep-button";
 import {
   getMyContacts,
   getMySubscription,
@@ -66,6 +67,7 @@ export function CandidateCard({ candidate: c, compact }: Readonly<{ candidate: C
             </span>
           </p>
         </div>
+        <KeepButton workerId={c.id} name={name} />
       </div>
       {!compact && c.description && <p className="line-clamp-2 text-muted-foreground text-sm leading-relaxed">{c.description}</p>}
       <div className="mt-auto flex gap-2">

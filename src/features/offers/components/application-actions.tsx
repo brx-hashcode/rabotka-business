@@ -192,7 +192,21 @@ export function ApplicationActions({
               <IconAddressBook className="size-4" />
             </button>
           )}
-          {main && <ActionButton action={main} />}
+          {main &&
+            (main.key === "rate" || main.key === "accept" ? (
+              <ActionButton action={main} />
+            ) : (
+              // Narrow rows: the icon, the words in its tooltip.
+              <button
+                type="button"
+                onClick={main.onClick}
+                aria-label={main.label}
+                title={main.label}
+                className={cn(button, TONE[main.tone], "px-2.5")}
+              >
+                <main.icon className="size-4" />
+              </button>
+            ))}
           {rest.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger aria-label="Plus d'actions" className={cn(button, "bg-card px-2.5 outline-none hover:bg-card/70")}>

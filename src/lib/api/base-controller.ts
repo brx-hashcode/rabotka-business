@@ -34,6 +34,14 @@ export class BusinessBaseController extends BaseController {
     return withSession(() => this.apiService.patch<T>(path, body, headers));
   }
 
+  protected put<T>(
+    path: string,
+    body?: RequestBody,
+    headers?: HeadersInit,
+  ): Promise<T> {
+    return withSession(() => this.apiService.put<T>(path, body, headers));
+  }
+
   protected delete<T>(path: string, headers?: HeadersInit): Promise<T> {
     return withSession(() => this.apiService.delete<T>(path, headers));
   }
