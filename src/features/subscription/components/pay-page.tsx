@@ -16,18 +16,20 @@ import {
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { Loader } from "lucide-react";
 
+import { toast } from "sonner";
+
 import { Bone } from "#/components/page-skeletons";
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { getPaymentByToken, getPaymentGateways, initiatePayment } from "#/lib/api/payment-controller";
 import type { BusinessPlan, PaymentOperator } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
+import { PaymentDialog, REQUEST_SECONDS, type PaymentPhase } from "./payment-dialog";
 
-type Step = "form" | "processing" | "approved" | "failed";
 
 const POLL_MS = 3000;
-/** Past this, the screen says the payment is still being confirmed. */
-const POLL_LIMIT = 60;
+/** Settled but no paid period after this many polls: it did not go through. */
+const POLL_LIMIT = 8;
 
 const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
 
@@ -73,10 +75,10 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
   const selected = operators.find((o) => o.code === operator) ?? operators[0] ?? null;
   const [digits, setDigits] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [step, setStep] = useState<Step>("form");
+  const [phase, setPhase] = useState<PaymentPhase | null>(null);
   const [sending, setSending] = useState(false);
-  const [slow, setSlow] = useState(false);
-  const [settled, setSettled] = useState(false);
+  const [sentAt, setSentAt] = useState(0);
+  const [phoneLabel, setPhoneLabel] = useState("");
   const paidBefore = useRef<number | null>(null);
   const polls = useRef(0);
 
@@ -106,7 +108,9 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
         ...(gateway?.requiresOperator && selected ? { operator: selected.code } : {}),
       });
       polls.current = 0;
-      setStep("processing");
+      setPhoneLabel(number.formatInternational());
+      setSentAt(Date.now());
+      setPhase("waiting");
     } catch (err) {
       setError(friendlyError(err, "Le paiement n'a pas pu être lancé. Réessayez."));
     } finally {
@@ -115,31 +119,33 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
   }
 
   // While the phone confirms: the request settles, then the subscription says how.
+  // Past the request's lifetime with nothing settled, it has expired.
   useEffect(() => {
-    if (step !== "processing") return;
+    if (phase !== "waiting") return;
     const timer = setInterval(async () => {
       polls.current += 1;
-      if (polls.current > POLL_LIMIT) setSlow(true);
       let done = false;
       try {
         const p = await getPaymentByToken(token);
         if (p.status === "REJECTED") {
-          setStep("failed");
+          setPhase("failed");
           return;
         }
         done = p.status === "APPROVED";
       } catch {
         done = true; // Settled requests are no longer served by token.
       }
-      if (!done) return;
-      setSettled(true);
+      if (!done) {
+        if (Date.now() - sentAt > REQUEST_SECONDS * 1000) setPhase("expired");
+        return;
+      }
       const sub = await queryClient.fetchQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription, staleTime: 0 });
       const paidNow = sub.history.filter((p) => p.paid).length;
-      if (paidNow > (paidBefore.current ?? 0)) setStep("approved");
-      else if (polls.current > 4) setStep("failed");
+      if (paidNow > (paidBefore.current ?? 0)) setPhase("approved");
+      else if (polls.current > POLL_LIMIT) setPhase("failed");
     }, POLL_MS);
     return () => clearInterval(timer);
-  }, [step, token, queryClient]);
+  }, [phase, token, queryClient, sentAt]);
 
   return (
     <div className="w-full space-y-6 pt-2">
@@ -152,7 +158,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
         <p className="text-muted-foreground">Réglez votre formule par mobile money : vous validez le paiement sur votre téléphone.</p>
       </div>
 
-      {payment.isError && step === "form" ? (
+      {payment.isError && phase === null ? (
         <section className="mx-auto max-w-xl rounded-3xl bg-card p-6 sm:p-8">
           <Result
             tone="muted"
@@ -163,45 +169,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
       ) : (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
           <section className="rounded-3xl bg-card p-6 sm:p-8">
-            {step === "approved" ? (
-              <Result
-                tone="good"
-                title="Paiement confirmé"
-                text="Votre formule est active dès maintenant. La facture vous est envoyée par e-mail et se trouve dans Factures."
-              />
-            ) : step === "failed" ? (
-              <Result
-                tone="bad"
-                title="Le paiement n'a pas abouti"
-                text="Aucun montant n'a été prélevé. Vérifiez le solde de votre compte mobile money et réessayez."
-                retry={() => {
-                  setStep("form");
-                  setSettled(false);
-                  setSlow(false);
-                }}
-              />
-            ) : step === "processing" ? (
-              <div className="space-y-6">
-                <div className="space-y-1.5">
-                  <h2 className="font-semibold text-xl">Validez sur votre téléphone</h2>
-                  <p className="text-muted-foreground text-sm">
-                    Une demande de {amount !== null ? fcfa(amount) : "paiement"} a été envoyée au +{dial} {digits}. Composez votre code mobile
-                    money pour la valider.
-                  </p>
-                </div>
-                <ol className="space-y-3">
-                  <Progress state="done" label="Demande envoyée" hint={selected ? `Via ${selected.label}` : undefined} />
-                  <Progress state={settled ? "done" : "current"} label="Validation sur votre téléphone" hint="Avec votre code secret mobile money" />
-                  <Progress state={settled ? "current" : "next"} label="Activation de la formule" hint="Dès la confirmation de l'opérateur" />
-                </ol>
-                {slow && (
-                  <p className="rounded-2xl bg-chip-amber p-4 text-chip-amber-foreground text-sm">
-                    La confirmation prend plus de temps que prévu. Vous pouvez quitter cette page : votre formule s&apos;activera dès que
-                    l&apos;opérateur aura confirmé.
-                  </p>
-                )}
-              </div>
-            ) : payment.isLoading ? (
+            {payment.isLoading ? (
               <div className="space-y-6">
                 <Bone className="h-4 w-24" />
                 <div className="grid grid-cols-2 gap-3">
@@ -303,6 +271,25 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
             )}
           </section>
 
+          <PaymentDialog
+            phase={phase}
+            amount={amount}
+            phone={phoneLabel}
+            operator={selected}
+            sentAt={sentAt}
+            planName={what?.planName ?? null}
+            onClose={() => {
+              if (phase === "waiting") {
+                toast("Si vous validez la demande sur votre téléphone, votre formule s'activera quand même.");
+              }
+              setPhase(null);
+            }}
+            onResend={() => {
+              setPhase(null);
+              void pay();
+            }}
+          />
+
           <Summary
             loading={payment.isLoading}
             amount={amount}
@@ -391,35 +378,6 @@ function Summary({
         </ul>
       </div>
     </aside>
-  );
-}
-
-/** One step of the confirmation: done, under way, or still to come. */
-function Progress({ state, label, hint }: Readonly<{ state: "done" | "current" | "next"; label: string; hint?: string }>) {
-  return (
-    <li className={cn("flex items-center gap-3 rounded-2xl p-4", state === "current" ? "bg-page" : "")}>
-      <span
-        className={cn(
-          "flex size-8 shrink-0 items-center justify-center rounded-full",
-          state === "done" && "bg-whatsapp-dark text-white",
-          state === "current" && "bg-brand-lime",
-          state === "next" && "bg-page",
-        )}
-      >
-        {state === "done" ? (
-          <IconCheck className="size-4" />
-        ) : state === "current" ? (
-          // A quiet pulse rather than a spinner: under way, not stuck.
-          <span className="size-2.5 animate-pulse rounded-full bg-[#0f2414]" />
-        ) : (
-          <span className="size-2 rounded-full bg-muted-foreground/40" />
-        )}
-      </span>
-      <div className="min-w-0">
-        <p className={cn("font-medium text-sm", state === "next" && "text-muted-foreground")}>{label}</p>
-        {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
-      </div>
-    </li>
   );
 }
 
