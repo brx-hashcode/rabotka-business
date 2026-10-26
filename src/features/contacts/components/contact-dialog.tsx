@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { IconLockOpen } from "@tabler/icons-react";
 
@@ -46,9 +45,6 @@ export function ContactDialog({
                 ? friendlyError(contacts.error, "Les coordonnées sont indisponibles pour le moment.")
                 : `Elles apparaissent dès que ${name} a réglé sa part du déblocage.`}
             </p>
-            <Link href="/espace/contacts" className="font-medium text-sm text-whatsapp-dark hover:underline">
-              Voir mes profils contactés
-            </Link>
           </div>
         )}
       </DialogContent>
