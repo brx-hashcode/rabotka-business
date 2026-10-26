@@ -53,6 +53,23 @@ export const APPLICATION_STATUS: Record<string, string> = {
   CANCELLED: "Annulée",
 };
 
+/** Where an application stands, for the pipeline's tabs and its pill colour. */
+export type ApplicationStage = "new" | "viewed" | "hired" | "closed";
+
+export function applicationStage(status: string): ApplicationStage {
+  if (status === "PENDING") return "new";
+  if (status === "VIEWED") return "viewed";
+  if (["ACCEPTED", "WAITING_PAYMENT", "STARTED", "END"].includes(status)) return "hired";
+  return "closed";
+}
+
+export const STAGE_CLASS: Record<ApplicationStage, string> = {
+  new: "bg-chip-amber text-chip-amber-foreground",
+  viewed: "bg-card text-foreground",
+  hired: "bg-chip-green text-chip-green-foreground",
+  closed: "bg-card text-muted-foreground",
+};
+
 /** Whether the date is the day of the work (a mission) or a closing date. */
 export const isDatedMission = (t: EmploymentType) => t === "MISSION";
 
