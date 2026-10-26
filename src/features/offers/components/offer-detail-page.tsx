@@ -13,7 +13,6 @@ import {
   IconInfoCircle,
   IconMapPin,
   IconPencil,
-  IconSparkles,
   IconRefresh,
   IconTrash,
   IconUserCheck,
@@ -441,7 +440,6 @@ function SuggestedCard({ offer: o, exclude }: Readonly<{ offer: Offer; exclude: 
     <section className="space-y-4 rounded-3xl bg-card p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <IconSparkles className="size-5 text-whatsapp-dark" />
           <h2 className="font-semibold text-xl">Profils suggérés</h2>
         </div>
         <Link href={`/espace/recherche?${more}`} className="font-medium text-sm text-whatsapp-dark hover:underline">
