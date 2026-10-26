@@ -8,7 +8,6 @@ import {
   IconLayoutDashboard,
   IconMessageCircle,
   IconSearch,
-  IconUserCheck,
   IconUsers,
   type Icon,
 } from "@tabler/icons-react";
@@ -47,7 +46,6 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Échanges",
     items: [
       { label: "Discussions", href: "/espace/discussions", icon: IconMessageCircle },
-      { label: "Profils contactés", href: "/espace/contacts", icon: IconUserCheck },
     ],
   },
   {

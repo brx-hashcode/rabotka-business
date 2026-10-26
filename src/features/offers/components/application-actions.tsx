@@ -384,7 +384,7 @@ function UnlockDialog({
       ) : !u ? (
         <p className="rounded-2xl bg-page p-4 text-muted-foreground text-sm">
           {detail.data?.status === "ACCEPTED"
-            ? "Le déblocage est terminé : le recrutement est confirmé. Ses coordonnées sont dans vos profils contactés."
+            ? "Le déblocage est terminé : le recrutement est confirmé. Ses coordonnées s'affichent avec « Contact »."
             : friendlyError(detail.error, "Aucun déblocage en cours pour cette candidature.")}
         </p>
       ) : (

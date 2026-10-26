@@ -47,7 +47,7 @@ export const discussionsContent = {
     header: "Numéros et e-mails sont toujours masqués ici. Pour obtenir les coordonnées, retenez le candidat sur votre offre.",
     sender: "Ce fragment n'a pas été transmis. Les coordonnées ne s'échangent pas dans la discussion.",
     recipient:
-      "Les coordonnées sont toujours masquées ici. Elles s'obtiennent en retenant le candidat, et apparaissent dans vos profils contactés.",
+      "Les coordonnées sont toujours masquées ici. Elles s'obtiennent en retenant le candidat, puis s'affichent avec « Contact » sur sa candidature.",
     held: "Ce message n'a pas été transmis : il contenait des coordonnées.",
     reportCta: "Signaler une erreur",
     reportConfirm: "Confirmer le signalement",
