@@ -5,9 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { IconCommand, IconSearch, IconStarFilled } from "@tabler/icons-react";
-import { Loader } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
+import { Bone } from "#/components/page-skeletons";
 import {
   CommandDialog,
   CommandGroup,
@@ -95,9 +95,16 @@ export function CommandSearch() {
           {searching && (
             <CommandGroup heading="Candidats">
               {results.isFetching && !results.data ? (
-                <div className="flex items-center gap-2 px-2 py-4 text-muted-foreground text-sm">
-                  <Loader className="size-4 animate-spin" />
-                  Recherche…
+                <div className="space-y-1 p-1" role="status" aria-label="Recherche">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="flex items-center gap-3 p-2">
+                      <Bone className="size-9 shrink-0 rounded-xl" />
+                      <div className="flex-1 space-y-1.5">
+                        <Bone className="h-3.5 w-2/5" />
+                        <Bone className="h-3 w-3/5" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : forbidden ? (
                 <div className="space-y-2 px-2 py-4 text-sm">

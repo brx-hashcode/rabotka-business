@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader } from "lucide-react";
 import { Document, Page, pdfjs } from "react-pdf";
 
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
+import { DocumentPageSkeleton } from "./page-skeletons";
 
 // The admin's worker, from the CDN at the exact version react-pdf bundles.
 pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -42,11 +42,7 @@ export default function PdfPages({
           onPages(numPages);
         }}
         onLoadError={onError}
-        loading={
-          <div className="flex justify-center py-24">
-            <Loader aria-label="Chargement" className="size-8 animate-spin text-muted-foreground" />
-          </div>
-        }
+        loading={<DocumentPageSkeleton />}
         error={<span />}
         className="flex flex-col items-center gap-4"
       >

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { IconBriefcase, IconCalendar, IconMapPin, IconPlus, IconUsers } from "@tabler/icons-react";
 
-import { Skeleton } from "#/components/ui/skeleton";
+import { CardGridSkeleton } from "#/components/page-skeletons";
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { listOffers, offersKey, type OfferListItem, type OfferStatus } from "#/lib/api/offer-controller";
@@ -82,11 +82,7 @@ export function OffersPage() {
       </div>
 
       {isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {[0, 1, 2].map((i) => (
-            <Skeleton key={i} className="h-48 rounded-3xl" />
-          ))}
-        </div>
+        <CardGridSkeleton count={6} />
       ) : error ? (
         <p className="rounded-3xl bg-card p-6 text-muted-foreground">{friendlyError(error, "Vos offres n'ont pas pu être chargées.")}</p>
       ) : !data?.items.length ? (

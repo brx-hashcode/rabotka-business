@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { ImageViewer } from "#/components/image-viewer";
 import { SafeImage } from "#/components/safe-image";
 import { Skeleton } from "#/components/ui/skeleton";
+import { Bone, ThreadSkeleton } from "#/components/page-skeletons";
 import {
   addClaimComment,
   claimsKey,
@@ -68,7 +69,16 @@ export function ClaimDetailPage({ id }: Readonly<{ id: string }>) {
       </Link>
 
       {claim.isLoading ? (
-        <Skeleton className="h-96 rounded-3xl" />
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+          <div className="h-[calc(100svh-11rem)] min-h-[28rem] rounded-3xl bg-card">
+            <ThreadSkeleton />
+          </div>
+          <div className="order-first space-y-4 rounded-3xl bg-card p-6 lg:order-none">
+            <Bone className="h-6 w-24 rounded-full" />
+            <Bone className="h-8 w-3/4" />
+            <Bone className="h-20" />
+          </div>
+        </div>
       ) : !c ? (
         <p className="rounded-3xl bg-card p-6 text-muted-foreground">{friendlyError(claim.error, "Cette demande est introuvable.")}</p>
       ) : (

@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { IconCalendar, IconDownload, IconEye, IconFileInvoice, IconReceipt } from "@tabler/icons-react";
 
 import { PreviewSheet } from "#/components/preview-sheet";
-import { Skeleton } from "#/components/ui/skeleton";
+import { RowsSkeleton, TilesSkeleton } from "#/components/page-skeletons";
 import { StatTile } from "#/features/home/components/stat-tile";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { invoiceDownloadUrl, invoicesKey, listInvoices, type Invoice } from "#/lib/api/invoice-controller";
@@ -48,7 +48,14 @@ export function InvoicesPage() {
       </div>
 
       {invoices.isLoading ? (
-        <Skeleton className="h-96 rounded-3xl" />
+        <>
+          <div className="rounded-3xl bg-card p-6 sm:p-8">
+            <TilesSkeleton count={3} />
+          </div>
+          <div className="rounded-3xl bg-card p-6">
+            <RowsSkeleton count={4} />
+          </div>
+        </>
       ) : !invoices.data ? (
         <p className="rounded-3xl bg-card p-6 text-muted-foreground">{friendlyError(invoices.error, "Vos factures sont indisponibles pour le moment.")}</p>
       ) : invoices.data.length === 0 ? (

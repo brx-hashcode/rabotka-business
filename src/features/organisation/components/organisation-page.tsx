@@ -4,7 +4,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { IconAlertTriangle, IconClock } from "@tabler/icons-react";
 import { toast } from "sonner";
 
-import { Skeleton } from "#/components/ui/skeleton";
+import { Bone } from "#/components/page-skeletons";
 import { OrganisationStep, type OrganisationValues } from "#/features/sign-up/components/organisation-step";
 import { getMyBusiness, myBusinessKey, updateMyBusiness } from "#/lib/api/business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
@@ -84,10 +84,28 @@ export function OrganisationPage() {
 
       {isLoading ? (
         <div className="space-y-6">
-          <Skeleton className="h-24 rounded-3xl" />
-          <div className="grid gap-6 lg:grid-cols-[1fr_26rem]">
-            <Skeleton className="h-[640px] rounded-3xl" />
-            <Skeleton className="h-80 rounded-3xl" />
+          <div className="flex items-center gap-4 rounded-3xl bg-card p-6">
+            <Bone className="size-20 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Bone className="h-6 w-48" />
+              <Bone className="h-4 w-64" />
+            </div>
+          </div>
+          <div className="grid items-start gap-6 lg:grid-cols-[1fr_26rem]">
+            <div className="space-y-6 rounded-3xl bg-card p-6">
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="space-y-2">
+                  <Bone className="h-3.5 w-28" />
+                  <Bone className="h-12" />
+                </div>
+              ))}
+            </div>
+            <div className="space-y-3 rounded-3xl bg-card p-6">
+              <Bone className="h-6 w-32" />
+              <Bone className="h-16 rounded-2xl" />
+              <Bone className="h-16 rounded-2xl" />
+              <Bone className="h-16 rounded-2xl" />
+            </div>
           </div>
         </div>
       ) : !business ? (
