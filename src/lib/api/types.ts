@@ -119,6 +119,15 @@ export type MyBusiness = {
   verifiedAt: string | null;
   rejectionReason: string | null;
   createdAt: string;
+  /** The person who opened the account and signs in with it. */
+  owner?: {
+    firstName: string;
+    lastName: string;
+    email: string | null;
+    phone: string;
+    directPhone: string | null;
+    createdAt: string;
+  };
   /** The current papers, each with what it replaced (newest first). */
   documents: (BusinessDocumentVersion & {
     resubmitted: boolean;

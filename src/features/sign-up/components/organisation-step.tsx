@@ -97,6 +97,7 @@ export function OrganisationStep({
   heading = true,
   submitLabel,
   pending,
+  lockIdentity,
 }: Readonly<{
   catalog: BusinessCatalog | undefined;
   defaultValues?: OrganisationValues;
@@ -105,6 +106,8 @@ export function OrganisationStep({
   heading?: boolean;
   submitLabel?: string;
   pending?: boolean;
+  /** Verified: what the review checked shows, but no longer changes here. */
+  lockIdentity?: boolean;
 }>) {
   const form = useForm<OrganisationValues>({
     resolver: zodResolver(schema),
@@ -158,8 +161,15 @@ export function OrganisationStep({
           text="Ces informations apparaissent sur votre profil entreprise et servent à sa vérification."
         />}
 
-        <Section title="Identité">
-          <TextField control={form.control} name="name" label="Raison sociale" autoComplete="organization" autoFocus={heading} />
+        <Section title="Identité" note={lockIdentity ? "vérifiée" : undefined}>
+          <TextField
+            control={form.control}
+            name="name"
+            label="Raison sociale"
+            autoComplete="organization"
+            autoFocus={heading}
+            disabled={lockIdentity}
+          />
           <ComboboxField
             control={form.control}
             name="category"
@@ -167,6 +177,7 @@ export function OrganisationStep({
             placeholder="Choisir le type d'organisation"
             searchPlaceholder="Rechercher : PME, école, ONG…"
             options={categoryOptions}
+            disabled={lockIdentity}
           />
           <ComboboxField
             control={form.control}
@@ -174,17 +185,40 @@ export function OrganisationStep({
             label="Forme juridique"
             optional
             placeholder={category ? "Choisir la forme juridique" : "Choisissez d'abord le type"}
-            disabled={!category}
+            disabled={lockIdentity || !category}
             options={legalFormOptions}
           />
           <SizeField control={form.control} sizes={catalog.sizes} />
         </Section>
 
-        <Section title="Identifiants officiels" note="facultatif" text="Ils facilitent la vérification de votre organisation.">
+        <Section
+          title="Identifiants officiels"
+          note={lockIdentity ? "vérifiés" : "facultatif"}
+          text={lockIdentity ? undefined : "Ils facilitent la vérification de votre organisation."}
+        >
           <div className="grid gap-5 sm:grid-cols-2">
-            <TextField control={form.control} name="registrationNumber" label="N° RCCM" placeholder="CG-BZV-01-2024-B12-00123" />
-            <TextField control={form.control} name="taxId" label="NIU" placeholder="M2024000123456A" />
-            <TextField control={form.control} name="statisticalId" label="SCIEN / SCIET" className="sm:col-span-2" />
+            <TextField
+              control={form.control}
+              name="registrationNumber"
+              label="N° RCCM"
+              placeholder={lockIdentity ? "Non renseigné" : "CG-BZV-01-2024-B12-00123"}
+              disabled={lockIdentity}
+            />
+            <TextField
+              control={form.control}
+              name="taxId"
+              label="NIU"
+              placeholder={lockIdentity ? "Non renseigné" : "M2024000123456A"}
+              disabled={lockIdentity}
+            />
+            <TextField
+              control={form.control}
+              name="statisticalId"
+              label="SCIEN / SCIET"
+              className="sm:col-span-2"
+              placeholder={lockIdentity ? "Non renseigné" : undefined}
+              disabled={lockIdentity}
+            />
           </div>
         </Section>
 
