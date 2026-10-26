@@ -55,8 +55,8 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Mon organisation", href: "/espace/organisation", icon: IconBuilding },
       { label: "Abonnement", href: "/espace/abonnement", icon: IconCreditCard },
-      { label: "Factures", href: "/espace/factures", icon: IconFileInvoice, soon: true },
-      { label: "Réclamations", href: "/espace/reclamations", icon: IconAlertCircle, soon: true },
+      { label: "Factures", href: "/espace/factures", icon: IconFileInvoice },
+      { label: "Réclamations", href: "/espace/reclamations", icon: IconAlertCircle },
     ],
   },
 ];

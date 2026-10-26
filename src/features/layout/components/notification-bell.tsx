@@ -129,12 +129,13 @@ export function NotificationList({
 /**
  * Where a notification opens in the space. Business notifications already
  * point into `/espace`; a new message carries the client app's
- * `/discussions/:id`, the same conversation here. Anything else has no page
+ * `/discussions/:id`, a claim `/claims/:id` — the same pages here. Anything else has no page
  * in the space.
  */
 export function espaceLink(link: string | null | undefined): string | null {
   if (!link) return null;
   if (link.startsWith("/espace")) return link;
   if (link.startsWith("/discussions/")) return `/espace${link}`;
+  if (link.startsWith("/claims/")) return `/espace/reclamations/${link.slice("/claims/".length)}`;
   return null;
 }
