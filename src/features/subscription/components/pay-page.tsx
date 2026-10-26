@@ -13,6 +13,7 @@ import {
   IconLock,
   IconRosetteDiscountCheck,
 } from "@tabler/icons-react";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { Loader } from "lucide-react";
 
 import { Bone } from "#/components/page-skeletons";
@@ -85,9 +86,11 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
   const plan = what ? subscription.data?.plans.find((p) => p.name.toLowerCase() === what.planName.toLowerCase()) : undefined;
 
   async function pay() {
-    const local = digits.replace(/\D/g, "").replace(/^0(?=\d{8,})/, "");
-    if (local.length < 8) {
-      setError("Saisissez un numéro de téléphone valide.");
+    // The country's own rules: in Congo the leading 0 is part of the number
+    // (+242 06 …), where elsewhere it is a trunk prefix to drop.
+    const number = parsePhoneNumberFromString(digits, { defaultCallingCode: dial });
+    if (!number?.isValid()) {
+      setError("Saisissez un numéro de téléphone valide, par exemple 06 123 45 67.");
       return;
     }
     if (gateway?.requiresOperator && !selected) {
@@ -99,7 +102,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
     paidBefore.current = (subscription.data?.history ?? []).filter((p) => p.paid).length;
     try {
       await initiatePayment(token, {
-        phone: `+${dial}${local}`,
+        phone: number.number,
         ...(gateway?.requiresOperator && selected ? { operator: selected.code } : {}),
       });
       polls.current = 0;
