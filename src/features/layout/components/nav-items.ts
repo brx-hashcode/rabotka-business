@@ -37,7 +37,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: "Recrutement",
     items: [
-      { label: "Mes offres", href: "/espace/offres", icon: IconBriefcase, soon: true },
+      { label: "Mes offres", href: "/espace/offres", icon: IconBriefcase },
       { label: "Candidatures", href: "/espace/candidatures", icon: IconUsers, soon: true },
       { label: "Recherche", href: "/espace/recherche", icon: IconSearch, soon: true },
       { label: "Missions", href: "/espace/missions", icon: IconCalendarCheck, soon: true },

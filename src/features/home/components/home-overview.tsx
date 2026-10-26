@@ -275,10 +275,15 @@ function NextSteps({ business, subscription }: Readonly<{ business: MyBusiness; 
     },
     { label: "Obtenir la vérification de l'organisation", done: business.verificationStatus === "VERIFIED", href: "/espace/organisation" },
     { label: "Choisir une formule", done: !!subscription.entitlements.plan, href: "/espace/abonnement" },
+    {
+      label: "Publier votre première offre",
+      done: subscription.entitlements.activeOffers > 0,
+      href: "/espace/offres/nouvelle",
+    },
   ];
   const done = steps.filter((s) => s.done).length;
   return (
-    <Card title="Prochaines étapes" action={<span className="text-muted-foreground text-sm">{done}/{steps.length + 1} faites</span>}>
+    <Card title="Prochaines étapes" action={<span className="text-muted-foreground text-sm">{done}/{steps.length} faites</span>}>
       <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
         {steps.map((s) => (
           <li key={s.label}>
@@ -294,12 +299,6 @@ function NextSteps({ business, subscription }: Readonly<{ business: MyBusiness; 
             </Link>
           </li>
         ))}
-        <li className="flex items-start gap-3 rounded-2xl bg-page p-4 text-muted-foreground text-sm">
-          <IconCircleDashed className="size-5 shrink-0" />
-          <span className="font-medium">
-            Publier votre première offre <span className="ml-1 rounded-full bg-card px-2 py-0.5 text-[11px]">Bientôt</span>
-          </span>
-        </li>
       </ul>
     </Card>
   );
