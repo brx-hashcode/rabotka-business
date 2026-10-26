@@ -39,15 +39,10 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Offres", href: "/espace/offres", icon: IconBriefcase },
       { label: "Candidatures", href: "/espace/candidatures", icon: IconUsers },
+      { label: "Trouver des profils", href: "/espace/recherche", icon: IconSearch },
+      { label: "Mes profils", href: "/espace/vivier", icon: IconBookmark },
       { label: "Messages", href: "/espace/discussions", icon: IconMessageCircle },
       { label: "Missions", href: "/espace/missions", icon: IconCalendarCheck },
-    ],
-  },
-  {
-    title: "Profils",
-    items: [
-      { label: "Trouver des profils", href: "/espace/recherche", icon: IconSearch },
-      { label: "Vivier", href: "/espace/vivier", icon: IconBookmark },
     ],
   },
   {

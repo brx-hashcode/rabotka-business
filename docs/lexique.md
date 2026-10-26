@@ -20,7 +20,7 @@ part, période).
 | Fin d'une demande d'aide | **résolue** / **refusée** | traitée, rejetée, clôturée |
 | Échanges avec les candidats | **Messages** (la page), **conversation** (un fil) | discussion |
 | Demande à l'équipe Rabotka | **Aide**, **demande** | réclamation |
-| Profils gardés pour plus tard | **Vivier**, **garder**, **mots-clés** | signet, étiquettes, favoris |
+| Profils gardés pour plus tard, et ceux déjà recrutés | **Mes profils**, **garder**, **mots-clés** | vivier, signet, étiquettes, favoris |
 | Statistique | **en moyenne**, **postes pourvus** | médiane, taux de pourvoi |
 | Adresse électronique | **e-mail** | email, mail |
 
