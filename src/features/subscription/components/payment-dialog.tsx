@@ -28,6 +28,7 @@ export function PaymentDialog({
   operator,
   sentAt,
   planName,
+  startsAt,
   onClose,
   onResend,
 }: Readonly<{
@@ -38,6 +39,8 @@ export function PaymentDialog({
   operator: PaymentOperator | null;
   sentAt: number;
   planName: string | null;
+  /** When the plan paid for starts, if it follows the running one. */
+  startsAt?: string | null;
   onClose: () => void;
   onResend: () => void;
 }>) {
@@ -114,7 +117,11 @@ export function PaymentDialog({
           <Outcome
             tone="good"
             title="Paiement confirmé"
-            text={`${planName ? `Votre formule ${planName}` : "Votre formule"} est active dès maintenant. La facture arrive par e-mail et dans Factures.`}
+            text={`${planName ? `Votre formule ${planName}` : "Votre formule"} ${
+              startsAt
+                ? `démarre le ${new Date(startsAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}, à la suite de la formule en cours`
+                : "est active dès maintenant"
+            }. La facture arrive par e-mail et dans Factures.`}
           >
             <Link href="/espace/factures" className="h-11 flex-1 rounded-full bg-page px-4 font-medium text-sm leading-[2.75rem] hover:bg-page/70">
               Voir la facture
