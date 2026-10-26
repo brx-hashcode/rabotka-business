@@ -3,14 +3,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconAlertTriangle, IconCircleCheck, IconDeviceMobile } from "@tabler/icons-react";
+import {
+  IconAlertTriangle,
+  IconArrowLeft,
+  IconCheck,
+  IconCircleCheckFilled,
+  IconDeviceMobile,
+  IconFileInvoice,
+  IconLock,
+  IconRosetteDiscountCheck,
+} from "@tabler/icons-react";
 import { Loader } from "lucide-react";
 
-import { Skeleton } from "#/components/ui/skeleton";
+import { Bone } from "#/components/page-skeletons";
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { getPaymentByToken, getPaymentGateways, initiatePayment } from "#/lib/api/payment-controller";
-import type { PaymentOperator } from "#/lib/api/types";
+import type { BusinessPlan, PaymentOperator } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 
 type Step = "form" | "processing" | "approved" | "failed";
@@ -21,10 +30,27 @@ const POLL_LIMIT = 60;
 
 const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
 
+/** « Abonnement Rabotka Business Pro — mensuel » → the plan's name and its period. */
+function readDescription(description: string | null | undefined) {
+  const m = description?.match(/Rabotka Business (.+?)\s+[—-]\s+(mensuel|annuel)/i);
+  return m ? { planName: m[1], period: m[2].toLowerCase() as "mensuel" | "annuel" } : null;
+}
+
+/** What a plan brings, said as on the Abonnement page. */
+function planLines(p: BusinessPlan): string[] {
+  return [
+    p.unlocksPerPeriod === null ? "Contacts illimités" : `${p.unlocksPerPeriod} contact${p.unlocksPerPeriod > 1 ? "s" : ""} inclus`,
+    p.activeOffersLimit === null ? "Offres en ligne illimitées" : `${p.activeOffersLimit} offre${p.activeOffersLimit > 1 ? "s" : ""} en ligne`,
+    ...(p.includesPreselection ? ["Recherche de profils"] : []),
+    ...(p.includesFieldAgents ? ["Aide d'un agent sur le terrain"] : []),
+    ...(p.priorityVisibility ? ["Offres affichées en premier"] : []),
+  ];
+}
+
 /**
- * The dashboard's own pay page for a subscription, on the public pay API the
- * client app uses (`pay/:token`). Mobile money: pick the network, type the
- * number, confirm on the phone. Once the request is settled `GET pay/:token`
+ * Paying a subscription, on the public pay API the client app uses
+ * (`pay/:token`): the network, the number, the confirmation on the phone —
+ * beside what is being paid for. Once the request is settled `GET pay/:token`
  * answers no more, so success is read from the subscription itself: a new
  * paid period means the payment went through.
  */
@@ -49,10 +75,14 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
   const [step, setStep] = useState<Step>("form");
   const [sending, setSending] = useState(false);
   const [slow, setSlow] = useState(false);
+  const [settled, setSettled] = useState(false);
   const paidBefore = useRef<number | null>(null);
   const polls = useRef(0);
 
   const dial = selected?.dialCode ?? "242";
+  const amount = payment.data?.amount ?? null;
+  const what = readDescription(payment.data?.description);
+  const plan = what ? subscription.data?.plans.find((p) => p.name.toLowerCase() === what.planName.toLowerCase()) : undefined;
 
   async function pay() {
     const local = digits.replace(/\D/g, "").replace(/^0(?=\d{8,})/, "");
@@ -87,18 +117,19 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
     const timer = setInterval(async () => {
       polls.current += 1;
       if (polls.current > POLL_LIMIT) setSlow(true);
-      let settled = false;
+      let done = false;
       try {
         const p = await getPaymentByToken(token);
         if (p.status === "REJECTED") {
           setStep("failed");
           return;
         }
-        settled = p.status === "APPROVED";
+        done = p.status === "APPROVED";
       } catch {
-        settled = true; // Settled requests are no longer served by token.
+        done = true; // Settled requests are no longer served by token.
       }
-      if (!settled) return;
+      if (!done) return;
+      setSettled(true);
       const sub = await queryClient.fetchQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription, staleTime: 0 });
       const paidNow = sub.history.filter((p) => p.paid).length;
       if (paidNow > (paidBefore.current ?? 0)) setStep("approved");
@@ -107,138 +138,327 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
     return () => clearInterval(timer);
   }, [step, token, queryClient]);
 
-  const amount = payment.data?.amount ?? null;
-
   return (
-    <div className="mx-auto w-full max-w-xl pt-6">
-      <div className="space-y-6 rounded-3xl bg-card p-6 sm:p-8">
-        {step === "approved" ? (
-          <Result
-            icon={IconCircleCheck}
-            tone="text-whatsapp-dark"
-            title="Paiement confirmé"
-            text="Votre abonnement est actif. La facture vous est envoyée par e-mail."
-          />
-        ) : step === "failed" ? (
-          <Result
-            icon={IconAlertTriangle}
-            tone="text-destructive"
-            title="Le paiement n'a pas abouti"
-            text="Aucun montant n'a été prélevé. Vous pouvez réessayer depuis la page Abonnement."
-          />
-        ) : payment.isLoading ? (
-          <Skeleton className="h-80 rounded-2xl" />
-        ) : payment.isError ? (
-          <Result
-            icon={IconAlertTriangle}
-            tone="text-muted-foreground"
-            title="Ce lien de paiement n'est plus valide"
-            text="Il a peut-être déjà été utilisé. Retrouvez votre abonnement sur la page Abonnement."
-          />
-        ) : step === "processing" ? (
-          <div className="space-y-4 py-6 text-center">
-            <Loader className="mx-auto size-10 animate-spin text-ink" />
-            <h1 className="font-semibold text-xl">Confirmez sur votre téléphone</h1>
-            <p className="text-muted-foreground text-sm">
-              Une demande de paiement de {amount !== null ? fcfa(amount) : "votre abonnement"} a été envoyée au +{dial}{" "}
-              {digits}. Validez-la avec votre code mobile money.
-              {slow ? " La confirmation prend plus de temps que prévu ; vous pouvez revenir plus tard." : ""}
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">{payment.data?.description}</p>
-              <h1 className="font-semibold text-3xl tracking-tight">{amount !== null ? fcfa(amount) : "—"}</h1>
-            </div>
+    <div className="w-full space-y-6 pt-2">
+      <Link href="/espace/abonnement" className="inline-flex items-center gap-1.5 text-muted-foreground text-sm hover:text-foreground">
+        <IconArrowLeft className="size-4" />
+        Abonnement
+      </Link>
+      <div className="space-y-1.5">
+        <h1 className="font-semibold text-3xl tracking-tight">Paiement</h1>
+        <p className="text-muted-foreground">Réglez votre formule par mobile money : vous validez le paiement sur votre téléphone.</p>
+      </div>
 
-            {operators.length > 0 && (
-              <div className="space-y-2">
-                <p className="font-medium text-sm">Opérateur</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {operators.map((o) => (
-                    <button
-                      key={o.code}
-                      type="button"
-                      onClick={() => setOperator(o.code)}
-                      className={cn(
-                        "flex h-14 items-center gap-3 rounded-2xl px-4 text-left text-sm transition-colors",
-                        selected?.code === o.code ? "bg-ink text-white" : "bg-page hover:bg-page/70",
-                      )}
-                    >
-                      {o.logo ? (
-                        // A gateway-hosted logo: nothing next/image could optimise.
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={o.logo} alt="" className="size-7 rounded-md bg-white object-contain" />
-                      ) : (
-                        <IconDeviceMobile className="size-5" />
-                      )}
-                      <span className="font-medium">{o.label}</span>
-                    </button>
-                  ))}
+      {payment.isError && step === "form" ? (
+        <section className="mx-auto max-w-xl rounded-3xl bg-card p-6 sm:p-8">
+          <Result
+            tone="muted"
+            title="Ce lien de paiement n'est plus valide"
+            text="Il a peut-être déjà été utilisé. Retrouvez votre formule sur la page Abonnement."
+          />
+        </section>
+      ) : (
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+          <section className="rounded-3xl bg-card p-6 sm:p-8">
+            {step === "approved" ? (
+              <Result
+                tone="good"
+                title="Paiement confirmé"
+                text="Votre formule est active dès maintenant. La facture vous est envoyée par e-mail et se trouve dans Factures."
+              />
+            ) : step === "failed" ? (
+              <Result
+                tone="bad"
+                title="Le paiement n'a pas abouti"
+                text="Aucun montant n'a été prélevé. Vérifiez le solde de votre compte mobile money et réessayez."
+                retry={() => {
+                  setStep("form");
+                  setSettled(false);
+                  setSlow(false);
+                }}
+              />
+            ) : step === "processing" ? (
+              <div className="space-y-6">
+                <div className="space-y-1.5">
+                  <h2 className="font-semibold text-xl">Validez sur votre téléphone</h2>
+                  <p className="text-muted-foreground text-sm">
+                    Une demande de {amount !== null ? fcfa(amount) : "paiement"} a été envoyée au +{dial} {digits}. Composez votre code mobile
+                    money pour la valider.
+                  </p>
+                </div>
+                <ol className="space-y-3">
+                  <Progress state="done" label="Demande envoyée" hint={selected ? `Via ${selected.label}` : undefined} />
+                  <Progress state={settled ? "done" : "current"} label="Validation sur votre téléphone" hint="Avec votre code secret mobile money" />
+                  <Progress state={settled ? "current" : "next"} label="Activation de la formule" hint="Dès la confirmation de l'opérateur" />
+                </ol>
+                {slow && (
+                  <p className="rounded-2xl bg-chip-amber p-4 text-chip-amber-foreground text-sm">
+                    La confirmation prend plus de temps que prévu. Vous pouvez quitter cette page : votre formule s&apos;activera dès que
+                    l&apos;opérateur aura confirmé.
+                  </p>
+                )}
+              </div>
+            ) : payment.isLoading ? (
+              <div className="space-y-6">
+                <Bone className="h-4 w-24" />
+                <div className="grid grid-cols-2 gap-3">
+                  <Bone className="h-20 rounded-2xl" />
+                  <Bone className="h-20 rounded-2xl" />
+                </div>
+                <Bone className="h-4 w-40" />
+                <Bone className="h-14 rounded-2xl" />
+                <Bone className="h-12 rounded-full" />
+              </div>
+            ) : (
+              <div className="space-y-7">
+                {operators.length > 0 && (
+                  <fieldset className="space-y-3">
+                    <legend className="mb-3 flex items-center gap-2 font-medium text-sm">
+                      <StepNumber n={1} />
+                      Votre opérateur
+                    </legend>
+                    <div role="radiogroup" aria-label="Opérateur" className="grid grid-cols-2 gap-3">
+                      {operators.map((o) => {
+                        const on = selected?.code === o.code;
+                        return (
+                          <button
+                            key={o.code}
+                            type="button"
+                            role="radio"
+                            aria-checked={on}
+                            onClick={() => setOperator(o.code)}
+                            className={cn(
+                              "relative flex h-20 items-center gap-3 rounded-2xl bg-page px-4 text-left transition-shadow",
+                              on ? "ring-2 ring-whatsapp-dark" : "hover:ring-2 hover:ring-foreground/10",
+                            )}
+                          >
+                            {o.logo ? (
+                              // A gateway-hosted logo: nothing next/image could optimise.
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={o.logo} alt="" className="size-11 rounded-xl bg-white object-contain p-1" />
+                            ) : (
+                              <span className="flex size-11 items-center justify-center rounded-xl bg-card">
+                                <IconDeviceMobile className="size-5" />
+                              </span>
+                            )}
+                            <span className="font-semibold">{o.label}</span>
+                            {on && <IconCircleCheckFilled className="absolute top-2.5 right-2.5 size-5 text-whatsapp-dark" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+                )}
+
+                <div className="space-y-3">
+                  <label htmlFor="pay-phone" className="flex items-center gap-2 font-medium text-sm">
+                    <StepNumber n={operators.length > 0 ? 2 : 1} />
+                    Numéro mobile money
+                  </label>
+                  <div className="flex h-14 items-center rounded-2xl bg-page focus-within:ring-2 focus-within:ring-whatsapp-dark">
+                    <span className="flex h-full items-center pr-3 pl-4 font-semibold text-base">+{dial}</span>
+                    <span aria-hidden className="h-6 w-px bg-foreground/10" />
+                    <input
+                      id="pay-phone"
+                      inputMode="tel"
+                      autoComplete="tel-national"
+                      value={digits}
+                      onChange={(e) => setDigits(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && void pay()}
+                      placeholder="06 123 45 67"
+                      className="h-full flex-1 bg-transparent px-3 text-lg tracking-wide outline-none placeholder:text-muted-foreground/60"
+                    />
+                  </div>
+                  <p className="text-muted-foreground text-xs">Le téléphone qui recevra la demande de validation.</p>
+                </div>
+
+                {error && <p className="rounded-2xl bg-destructive/8 px-4 py-3 text-destructive text-sm">{error}</p>}
+
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => void pay()}
+                    disabled={sending || !gateways.data?.active}
+                    className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-ink font-semibold text-base text-white transition-colors hover:bg-ink/90 disabled:opacity-60"
+                  >
+                    {sending ? (
+                      <Loader className="size-5 animate-spin" />
+                    ) : (
+                      <>
+                        <IconLock className="size-5" />
+                        Payer {amount !== null ? fcfa(amount) : ""}
+                      </>
+                    )}
+                  </button>
+                  {!gateways.isLoading && !gateways.data?.active ? (
+                    <p className="text-center text-muted-foreground text-sm">Le paiement est momentanément indisponible.</p>
+                  ) : (
+                    <p className="text-center text-muted-foreground text-xs">Rien n&apos;est prélevé sans votre validation sur le téléphone.</p>
+                  )}
                 </div>
               </div>
             )}
+          </section>
 
-            <div className="space-y-2">
-              <label htmlFor="pay-phone" className="font-medium text-sm">
-                Numéro mobile money
-              </label>
-              <div className="flex h-12 items-center rounded-xl bg-page focus-within:ring-2 focus-within:ring-whatsapp/40">
-                <span className="flex h-full items-center pr-3 pl-4 font-medium text-[15px] text-muted-foreground">+{dial}</span>
-                <span aria-hidden className="h-5 w-px bg-foreground/10" />
-                <input
-                  id="pay-phone"
-                  inputMode="tel"
-                  autoComplete="tel-national"
-                  value={digits}
-                  onChange={(e) => setDigits(e.target.value)}
-                  placeholder="06 123 45 67"
-                  className="h-full flex-1 bg-transparent px-3 text-base outline-none md:text-[15px]"
-                />
-              </div>
-            </div>
-
-            {error && <p className="rounded-xl bg-destructive/8 px-4 py-3 text-destructive text-sm">{error}</p>}
-
-            <button
-              type="button"
-              onClick={() => void pay()}
-              disabled={sending || !gateways.data?.active}
-              className="inline-flex h-12 w-full items-center justify-center rounded-full bg-ink font-medium text-[15px] text-white transition-colors hover:bg-ink/90 disabled:opacity-60"
-            >
-              {sending ? <Loader className="size-5 animate-spin text-white" /> : "Payer"}
-            </button>
-            {!gateways.isLoading && !gateways.data?.active && (
-              <p className="text-center text-muted-foreground text-sm">Le paiement est momentanément indisponible.</p>
-            )}
-          </>
-        )}
-
-        {(step === "approved" || step === "failed" || payment.isError) && (
-          <Link
-            href="/espace/abonnement"
-            className="inline-flex h-12 w-full items-center justify-center rounded-full bg-ink font-medium text-[15px] text-white hover:bg-ink/90"
-          >
-            Voir mon abonnement
-          </Link>
-        )}
-      </div>
+          <Summary
+            loading={payment.isLoading}
+            amount={amount}
+            description={payment.data?.description ?? null}
+            planName={what?.planName ?? null}
+            period={what?.period ?? null}
+            plan={plan}
+          />
+        </div>
+      )}
     </div>
   );
 }
 
+function StepNumber({ n }: Readonly<{ n: number }>) {
+  return <span className="flex size-6 items-center justify-center rounded-full bg-brand-lime font-semibold text-[#0f2414] text-xs">{n}</span>;
+}
+
+/** What is being paid for, and what happens after. */
+function Summary({
+  loading,
+  amount,
+  description,
+  planName,
+  period,
+  plan,
+}: Readonly<{
+  loading: boolean;
+  amount: number | null;
+  description: string | null;
+  planName: string | null;
+  period: "mensuel" | "annuel" | null;
+  plan?: BusinessPlan;
+}>) {
+  return (
+    <aside className="space-y-6 rounded-3xl bg-card p-6 lg:sticky lg:top-24">
+      <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Récapitulatif</p>
+      {loading ? (
+        <div className="space-y-3">
+          <Bone className="h-7 w-40" />
+          <Bone className="h-4 w-24" />
+          <Bone className="h-24 rounded-2xl" />
+        </div>
+      ) : (
+        <>
+          <div className="flex items-start gap-3">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand-lime text-[#0f2414]">
+              <IconRosetteDiscountCheck className="size-6" />
+            </span>
+            <div className="min-w-0">
+              <p className="font-semibold text-lg">{planName ? `Formule ${planName}` : (description ?? "Abonnement")}</p>
+              {period && <p className="text-muted-foreground text-sm">Abonnement {period}, renouvelable</p>}
+            </div>
+          </div>
+          {plan && (
+            <ul className="space-y-2 rounded-2xl bg-page p-4 text-sm">
+              {planLines(plan).map((line) => (
+                <li key={line} className="flex items-center gap-2">
+                  <IconCheck className="size-4 shrink-0 text-whatsapp-dark" />
+                  {line}
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="flex items-baseline justify-between rounded-2xl bg-page p-4">
+            <span className="font-medium">Total à payer</span>
+            <span className="font-semibold text-2xl tracking-tight">{amount !== null ? fcfa(amount) : "—"}</span>
+          </div>
+        </>
+      )}
+      <div className="space-y-3">
+        <p className="font-medium text-sm">Et ensuite</p>
+        <ul className="space-y-2.5 text-muted-foreground text-sm">
+          <li className="flex gap-2.5">
+            <IconDeviceMobile className="mt-0.5 size-4 shrink-0" />
+            Vous validez la demande sur votre téléphone.
+          </li>
+          <li className="flex gap-2.5">
+            <IconCircleCheckFilled className="mt-0.5 size-4 shrink-0" />
+            Votre formule s&apos;active aussitôt.
+          </li>
+          <li className="flex gap-2.5">
+            <IconFileInvoice className="mt-0.5 size-4 shrink-0" />
+            La facture arrive par e-mail et dans Factures.
+          </li>
+        </ul>
+      </div>
+    </aside>
+  );
+}
+
+/** One step of the confirmation: done, under way, or still to come. */
+function Progress({ state, label, hint }: Readonly<{ state: "done" | "current" | "next"; label: string; hint?: string }>) {
+  return (
+    <li className={cn("flex items-center gap-3 rounded-2xl p-4", state === "current" ? "bg-page" : "")}>
+      <span
+        className={cn(
+          "flex size-8 shrink-0 items-center justify-center rounded-full",
+          state === "done" && "bg-whatsapp-dark text-white",
+          state === "current" && "bg-brand-lime",
+          state === "next" && "bg-page",
+        )}
+      >
+        {state === "done" ? (
+          <IconCheck className="size-4" />
+        ) : state === "current" ? (
+          // A quiet pulse rather than a spinner: under way, not stuck.
+          <span className="size-2.5 animate-pulse rounded-full bg-[#0f2414]" />
+        ) : (
+          <span className="size-2 rounded-full bg-muted-foreground/40" />
+        )}
+      </span>
+      <div className="min-w-0">
+        <p className={cn("font-medium text-sm", state === "next" && "text-muted-foreground")}>{label}</p>
+        {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
+      </div>
+    </li>
+  );
+}
+
 function Result({
-  icon: Icon,
   tone,
   title,
   text,
-}: Readonly<{ icon: typeof IconCircleCheck; tone: string; title: string; text: string }>) {
+  retry,
+}: Readonly<{ tone: "good" | "bad" | "muted"; title: string; text: string; retry?: () => void }>) {
+  const Icon = tone === "good" ? IconCircleCheckFilled : IconAlertTriangle;
   return (
-    <div className="space-y-3 py-4 text-center">
-      <Icon className={cn("mx-auto size-12", tone)} />
-      <h1 className="font-semibold text-xl">{title}</h1>
-      <p className="text-muted-foreground text-sm">{text}</p>
+    <div className="space-y-5 py-6 text-center">
+      <span
+        className={cn(
+          "mx-auto flex size-16 items-center justify-center rounded-3xl",
+          tone === "good" && "bg-chip-green text-chip-green-foreground",
+          tone === "bad" && "bg-destructive/10 text-destructive",
+          tone === "muted" && "bg-page text-muted-foreground",
+        )}
+      >
+        <Icon className="size-8" />
+      </span>
+      <div className="space-y-1.5">
+        <h2 className="font-semibold text-2xl tracking-tight">{title}</h2>
+        <p className="mx-auto max-w-md text-muted-foreground text-sm">{text}</p>
+      </div>
+      <div className="flex flex-wrap justify-center gap-2">
+        {retry && (
+          <button type="button" onClick={retry} className="inline-flex h-12 items-center rounded-full bg-ink px-6 font-medium text-white hover:bg-ink/90">
+            Réessayer
+          </button>
+        )}
+        <Link
+          href={tone === "good" ? "/espace" : "/espace/abonnement"}
+          className={cn(
+            "inline-flex h-12 items-center rounded-full px-6 font-medium",
+            retry ? "bg-page hover:bg-page/70" : "bg-ink text-white hover:bg-ink/90",
+          )}
+        >
+          {tone === "good" ? "Aller au tableau de bord" : "Voir mon abonnement"}
+        </Link>
+      </div>
     </div>
   );
 }
