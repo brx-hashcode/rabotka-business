@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconAddressBook, IconCheck, IconCircleCheckFilled, IconCircleDashed, IconLockOpen, IconX } from "@tabler/icons-react";
+import { IconAddressBook, IconCheck, IconMessageCircle, IconCircleCheckFilled, IconCircleDashed, IconLockOpen, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
+import { chattableApplicationId } from "#/features/discussions/chattable";
+import { useOpenDiscussion } from "#/features/discussions/use-discussions";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Textarea } from "#/components/ui/textarea";
 import {
@@ -34,6 +37,8 @@ const button = "inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 font-me
  */
 export function ApplicationActions({ applicant, name }: Readonly<{ applicant: OfferApplicant; name: string }>) {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const openChat = useOpenDiscussion();
   const [dialog, setDialog] = useState<Dialog>(null);
   const [reason, setReason] = useState("");
   const id = applicant.applicationId;
@@ -69,8 +74,26 @@ export function ApplicationActions({ applicant, name }: Readonly<{ applicant: Of
   });
 
   const status = applicant.status;
+  const chatId = chattableApplicationId(id, status);
   return (
     <>
+      {chatId && (
+        <button
+          type="button"
+          disabled={openChat.isPending}
+          onClick={() =>
+            openChat.mutate(chatId, {
+              onSuccess: ({ conversation }) => router.push(`/espace/discussions/${conversation.id}`),
+              onError: (err) => toast.error(friendlyError(err, "La discussion n'a pas pu être ouverte.")),
+            })
+          }
+          aria-label={`Écrire à ${name}`}
+          title="Écrire"
+          className={cn(button, "bg-card px-2.5 hover:bg-card/70")}
+        >
+          <IconMessageCircle className="size-4" />
+        </button>
+      )}
       {(status === "PENDING" || status === "VIEWED") && (
         <div className="flex gap-2">
           <button type="button" onClick={() => setDialog("reject")} className={cn(button, "bg-card hover:text-destructive")}>
