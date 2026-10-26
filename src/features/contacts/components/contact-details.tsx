@@ -40,6 +40,7 @@ export function ContactDetails({ contact: c }: Readonly<{ contact: ContactedProf
           label={c.directPhone ? "WhatsApp" : "WhatsApp et appels"}
           value={readable(c.phone)}
           copyValue={c.phone}
+          phone
           actions={[
             { label: "WhatsApp", icon: IconBrandWhatsapp, href: `https://wa.me/${digits(c.phone)}`, external: true, tone: "whatsapp" },
             ...(c.directPhone ? [] : [{ label: "Appeler", icon: IconPhone, href: `tel:${c.phone}` }]),
@@ -51,6 +52,7 @@ export function ContactDetails({ contact: c }: Readonly<{ contact: ContactedProf
             label="Appel direct"
             value={readable(c.directPhone)}
             copyValue={c.directPhone}
+            phone
             actions={[{ label: "Appeler", icon: IconPhone, href: `tel:${c.directPhone.replace(/\s+/g, "")}` }]}
           />
         )}
@@ -101,6 +103,7 @@ function Channel({
   value,
   copyValue,
   actions,
+  phone,
 }: Readonly<{
   icon: typeof IconPhone;
   tone?: "whatsapp";
@@ -108,6 +111,7 @@ function Channel({
   value: string;
   copyValue: string;
   actions: ChannelAction[];
+  phone?: boolean;
 }>) {
   async function copy() {
     try {
@@ -118,46 +122,50 @@ function Channel({
     }
   }
   return (
-    <div className="flex min-w-0 items-center gap-2 rounded-2xl bg-page p-2 pl-4 sm:gap-3 sm:pl-2.5">
-      <span
-        className={cn(
-          // Not on a phone: the room goes to the number, which must read whole.
-          "hidden size-10 shrink-0 items-center justify-center rounded-xl sm:flex",
-          tone === "whatsapp" ? "bg-[#25D366]/15 text-[#128C4B] dark:text-[#25D366]" : "bg-card text-muted-foreground",
-        )}
-      >
-        <Icon className="size-5" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-muted-foreground text-xs">{label}</p>
-        <p className="truncate font-medium text-[15px] tabular-nums">{value}</p>
-      </div>
-      <button
-        type="button"
-        onClick={() => void copy()}
-        aria-label={`Copier : ${label}`}
-        title="Copier"
-        className="flex size-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:bg-card hover:text-foreground"
-      >
-        <IconCopy className="size-4" />
-      </button>
-      {actions.map((a) => (
-        <a
-          key={a.label}
-          href={a.href}
-          aria-label={a.label}
-          title={a.label}
-          {...(a.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+    // Sized by the row, not the screen: the same row sits in a narrow dialog and in a wide card.
+    <div className="@container min-w-0 rounded-2xl bg-page">
+      <div className="flex min-w-0 items-center gap-2 p-2 pl-4 @md:gap-3 @md:pl-2.5">
+        <span
           className={cn(
-            // Icon only on a phone, where the row has no room for words.
-            "inline-flex size-9 shrink-0 items-center justify-center gap-1.5 rounded-full font-medium text-sm sm:w-auto sm:px-4",
-            a.tone === "whatsapp" ? "bg-[#25D366] text-[#0f2414] hover:bg-[#25D366]/90" : "bg-ink text-white hover:bg-ink/90",
+            // Only in a wide row: in a narrow one the room goes to the number.
+            "hidden size-10 shrink-0 items-center justify-center rounded-xl @md:flex",
+            tone === "whatsapp" ? "bg-[#25D366]/15 text-[#128C4B] dark:text-[#25D366]" : "bg-card text-muted-foreground",
           )}
         >
-          <a.icon className="size-4 sm:hidden" />
-          <span className="hidden sm:inline">{a.label}</span>
-        </a>
-      ))}
+          <Icon className="size-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-muted-foreground text-xs">{label}</p>
+          {/* A number reads whole or not at all; only an e-mail may be cut. */}
+          <p className={cn("font-medium text-[15px] tabular-nums", phone ? "whitespace-nowrap" : "truncate")}>{value}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => void copy()}
+          aria-label={`Copier : ${label}`}
+          title="Copier"
+          className="flex size-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:bg-card hover:text-foreground"
+        >
+          <IconCopy className="size-4" />
+        </button>
+        {actions.map((a) => (
+          <a
+            key={a.label}
+            href={a.href}
+            aria-label={a.label}
+            title={a.label}
+            {...(a.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+            className={cn(
+              // Icon only in a narrow row, where words would cut the number.
+              "inline-flex size-9 shrink-0 items-center justify-center gap-1.5 rounded-full font-medium text-sm @lg:w-auto @lg:px-4",
+              a.tone === "whatsapp" ? "bg-[#25D366] text-[#0f2414] hover:bg-[#25D366]/90" : "bg-ink text-white hover:bg-ink/90",
+            )}
+          >
+            <a.icon className="size-4 @lg:hidden" />
+            <span className="hidden @lg:inline">{a.label}</span>
+          </a>
+        ))}
+      </div>
     </div>
   );
 }
