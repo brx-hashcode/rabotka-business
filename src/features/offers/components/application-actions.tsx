@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
 import { chattableApplicationId } from "#/features/discussions/chattable";
+import { ContactDialog } from "#/features/contacts/components/contact-dialog";
 import { useOpenDiscussion } from "#/features/discussions/use-discussions";
 import {
   DropdownMenu,
@@ -33,7 +34,7 @@ import { offersKey, type OfferApplicant } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
 import { fcfa } from "../offer-labels";
 
-type Dialog = "accept" | "reject" | "cancel" | "unlock" | "rate" | null;
+type Dialog = "accept" | "reject" | "cancel" | "unlock" | "rate" | "contact" | null;
 
 type Action = {
   key: string;
@@ -51,14 +52,17 @@ const TONE: Record<Action["tone"], string> = {
   danger: "bg-card hover:text-destructive",
 };
 
-const button = "inline-flex h-9 items-center justify-center gap-1.5 rounded-full px-3.5 font-medium text-sm transition-colors";
+const button = "inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3.5 font-medium text-sm transition-colors";
+
+/** Beside other buttons, on a row or a card: the long labels stay for the menu and the dialogs. */
+const SHORT: Record<string, string> = { cancel: "Annuler", unlock: "Déblocage", contact: "Contact" };
 
 function ActionButton({ action: a, stretch, label }: Readonly<{ action: Action; stretch?: boolean; label?: string }>) {
-  const className = cn(button, TONE[a.tone], stretch && "flex-1");
+  const className = cn(button, TONE[a.tone], stretch && "min-w-0 flex-1");
   const body = (
     <>
-      <a.icon className="size-4" />
-      {label ?? a.label}
+      <a.icon className="size-4 shrink-0" />
+      <span className="truncate">{label ?? a.label}</span>
     </>
   );
   return a.href ? (
@@ -128,7 +132,6 @@ export function ApplicationActions({
   const status = applicant.status;
   const chatId = chattableApplicationId(id, status);
   const hired = ["ACCEPTED", "STARTED", "END"].includes(status);
-  const contactHref = `/espace/contacts#w-${applicant.worker.id}`;
 
   // What this stage allows, most useful first; the layout decides how they show.
   const actions: Action[] = [];
@@ -143,7 +146,7 @@ export function ApplicationActions({
   if (status === "END" && !applicant.ratedByEmployer) {
     actions.push({ key: "rate", label: "Noter", icon: IconStar, tone: "accent", onClick: () => setDialog("rate") });
   }
-  if (hired) actions.push({ key: "contact", label: "Voir le contact", icon: IconAddressBook, tone: "primary", href: contactHref });
+  if (hired) actions.push({ key: "contact", label: "Voir le contact", icon: IconAddressBook, tone: "primary", onClick: () => setDialog("contact") });
   if (status === "ACCEPTED") {
     actions.push({ key: "cancel", label: "Annuler le recrutement", icon: IconX, tone: "danger", onClick: () => setDialog("cancel") });
   }
@@ -179,9 +182,15 @@ export function ApplicationActions({
         <div className="flex shrink-0 items-center gap-1.5">
           {chat}
           {contact && (
-            <Link href={contact.href!} aria-label={`Voir le contact de ${name}`} title="Voir le contact" className={cn(button, "bg-card px-2.5 hover:bg-card/70")}>
+            <button
+              type="button"
+              onClick={contact.onClick}
+              aria-label={`Voir le contact de ${name}`}
+              title="Voir le contact"
+              className={cn(button, "bg-card px-2.5 hover:bg-card/70")}
+            >
               <IconAddressBook className="size-4" />
-            </Link>
+            </button>
           )}
           {main && <ActionButton action={main} />}
           {rest.length > 0 && (
@@ -213,10 +222,17 @@ export function ApplicationActions({
           {[...actions]
             .sort((a, b) => Number(b.tone === "danger") - Number(a.tone === "danger"))
             .map((a) => (
-              <ActionButton key={a.key} action={a} stretch={variant === "card"} label={a.key === "cancel" && variant === "inline" ? "Annuler" : undefined} />
+              <ActionButton key={a.key} action={a} stretch={variant === "card"} label={SHORT[a.key]} />
             ))}
         </div>
       )}
+
+      <ContactDialog
+        workerId={applicant.worker.id}
+        name={name}
+        open={dialog === "contact"}
+        onOpenChange={(o) => setDialog(o ? "contact" : null)}
+      />
 
       <AcceptDialog
         open={dialog === "accept"}
