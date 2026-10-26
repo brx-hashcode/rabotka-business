@@ -6,12 +6,19 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IconArrowLeft,
-  IconCalendar,
+  IconBriefcase,
+  IconCalendarEvent,
+  IconCash,
+  IconChevronRight,
+  IconInbox,
+  IconInfoCircle,
   IconMapPin,
   IconPencil,
   IconRefresh,
   IconTrash,
+  IconUserCheck,
   IconUsers,
+  type Icon as TablerIcon,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 
@@ -24,26 +31,41 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import {
   deleteOffer,
   getOffer,
+  getJobCategories,
   getOfferApplicants,
   offersKey,
   republishOffer,
   type Offer,
+  type OfferApplicant,
 } from "#/lib/api/offer-controller";
 import { cn, getInitials } from "#/lib/utils";
-import { APPLICATION_STATUS, EMPLOYMENT_LABEL, fcfa, offerDate, PAYMENT_SUFFIX, STATUS } from "../offer-labels";
+import {
+  APPLICATION_STATUS,
+  applicationStage,
+  EMPLOYMENT_LABEL,
+  fcfa,
+  isDatedMission,
+  offerDate,
+  PAYMENT_SUFFIX,
+  STAGE_CLASS,
+  STATUS,
+  type ApplicationStage,
+} from "../offer-labels";
 import { scheduledIso } from "./offer-form";
 
 /**
- * One offer: what was published, its applicants (public profile only — a
- * candidate opens in the profile dialog, never with a phone), and what can be
- * done with it at this stage: edit while active, delete while nobody is
- * engaged, republish once expired.
+ * One offer: where it stands (applications, positions filled, time left), its
+ * applicants by stage (public profile only — a candidate opens in the profile
+ * dialog, never with a phone), what was published, and what can be done with
+ * it at this stage: edit while active, delete while nobody is engaged,
+ * republish once expired.
  */
 export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const offer = useQuery({ queryKey: [...offersKey, id], queryFn: () => getOffer(id) });
   const applicants = useQuery({ queryKey: [...offersKey, id, "applicants"], queryFn: () => getOfferApplicants(id) });
+  const categories = useQuery({ queryKey: ["job-categories"], queryFn: getJobCategories, staleTime: Infinity });
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [republishing, setRepublishing] = useState(false);
   const [newDate, setNewDate] = useState("");
@@ -81,19 +103,24 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
       </Link>
 
       {offer.isLoading ? (
-        <Skeleton className="h-72 rounded-3xl" />
+        <div className="space-y-6">
+          <Skeleton className="h-64 rounded-3xl" />
+          <Skeleton className="h-96 rounded-3xl" />
+        </div>
       ) : !o ? (
         <p className="rounded-3xl bg-card p-6 text-muted-foreground">{friendlyError(offer.error, "Cette offre est introuvable.")}</p>
       ) : (
-        <div className="grid items-start gap-6 lg:grid-cols-[1fr_26rem]">
-          <OfferSummary
+        <>
+          <OfferHeader
             offer={o}
+            category={categories.data?.find((c) => c.id === o.categoryId)?.name}
+            applicants={applicants.data}
             actions={
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 empty:hidden">
                 {o.status === "ACTIVE" && (
                   <Link
                     href={`/espace/offres/${o.id}/modifier`}
-                    className="inline-flex h-10 items-center gap-2 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70"
+                    className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white hover:bg-ink/90"
                   >
                     <IconPencil className="size-4" />
                     Modifier
@@ -123,48 +150,28 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
             }
           />
 
-          <section className="space-y-4 rounded-3xl bg-card p-6">
-            <h2 className="font-semibold text-lg">
-              Candidats{applicants.data?.length ? ` (${applicants.data.length})` : ""}
-            </h2>
-            {applicants.isLoading ? (
-              <Skeleton className="h-40 rounded-2xl" />
-            ) : !applicants.data?.length ? (
-              <p className="rounded-2xl bg-page p-4 text-muted-foreground text-sm">
-                Aucune candidature pour le moment. Les candidats correspondants ont été prévenus de votre offre.
-              </p>
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {applicants.data.map((a) => {
-                  const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
-                  return (
-                    <li key={a.applicationId}>
-                      <Link
-                        href={`/espace/candidats/${a.worker.id}`}
-                        className="flex items-center gap-3 rounded-2xl bg-page p-3 transition-colors hover:bg-page/70"
-                      >
-                        <Avatar className="size-10 rounded-xl">
-                          {a.worker.avatarUrl && <AvatarImage src={a.worker.avatarUrl} alt="" className="object-cover" />}
-                          <AvatarFallback className="rounded-xl bg-card font-medium">{getInitials(name)}</AvatarFallback>
-                        </Avatar>
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate font-medium text-sm">{name}</span>
-                          <span className="block text-muted-foreground text-xs">
-                            {a.worker.reliabilityScore !== null ? `Fiabilité ${a.worker.reliabilityScore}/100 · ` : ""}
-                            {new Date(a.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
-                          </span>
-                        </span>
-                        <span className="shrink-0 rounded-full bg-card px-2.5 py-1 font-medium text-xs">
-                          {APPLICATION_STATUS[a.status] ?? a.status}
-                        </span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
-        </div>
+          <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_28rem]">
+            <ApplicantsCard offer={o} applicants={applicants.data} loading={applicants.isLoading} />
+            <div className="space-y-6 lg:sticky lg:top-24">
+              <DetailsCard offer={o} category={categories.data?.find((c) => c.id === o.categoryId)?.name} />
+              <section className="space-y-5 rounded-3xl bg-card p-6">
+                <div className="space-y-2">
+                  <h2 className="font-semibold text-lg">Description</h2>
+                  <p className="whitespace-pre-line text-muted-foreground leading-relaxed">{o.description}</p>
+                </div>
+                {o.note && (
+                  <div className="space-y-2 rounded-2xl bg-page p-4">
+                    <h3 className="flex items-center gap-1.5 font-medium text-sm">
+                      <IconInfoCircle className="size-4" />
+                      Note pour les candidats
+                    </h3>
+                    <p className="whitespace-pre-line text-muted-foreground text-sm leading-relaxed">{o.note}</p>
+                  </div>
+                )}
+              </section>
+            </div>
+          </div>
+        </>
       )}
 
       <ActionDialog
@@ -201,56 +208,238 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   );
 }
 
-function OfferSummary({ offer: o, actions }: Readonly<{ offer: Offer; actions: React.ReactNode }>) {
+const DAY_MS = 24 * 60 * 60 * 1000;
+const longDate = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+
+/** Days from today to the offer's date: what is left to fill it. */
+function daysUntil(iso: string): number {
+  return Math.ceil((new Date(iso).getTime() - new Date().setHours(0, 0, 0, 0)) / DAY_MS) - 1;
+}
+
+/** The offer at a glance: what it is, where it stands, and what can be done with it. */
+function OfferHeader({
+  offer: o,
+  category,
+  applicants,
+  actions,
+}: Readonly<{ offer: Offer; category?: string; applicants?: OfferApplicant[]; actions: React.ReactNode }>) {
   const status = STATUS[o.status];
-  const when = offerDate(o.scheduledAt, o.employmentType);
-  const place = o.isRemote
-    ? "À distance"
-    : [o.address, [o.city, o.countryName].filter(Boolean).join(", ")].filter(Boolean).join(" — ");
+  const list = applicants ?? [];
+  const toReview = list.filter((a) => applicationStage(a.status) === "new").length;
+  // `acceptedCount` counts ACCEPTED only; a hire that has started or ended still fills its seat.
+  const hired = list.filter((a) => applicationStage(a.status) === "hired").length;
+  const filled = Math.min(Math.max(o.acceptedCount, hired), o.quantity);
+  const left = o.scheduledAt ? daysUntil(o.scheduledAt) : null;
+  const open = o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED";
+
   return (
-    <section className="space-y-6 rounded-3xl bg-card p-6 sm:p-8">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-page px-2.5 py-1 font-medium text-xs">{EMPLOYMENT_LABEL[o.employmentType]}</span>
-        <span className={cn("rounded-full px-2.5 py-1 font-medium text-xs", status.className)}>{status.label}</span>
-        <span className="text-muted-foreground text-xs">Réf. {o.reference}</span>
-      </div>
-      <div className="space-y-3">
-        <h1 className="font-semibold text-3xl tracking-tight">{o.title}</h1>
+    <section className="space-y-8 rounded-3xl bg-card p-6 sm:p-8">
+      <div className="flex flex-wrap items-start justify-between gap-6">
+        <div className="min-w-0 space-y-3">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className={cn("rounded-full px-2.5 py-1 font-medium", status.className)}>{status.label}</span>
+            <span className="rounded-full bg-page px-2.5 py-1 font-medium">{EMPLOYMENT_LABEL[o.employmentType]}</span>
+            {category && <span className="rounded-full bg-page px-2.5 py-1 font-medium">{category}</span>}
+          </div>
+          <h1 className="break-words font-semibold text-3xl tracking-tight sm:text-4xl">{o.title}</h1>
+          <p className="text-muted-foreground text-sm">
+            Réf. {o.reference}
+            {o.createdAt && ` · publiée le ${longDate(o.createdAt)}`}
+          </p>
+        </div>
         {actions}
       </div>
-      <ul className="grid gap-3 sm:grid-cols-3">
-        {when && <Fact icon={IconCalendar} label="Date" value={when} />}
-        {place && <Fact icon={IconMapPin} label="Lieu" value={place} />}
-        <Fact icon={IconUsers} label="Postes" value={`${o.acceptedCount}/${o.quantity} pourvu${o.quantity > 1 ? "s" : ""}`} />
-      </ul>
-      {o.amount !== null && (
-        <p className="font-semibold text-2xl">
-          {fcfa(o.amount)}{" "}
-          {o.paymentFlow && <span className="font-normal text-base text-muted-foreground">{PAYMENT_SUFFIX[o.paymentFlow]}</span>}
-        </p>
-      )}
-      <div className="space-y-2">
-        <h2 className="font-medium text-sm">Description</h2>
-        <p className="whitespace-pre-line text-muted-foreground leading-relaxed">{o.description}</p>
+
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        <Tile icon={IconInbox} label="Candidatures" value={applicants ? String(list.length) : "—"} />
+        <Tile
+          icon={IconUsers}
+          label="À examiner"
+          value={applicants ? String(toReview) : "—"}
+          hint={toReview > 0 ? "en attente de votre réponse" : "aucune en attente"}
+        />
+        <Tile icon={IconUserCheck} label="Postes pourvus" value={`${filled}/${o.quantity}`}>
+          <div className="h-1.5 overflow-hidden rounded-full bg-card">
+            <div className="h-full rounded-full bg-whatsapp-dark" style={{ width: `${(filled / o.quantity) * 100}%` }} />
+          </div>
+        </Tile>
+        <Tile
+          icon={IconCalendarEvent}
+          label={isDatedMission(o.employmentType) ? "Mission" : "Clôture"}
+          value={left === null ? "—" : left > 0 ? `J-${left}` : left === 0 ? "Aujourd'hui" : "Passée"}
+          hint={o.scheduledAt ? (offerDate(o.scheduledAt, o.employmentType) ?? undefined) : undefined}
+          muted={!open}
+        />
       </div>
-      {o.note && (
-        <div className="space-y-2">
-          <h2 className="font-medium text-sm">Note pour les candidats</h2>
-          <p className="whitespace-pre-line text-muted-foreground leading-relaxed">{o.note}</p>
+    </section>
+  );
+}
+
+function Tile({
+  icon: Icon,
+  label,
+  value,
+  hint,
+  muted,
+  children,
+}: Readonly<{ icon: TablerIcon; label: string; value: string; hint?: string; muted?: boolean; children?: React.ReactNode }>) {
+  return (
+    <div className="flex min-w-0 flex-col gap-3 rounded-2xl bg-page p-4 sm:p-5">
+      <div className="flex items-center gap-3">
+        <span className="hidden size-9 shrink-0 items-center justify-center rounded-xl bg-card sm:flex">
+          <Icon className="size-4" />
+        </span>
+        <span className="truncate font-medium text-sm">{label}</span>
+      </div>
+      <p className={cn("font-semibold text-3xl tracking-tight", muted && "text-muted-foreground")}>{value}</p>
+      {hint && <p className="-mt-2 line-clamp-2 text-muted-foreground text-xs">{hint}</p>}
+      {children}
+    </div>
+  );
+}
+
+const TABS: { key: "all" | ApplicationStage; label: string }[] = [
+  { key: "all", label: "Toutes" },
+  { key: "new", label: "Nouvelles" },
+  { key: "viewed", label: "Vues" },
+  { key: "hired", label: "Retenues" },
+  { key: "closed", label: "Refusées ou annulées" },
+];
+
+/** The applicants by stage. A candidate opens in the profile dialog — public profile only. */
+function ApplicantsCard({
+  offer: o,
+  applicants,
+  loading,
+}: Readonly<{ offer: Offer; applicants?: OfferApplicant[]; loading: boolean }>) {
+  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("all");
+  const list = applicants ?? [];
+  const count = (k: (typeof TABS)[number]["key"]) => (k === "all" ? list.length : list.filter((a) => applicationStage(a.status) === k).length);
+  const shown = tab === "all" ? list : list.filter((a) => applicationStage(a.status) === tab);
+  const open = o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED";
+
+  return (
+    <section className="space-y-5 rounded-3xl bg-card p-6">
+      <h2 className="font-semibold text-xl">Candidats</h2>
+
+      {loading ? (
+        <Skeleton className="h-64 rounded-2xl" />
+      ) : list.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 rounded-2xl bg-page px-6 py-12 text-center">
+          <span className="flex size-12 items-center justify-center rounded-2xl bg-card">
+            <IconUsers className="size-6 text-muted-foreground" />
+          </span>
+          <p className="font-medium">Aucune candidature pour le moment</p>
+          <p className="max-w-sm text-muted-foreground text-sm">
+            {open
+              ? "Les travailleurs correspondants ont été prévenus de votre offre. Les candidatures apparaîtront ici."
+              : "Cette offre n'a reçu aucune candidature."}
+          </p>
         </div>
+      ) : (
+        <>
+          <div role="tablist" aria-label="Étape" className="flex gap-1 overflow-x-auto rounded-full bg-page p-1">
+            {TABS.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                role="tab"
+                aria-selected={tab === t.key}
+                onClick={() => setTab(t.key)}
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 font-medium text-sm transition-colors",
+                  tab === t.key ? "bg-brand-lime text-[#0f2414]" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {t.label}
+                <span className="tabular-nums opacity-70">{count(t.key)}</span>
+              </button>
+            ))}
+          </div>
+
+          {shown.length === 0 ? (
+            <p className="rounded-2xl bg-page p-4 text-muted-foreground text-sm">Aucun candidat à cette étape.</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {shown.map((a) => {
+                const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
+                return (
+                  <li key={a.applicationId}>
+                    <Link
+                      href={`/espace/candidats/${a.worker.id}`}
+                      className="flex items-center gap-4 rounded-2xl bg-page p-3 pr-4 transition-colors hover:bg-page/70"
+                    >
+                      <Avatar className="size-11 rounded-xl">
+                        {a.worker.avatarUrl && <AvatarImage src={a.worker.avatarUrl} alt="" className="object-cover" />}
+                        <AvatarFallback className="rounded-xl bg-card font-medium">{getInitials(name)}</AvatarFallback>
+                      </Avatar>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium">{name}</span>
+                        <span className="block text-muted-foreground text-xs">
+                          Candidature du {new Date(a.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
+                        </span>
+                      </span>
+                      {a.worker.reliabilityScore !== null && (
+                        <span className="hidden shrink-0 text-right sm:block">
+                          <span className="block font-semibold text-sm tabular-nums">{a.worker.reliabilityScore}/100</span>
+                          <span className="block text-muted-foreground text-xs">Fiabilité</span>
+                        </span>
+                      )}
+                      <span
+                        className={cn(
+                          "shrink-0 rounded-full px-2.5 py-1 font-medium text-xs",
+                          STAGE_CLASS[applicationStage(a.status)],
+                        )}
+                      >
+                        {APPLICATION_STATUS[a.status] ?? a.status}
+                      </span>
+                      <IconChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </>
       )}
     </section>
   );
 }
 
-function Fact({ icon: Icon, label, value }: Readonly<{ icon: typeof IconCalendar; label: string; value: string }>) {
+function DetailsCard({ offer: o, category }: Readonly<{ offer: Offer; category?: string }>) {
+  const place = o.isRemote ? "À distance" : [o.city, o.countryName].filter(Boolean).join(", ");
+  const rows: { icon: TablerIcon; label: string; value: string; hint?: string }[] = [
+    {
+      icon: IconCalendarEvent,
+      label: isDatedMission(o.employmentType) ? "Date de la mission" : "Clôture des candidatures",
+      value: offerDate(o.scheduledAt, o.employmentType)?.replace(/^Candidatures jusqu'au /, "") ?? "Non renseignée",
+    },
+    { icon: IconMapPin, label: "Lieu", value: place || "Non renseigné", hint: o.isRemote ? undefined : (o.address ?? undefined) },
+    { icon: IconUsers, label: "Postes", value: `${o.quantity} personne${o.quantity > 1 ? "s" : ""}` },
+    {
+      icon: IconCash,
+      label: "Rémunération",
+      value: o.amount === null ? "À discuter avec le candidat" : `${fcfa(o.amount)}${o.paymentFlow ? ` ${PAYMENT_SUFFIX[o.paymentFlow]}` : ""}`,
+    },
+    { icon: IconBriefcase, label: "Type et domaine", value: [EMPLOYMENT_LABEL[o.employmentType], category].filter(Boolean).join(" · ") },
+  ];
   return (
-    <li className="rounded-2xl bg-page p-4">
-      <p className="flex items-center gap-1.5 text-muted-foreground text-xs">
-        <Icon className="size-3.5" />
-        {label}
-      </p>
-      <p className="mt-1 font-medium text-sm">{value}</p>
-    </li>
+    <section className="space-y-4 rounded-3xl bg-card p-6">
+      <h2 className="font-semibold text-lg">Détails</h2>
+      <dl className="space-y-3">
+        {rows.map((r) => (
+          <div key={r.label} className="flex items-start gap-3">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-page">
+              <r.icon className="size-4 text-muted-foreground" />
+            </span>
+            <div className="min-w-0">
+              <dt className="text-muted-foreground text-xs">{r.label}</dt>
+              <dd className="break-words font-medium text-sm">{r.value}</dd>
+              {r.hint && <dd className="break-words text-muted-foreground text-xs">{r.hint}</dd>}
+            </div>
+          </div>
+        ))}
+      </dl>
+    </section>
   );
 }
