@@ -3,13 +3,13 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { IconCalendarCheck, IconCalendarEvent, IconChevronRight, IconStar, IconUsers } from "@tabler/icons-react";
+import { IconCalendarCheck, IconCalendarEvent, IconCash, IconChevronRight, IconMapPin, IconStar, IconUsers } from "@tabler/icons-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Skeleton } from "#/components/ui/skeleton";
 import { StatTile } from "#/features/home/components/stat-tile";
 import { ApplicationActions } from "#/features/offers/components/application-actions";
-import { APPLICATION_STATUS, applicationStage, STAGE_CLASS, STATUS } from "#/features/offers/offer-labels";
+import { APPLICATION_STATUS, applicationStage, fcfa, PAYMENT_SUFFIX, STAGE_CLASS, STATUS } from "#/features/offers/offer-labels";
 import { friendlyError } from "#/lib/api/friendly-error";
 import {
   getOfferApplicants,
@@ -162,22 +162,45 @@ function MissionCard({ offer: o }: Readonly<{ offer: OfferListItem }>) {
             {place && ` · ${place}`}
           </p>
         </div>
+        <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 font-medium text-xs", STATUS[o.status].className)}>{STATUS[o.status].label}</span>
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
-        <span className={cn("rounded-full px-2.5 py-0.5 font-medium text-xs", STATUS[o.status].className)}>{STATUS[o.status].label}</span>
-        {days !== null && days >= 0 && o.status !== "COMPLETED" && (
-          <span className="rounded-full bg-page px-2.5 py-0.5 font-medium text-xs">
-            {days === 0 ? "Aujourd'hui" : days === 1 ? "Demain" : `Dans ${days} jours`}
-          </span>
-        )}
-        {toRate > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-chip-amber px-2.5 py-0.5 font-medium text-chip-amber-foreground text-xs">
-            <IconStar className="size-3" />
-            {toRate} à noter
-          </span>
-        )}
-      </div>
+      {(o.description || o.amount !== null || o.address) && (
+        <div className="space-y-2 rounded-2xl bg-page p-3">
+          {o.description && <p className="line-clamp-2 text-muted-foreground text-sm leading-relaxed">{o.description}</p>}
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+            {o.amount !== null && (
+              <span className="inline-flex items-center gap-1 font-semibold">
+                <IconCash className="size-3.5 text-muted-foreground" />
+                {fcfa(o.amount)}
+                {o.paymentFlow && <span className="font-normal text-muted-foreground">{PAYMENT_SUFFIX[o.paymentFlow]}</span>}
+              </span>
+            )}
+            {!o.isRemote && o.address && (
+              <span className="inline-flex min-w-0 items-center gap-1 text-muted-foreground">
+                <IconMapPin className="size-3.5 shrink-0" />
+                <span className="truncate">{o.address}</span>
+              </span>
+            )}
+          </p>
+        </div>
+      )}
+
+      {((days !== null && days >= 0 && o.status !== "COMPLETED") || toRate > 0) && (
+        <div className="flex flex-wrap gap-1.5">
+          {days !== null && days >= 0 && o.status !== "COMPLETED" && (
+            <span className="rounded-full bg-page px-2.5 py-0.5 font-medium text-xs">
+              {days === 0 ? "Aujourd'hui" : days === 1 ? "Demain" : `Dans ${days} jours`}
+            </span>
+          )}
+          {toRate > 0 && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-chip-amber px-2.5 py-0.5 font-medium text-chip-amber-foreground text-xs">
+              <IconStar className="size-3" />
+              {toRate} à noter
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="space-y-1.5">
         <div className="flex items-baseline justify-between text-xs">

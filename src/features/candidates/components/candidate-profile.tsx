@@ -10,6 +10,7 @@ import { Skeleton } from "#/components/ui/skeleton";
 import { getCandidate, getCandidatePortfolio } from "#/lib/api/candidate-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { ImageViewer } from "#/components/image-viewer";
+import { KeepButton } from "#/features/talents/components/keep-button";
 import { SafeImage } from "#/components/safe-image";
 import { getInitials } from "#/lib/utils";
 
@@ -62,7 +63,7 @@ export function CandidateProfile({ workerId }: Readonly<{ workerId: string }>) {
             {getInitials(name)}
           </AvatarFallback>
         </Avatar>
-        <div className="min-w-0 space-y-1">
+        <div className="min-w-0 flex-1 space-y-1">
           <h2 className="truncate font-semibold text-2xl tracking-tight">{name}</h2>
           {/* As the client app: only when verified — a pending or refused
               review is never shown to employers. */}
@@ -80,6 +81,7 @@ export function CandidateProfile({ workerId }: Readonly<{ workerId: string }>) {
             </p>
           )}
         </div>
+        <KeepButton workerId={workerId} name={name} className="size-10 self-start bg-page" />
       </div>
 
       <div className="grid grid-cols-3 gap-3">

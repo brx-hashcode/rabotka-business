@@ -27,6 +27,8 @@ export type OfferListItem = {
   quantity: number;
   acceptedCount: number;
   createdAt: string;
+  description: string;
+  address: string | null;
 };
 
 export type Offer = OfferListItem & {
@@ -97,6 +99,8 @@ function toListItem(o: Raw): OfferListItem {
     quantity: Number(o.quantity ?? 1),
     acceptedCount: Number(o.acceptedCount ?? 0),
     createdAt: String(o.created_at ?? ""),
+    description: String(o.description ?? ""),
+    address: str(o.address),
   };
 }
 
