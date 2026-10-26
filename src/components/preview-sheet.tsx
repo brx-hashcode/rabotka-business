@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { IconDownload, IconPrinter, IconX } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+import { IconDownload, IconMinus, IconPlus, IconPrinter, IconX } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
 import { Dialog as SheetPrimitive } from "radix-ui";
 import { toast } from "sonner";
 
-import { cn } from "#/lib/utils";
+const PdfPages = dynamic(() => import("./pdf-pages"), { ssr: false });
 
+const ZOOMS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
 export function PreviewSheet({
   open,
@@ -23,13 +25,18 @@ export function PreviewSheet({
   onOpenChange: (open: boolean) => void;
   title: string;
   subtitle?: string;
+  /** Same-origin API path, signed URL or `blob:`; none: nothing to show. */
   src: string | undefined;
   kind: "pdf" | "image";
+  /** The name a download is saved under. */
   fileName?: string;
   unavailable?: string;
 }>) {
   const file = useBlobUrl(open ? src : undefined, kind);
-  const frame = useRef<HTMLIFrameElement>(null);
+  const [zoom, setZoom] = useState(1);
+  const [pages, setPages] = useState(0);
+  const [drawFailed, setDrawFailed] = useState(false);
+  const failed = file.failed || drawFailed;
 
   function download() {
     if (!file.url) return;
@@ -39,32 +46,72 @@ export function PreviewSheet({
     a.click();
   }
 
+  /** The browser's print dialog for the file alone, from a hidden frame. */
   function print() {
-    if (kind === "pdf") {
-      frame.current?.contentWindow?.focus();
-      frame.current?.contentWindow?.print();
-      return;
-    }
-    const w = window.open(file.url ?? "", "_blank");
-    if (!w) toast.error("L'impression n'a pas pu s'ouvrir.");
-    else w.addEventListener("load", () => w.print());
+    if (!file.url) return;
+    const frame = document.createElement("iframe");
+    frame.setAttribute("style", "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden");
+    frame.src = file.url;
+    frame.onload = () => {
+      try {
+        frame.contentWindow?.focus();
+        frame.contentWindow?.print();
+      } catch {
+        toast.error("L'impression n'a pas pu s'ouvrir.");
+      }
+      setTimeout(() => frame.remove(), 60_000);
+    };
+    document.body.appendChild(frame);
   }
 
+  const step = (d: number) => setZoom((z) => ZOOMS[Math.min(ZOOMS.length - 1, Math.max(0, ZOOMS.indexOf(z) + d))] ?? 1);
+
   return (
-    <SheetPrimitive.Root open={open} onOpenChange={onOpenChange}>
+    <SheetPrimitive.Root
+      open={open}
+      onOpenChange={(o) => {
+        onOpenChange(o);
+        if (!o) {
+          setZoom(1);
+          setPages(0);
+          setDrawFailed(false);
+        }
+      }}
+    >
       <SheetPrimitive.Portal>
         <SheetPrimitive.Overlay className="data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50" />
         <SheetPrimitive.Content
           aria-describedby={undefined}
-          className="data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-card shadow-soft outline-none data-[state=closed]:duration-300 data-[state=open]:duration-500 sm:w-[min(56rem,92vw)] sm:rounded-l-3xl"
+          className="data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-card shadow-soft outline-none data-[state=closed]:duration-300 data-[state=open]:duration-500 sm:w-[min(56rem,92vw)]"
         >
-          <header className="flex items-center gap-3 px-5 py-4 sm:px-6">
+          <header className="flex flex-wrap items-center gap-3 px-5 py-4 sm:px-6">
             <div className="min-w-0 flex-1">
               <SheetPrimitive.Title className="truncate font-semibold text-lg">{title}</SheetPrimitive.Title>
               {subtitle && <p className="truncate text-muted-foreground text-sm">{subtitle}</p>}
             </div>
-            {file.url && (
-              <>
+            {file.url && !failed && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center rounded-full bg-page p-1">
+                  <button
+                    type="button"
+                    onClick={() => step(-1)}
+                    disabled={zoom === ZOOMS[0]}
+                    aria-label="Réduire"
+                    className="flex size-8 items-center justify-center rounded-full hover:bg-card disabled:opacity-40"
+                  >
+                    <IconMinus className="size-4" />
+                  </button>
+                  <span className="w-12 text-center font-medium text-xs tabular-nums">{Math.round(zoom * 100)} %</span>
+                  <button
+                    type="button"
+                    onClick={() => step(1)}
+                    disabled={zoom === ZOOMS.at(-1)}
+                    aria-label="Agrandir"
+                    className="flex size-8 items-center justify-center rounded-full hover:bg-card disabled:opacity-40"
+                  >
+                    <IconPlus className="size-4" />
+                  </button>
+                </div>
                 <button
                   type="button"
                   onClick={download}
@@ -82,26 +129,38 @@ export function PreviewSheet({
                 >
                   <IconPrinter className="size-4" />
                 </button>
-              </>
+              </div>
             )}
             <SheetPrimitive.Close aria-label="Fermer" className="flex size-10 items-center justify-center rounded-full hover:bg-page">
               <IconX className="size-5" />
             </SheetPrimitive.Close>
           </header>
 
-          <div className="flex min-h-0 flex-1 items-center justify-center bg-page sm:mx-3 sm:mb-3 sm:rounded-2xl">
+          <div className="relative min-h-0 flex-1 overflow-auto bg-page">
             {!src ? (
               <Message>{unavailable}</Message>
-            ) : file.failed ? (
+            ) : failed ? (
               <Message>Le fichier n&apos;a pas pu être affiché. Réessayez dans un instant.</Message>
             ) : !file.url ? (
-              <Loader aria-label="Chargement" className="size-8 animate-spin text-muted-foreground" />
+              <div className="flex h-full items-center justify-center">
+                <Loader aria-label="Chargement" className="size-8 animate-spin text-muted-foreground" />
+              </div>
             ) : kind === "pdf" ? (
-              <iframe ref={frame} src={file.url} title={title} className={cn("size-full sm:rounded-2xl")} />
+              <div className="px-4 py-6 sm:px-8">
+                <PdfPages file={file.url} zoom={zoom} onPages={setPages} onError={() => setDrawFailed(true)} />
+                {pages > 1 && <p className="mt-4 text-center text-muted-foreground text-xs">{pages} pages</p>}
+              </div>
             ) : (
-              // A local blob, a signed URL or the API route: nothing next/image could optimise.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={file.url} alt={title} className="max-h-full max-w-full object-contain p-4" />
+              <div className="flex min-h-full items-center justify-center p-6">
+                {/* A local blob, a signed URL or the API route: nothing next/image could optimise. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={file.url}
+                  alt={title}
+                  style={zoom === 1 ? undefined : { width: `${zoom * 100}%`, maxWidth: "none" }}
+                  className="max-h-full max-w-full rounded-xl object-contain shadow-soft"
+                />
+              </div>
             )}
           </div>
         </SheetPrimitive.Content>
@@ -110,7 +169,7 @@ export function PreviewSheet({
   );
 }
 
-/** The file as a URL the panel can frame and save: API routes become a local copy. */
+/** The file as a URL the panel can draw and save: API routes become a local copy. */
 function useBlobUrl(src: string | undefined, kind: "pdf" | "image") {
   const sameOrigin = !!src?.startsWith("/");
   const [state, setState] = useState<{ for?: string; url: string | null; failed: boolean }>({ url: null, failed: false });
@@ -143,5 +202,5 @@ function useBlobUrl(src: string | undefined, kind: "pdf" | "image") {
 }
 
 function Message({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <p className="px-6 text-center text-muted-foreground text-sm">{children}</p>;
+  return <p className="flex h-full items-center justify-center px-6 text-center text-muted-foreground text-sm">{children}</p>;
 }
