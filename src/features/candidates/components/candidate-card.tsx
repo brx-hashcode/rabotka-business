@@ -23,6 +23,8 @@ import type { Candidate } from "#/lib/api/candidate-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { cn, getInitials } from "#/lib/utils";
 
+export const RELIABILITY_HINT = "Fiabilité : présence, ponctualité et missions menées à terme";
+
 const button = "inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 font-medium text-sm transition-colors";
 
 /**
@@ -56,7 +58,7 @@ export function CandidateCard({ candidate: c, compact }: Readonly<{ candidate: C
               </span>
             )}
             {c.reliabilityScore !== null && (
-              <span className="inline-flex items-center gap-1 font-medium">
+              <span className="inline-flex items-center gap-1 font-medium" title={RELIABILITY_HINT}>
                 <IconShieldCheck className="size-3.5 text-whatsapp-dark" />
                 {c.reliabilityScore}/100
               </span>
@@ -72,7 +74,7 @@ export function CandidateCard({ candidate: c, compact }: Readonly<{ candidate: C
       {!compact && c.description && <p className="line-clamp-2 text-muted-foreground text-sm leading-relaxed">{c.description}</p>}
       <div className="mt-auto flex gap-2">
         <Link href={`/espace/candidats/${c.id}`} className={cn(button, "bg-card hover:bg-card/70")}>
-          Voir le profil
+          Profil
         </Link>
         <ReachButton workerId={c.id} name={name} />
       </div>
@@ -98,9 +100,9 @@ export function ReachButton({ workerId, name }: Readonly<{ workerId: string; nam
       void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
       setConfirm(false);
       setShow(true);
-      if (spent) toast.success(`Contact de ${name} débloqué.`);
+      if (spent) toast.success(`Contact de ${name} obtenu.`);
     },
-    onError: (err) => toast.error(friendlyError(err, "Le contact n'a pas pu être débloqué.")),
+    onError: (err) => toast.error(friendlyError(err, "Le contact n'a pas pu être obtenu.")),
   });
 
   return (
@@ -118,7 +120,7 @@ export function ReachButton({ workerId, name }: Readonly<{ workerId: string; nam
           className={cn(button, "bg-ink text-white hover:bg-ink/90 disabled:opacity-50")}
         >
           <IconLockOpen className="size-4 shrink-0" />
-          Débloquer
+          Obtenir le contact
         </button>
       )}
 
@@ -150,9 +152,9 @@ function UnlockConfirm({
       open={open}
       onOpenChange={onOpenChange}
       icon={<IconLockOpen className="size-5" />}
-      title={`Débloquer le contact de ${name} ?`}
-      description="Son téléphone et son e-mail s'affichent aussitôt. Le candidat n'a rien à régler."
-      confirmLabel="Débloquer"
+      title={`Obtenir le contact de ${name} ?`}
+      description="Son téléphone et son e-mail s'affichent aussitôt."
+      confirmLabel="Obtenir le contact"
       confirmDisabled={!covered}
       pending={pending}
       onConfirm={onConfirm}
@@ -161,12 +163,12 @@ function UnlockConfirm({
         <Skeleton className="h-14 rounded-2xl" />
       ) : covered ? (
         <p className="rounded-2xl bg-chip-green p-4 text-chip-green-foreground text-sm">
-          Compté sur votre formule {e.plan!.name}
-          {left === null ? " (contacts illimités)." : ` : il vous restera ${left! - 1} contact${left! - 1 > 1 ? "s" : ""} sur cette période.`}
+          Inclus dans votre formule {e.plan!.name}
+          {left === null ? " (contacts illimités)." : ` : il vous restera ${left! - 1} contact${left! - 1 > 1 ? "s" : ""} inclus.`}
         </p>
       ) : (
         <p className="rounded-2xl bg-chip-amber p-4 text-chip-amber-foreground text-sm">
-          {e.plan ? "Le quota de contacts de votre formule est épuisé pour cette période." : "Il faut une formule pour débloquer des contacts."}{" "}
+          {e.plan ? "Vous avez utilisé tous les contacts inclus dans votre formule." : "Il faut une formule pour obtenir des contacts."}{" "}
           <Link href="/espace/abonnement" className="font-medium underline">
             Voir les formules
           </Link>

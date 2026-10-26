@@ -5,28 +5,28 @@
  */
 export const discussionsContent = {
   list: {
-    title: "Discussions",
-    emptyTitle: "Aucune discussion",
+    title: "Messages",
+    emptyTitle: "Aucune conversation",
     emptyDescription: "Écrivez à un candidat depuis l'une de vos offres : vos échanges apparaîtront ici.",
-    closed: "Discussion close",
+    closed: "Conversation terminée",
     searchPlaceholder: "Rechercher un candidat, une offre…",
     filterAll: "Toutes",
     filterUnread: "Non lues",
-    noSearchResult: "Aucune discussion ne correspond à votre recherche.",
+    noSearchResult: "Aucune conversation ne correspond à votre recherche.",
     noUnread: "Vous avez tout lu.",
-    pick: "Choisissez une discussion pour l'afficher.",
-    delete: "Supprimer la discussion",
+    pick: "Choisissez une conversation pour l'afficher.",
+    delete: "Supprimer la conversation",
     deleteConfirm: "Oui, supprimer",
     /** Said before, because « supprimer » here is for you only, as on WhatsApp. */
     deleteExplain:
-      "La discussion disparaîtra de votre liste uniquement. Votre interlocuteur la conserve, et elle réapparaîtra s'il vous écrit de nouveau.",
-    deleted: "Discussion supprimée",
-    deleteFailed: "La discussion n'a pas pu être supprimée",
+      "La conversation disparaîtra de votre liste uniquement. Votre interlocuteur la conserve, et elle réapparaîtra s'il vous écrit de nouveau.",
+    deleted: "Conversation supprimée",
+    deleteFailed: "La conversation n'a pas pu être supprimée",
   },
   thread: {
     placeholder: "Écrivez votre message…",
     send: "Envoyer",
-    closed: "Cette discussion est close, vous ne pouvez plus écrire.",
+    closed: "Cette conversation est terminée : vous ne pouvez plus écrire.",
     empty: "Écrivez le premier message.",
     older: "Messages précédents",
     olderLoading: "Chargement…",
@@ -44,11 +44,10 @@ export const discussionsContent = {
   },
   /** The standing rule, said before it is enforced, and how to get details instead. */
   warning: {
-    header: "Numéros et e-mails sont toujours masqués ici. Pour obtenir les coordonnées, retenez le candidat sur votre offre.",
-    sender: "Ce fragment n'a pas été transmis. Les coordonnées ne s'échangent pas dans la discussion.",
-    recipient:
-      "Les coordonnées sont toujours masquées ici. Elles s'obtiennent en retenant le candidat, puis s'affichent avec « Contact » sur sa candidature.",
-    held: "Ce message n'a pas été transmis : il contenait des coordonnées.",
+    header: "Les numéros et e-mails ne passent pas ici. Retenez le candidat pour obtenir son contact.",
+    sender: "Ce passage n'a pas été envoyé : les coordonnées ne passent pas dans les messages.",
+    recipient: "Les numéros et e-mails ne passent pas ici. Retenez le candidat pour obtenir son contact.",
+    held: "Ce message n'a pas été envoyé : il contenait des coordonnées.",
     reportCta: "Signaler une erreur",
     reportConfirm: "Confirmer le signalement",
     reportDone: "Merci, votre signalement a été enregistré.",

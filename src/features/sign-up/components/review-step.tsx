@@ -64,7 +64,7 @@ export function ReviewStep({
 
       <Summary title="Responsable du compte" onEdit={() => onEdit(0)}>
         <Row label="Nom">{`${account.firstName} ${account.lastName}`}</Row>
-        <Row label="Email">{account.email}</Row>
+        <Row label="E-mail">{account.email}</Row>
         <Row label="Téléphone">{account.phone}</Row>
       </Summary>
 
@@ -174,8 +174,8 @@ export function SignUpDone({
         title="Votre compte entreprise est créé"
         text={
           signInRequired
-            ? "Il ne reste qu'à vous connecter : saisissez le code que nous venons d'envoyer par email."
-            : "Merci ! Nos équipes examinent maintenant les pièces de votre organisation. Vous serez informé par email dès que votre compte sera activé."
+            ? "Il ne reste qu'à vous connecter : saisissez le code que nous venons d'envoyer par e-mail."
+            : "Merci ! Nos équipes examinent maintenant les pièces de votre organisation. Vous serez informé par e-mail dès que votre compte sera activé."
         }
       />
       <div className="space-y-3">
@@ -188,7 +188,7 @@ export function SignUpDone({
             },
             {
               title: "Activation de votre compte",
-              text: "Vous êtes prévenu par email et dans votre espace.",
+              text: "Vous êtes prévenu par e-mail et dans votre espace.",
             },
             {
               title: "Vos premiers recrutements",

@@ -55,7 +55,7 @@ const TONE: Record<Action["tone"], string> = {
 const button = "inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3.5 font-medium text-sm transition-colors";
 
 /** Beside other buttons, on a row or a card: the long labels stay for the menu and the dialogs. */
-const SHORT: Record<string, string> = { cancel: "Annuler", unlock: "Déblocage", contact: "Contact" };
+const SHORT: Record<string, string> = { cancel: "Annuler", unlock: "Suivi", contact: "Contact" };
 
 function ActionButton({ action: a, stretch, label }: Readonly<{ action: Action; stretch?: boolean; label?: string }>) {
   const className = cn(button, TONE[a.tone], stretch && "min-w-0 flex-1");
@@ -106,7 +106,7 @@ export function ApplicationActions({
   const accept = useMutation({
     mutationFn: () => acceptApplication(id),
     onSuccess: (d) => {
-      done(`${name} est retenu·e.`);
+      done(`Candidature de ${name} retenue.`);
       // Straight to what happens next: who still has to pay.
       if (d.unlock) setDialog("unlock");
     },
@@ -140,7 +140,7 @@ export function ApplicationActions({
     actions.push({ key: "reject", label: "Refuser", icon: IconX, tone: "danger", onClick: () => setDialog("reject") });
   }
   if (status === "WAITING_PAYMENT") {
-    actions.push({ key: "unlock", label: "Suivre le déblocage", icon: IconLockOpen, tone: "default", onClick: () => setDialog("unlock") });
+    actions.push({ key: "unlock", label: "Voir l'avancement", icon: IconLockOpen, tone: "default", onClick: () => setDialog("unlock") });
     actions.push({ key: "cancel", label: "Annuler le recrutement", icon: IconX, tone: "danger", onClick: () => setDialog("cancel") });
   }
   if (status === "END" && !applicant.ratedByEmployer) {
@@ -158,7 +158,7 @@ export function ApplicationActions({
       onClick={() =>
         openChat.mutate(chatId, {
           onSuccess: ({ conversation }) => router.push(`/espace/discussions/${conversation.id}`),
-          onError: (err) => toast.error(friendlyError(err, "La discussion n'a pas pu être ouverte.")),
+          onError: (err) => toast.error(friendlyError(err, "La conversation n'a pas pu être ouverte.")),
         })
       }
       aria-label={`Écrire à ${name}`}
@@ -275,7 +275,7 @@ export function ApplicationActions({
         onOpenChange={(o) => setDialog(o ? "cancel" : null)}
         tone="warning"
         title={`Annuler le recrutement de ${name} ?`}
-        description="Le candidat est prévenu et le poste se libère. Une annulation de votre part pèse sur votre fiabilité d'employeur."
+        description="Le candidat est prévenu et le poste se libère. Attention : annuler baisse votre note d'employeur."
         confirmLabel="Annuler le recrutement"
         pending={cancel.isPending}
         onConfirm={() => cancel.mutate()}
@@ -333,7 +333,7 @@ function AcceptDialog({
       onOpenChange={onOpenChange}
       icon={<IconCheck className="size-5" />}
       title={`Retenir ${name} ?`}
-      description="Le candidat est prévenu. Vos coordonnées sont échangées dès que sa part du déblocage est réglée."
+      description="Le candidat est prévenu. Vous obtenez son contact dès qu'il a confirmé."
       confirmLabel="Retenir"
       pending={pending}
       onConfirm={onConfirm}
@@ -342,15 +342,15 @@ function AcceptDialog({
         <Skeleton className="h-16 rounded-2xl" />
       ) : covered ? (
         <p className="rounded-2xl bg-chip-green p-4 text-chip-green-foreground text-sm">
-          Déblocage couvert par votre formule {e.plan!.name}
+          Contact inclus dans votre formule {e.plan!.name}
           {e.unlocksRemaining === null
             ? "."
-            : ` : il vous restera ${e.unlocksRemaining - 1} contact${e.unlocksRemaining - 1 > 1 ? "s" : ""} sur cette période.`}
+            : ` : il vous restera ${e.unlocksRemaining - 1} contact${e.unlocksRemaining - 1 > 1 ? "s" : ""} inclus.`}
         </p>
       ) : (
         <p className="rounded-2xl bg-chip-amber p-4 text-chip-amber-foreground text-sm">
-          {e.plan ? "Le quota de contacts de votre formule est épuisé" : "Vous n'avez pas de formule en cours"} : les frais de
-          déblocage s&apos;appliqueront.{" "}
+          {e.plan ? "Vous avez utilisé tous les contacts inclus dans votre formule" : "Vous n'avez pas de formule en cours"} : ce
+          contact sera payant.{" "}
           <Link href="/espace/abonnement" className="font-medium underline">
             Voir les formules
           </Link>
@@ -376,7 +376,7 @@ function UnlockDialog({
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: offersKey });
       void queryClient.invalidateQueries({ queryKey: applicationKey(applicationId) });
-      toast.success("Votre part du déblocage est réglée.");
+      toast.success("Paiement effectué.");
     },
     onError: (err) => toast.error(friendlyError(err, "Le paiement n'a pas abouti.")),
   });
@@ -387,8 +387,8 @@ function UnlockDialog({
       open={open}
       onOpenChange={onOpenChange}
       icon={<IconLockOpen className="size-5" />}
-      title={`Déblocage du contact — ${name}`}
-      description="Les coordonnées sont échangées quand les deux parts sont réglées."
+      title={`Contact de ${name} : avancement`}
+      description="Vous obtenez le contact dès que le candidat a confirmé."
       confirmLabel={canPay ? `Payer ${fcfa(u.employerFee)} avec mon solde` : "Fermer"}
       pending={pay.isPending}
       onConfirm={() => (canPay ? pay.mutate() : onOpenChange(false))}
@@ -398,24 +398,24 @@ function UnlockDialog({
       ) : !u ? (
         <p className="rounded-2xl bg-page p-4 text-muted-foreground text-sm">
           {detail.data?.status === "ACCEPTED"
-            ? "Le déblocage est terminé : le recrutement est confirmé. Ses coordonnées s'affichent avec « Contact »."
-            : friendlyError(detail.error, "Aucun déblocage en cours pour cette candidature.")}
+            ? "Le candidat a confirmé : son contact s'affiche avec « Contact »."
+            : friendlyError(detail.error, "Rien en attente pour cette candidature.")}
         </p>
       ) : (
         <div className="space-y-3">
           <ul className="space-y-2 rounded-2xl bg-page p-4 text-sm">
             <Step
               done={u.employerPaid}
-              label="Votre part"
-              hint={u.employerPaid ? (u.employerFee === 0 ? "couverte par votre formule" : "réglée") : `${fcfa(u.employerFee)} à régler`}
+              label="Vous"
+              hint={u.employerPaid ? (u.employerFee === 0 ? "inclus dans votre formule" : "payé") : `${fcfa(u.employerFee)} à payer`}
             />
-            <Step done={u.workerPaid} label="La part du candidat" hint={u.workerPaid ? "réglée" : "en attente"} />
+            <Step done={u.workerPaid} label="Le candidat" hint={u.workerPaid ? "a confirmé" : "confirmation en attente"} />
           </ul>
           {u.status !== "UNLOCKED" && (
             <p className="text-muted-foreground text-xs">
-              À régler avant le{" "}
-              {new Date(u.expiresAt).toLocaleString("fr-FR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}, sinon
-              la candidature est libérée.
+              Sans confirmation avant le{" "}
+              {new Date(u.expiresAt).toLocaleString("fr-FR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}, la
+              candidature est annulée.
             </p>
           )}
           {!u.employerPaid && !canPay && (

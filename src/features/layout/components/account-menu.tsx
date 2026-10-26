@@ -74,7 +74,7 @@ export function AccountMenu() {
               <span className="flex size-8 items-center justify-center rounded-full bg-page">
                 <IconBuilding className="size-4" />
               </span>
-              Mon organisation
+              Organisation
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild className="cursor-pointer gap-3 rounded-2xl px-3 py-2.5 text-sm focus:bg-page">

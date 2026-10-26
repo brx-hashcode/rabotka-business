@@ -106,7 +106,7 @@ export function HomeOverview() {
               />
               <StatTile
                 icon={IconUserCheck}
-                label="Recrutements"
+                label="Candidats retenus"
                 value={nf(st.hires.count)}
                 footer={<TrendLine trend={trend(st.hires.count, st.hires.previous)} days={days} />}
               />
@@ -251,7 +251,7 @@ function FunnelCard({ funnel }: Readonly<{ funnel: BusinessStats["funnel"] }>) {
     { label: "Mission terminée", value: funnel.completed },
   ];
   return (
-    <Card title="Parcours des candidatures">
+    <Card title="Où en sont vos candidatures">
       {funnel.received === 0 ? (
         <p className="text-muted-foreground text-sm">Aucune candidature reçue sur la période.</p>
       ) : (
@@ -333,7 +333,7 @@ function DelaysCard({ timing, days }: Readonly<{ timing: BusinessStats["timing"]
           days={days}
         />
       </div>
-      <p className="mt-auto text-muted-foreground text-xs">Valeurs médianes sur la période, comparées à la précédente.</p>
+      <p className="mt-auto text-muted-foreground text-xs">En moyenne sur la période, comparé à la période précédente.</p>
     </Card>
   );
 }
@@ -354,7 +354,7 @@ function ResultsCard({ quality: q }: Readonly<{ quality: BusinessStats["quality"
       <div className="space-y-2 rounded-2xl bg-page p-4">
         <div className="flex items-baseline justify-between gap-3">
           <div>
-            <p className="font-medium text-sm">Taux de pourvoi</p>
+            <p className="font-medium text-sm">Postes pourvus</p>
             <p className="text-muted-foreground text-xs">
               {q.positionsFilled} poste{q.positionsFilled > 1 ? "s" : ""} pourvu{q.positionsFilled > 1 ? "s" : ""} sur{" "}
               {q.positionsProposed}
@@ -373,7 +373,7 @@ function ResultsCard({ quality: q }: Readonly<{ quality: BusinessStats["quality"
           value={percent(q.noShowRate)}
         />
         <Figure label="Note donnée" hint={`moyenne de vos ${q.ratingsGivenCount} avis`} value={<Stars value={q.ratingGiven} />} />
-        <Figure label="Note reçue" hint={`${q.ratingsReceivedCount} avis de travailleurs`} value={<Stars value={q.ratingReceived} />} />
+        <Figure label="Note reçue" hint={`${q.ratingsReceivedCount} avis de candidats`} value={<Stars value={q.ratingReceived} />} />
       </div>
     </Card>
   );
@@ -416,7 +416,7 @@ function SubscriptionCard({
         {/* Contacts used against the period's quota. */}
         <div
           role="img"
-          aria-label={`${e.unlocksUsed} contacts débloqués${quota === null ? "" : ` sur ${quota}`}`}
+          aria-label={`${e.unlocksUsed} contacts obtenus${quota === null ? "" : ` sur ${quota}`}`}
           className="relative size-32 shrink-0 rounded-full"
           style={{ background: `conic-gradient(var(--color-whatsapp-dark) ${pct}%, var(--page) ${pct}% 100%)` }}
         >
@@ -435,7 +435,7 @@ function SubscriptionCard({
           </div>
           {e.endsAt && (
             <div>
-              <dt className="text-muted-foreground">{e.status === "TRIAL" ? "Fin de l'essai" : "Échéance"}</dt>
+              <dt className="text-muted-foreground">{e.status === "TRIAL" ? "Fin de l'essai" : "Fin de l'abonnement"}</dt>
               <dd className="font-semibold">{date(e.endsAt)}</dd>
             </div>
           )}
@@ -446,7 +446,7 @@ function SubscriptionCard({
         </dl>
       </div>
       <p className="mt-auto text-muted-foreground text-xs">
-        {unlocked} contact{unlocked > 1 ? "s" : ""} débloqué{unlocked > 1 ? "s" : ""} sur les {days} derniers jours.
+        {unlocked} contact{unlocked > 1 ? "s" : ""} obtenu{unlocked > 1 ? "s" : ""} sur les {days} derniers jours.
       </p>
     </Card>
   );

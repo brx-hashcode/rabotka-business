@@ -64,13 +64,13 @@ export function ClaimDetailPage({ id }: Readonly<{ id: string }>) {
     <div className="w-full space-y-6 pt-2">
       <Link href="/espace/reclamations" className="inline-flex items-center gap-1.5 text-muted-foreground text-sm hover:text-foreground">
         <IconArrowLeft className="size-4" />
-        Réclamations
+        Aide
       </Link>
 
       {claim.isLoading ? (
         <Skeleton className="h-96 rounded-3xl" />
       ) : !c ? (
-        <p className="rounded-3xl bg-card p-6 text-muted-foreground">{friendlyError(claim.error, "Cette réclamation est introuvable.")}</p>
+        <p className="rounded-3xl bg-card p-6 text-muted-foreground">{friendlyError(claim.error, "Cette demande est introuvable.")}</p>
       ) : (
         <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_28rem]">
           <section className="flex h-[calc(100svh-11rem)] min-h-[28rem] flex-col overflow-hidden rounded-3xl bg-card">
@@ -99,7 +99,7 @@ export function ClaimDetailPage({ id }: Readonly<{ id: string }>) {
             {closed ? (
               <p className="flex items-center justify-center gap-2 px-6 py-4 text-muted-foreground text-sm">
                 <IconLock className="size-4" />
-                Cette réclamation est {c.status === "COMPLETED" ? "traitée" : "rejetée"} : vous ne pouvez plus y répondre.
+                Cette demande est {c.status === "COMPLETED" ? "résolue" : "refusée"} : vous ne pouvez plus y répondre.
               </p>
             ) : (
               <form

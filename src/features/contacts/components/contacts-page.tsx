@@ -46,7 +46,7 @@ export function ContactsPage() {
         <div className="space-y-1.5">
           <h1 className="font-semibold text-3xl tracking-tight">Profils contactés</h1>
           <p className="text-muted-foreground">
-            Les coordonnées des candidats dont le contact est débloqué : appelez-les ou écrivez-leur directement.
+            Les candidats dont vous avez obtenu le contact : appelez-les ou écrivez-leur directement.
           </p>
         </div>
         {(contacts.data?.length ?? 0) > 0 && (
@@ -77,9 +77,9 @@ export function ContactsPage() {
           <span className="flex size-12 items-center justify-center rounded-2xl bg-page">
             <IconUserCheck className="size-6 text-muted-foreground" />
           </span>
-          <p className="font-medium">Aucun contact débloqué pour le moment</p>
+          <p className="font-medium">Aucun contact obtenu pour le moment</p>
           <p className="max-w-md text-muted-foreground text-sm">
-            Retenez un candidat sur l&apos;une de vos offres : ses coordonnées apparaissent ici dès que le déblocage est réglé.
+            Retenez un candidat sur l&apos;une de vos offres : ses coordonnées apparaissent ici dès qu&apos;il a confirmé.
           </p>
           <Link href="/espace/offres" className="mt-2 font-medium text-sm text-whatsapp-dark hover:underline">
             Voir mes offres

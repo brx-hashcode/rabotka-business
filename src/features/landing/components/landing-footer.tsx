@@ -53,7 +53,7 @@ export function ClosingCta() {
           </h2>
           <p className="max-w-xl text-header-muted text-lg">
             Ouvrez votre compte entreprise en quelques minutes avec
-            l&apos;adresse email professionnelle de votre organisation.
+            l&apos;adresse e-mail professionnelle de votre organisation.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Button

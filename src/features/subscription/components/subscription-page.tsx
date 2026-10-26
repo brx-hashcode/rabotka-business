@@ -19,7 +19,7 @@ const STATUS: Record<SubscriptionStatus, { label: string; className: string }> =
   TRIAL: { label: "Essai gratuit", className: "bg-chip-violet text-chip-violet-foreground" },
   ACTIVE: { label: "Actif", className: "bg-chip-green text-chip-green-foreground" },
   EXPIRED: { label: "Terminé", className: "bg-page text-muted-foreground" },
-  CANCELLED: { label: "Arrêté", className: "bg-page text-muted-foreground" },
+  CANCELLED: { label: "Annulé", className: "bg-page text-muted-foreground" },
 };
 
 const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
@@ -72,7 +72,7 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
       <section className="space-y-2 rounded-3xl bg-card p-6">
         <h2 className="font-semibold text-lg">Aucune formule en cours</h2>
         <p className="text-muted-foreground text-sm">
-          Choisissez une formule pour publier vos offres. Sans formule, chaque contact débloqué est payé à l&apos;unité.
+          Choisissez une formule pour publier vos offres. Sans formule, chaque contact est payant.
         </p>
       </section>
     );
@@ -98,19 +98,19 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
       <div className="grid gap-4 sm:grid-cols-2">
         <Meter
           icon={IconLockOpen}
-          label="Contacts débloqués"
+          label="Contacts inclus"
           used={e.unlocksUsed}
           limit={e.unlocksQuota}
-          hint={e.unlocksRemaining === 0 ? "Quota atteint : les prochains contacts sont payés à l'unité." : undefined}
+          hint={e.unlocksRemaining === 0 ? "Tous vos contacts inclus sont utilisés : les suivants sont payants." : undefined}
         />
-        <Meter icon={IconFileText} label="Offres actives" used={e.activeOffers} limit={e.activeOffersLimit} />
+        <Meter icon={IconFileText} label="Offres en ligne" used={e.activeOffers} limit={e.activeOffersLimit} />
       </div>
 
       {(e.includesPreselection || e.includesFieldAgents || e.priorityVisibility) && (
         <ul className="flex flex-wrap gap-2">
-          {e.includesPreselection && <Feature>Présélection de profils</Feature>}
-          {e.includesFieldAgents && <Feature>Recrutement accompagné par nos agents</Feature>}
-          {e.priorityVisibility && <Feature>Offres mises en avant</Feature>}
+          {e.includesPreselection && <Feature>Recherche de profils</Feature>}
+          {e.includesFieldAgents && <Feature>Aide d&apos;un agent sur le terrain</Feature>}
+          {e.priorityVisibility && <Feature>Offres affichées en premier</Feature>}
         </ul>
       )}
 
@@ -229,15 +229,15 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
               <ul className="flex-1 space-y-2.5 text-sm">
                 <PlanLine>
                   {plan.unlocksPerPeriod === null
-                    ? "Contacts débloqués illimités"
-                    : `${plan.unlocksPerPeriod} contact${plan.unlocksPerPeriod > 1 ? "s" : ""} débloqué${plan.unlocksPerPeriod > 1 ? "s" : ""} par période`}
+                    ? "Contacts illimités"
+                    : `${plan.unlocksPerPeriod} contact${plan.unlocksPerPeriod > 1 ? "s" : ""} inclus`}
                 </PlanLine>
                 <PlanLine>
-                  {plan.activeOffersLimit === null ? "Offres actives illimitées" : `${plan.activeOffersLimit} offre${plan.activeOffersLimit > 1 ? "s" : ""} active${plan.activeOffersLimit > 1 ? "s" : ""}`}
+                  {plan.activeOffersLimit === null ? "Offres en ligne illimitées" : `${plan.activeOffersLimit} offre${plan.activeOffersLimit > 1 ? "s" : ""} en ligne`}
                 </PlanLine>
-                {plan.includesPreselection && <PlanLine>Présélection de profils</PlanLine>}
-                {plan.includesFieldAgents && <PlanLine>Recrutement accompagné par nos agents</PlanLine>}
-                {plan.priorityVisibility && <PlanLine>Offres mises en avant</PlanLine>}
+                {plan.includesPreselection && <PlanLine>Recherche de profils</PlanLine>}
+                {plan.includesFieldAgents && <PlanLine>Aide d&apos;un agent sur le terrain</PlanLine>}
+                {plan.priorityVisibility && <PlanLine>Offres affichées en premier</PlanLine>}
               </ul>
               <button
                 type="button"

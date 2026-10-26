@@ -159,7 +159,7 @@ export const SOLUTIONS: Solution[] = [
 export const STEPS = [
   {
     title: "Ouvrez votre compte entreprise",
-    text: "Avec l'adresse email professionnelle de votre organisation. Connexion par code à usage unique, sans mot de passe.",
+    text: "Avec l'adresse e-mail professionnelle de votre organisation. Connexion par code à usage unique, sans mot de passe.",
   },
   {
     title: "Authentifiez votre organisation",
@@ -212,11 +212,11 @@ export const FAQ = [
   },
   {
     q: "Comment se déroule la vérification de mon organisation ?",
-    a: "Nos équipes examinent vos pièces dès leur réception. Votre compte est activé une fois la vérification validée, et vous en êtes informé par email.",
+    a: "Nos équipes examinent vos pièces dès leur réception. Votre compte est activé une fois la vérification validée, et vous en êtes informé par e-mail.",
   },
   {
     q: "Comment se connecter à l'espace entreprise ?",
-    a: "Avec l'adresse email du compte : un code à usage unique est envoyé à chaque connexion. Aucun mot de passe à gérer.",
+    a: "Avec l'adresse e-mail du compte : un code à usage unique est envoyé à chaque connexion. Aucun mot de passe à gérer.",
   },
   {
     q: "Mes documents sont-ils protégés ?",

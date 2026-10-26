@@ -51,7 +51,7 @@ export function ContactDetails({ contact: c }: Readonly<{ contact: ContactedProf
           </div>
         )}
         <p className="text-muted-foreground text-xs">
-          Débloqué le {new Date(c.unlockedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+          Obtenu le {new Date(c.unlockedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
         </p>
       </div>
     </div>

@@ -38,20 +38,20 @@ export function NewClaimPage() {
     },
     onSuccess: (claim) => {
       void queryClient.invalidateQueries({ queryKey: claimsKey });
-      toast.success("Réclamation envoyée. L'équipe Rabotka vous répond ici.");
+      toast.success("Demande envoyée. L'équipe Rabotka vous répond ici.");
       router.push(`/espace/reclamations/${claim.id}`);
     },
-    onError: (err) => toast.error(friendlyError(err, "La réclamation n'a pas pu être envoyée.")),
+    onError: (err) => toast.error(friendlyError(err, "La demande n'a pas pu être envoyée.")),
   });
 
   return (
     <div className="w-full space-y-6 pt-2">
       <Link href="/espace/reclamations" className="inline-flex items-center gap-1.5 text-muted-foreground text-sm hover:text-foreground">
         <IconArrowLeft className="size-4" />
-        Réclamations
+        Aide
       </Link>
       <div className="space-y-1.5">
-        <h1 className="font-semibold text-3xl tracking-tight">Nouvelle réclamation</h1>
+        <h1 className="font-semibold text-3xl tracking-tight">Nouvelle demande</h1>
         <p className="text-muted-foreground">Dites-nous ce qui ne va pas : l&apos;équipe Rabotka vous répond dans votre espace.</p>
       </div>
 

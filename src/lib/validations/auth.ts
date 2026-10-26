@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const emailSchema = z.email("Saisissez une adresse email valide");
+export const emailSchema = z.email("Saisissez une adresse e-mail valide");
 
 export const otpSchema = z
   .string()

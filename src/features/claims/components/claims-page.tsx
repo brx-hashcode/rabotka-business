@@ -26,7 +26,7 @@ export function ClaimsPage() {
     <div className="w-full space-y-6 pt-2">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1.5">
-          <h1 className="font-semibold text-3xl tracking-tight">Réclamations</h1>
+          <h1 className="font-semibold text-3xl tracking-tight">Aide</h1>
           <p className="text-muted-foreground">Un souci avec un candidat, un paiement, une facture ? L&apos;équipe Rabotka vous répond ici.</p>
         </div>
         <Link
@@ -34,7 +34,7 @@ export function ClaimsPage() {
           className="inline-flex h-12 items-center gap-2 rounded-full bg-ink px-5 font-medium text-white hover:bg-ink/90"
         >
           <IconPlus className="size-4" />
-          Nouvelle réclamation
+          Nouvelle demande
         </Link>
       </div>
 
@@ -43,7 +43,7 @@ export function ClaimsPage() {
           {(
             [
               ["open", "En cours", open.length],
-              ["closed", "Clôturées", closed.length],
+              ["closed", "Terminées", closed.length],
             ] as const
           ).map(([key, label, n]) => (
             <button
@@ -66,13 +66,13 @@ export function ClaimsPage() {
         {claims.isLoading ? (
           <Skeleton className="h-48 rounded-2xl" />
         ) : !claims.data ? (
-          <p className="text-muted-foreground">{friendlyError(claims.error, "Vos réclamations sont indisponibles pour le moment.")}</p>
+          <p className="text-muted-foreground">{friendlyError(claims.error, "Vos demandes sont indisponibles pour le moment.")}</p>
         ) : shown.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-2xl bg-page px-6 py-12 text-center">
             <span className="flex size-12 items-center justify-center rounded-2xl bg-card">
               <IconMessageReport className="size-6 text-muted-foreground" />
             </span>
-            <p className="font-medium">{tab === "open" ? "Aucune réclamation en cours" : "Aucune réclamation clôturée"}</p>
+            <p className="font-medium">{tab === "open" ? "Aucune demande en cours" : "Aucune demande terminée"}</p>
             {tab === "open" && (
               <p className="max-w-sm text-muted-foreground text-sm">Décrivez votre souci, joignez des photos si besoin : l&apos;équipe vous répond ici.</p>
             )}

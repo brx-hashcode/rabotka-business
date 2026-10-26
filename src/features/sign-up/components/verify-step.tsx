@@ -71,7 +71,7 @@ export function VerifyStep({
       }}
     >
       <StepHeading
-        title="Vérifiez votre adresse email"
+        title="Vérifiez votre adresse e-mail"
         text={`Nous avons envoyé un code à 6 chiffres à ${account.email}. Il est valable quelques minutes.`}
       />
 

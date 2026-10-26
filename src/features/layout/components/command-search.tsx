@@ -101,7 +101,7 @@ export function CommandSearch() {
                 </div>
               ) : forbidden ? (
                 <div className="space-y-2 px-2 py-4 text-sm">
-                  <p className="text-muted-foreground">La recherche de candidats est incluse dans les formules avec présélection.</p>
+                  <p className="text-muted-foreground">La recherche de profils est incluse dans certaines formules : voir « Abonnement ».</p>
                   <Link href="/espace/abonnement" onClick={close} className="font-medium text-whatsapp-dark hover:underline">
                     Voir les formules
                   </Link>

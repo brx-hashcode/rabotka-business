@@ -108,8 +108,8 @@ export function SignInFlow({
           </h2>
           <p className="text-muted-foreground text-sm">
             {email
-              ? "Nous vous avons envoyé un code à 6 chiffres par email."
-              : "Recevez un code de connexion sur l'adresse email de votre compte."}
+              ? "Nous vous avons envoyé un code à 6 chiffres par e-mail."
+              : "Recevez un code de connexion sur l'adresse e-mail de votre compte."}
           </p>
         </div>
       </div>

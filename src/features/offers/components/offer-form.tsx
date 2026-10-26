@@ -38,7 +38,7 @@ const schema = z
       .refine((v) => /^\d+$/.test(v) && Number(v) >= 1 && Number(v) <= 100, "Entre 1 et 100 personnes"),
     amount: z.string().trim(),
     paymentFlow: z.string(),
-    categoryId: z.string().min(1, "Choisissez un domaine"),
+    categoryId: z.string().min(1, "Choisissez un métier"),
     note: z.string().trim().max(500, "500 caractères au plus"),
   })
   .superRefine((d, ctx) => {
@@ -205,14 +205,14 @@ export function OfferForm({
               name="categoryId"
               render={({ field, fieldState }) => (
                 <FormItem>
-                  <FieldLabel>Domaine</FieldLabel>
+                  <FieldLabel>Métier</FieldLabel>
                   <Combobox
                     value={field.value}
                     onChange={field.onChange}
                     invalid={!!fieldState.error}
                     options={(categories ?? []).map((c) => ({ value: c.id, label: c.name }))}
-                    placeholder="Choisir le domaine"
-                    searchPlaceholder="Rechercher un domaine"
+                    placeholder="Choisir le métier"
+                    searchPlaceholder="Rechercher un métier"
                   />
                   <FormMessage />
                 </FormItem>
@@ -224,7 +224,7 @@ export function OfferForm({
             <Choice
               control={form.control}
               name="employmentType"
-              label="Type d'engagement"
+              label="Type d'offre"
               options={EMPLOYMENT_TYPES.map((t) => ({
                 value: t.value,
                 label: t.label,

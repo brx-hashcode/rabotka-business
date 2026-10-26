@@ -3,7 +3,7 @@ import { IconMessageCircle } from "@tabler/icons-react";
 
 import { discussionsContent } from "#/features/discussions/content";
 
-export const metadata: Metadata = { title: "Discussions" };
+export const metadata: Metadata = { title: "Messages" };
 
 /** Beside the list on desktop, until a conversation is chosen. */
 export default function Page() {
