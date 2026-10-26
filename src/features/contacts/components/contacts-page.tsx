@@ -3,16 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { IconCopy, IconMail, IconPhone, IconSearch, IconUserCheck } from "@tabler/icons-react";
-import { toast } from "sonner";
+import { IconSearch, IconUserCheck } from "@tabler/icons-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Input } from "#/components/ui/input";
 import { Skeleton } from "#/components/ui/skeleton";
 import { getMyContacts, myContactsKey } from "#/lib/api/business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import type { ContactedProfile } from "#/lib/api/types";
-import { getInitials } from "#/lib/utils";
+import { ContactDetails } from "./contact-details";
 
 const fold = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
@@ -101,82 +99,13 @@ export function ContactsPage() {
 }
 
 function ContactCard({ contact: c }: Readonly<{ contact: ContactedProfile }>) {
-  const name = `${c.firstName} ${c.lastName}`.trim();
-  const subtitle = [c.categoryName, c.city].filter(Boolean).join(" · ");
   return (
     <li
       id={`w-${c.workerId}`}
       // The one an offer's candidate pointed at (`#w-<id>`) stands out.
-      className="flex flex-col gap-5 rounded-3xl bg-card p-6 target:ring-2 target:ring-whatsapp-dark"
+      className="flex flex-col rounded-3xl bg-card p-6 target:ring-2 target:ring-whatsapp-dark"
     >
-      <div className="flex items-center gap-4">
-        <Avatar className="size-14 rounded-2xl">
-          {c.avatarUrl && <AvatarImage src={c.avatarUrl} alt="" className="object-cover" />}
-          <AvatarFallback className="rounded-2xl bg-brand-lime font-semibold text-[#0f2414]">{getInitials(name)}</AvatarFallback>
-        </Avatar>
-        <div className="min-w-0 flex-1">
-          <Link href={`/espace/candidats/${c.workerId}`} className="block truncate font-semibold text-lg hover:underline">
-            {name}
-          </Link>
-          {subtitle && <p className="truncate text-muted-foreground text-sm">{subtitle}</p>}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Channel icon={IconPhone} href={`tel:${c.phone.replace(/\s+/g, "")}`} value={c.phone} label="Téléphone" />
-        {c.email && <Channel icon={IconMail} href={`mailto:${c.email}`} value={c.email} label="E-mail" />}
-      </div>
-
-      <div className="mt-auto space-y-2">
-        {c.offers.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {c.offers.map((o) => (
-              <Link
-                key={o.id}
-                href={`/espace/offres/${o.id}`}
-                className="max-w-full truncate rounded-full bg-page px-2.5 py-1 font-medium text-xs hover:bg-page/70"
-              >
-                {o.title}
-              </Link>
-            ))}
-          </div>
-        )}
-        <p className="text-muted-foreground text-xs">
-          Débloqué le {new Date(c.unlockedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
-        </p>
-      </div>
+      <ContactDetails contact={c} />
     </li>
-  );
-}
-
-function Channel({
-  icon: Icon,
-  href,
-  value,
-  label,
-}: Readonly<{ icon: typeof IconPhone; href: string; value: string; label: string }>) {
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(value);
-      toast.success(`${label} copié.`);
-    } catch {
-      toast.error("La copie n'a pas fonctionné.");
-    }
-  }
-  return (
-    <div className="flex items-center gap-2 rounded-2xl bg-page p-2 pl-3">
-      <Icon className="size-4 shrink-0 text-muted-foreground" />
-      <a href={href} className="min-w-0 flex-1 truncate font-medium text-sm hover:underline">
-        {value}
-      </a>
-      <button
-        type="button"
-        onClick={() => void copy()}
-        aria-label={`Copier ${label.toLowerCase()}`}
-        className="flex size-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:bg-card hover:text-foreground"
-      >
-        <IconCopy className="size-4" />
-      </button>
-    </div>
   );
 }

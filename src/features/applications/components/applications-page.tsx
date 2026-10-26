@@ -174,9 +174,9 @@ function daysSince(iso: string): number {
 
 function ago(iso: string): string {
   const days = daysSince(iso);
-  if (days <= 0) return "aujourd'hui";
-  if (days === 1) return "hier";
-  return `il y a ${days} jours`;
+  if (days <= 0) return "Aujourd'hui";
+  if (days === 1) return "Hier";
+  return `Il y a ${days} jours`;
 }
 
 /** One application: who, for which offer, how long it has waited — and the decision. */
@@ -197,7 +197,12 @@ function ApplicationCard({ application: a }: Readonly<{ application: ReceivedApp
           <Link href={`/espace/candidats/${a.worker.id}`} className="block truncate font-semibold hover:underline">
             {name}
           </Link>
-          <p className="text-muted-foreground text-xs">Candidature {ago(a.createdAt)}</p>
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className={cn("rounded-full px-2 py-0.5 font-medium text-[11px]", STAGE_CLASS[applicationStage(a.status)])}>
+              {APPLICATION_STATUS[a.status] ?? a.status}
+            </span>
+            <span className="text-muted-foreground text-xs">{ago(a.createdAt)}</span>
+          </p>
           {a.worker.reliabilityScore !== null && (
             <p className="mt-1 inline-flex items-center gap-1 font-medium text-xs">
               <IconShieldCheck className="size-3.5 text-whatsapp-dark" />
@@ -205,9 +210,6 @@ function ApplicationCard({ application: a }: Readonly<{ application: ReceivedApp
             </p>
           )}
         </div>
-        <span className={cn("shrink-0 rounded-full px-2.5 py-1 font-medium text-xs", STAGE_CLASS[applicationStage(a.status)])}>
-          {APPLICATION_STATUS[a.status] ?? a.status}
-        </span>
       </div>
 
       <Link href={`/espace/offres/${a.offer.id}`} className="group space-y-0.5 rounded-2xl bg-card p-3">
