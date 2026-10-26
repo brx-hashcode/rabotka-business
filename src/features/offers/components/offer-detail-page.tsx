@@ -13,6 +13,7 @@ import {
   IconInfoCircle,
   IconMapPin,
   IconPencil,
+  IconSparkles,
   IconRefresh,
   IconTrash,
   IconUserCheck,
@@ -25,7 +26,9 @@ import { ActionDialog } from "#/components/action-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Input } from "#/components/ui/input";
 import { Skeleton } from "#/components/ui/skeleton";
+import { CandidateCard } from "#/features/candidates/components/candidate-card";
 import { mySubscriptionKey } from "#/lib/api/business-controller";
+import { findCandidates } from "#/lib/api/candidate-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import {
   deleteOffer,
@@ -156,7 +159,12 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
           />
 
           <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_28rem]">
-            <ApplicantsCard offer={o} applicants={applicants.data} loading={applicants.isLoading} />
+            <div className="min-w-0 space-y-6">
+              <ApplicantsCard offer={o} applicants={applicants.data} loading={applicants.isLoading} />
+              {(o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
+                <SuggestedCard offer={o} exclude={(applicants.data ?? []).map((a) => a.worker.id)} />
+              )}
+            </div>
             <div className="space-y-6 lg:sticky lg:top-24">
               <DetailsCard offer={o} category={categories.data?.find((c) => c.id === o.categoryId)?.name} />
               <section className="space-y-5 rounded-3xl bg-card p-6">
@@ -402,6 +410,50 @@ function ApplicantsCard({
           )}
         </>
       )}
+    </section>
+  );
+}
+
+/**
+ * Profiles that fit this offer — its trade and city, reliable ones first —
+ * who have not applied: the business may reach them directly. Hidden when
+ * the plan has no search (403) or nobody fits.
+ */
+function SuggestedCard({ offer: o, exclude }: Readonly<{ offer: Offer; exclude: string[] }>) {
+  const filters = { categoryId: o.categoryId ?? undefined, city: o.isRemote ? undefined : (o.city ?? undefined), minReliability: 70 };
+  const found = useQuery({
+    queryKey: ["candidates", "for-offer", o.id],
+    // The city first; too few there, the same trade anywhere (people travel for work).
+    queryFn: async () => {
+      const near = await findCandidates(filters, 0, 8);
+      if (!filters.city || near.items.length >= 4 + exclude.length) return near;
+      const wider = await findCandidates({ ...filters, city: undefined }, 0, 8 + exclude.length);
+      const seen = new Set(near.items.map((c) => c.id));
+      return { total: wider.total, items: [...near.items, ...wider.items.filter((c) => !seen.has(c.id))] };
+    },
+    retry: false,
+  });
+  const shown = (found.data?.items ?? []).filter((c) => !exclude.includes(c.id)).slice(0, 4);
+  if (found.isLoading || shown.length === 0) return null;
+  const more = new URLSearchParams(Object.entries(filters).filter(([k, v]) => v !== undefined && k !== "minReliability") as [string, string][]);
+
+  return (
+    <section className="space-y-4 rounded-3xl bg-card p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <IconSparkles className="size-5 text-whatsapp-dark" />
+          <h2 className="font-semibold text-xl">Profils suggérés</h2>
+        </div>
+        <Link href={`/espace/recherche?${more}`} className="font-medium text-sm text-whatsapp-dark hover:underline">
+          Voir plus dans Recherche
+        </Link>
+      </div>
+      <p className="-mt-2 text-muted-foreground text-sm">Ils correspondent à cette offre et n&apos;ont pas encore postulé : contactez-les directement.</p>
+      <ul className="grid gap-3 md:grid-cols-2">
+        {shown.map((c) => (
+          <CandidateCard key={c.id} candidate={c} compact />
+        ))}
+      </ul>
     </section>
   );
 }
