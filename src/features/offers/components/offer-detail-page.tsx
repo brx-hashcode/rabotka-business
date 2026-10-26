@@ -64,7 +64,12 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const offer = useQuery({ queryKey: [...offersKey, id], queryFn: () => getOffer(id) });
-  const applicants = useQuery({ queryKey: [...offersKey, id, "applicants"], queryFn: () => getOfferApplicants(id) });
+  // The candidate's side moves on its own (paying their part of an unlock): keep up.
+  const applicants = useQuery({
+    queryKey: [...offersKey, id, "applicants"],
+    queryFn: () => getOfferApplicants(id),
+    refetchInterval: 30_000,
+  });
   const categories = useQuery({ queryKey: ["job-categories"], queryFn: getJobCategories, staleTime: Infinity });
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [republishing, setRepublishing] = useState(false);

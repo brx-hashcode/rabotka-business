@@ -47,7 +47,7 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Échanges",
     items: [
       { label: "Discussions", href: "/espace/discussions", icon: IconMessageCircle, soon: true },
-      { label: "Profils contactés", href: "/espace/profils-contactes", icon: IconUserCheck, soon: true },
+      { label: "Profils contactés", href: "/espace/contacts", icon: IconUserCheck },
     ],
   },
   {

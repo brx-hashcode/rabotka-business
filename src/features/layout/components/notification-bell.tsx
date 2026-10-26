@@ -63,9 +63,9 @@ export function NotificationBell() {
           </span>
         )}
       </PopoverTrigger>
-      <PopoverContent align="end" sideOffset={10} className="w-[min(24rem,calc(100vw-2rem))] rounded-3xl border-0 shadow-soft">
+      <PopoverContent align="end" sideOffset={10} className="w-[min(32rem,calc(100vw-2rem))] rounded-3xl border-0 p-5 shadow-soft">
         <div className="flex items-center justify-between gap-3 pb-3">
-          <p className="font-semibold">Notifications</p>
+          <p className="font-semibold text-lg">Notifications</p>
           {count > 0 && (
             <button
               type="button"
@@ -76,7 +76,9 @@ export function NotificationBell() {
             </button>
           )}
         </div>
-        <NotificationList items={feed.data?.items} loading={feed.isLoading} onOpen={(n) => void openOne(n)} />
+        <div className="-mx-1 max-h-[min(36rem,70vh)] overflow-y-auto px-1">
+          <NotificationList items={feed.data?.items} loading={feed.isLoading} onOpen={(n) => void openOne(n)} />
+        </div>
       </PopoverContent>
     </Popover>
   );
@@ -113,7 +115,7 @@ export function NotificationList({
                 <span className={cn("truncate text-sm", n.readAt ? "font-medium" : "font-semibold")}>{n.title}</span>
                 {!n.readAt && <span aria-label="Non lue" className="size-2 shrink-0 rounded-full bg-whatsapp" />}
               </span>
-              <span className="line-clamp-2 text-muted-foreground text-sm">{n.body}</span>
+              <span className="line-clamp-3 text-muted-foreground text-sm">{n.body}</span>
               <span className="text-muted-foreground text-xs">{timeAgo(n.createdAt)}</span>
             </span>
           </button>

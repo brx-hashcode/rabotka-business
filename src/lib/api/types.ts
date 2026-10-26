@@ -263,3 +263,18 @@ export type BusinessStats = {
   }[];
   categories: { name: string; applications: number }[];
 };
+
+/** `GET business/me/contacts`: a worker whose contact the business unlocked. */
+export type ContactedProfile = {
+  workerId: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string | null;
+  phone: string;
+  email: string | null;
+  city: string | null;
+  categoryName: string | null;
+  unlockedAt: string;
+  origin: "MISSION" | "DIRECT" | string;
+  offers: { id: string; title: string }[];
+};
