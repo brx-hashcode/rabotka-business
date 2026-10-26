@@ -8,7 +8,7 @@ import { IconCalendarEvent, IconClock, IconInbox, IconSearch, IconShieldCheck } 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Input } from "#/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
-import { Skeleton } from "#/components/ui/skeleton";
+import { CardGridSkeleton } from "#/components/page-skeletons";
 import { ApplicationActions } from "#/features/offers/components/application-actions";
 import { APPLICATION_STATUS, applicationStage, STAGE_CLASS, type ApplicationStage } from "#/features/offers/offer-labels";
 import { friendlyError } from "#/lib/api/friendly-error";
@@ -123,7 +123,7 @@ export function ApplicationsPage() {
         </div>
 
         {query.isLoading ? (
-          <Skeleton className="h-64 rounded-2xl" />
+          <CardGridSkeleton kind="application" />
         ) : !query.data ? (
           <p className="text-muted-foreground">{friendlyError(query.error, "Vos candidatures sont indisponibles pour le moment.")}</p>
         ) : shown.length === 0 ? (

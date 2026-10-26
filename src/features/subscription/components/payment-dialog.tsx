@@ -153,9 +153,10 @@ function PhoneSignal() {
   return (
     <div className="relative mx-auto flex size-24 items-center justify-center">
       <span aria-hidden className="absolute inset-0 animate-ping rounded-full bg-brand-lime/40 [animation-duration:2.4s]" />
-      <span aria-hidden className="absolute inset-3 rounded-full bg-brand-lime/50" />
-      <span className="relative flex size-14 items-center justify-center rounded-2xl bg-brand-lime text-[#0f2414]">
-        <IconDeviceMobileMessage className="size-7" />
+      <span aria-hidden className="absolute inset-0 rounded-full bg-brand-lime/40" />
+      {/* Round inside the round halo: nothing sticks out of it. */}
+      <span className="relative flex size-[4.5rem] items-center justify-center rounded-full bg-brand-lime text-[#0f2414]">
+        <IconDeviceMobileMessage className="size-9" stroke={1.75} />
       </span>
     </div>
   );

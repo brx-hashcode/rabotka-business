@@ -6,8 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { IconCalendarCheck, IconCalendarEvent, IconCash, IconChevronRight, IconMapPin, IconStar, IconUsers } from "@tabler/icons-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
-import { Skeleton } from "#/components/ui/skeleton";
-import { CardGridSkeleton, TilesSkeleton } from "#/components/page-skeletons";
+import { Bone, CardGridSkeleton, TilesSkeleton } from "#/components/page-skeletons";
 import { StatTile } from "#/features/home/components/stat-tile";
 import { ApplicationActions } from "#/features/offers/components/application-actions";
 import { APPLICATION_STATUS, applicationStage, fcfa, PAYMENT_SUFFIX, STAGE_CLASS, STATUS } from "#/features/offers/offer-labels";
@@ -75,7 +74,7 @@ export function MissionsPage() {
           <div className="rounded-3xl bg-card p-6 sm:p-8">
             <TilesSkeleton />
           </div>
-          <CardGridSkeleton count={3} />
+          <CardGridSkeleton kind="mission" count={3} />
         </>
       ) : !offers.data || !received.data ? (
         <p className="rounded-3xl bg-card p-6 text-muted-foreground">
@@ -221,7 +220,18 @@ function MissionCard({ offer: o }: Readonly<{ offer: OfferListItem }>) {
       </div>
 
       {team.isLoading ? (
-        <Skeleton className="h-28 rounded-2xl" />
+        <div className="space-y-1.5">
+          {[0, 1].map((i) => (
+            <div key={i} className="flex items-center gap-2.5 rounded-2xl bg-page p-2">
+              <Bone onPage className="size-9" />
+              <div className="flex-1 space-y-1.5">
+                <Bone onPage className="h-3.5 w-1/2" />
+                <Bone onPage className="h-3 w-16 rounded-full" />
+              </div>
+              <Bone onPage className="size-9 rounded-full" />
+            </div>
+          ))}
+        </div>
       ) : (
         <ul className="space-y-1.5">
           {hired.map((a) => {

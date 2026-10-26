@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { IconSearch, IconUserCheck } from "@tabler/icons-react";
 
 import { Input } from "#/components/ui/input";
-import { Skeleton } from "#/components/ui/skeleton";
+import { CardGridSkeleton } from "#/components/page-skeletons";
 import { getMyContacts, myContactsKey } from "#/lib/api/business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import type { ContactedProfile } from "#/lib/api/types";
@@ -63,11 +63,7 @@ export function ContactsPage() {
       </div>
 
       {contacts.isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
-          {[0, 1, 2].map((i) => (
-            <Skeleton key={i} className="h-56 rounded-3xl" />
-          ))}
-        </div>
+        <CardGridSkeleton kind="contact" />
       ) : !contacts.data ? (
         <p className="rounded-3xl bg-card p-6 text-muted-foreground">
           {friendlyError(contacts.error, "Vos contacts sont indisponibles pour le moment.")}

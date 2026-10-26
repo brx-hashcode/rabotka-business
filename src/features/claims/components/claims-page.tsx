@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { IconChevronRight, IconMessageReport, IconPhoto, IconPlus } from "@tabler/icons-react";
 
-import { Skeleton } from "#/components/ui/skeleton";
+import { ClaimRowsSkeleton } from "#/components/page-skeletons";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { claimsKey, listClaims, type ClaimStatus } from "#/lib/api/claim-controller";
 import { cn } from "#/lib/utils";
@@ -64,7 +64,7 @@ export function ClaimsPage() {
         </div>
 
         {claims.isLoading ? (
-          <Skeleton className="h-48 rounded-2xl" />
+          <ClaimRowsSkeleton />
         ) : !claims.data ? (
           <p className="text-muted-foreground">{friendlyError(claims.error, "Vos demandes sont indisponibles pour le moment.")}</p>
         ) : shown.length === 0 ? (
