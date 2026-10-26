@@ -15,6 +15,7 @@ import { useCities, useCountries } from "#/hooks/use-geo";
 import { getJobCategories, type EmploymentType, type Offer, type OfferInput, type PaymentFlow } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
 import { EMPLOYMENT_TYPES, isDatedMission, PAYMENT_FLOWS } from "../offer-labels";
+import { OfferSummary } from "./offer-summary";
 
 /** Mirrors the server (and the client app): a new date is at least 4 h ahead. */
 const MIN_HOURS_AHEAD = 4;
@@ -126,12 +127,14 @@ export function toOfferInput(v: OfferFormValues, countryName: string | undefined
  * An offer, as the client app asks it: what, when (the day of a mission, or
  * when applications close), where (or remote), how many, the pay, the trade.
  * `keepSchedule` (edit) lets an unchanged date stay however close it now is.
+ * Beside it, the offer as it will read and what the page adds (`aside`).
  */
 export function OfferForm({
   defaultValues,
   submitLabel,
   pending,
   keepSchedule,
+  aside,
   onSubmit,
   onCancel,
 }: Readonly<{
@@ -139,6 +142,7 @@ export function OfferForm({
   submitLabel: string;
   pending?: boolean;
   keepSchedule?: string;
+  aside?: ReactNode;
   onSubmit: (values: OfferFormValues, countryName: string | undefined) => void;
   onCancel?: () => void;
 }>) {
@@ -174,168 +178,178 @@ export function OfferForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(submit)} noValidate className="space-y-10">
-        <Section title="L'offre">
-          <TextField control={form.control} name="title" label="Intitulé" placeholder="Agent d'entretien pour nos bureaux" autoFocus />
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FieldLabel>Description</FieldLabel>
-                <FormControl>
-                  <Textarea
-                    {...field}
-                    rows={5}
-                    placeholder="Les tâches, le niveau attendu, les conditions de travail…"
-                    className="min-h-32 rounded-xl border-0 bg-page px-4 py-3 text-base shadow-none md:text-[15px]"
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_26rem]">
+        <form onSubmit={form.handleSubmit(submit)} noValidate className="space-y-10 rounded-3xl bg-card p-5 sm:p-8">
+          <Section title="L'offre">
+            <TextField control={form.control} name="title" label="Intitulé" placeholder="Agent d'entretien pour nos bureaux" autoFocus />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FieldLabel>Description</FieldLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      rows={5}
+                      placeholder="Les tâches, le niveau attendu, les conditions de travail…"
+                      className="min-h-32 rounded-xl border-0 bg-page px-4 py-3 text-base shadow-none md:text-[15px]"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="categoryId"
+              render={({ field, fieldState }) => (
+                <FormItem>
+                  <FieldLabel>Domaine</FieldLabel>
+                  <Combobox
+                    value={field.value}
+                    onChange={field.onChange}
+                    invalid={!!fieldState.error}
+                    options={(categories ?? []).map((c) => ({ value: c.id, label: c.name }))}
+                    placeholder="Choisir le domaine"
+                    searchPlaceholder="Rechercher un domaine"
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="categoryId"
-            render={({ field, fieldState }) => (
-              <FormItem>
-                <FieldLabel>Domaine</FieldLabel>
-                <Combobox
-                  value={field.value}
-                  onChange={field.onChange}
-                  invalid={!!fieldState.error}
-                  options={(categories ?? []).map((c) => ({ value: c.id, label: c.name }))}
-                  placeholder="Choisir le domaine"
-                  searchPlaceholder="Rechercher un domaine"
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </Section>
-
-        <Section title="Type et date">
-          <Choice
-            control={form.control}
-            name="employmentType"
-            label="Type d'engagement"
-            options={EMPLOYMENT_TYPES.map((t) => ({ value: t.value, label: t.label, hint: t.hint }))}
-          />
-          <div className="grid gap-5 sm:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="scheduledDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FieldLabel>{dated ? "Date de la mission" : "Clôture des candidatures"}</FieldLabel>
-                  <FormControl>
-                    <Input {...field} type="date" min={toDate(new Date())} className={FIELD_CLASS} />
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="scheduledTime"
-              render={({ field }) => (
-                <FormItem>
-                  <FieldLabel optional>Heure</FieldLabel>
-                  <FormControl>
-                    <Input {...field} type="time" className={FIELD_CLASS} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </Section>
+          </Section>
 
-        <Section title="Lieu">
-          <FormField
-            control={form.control}
-            name="isRemote"
-            render={({ field }) => (
-              <FormItem>
-                <div role="radiogroup" aria-label="Lieu" className="grid grid-cols-2 gap-2">
-                  {[
-                    { v: false, l: "Sur place" },
-                    { v: true, l: "À distance" },
-                  ].map((o) => (
-                    <button
-                      key={o.l}
-                      type="button"
-                      role="radio"
-                      aria-checked={field.value === o.v}
-                      onClick={() => field.onChange(o.v)}
-                      className={cn(
-                        "h-12 rounded-xl font-medium text-sm transition-colors",
-                        field.value === o.v ? "bg-ink text-white" : "bg-page hover:bg-page/70",
-                      )}
-                    >
-                      {o.l}
-                    </button>
-                  ))}
-                </div>
-              </FormItem>
-            )}
-          />
-          {!remote && (
-            <div className="grid gap-5 sm:grid-cols-2">
-              <ComboField
-                control={form.control}
-                name="countryCode"
-                label="Pays"
-                placeholder="Choisir le pays"
-                options={(countries ?? []).map((c) => ({ value: c.code, label: c.name }))}
-              />
-              <ComboField
-                control={form.control}
-                name="city"
-                label="Ville"
-                placeholder={country ? "Choisir la ville" : "Choisissez d'abord le pays"}
-                options={(cities ?? []).map((c) => ({ value: c, label: c }))}
-                disabled={!country}
-              />
-            </div>
-          )}
-          <TextField control={form.control} name="address" label="Adresse" optional placeholder="Quartier, rue, repère" />
-        </Section>
-
-        <Section title="Postes et rémunération">
-          <TextField control={form.control} name="quantity" label="Nombre de personnes" type="number" min={1} max={100} />
-          <TextField control={form.control} name="amount" label="Montant (FCFA)" optional type="number" min={1000} placeholder="15000" />
-          {amount && (
+          <Section title="Type et date">
             <Choice
               control={form.control}
-              name="paymentFlow"
-              label="Rythme de paiement"
-              options={PAYMENT_FLOWS.map((f) => ({ value: f.value, label: f.label }))}
+              name="employmentType"
+              label="Type d'engagement"
+              options={EMPLOYMENT_TYPES.map((t) => ({ value: t.value, label: t.label, hint: t.hint }))}
             />
-          )}
-          <FormField
-            control={form.control}
-            name="note"
-            render={({ field }) => (
-              <FormItem>
-                <FieldLabel optional>Note pour les candidats</FieldLabel>
-                <FormControl>
-                  <Textarea
-                    {...field}
-                    rows={3}
-                    placeholder="Tenue, matériel à apporter, horaires…"
-                    className="min-h-24 rounded-xl border-0 bg-page px-4 py-3 text-base shadow-none md:text-[15px]"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </Section>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="scheduledDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FieldLabel>{dated ? "Date de la mission" : "Clôture des candidatures"}</FieldLabel>
+                    <FormControl>
+                      <Input {...field} type="date" min={toDate(new Date())} className={FIELD_CLASS} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="scheduledTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FieldLabel optional>Heure</FieldLabel>
+                    <FormControl>
+                      <Input {...field} type="time" className={FIELD_CLASS} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </Section>
 
-        <StepActions onBack={onCancel} continueLabel={submitLabel} pending={pending} />
-      </form>
+          <Section title="Lieu">
+            <FormField
+              control={form.control}
+              name="isRemote"
+              render={({ field }) => (
+                <FormItem>
+                  <div role="radiogroup" aria-label="Lieu" className="grid grid-cols-2 gap-2">
+                    {[
+                      { v: false, l: "Sur place" },
+                      { v: true, l: "À distance" },
+                    ].map((o) => (
+                      <button
+                        key={o.l}
+                        type="button"
+                        role="radio"
+                        aria-checked={field.value === o.v}
+                        onClick={() => field.onChange(o.v)}
+                        className={cn(
+                          "h-12 rounded-xl font-medium text-sm transition-colors",
+                          field.value === o.v ? "bg-ink text-white" : "bg-page hover:bg-page/70",
+                        )}
+                      >
+                        {o.l}
+                      </button>
+                    ))}
+                  </div>
+                </FormItem>
+              )}
+            />
+            {!remote && (
+              <div className="grid gap-5 sm:grid-cols-2">
+                <ComboField
+                  control={form.control}
+                  name="countryCode"
+                  label="Pays"
+                  placeholder="Choisir le pays"
+                  options={(countries ?? []).map((c) => ({ value: c.code, label: c.name }))}
+                />
+                <ComboField
+                  control={form.control}
+                  name="city"
+                  label="Ville"
+                  placeholder={country ? "Choisir la ville" : "Choisissez d'abord le pays"}
+                  options={(cities ?? []).map((c) => ({ value: c, label: c }))}
+                  disabled={!country}
+                />
+              </div>
+            )}
+            <TextField control={form.control} name="address" label="Adresse" optional placeholder="Quartier, rue, repère" />
+          </Section>
+
+          <Section title="Postes et rémunération">
+            <TextField control={form.control} name="quantity" label="Nombre de personnes" type="number" min={1} max={100} />
+            <TextField control={form.control} name="amount" label="Montant (FCFA)" optional type="number" min={1000} placeholder="15000" />
+            {amount && (
+              <Choice
+                control={form.control}
+                name="paymentFlow"
+                label="Rythme de paiement"
+                options={PAYMENT_FLOWS.map((f) => ({ value: f.value, label: f.label }))}
+              />
+            )}
+            <FormField
+              control={form.control}
+              name="note"
+              render={({ field }) => (
+                <FormItem>
+                  <FieldLabel optional>Note pour les candidats</FieldLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      rows={3}
+                      placeholder="Tenue, matériel à apporter, horaires…"
+                      className="min-h-24 rounded-xl border-0 bg-page px-4 py-3 text-base shadow-none md:text-[15px]"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </Section>
+
+          <StepActions onBack={onCancel} continueLabel={submitLabel} pending={pending} />
+        </form>
+        <aside className="space-y-6 lg:sticky lg:top-24">
+          <OfferSummary
+            control={form.control}
+            categoryName={(id) => categories?.find((c) => c.id === id)?.name}
+            countryName={(code) => countries?.find((c) => c.code === code)?.name}
+          />
+          {aside}
+        </aside>
+      </div>
     </Form>
   );
 }
