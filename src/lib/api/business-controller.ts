@@ -30,6 +30,11 @@ class BusinessController extends BusinessBaseController {
     return this.get("/business/me/contacts");
   }
 
+  /** Reveals a worker from the search on the plan's contact quota (free if already unlocked). */
+  unlockContact(workerId: string): Promise<{ contact: ContactedProfile; spent: boolean }> {
+    return this.post(`/business/me/contacts/${encodeURIComponent(workerId)}`);
+  }
+
   getSubscription(): Promise<MySubscription> {
     return this.get("/business/me/subscription");
   }
@@ -59,6 +64,7 @@ export const updateMyBusiness = controller.updateMe.bind(controller);
 export const uploadMyBusinessDocument = controller.uploadDocument.bind(controller);
 export const uploadMyBusinessLogo = controller.uploadLogo.bind(controller);
 export const getMyContacts = controller.getContacts.bind(controller);
+export const unlockWorkerContact = controller.unlockContact.bind(controller);
 export const myContactsKey = ["business", "me", "contacts"] as const;
 export const getMyStats = controller.getStats.bind(controller);
 export const getMySubscription = controller.getSubscription.bind(controller);
