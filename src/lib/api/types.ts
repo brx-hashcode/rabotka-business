@@ -202,6 +202,8 @@ export type PaymentOperator = {
   label: string;
   country?: string;
   countryName?: string;
+  /** The gateway's flag image for the country. */
+  countryFlag?: string;
   dialCode?: string;
   logo?: string;
   currency?: string;

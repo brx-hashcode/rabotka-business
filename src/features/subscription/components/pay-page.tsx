@@ -19,6 +19,7 @@ import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
 import { Bone } from "#/components/page-skeletons";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { getPaymentByToken, getPaymentGateways, initiatePayment } from "#/lib/api/payment-controller";
@@ -64,12 +65,23 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
   const subscription = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
 
   const gateway = gateways.data?.gateways.find((g) => g.key === (gateways.data?.active ?? payment.data?.gateway));
+  // Every country the gateway charges in, from its live configuration — none listed in code.
+  const covered = useMemo(() => payCountries(gateway?.operators ?? []), [gateway]);
+  const [pickedCountry, setPickedCountry] = useState<string | null>(null);
+  const payerCountry = payment.data?.payerCountry ?? null;
+  // The payer's own country when it is covered, else Congo, else the first one.
+  const country =
+    pickedCountry ??
+    (covered.find((c) => c.code === payerCountry) ?? covered.find((c) => c.code === "COG") ?? covered[0])?.code ??
+    null;
+  const current = covered.find((c) => c.code === country) ?? null;
+  const payerNotCovered = !!payerCountry && covered.length > 0 && !covered.some((c) => c.code === payerCountry);
   const operators = useMemo<PaymentOperator[]>(() => {
     const all = gateway?.operators ?? [];
-    // Congo first: the networks of the payer's country, when the gateway says.
-    const home = all.filter((o) => o.country === (payment.data?.payerCountry ?? "COG"));
-    return home.length > 0 ? home : all;
-  }, [gateway, payment.data?.payerCountry]);
+    // A gateway that does not say where its networks operate gets its whole list.
+    if (!country || all.every((o) => !o.country)) return all;
+    return all.filter((o) => o.country === country);
+  }, [gateway, country]);
 
   const [operator, setOperator] = useState<string | null>(null);
   const selected = operators.find((o) => o.code === operator) ?? operators[0] ?? null;
@@ -82,7 +94,16 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
   const paidBefore = useRef<number | null>(null);
   const polls = useRef(0);
 
-  const dial = selected?.dialCode ?? "242";
+  const dial = selected?.dialCode ?? current?.dialCode ?? "242";
+
+  function chooseCountry(next: string) {
+    if (next === country) return;
+    // The networks and the number typed were for the old country.
+    setPickedCountry(next);
+    setOperator(null);
+    setDigits("");
+    setError(null);
+  }
   const amount = payment.data?.amount ?? null;
   const what = readDescription(payment.data?.description);
   const plan = what ? subscription.data?.plans.find((p) => p.name.toLowerCase() === what.planName.toLowerCase()) : undefined;
@@ -92,7 +113,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
     // (+242 06 …), where elsewhere it is a trunk prefix to drop.
     const number = parsePhoneNumberFromString(digits, { defaultCallingCode: dial });
     if (!number?.isValid()) {
-      setError("Saisissez un numéro de téléphone valide, par exemple 06 123 45 67.");
+      setError(dial === "242" ? "Saisissez un numéro de téléphone valide, par exemple 06 123 45 67." : "Saisissez un numéro de téléphone valide.");
       return;
     }
     if (gateway?.requiresOperator && !selected) {
@@ -182,10 +203,40 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
               </div>
             ) : (
               <div className="space-y-7">
+                {covered.length > 1 && (
+                  <div className="space-y-3">
+                    <label htmlFor="pay-country" className="flex items-center gap-2 font-medium text-sm">
+                      <StepNumber n={1} />
+                      Pays du numéro
+                    </label>
+                    <Select value={country ?? undefined} onValueChange={chooseCountry}>
+                      <SelectTrigger id="pay-country" className="!h-14 w-full rounded-2xl border-0 bg-page px-4 text-base shadow-none">
+                        <SelectValue placeholder="Choisir un pays" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {covered.map((c) => (
+                          <SelectItem key={c.code} value={c.code}>
+                            <span className="flex items-center gap-2.5">
+                              <Flag country={c} />
+                              <span>{c.name}</span>
+                              {c.dialCode && <span className="text-muted-foreground text-xs">+{c.dialCode}</span>}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {payerNotCovered && (
+                      <p className="text-muted-foreground text-xs">
+                        Le mobile money de votre pays n&apos;est pas encore accepté : payez avec un numéro d&apos;un des pays de la liste.
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {operators.length > 0 && (
                   <fieldset className="space-y-3">
                     <legend className="mb-3 flex items-center gap-2 font-medium text-sm">
-                      <StepNumber n={1} />
+                      <StepNumber n={covered.length > 1 ? 2 : 1} />
                       Votre opérateur
                     </legend>
                     <div role="radiogroup" aria-label="Opérateur" className="grid grid-cols-2 gap-3">
@@ -223,11 +274,13 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
 
                 <div className="space-y-3">
                   <label htmlFor="pay-phone" className="flex items-center gap-2 font-medium text-sm">
-                    <StepNumber n={operators.length > 0 ? 2 : 1} />
+                    <StepNumber n={(covered.length > 1 ? 1 : 0) + (operators.length > 0 ? 1 : 0) + 1} />
                     Numéro mobile money
                   </label>
                   <div className="flex h-14 items-center rounded-2xl bg-page focus-within:ring-2 focus-within:ring-whatsapp-dark">
-                    <span className="flex h-full items-center pr-3 pl-4 font-semibold text-base">+{dial}</span>
+                    <span className="flex h-full items-center gap-2 pr-3 pl-4 font-semibold text-base">
+                      {current && <Flag country={current} />}+{dial}
+                    </span>
                     <span aria-hidden className="h-6 w-px bg-foreground/10" />
                     <input
                       id="pay-phone"
@@ -236,7 +289,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
                       value={digits}
                       onChange={(e) => setDigits(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && void pay()}
-                      placeholder="06 123 45 67"
+                      placeholder={dial === "242" ? "06 123 45 67" : "Numéro"}
                       className="h-full flex-1 bg-transparent px-3 text-lg tracking-wide outline-none placeholder:text-muted-foreground/60"
                     />
                   </div>
@@ -301,6 +354,30 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
         </div>
       )}
     </div>
+  );
+}
+
+type PayCountry = { code: string; name: string; flag?: string; dialCode?: string };
+
+/** Each country the gateway has networks in, once, in the gateway's order. */
+function payCountries(all: readonly PaymentOperator[]): PayCountry[] {
+  const out: PayCountry[] = [];
+  for (const o of all) {
+    if (!o.country || out.some((c) => c.code === o.country)) continue;
+    out.push({ code: o.country, name: o.countryName ?? o.country, flag: o.countryFlag, dialCode: o.dialCode });
+  }
+  return out;
+}
+
+function Flag({ country }: Readonly<{ country: PayCountry }>) {
+  return country.flag ? (
+    // The gateway's flag image: nothing next/image could optimise.
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={country.flag} alt="" className="h-4 w-6 shrink-0 rounded-[3px] object-cover" />
+  ) : (
+    <span className="flex h-4 w-6 shrink-0 items-center justify-center rounded-[3px] bg-foreground/10 font-semibold text-[9px]">
+      {country.code.slice(0, 2)}
+    </span>
   );
 }
 
