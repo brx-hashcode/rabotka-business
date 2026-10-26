@@ -65,7 +65,8 @@ export function NewClaimPage() {
 
   // What the request may concern: the business's own offers and candidates.
   const offers = useQuery({ queryKey: [...offersKey, "claim-picker"], queryFn: () => listOffers({ pageSize: 100 }) });
-  const applications = useQuery({ queryKey: [...offersKey, "received"], queryFn: () => listReceivedApplications(0, 100) });
+  // Its own key: Candidatures keeps the paged (infinite) list under `received`.
+  const applications = useQuery({ queryKey: [...offersKey, "received", "claim-picker"], queryFn: () => listReceivedApplications(0, 100) });
   const topic = useWatch({ control: form.control, name: "topic" }) as Topic | "";
   const offerId = useWatch({ control: form.control, name: "offerId" });
   const concerns = topic === "candidate" || topic === "payment";
