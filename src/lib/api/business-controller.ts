@@ -1,6 +1,6 @@
 import { appConfig } from "#/config";
 import { BusinessBaseController } from "./base-controller";
-import type { BusinessStats, MyBusiness, MySubscription, StatsPeriod, UpdateMyBusiness } from "./types";
+import type { BusinessStats, ContactedProfile, MyBusiness, MySubscription, StatsPeriod, UpdateMyBusiness } from "./types";
 
 /** The signed-in business's own routes (`business/*`, BusinessProfileGuard). */
 class BusinessController extends BusinessBaseController {
@@ -23,6 +23,11 @@ class BusinessController extends BusinessBaseController {
   /** Recruitment figures over the last `days`, with the previous period. */
   getStats(days: StatsPeriod): Promise<BusinessStats> {
     return this.get(`/business/me/stats?days=${days}`);
+  }
+
+  /** The workers whose contact was unlocked, with their details (latest first). */
+  getContacts(): Promise<ContactedProfile[]> {
+    return this.get("/business/me/contacts");
   }
 
   getSubscription(): Promise<MySubscription> {
@@ -53,6 +58,8 @@ export const getMyBusiness = controller.getMe.bind(controller);
 export const updateMyBusiness = controller.updateMe.bind(controller);
 export const uploadMyBusinessDocument = controller.uploadDocument.bind(controller);
 export const uploadMyBusinessLogo = controller.uploadLogo.bind(controller);
+export const getMyContacts = controller.getContacts.bind(controller);
+export const myContactsKey = ["business", "me", "contacts"] as const;
 export const getMyStats = controller.getStats.bind(controller);
 export const getMySubscription = controller.getSubscription.bind(controller);
 export const subscribeToPlan = controller.subscribe.bind(controller);

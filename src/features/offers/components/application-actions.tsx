@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconCheck, IconCircleCheckFilled, IconCircleDashed, IconLockOpen, IconX } from "@tabler/icons-react";
+import { IconAddressBook, IconCheck, IconCircleCheckFilled, IconCircleDashed, IconLockOpen, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
@@ -89,10 +89,18 @@ export function ApplicationActions({ applicant, name }: Readonly<{ applicant: Of
           Suivre le déblocage
         </button>
       )}
-      {status === "ACCEPTED" && (
-        <button type="button" onClick={() => setDialog("cancel")} className={cn(button, "bg-card hover:text-destructive")}>
-          Annuler le recrutement
-        </button>
+      {["ACCEPTED", "STARTED", "END"].includes(status) && (
+        <div className="flex gap-2">
+          {status === "ACCEPTED" && (
+            <button type="button" onClick={() => setDialog("cancel")} className={cn(button, "bg-card hover:text-destructive")}>
+              Annuler
+            </button>
+          )}
+          <Link href={`/espace/contacts#w-${applicant.worker.id}`} className={cn(button, "bg-ink text-white hover:bg-ink/90")}>
+            <IconAddressBook className="size-4" />
+            Voir le contact
+          </Link>
+        </div>
       )}
 
       <AcceptDialog
@@ -237,7 +245,7 @@ function UnlockDialog({
       ) : !u ? (
         <p className="rounded-2xl bg-page p-4 text-muted-foreground text-sm">
           {detail.data?.status === "ACCEPTED"
-            ? "Le déblocage est terminé : le recrutement est confirmé."
+            ? "Le déblocage est terminé : le recrutement est confirmé. Ses coordonnées sont dans vos profils contactés."
             : friendlyError(detail.error, "Aucun déblocage en cours pour cette candidature.")}
         </p>
       ) : (
