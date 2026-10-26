@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconCalendar, IconDownload, IconFileInvoice, IconReceipt } from "@tabler/icons-react";
+import { IconCalendar, IconDownload, IconEye, IconFileInvoice, IconReceipt } from "@tabler/icons-react";
 
+import { PreviewSheet } from "#/components/preview-sheet";
 import { Skeleton } from "#/components/ui/skeleton";
 import { StatTile } from "#/features/home/components/stat-tile";
 import { friendlyError } from "#/lib/api/friendly-error";
@@ -108,6 +109,7 @@ export function InvoicesPage() {
 
 function InvoiceRow({ invoice: i, onDownload }: Readonly<{ invoice: Invoice; onDownload: () => void }>) {
   const fresh = i.status === "PENDING_DOWNLOAD";
+  const [preview, setPreview] = useState(false);
   return (
     <li className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-page p-4">
       <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-card">
@@ -121,15 +123,38 @@ function InvoiceRow({ invoice: i, onDownload }: Readonly<{ invoice: Invoice; onD
       </div>
       {fresh && <span className="rounded-full bg-chip-green px-2.5 py-1 font-medium text-chip-green-foreground text-xs">Nouvelle</span>}
       <p className="w-32 text-right font-semibold tabular-nums">{fcfa(Number(i.amount))}</p>
-      <a
-        href={invoiceDownloadUrl(i.id)}
-        download
-        onClick={onDownload}
-        className="inline-flex h-10 items-center gap-2 rounded-full bg-card px-4 font-medium text-sm hover:bg-card/70"
-      >
-        <IconDownload className="size-4" />
-        PDF
-      </a>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            setPreview(true);
+            onDownload();
+          }}
+          className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white hover:bg-ink/90"
+        >
+          <IconEye className="size-4" />
+          Aperçu
+        </button>
+        <a
+          href={invoiceDownloadUrl(i.id)}
+          download
+          onClick={onDownload}
+          aria-label="Télécharger le PDF"
+          title="Télécharger le PDF"
+          className="flex size-10 items-center justify-center rounded-full bg-card hover:bg-card/70"
+        >
+          <IconDownload className="size-4" />
+        </a>
+      </div>
+      <PreviewSheet
+        open={preview}
+        onOpenChange={setPreview}
+        title={REASON[i.reason] ?? i.reason}
+        subtitle={`${number(i.id)} · ${longDate(i.createdAt)} · ${fcfa(Number(i.amount))}`}
+        src={invoiceDownloadUrl(i.id)}
+        kind="pdf"
+        fileName={`facture-${number(i.id)}.pdf`}
+      />
     </li>
   );
 }
