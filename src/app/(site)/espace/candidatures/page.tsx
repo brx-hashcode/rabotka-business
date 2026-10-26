@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 
 import { ApplicationsPage } from "#/features/applications/components/applications-page";
@@ -5,5 +6,10 @@ import { ApplicationsPage } from "#/features/applications/components/application
 export const metadata: Metadata = { title: "Candidatures" };
 
 export default function Page() {
-  return <ApplicationsPage />;
+  // Suspense: the page reads `?candidature=` (opened from a notification).
+  return (
+    <Suspense>
+      <ApplicationsPage />
+    </Suspense>
+  );
 }

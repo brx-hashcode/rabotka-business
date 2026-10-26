@@ -143,14 +143,30 @@ export function NotificationList({
 
 /**
  * Where a notification opens in the space. Business notifications already
- * point into `/espace`; a new message carries the client app's
- * `/discussions/:id`, a claim `/claims/:id` — the same pages here. Anything else has no page
+ * point into `/espace`; the employer ones carry the client app's paths
+ * (`/candidatures/:applicationId`, `/missions/:offerId`, `/discussions/:id`,
+ * `/claims/:id`…), each sent to the same page here. Anything else has no page
  * in the space.
  */
 export function espaceLink(link: string | null | undefined): string | null {
   if (!link) return null;
   if (link.startsWith("/espace")) return link;
-  if (link.startsWith("/discussions/")) return `/espace${link}`;
-  if (link.startsWith("/claims/")) return `/espace/reclamations/${link.slice("/claims/".length)}`;
-  return null;
+  const [, root, id] = link.split("?")[0].split("/");
+  switch (root) {
+    case "candidatures":
+      return id ? `/espace/candidatures?candidature=${encodeURIComponent(id)}` : "/espace/candidatures";
+    case "missions":
+    case "job-offers":
+    case "offres":
+      return id ? `/espace/offres/${encodeURIComponent(id)}` : "/espace/offres";
+    case "discussions":
+      return id ? `/espace/discussions/${encodeURIComponent(id)}` : "/espace/discussions";
+    case "claims":
+      if (id === "new") return "/espace/reclamations/nouvelle";
+      return id ? `/espace/reclamations/${encodeURIComponent(id)}` : "/espace/reclamations";
+    case "profile":
+      return "/espace/organisation";
+    default:
+      return null;
+  }
 }

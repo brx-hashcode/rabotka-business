@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { IconCalendarEvent, IconClock, IconInbox, IconSearch, IconShieldCheck } from "@tabler/icons-react";
 
@@ -43,7 +44,17 @@ export function ApplicationsPage() {
   const all = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
   const total = query.data?.pages[0]?.total ?? 0;
 
-  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("new");
+  // Opened from a notification: that application, on its own tab, in view.
+  const focusId = useSearchParams().get("candidature");
+  const focused = focusId ? all.find((a) => a.applicationId === focusId) : undefined;
+  // A tab chosen by hand holds until another notification opens the page.
+  const [picked, setPicked] = useState<{ for: string | null; key: (typeof TABS)[number]["key"] } | null>(null);
+  const setTab = (key: (typeof TABS)[number]["key"]) => setPicked({ for: focusId, key });
+  const tab = (picked?.for === focusId ? picked.key : null) ?? (focused ? applicationStage(focused.status) : "new");
+  useEffect(() => {
+    if (!focused) return;
+    document.getElementById(`candidature-${focused.applicationId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [focused]);
   const [offerId, setOfferId] = useState("all");
   const [q, setQ] = useState("");
 
@@ -143,7 +154,7 @@ export function ApplicationsPage() {
         ) : (
           <ul className="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
             {shown.map((a) => (
-              <ApplicationCard key={a.applicationId} application={a} />
+              <ApplicationCard key={a.applicationId} application={a} focused={a.applicationId === focusId} />
             ))}
           </ul>
         )}
@@ -180,12 +191,15 @@ function ago(iso: string): string {
 }
 
 /** One application: who, for which offer, how long it has waited — and the decision. */
-function ApplicationCard({ application: a }: Readonly<{ application: ReceivedApplication }>) {
+function ApplicationCard({ application: a, focused }: Readonly<{ application: ReceivedApplication; focused?: boolean }>) {
   const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
   const waitingDays = a.status === "PENDING" ? daysSince(a.createdAt) : 0;
   const at = a.offer.scheduledAt ? new Date(a.offer.scheduledAt) : null;
   return (
-    <li className="flex flex-col gap-4 rounded-3xl bg-page p-5">
+    <li
+      id={`candidature-${a.applicationId}`}
+      className={cn("flex scroll-mt-24 flex-col gap-4 rounded-3xl bg-page p-5", focused && "ring-2 ring-whatsapp-dark")}
+    >
       <div className="flex items-start gap-3.5">
         <Link href={`/espace/candidats/${a.worker.id}`} className="shrink-0">
           <Avatar className="size-14 rounded-2xl">
