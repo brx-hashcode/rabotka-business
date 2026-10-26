@@ -1,3 +1,5 @@
+import type { OfferStatus } from "./offer-controller";
+
 /**
  * The signed-in person, as `auth/mobile/verify-otp` returns them
  * (MobileSessionUser in rabotka-backend). Snake case: it is the backend's own
@@ -218,4 +220,46 @@ export type PaymentByToken = {
   amount: number | null;
   description: string | null;
   payerCountry?: string | null;
+};
+
+/** `GET business/me/stats`: recruitment figures, each with the previous period. */
+export type StatsPeriod = 7 | 30 | 90;
+export type BusinessStats = {
+  period: { days: StatsPeriod; from: string; to: string };
+  offers: { open: number; total: number; openPositions: number; published: number; publishedPrevious: number };
+  applications: { received: number; receivedPrevious: number; toReview: number; overdue: number; perOffer: number | null };
+  hires: { count: number; previous: number };
+  funnel: { received: number; viewed: number; hired: number; started: number; completed: number };
+  timing: {
+    firstApplicantHours: number | null;
+    firstApplicantHoursPrevious: number | null;
+    responseHours: number | null;
+    responseHoursPrevious: number | null;
+    timeToHireDays: number | null;
+    timeToHireDaysPrevious: number | null;
+  };
+  quality: {
+    fillRate: number | null;
+    positionsProposed: number;
+    positionsFilled: number;
+    noShowRate: number | null;
+    missionsEnded: number;
+    ratingGiven: number | null;
+    ratingsGivenCount: number;
+    ratingReceived: number | null;
+    ratingsReceivedCount: number;
+  };
+  contacts: { unlocked: number; unlockedPrevious: number };
+  series: { date: string; applications: number; hires: number }[];
+  topOffers: {
+    id: string;
+    title: string;
+    status: OfferStatus;
+    quantity: number;
+    hired: number;
+    applications: number;
+    toReview: number;
+    createdAt: string;
+  }[];
+  categories: { name: string; applications: number }[];
 };
