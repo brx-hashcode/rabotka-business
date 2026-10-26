@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconAddressBook, IconCheck, IconMessageCircle, IconCircleCheckFilled, IconCircleDashed, IconLockOpen, IconX } from "@tabler/icons-react";
+import { IconAddressBook, IconCheck, IconMessageCircle, IconStar, IconStarFilled, IconCircleCheckFilled, IconCircleDashed, IconLockOpen, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
@@ -18,6 +18,7 @@ import {
   cancelApplication,
   getApplication,
   payUnlockWithWallet,
+  rateWorker,
   rejectApplication,
 } from "#/lib/api/application-controller";
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
@@ -26,7 +27,7 @@ import { offersKey, type OfferApplicant } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
 import { fcfa } from "../offer-labels";
 
-type Dialog = "accept" | "reject" | "cancel" | "unlock" | null;
+type Dialog = "accept" | "reject" | "cancel" | "unlock" | "rate" | null;
 
 const button = "inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 font-medium text-sm transition-colors";
 
@@ -71,6 +72,12 @@ export function ApplicationActions({ applicant, name }: Readonly<{ applicant: Of
     mutationFn: () => cancelApplication(id, reason.trim() || undefined),
     onSuccess: () => done("Recrutement annulé. Le candidat en est prévenu."),
     onError: (err) => toast.error(friendlyError(err, "Le recrutement n'a pas pu être annulé.")),
+  });
+
+  const rate = useMutation({
+    mutationFn: ({ score, note }: { score: number; note?: string }) => rateWorker(id, score, note),
+    onSuccess: () => done(`Merci : votre note pour ${name} est enregistrée.`),
+    onError: (err) => toast.error(friendlyError(err, "La note n'a pas pu être enregistrée.")),
   });
 
   const status = applicant.status;
@@ -119,6 +126,12 @@ export function ApplicationActions({ applicant, name }: Readonly<{ applicant: Of
               Annuler
             </button>
           )}
+          {status === "END" && !applicant.ratedByEmployer && (
+            <button type="button" onClick={() => setDialog("rate")} className={cn(button, "bg-brand-lime text-[#0f2414] hover:bg-brand-lime/80")}>
+              <IconStar className="size-4" />
+              Noter
+            </button>
+          )}
           <Link href={`/espace/contacts#w-${applicant.worker.id}`} className={cn(button, "bg-ink text-white hover:bg-ink/90")}>
             <IconAddressBook className="size-4" />
             Voir le contact
@@ -160,6 +173,14 @@ export function ApplicationActions({ applicant, name }: Readonly<{ applicant: Of
       >
         <ReasonField value={reason} onChange={setReason} placeholder="Ce qui a changé (facultatif)" />
       </ActionDialog>
+
+      <RateDialog
+        open={dialog === "rate"}
+        name={name}
+        pending={rate.isPending}
+        onOpenChange={(o) => setDialog(o ? "rate" : null)}
+        onConfirm={(score, note) => rate.mutate({ score, note })}
+      />
 
       <UnlockDialog
         open={dialog === "unlock"}
@@ -317,5 +338,51 @@ function Step({ done, label, hint }: Readonly<{ done: boolean; label: string; hi
       <span className="flex-1 font-medium">{label}</span>
       <span className="text-muted-foreground">{hint}</span>
     </li>
+  );
+}
+
+/** A finished mission's worker, rated 1 to 5 — what other employers will read. */
+function RateDialog({
+  open,
+  name,
+  pending,
+  onOpenChange,
+  onConfirm,
+}: Readonly<{ open: boolean; name: string; pending: boolean; onOpenChange: (o: boolean) => void; onConfirm: (score: number, note?: string) => void }>) {
+  const [score, setScore] = useState(0);
+  const [note, setNote] = useState("");
+  const labels = ["", "Décevant", "Moyen", "Bien", "Très bien", "Excellent"];
+  return (
+    <ActionDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={<IconStar className="size-5" />}
+      title={`Noter ${name}`}
+      description="Votre note compte pour sa fiabilité et aide les autres employeurs."
+      confirmLabel="Enregistrer la note"
+      confirmDisabled={score === 0}
+      pending={pending}
+      onConfirm={() => onConfirm(score, note.trim() || undefined)}
+    >
+      <div className="space-y-3">
+        <div role="radiogroup" aria-label="Note" className="flex items-center gap-1">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              type="button"
+              role="radio"
+              aria-checked={score === n}
+              aria-label={`${n} sur 5`}
+              onClick={() => setScore(n)}
+              className="rounded-lg p-1 transition-transform hover:scale-110"
+            >
+              {n <= score ? <IconStarFilled className="size-8 text-amber-400" /> : <IconStar className="size-8 text-muted-foreground/50" />}
+            </button>
+          ))}
+          <span className="ml-2 font-medium text-sm">{labels[score]}</span>
+        </div>
+        <ReasonField value={note} onChange={setNote} placeholder="Un mot sur la mission (facultatif)" />
+      </div>
+    </ActionDialog>
   );
 }

@@ -1,0 +1,190 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { IconInbox, IconSearch } from "@tabler/icons-react";
+
+import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
+import { Input } from "#/components/ui/input";
+import { Skeleton } from "#/components/ui/skeleton";
+import { ApplicationActions } from "#/features/offers/components/application-actions";
+import { APPLICATION_STATUS, applicationStage, STAGE_CLASS, type ApplicationStage } from "#/features/offers/offer-labels";
+import { friendlyError } from "#/lib/api/friendly-error";
+import { listReceivedApplications, offersKey, type ReceivedApplication } from "#/lib/api/offer-controller";
+import { cn, getInitials } from "#/lib/utils";
+
+const PAGE = 100;
+const fold = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+
+const TABS: { key: "all" | ApplicationStage; label: string }[] = [
+  { key: "new", label: "À examiner" },
+  { key: "viewed", label: "Vues" },
+  { key: "hired", label: "Retenues" },
+  { key: "closed", label: "Refusées ou annulées" },
+  { key: "all", label: "Toutes" },
+];
+
+/**
+ * Every application to the business's offers, in one inbox — the client
+ * app's « Candidatures reçues » endpoint. Decided here as on an offer's page:
+ * retain, turn down, follow the unlock, write, rate.
+ */
+export function ApplicationsPage() {
+  const query = useInfiniteQuery({
+    queryKey: [...offersKey, "received"],
+    queryFn: ({ pageParam }) => listReceivedApplications(pageParam, PAGE),
+    initialPageParam: 0,
+    getNextPageParam: (last, all) => (all.length * PAGE < last.total ? all.length : undefined),
+    // A candidate's side moves on its own (applying, paying their part).
+    refetchInterval: 30_000,
+  });
+  const all = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
+  const total = query.data?.pages[0]?.total ?? 0;
+
+  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("new");
+  const [offerId, setOfferId] = useState("all");
+  const [q, setQ] = useState("");
+
+  const offers = useMemo(() => {
+    const byId = new Map<string, { id: string; title: string; n: number }>();
+    for (const a of all) {
+      const o = byId.get(a.offer.id) ?? { id: a.offer.id, title: a.offer.title, n: 0 };
+      o.n++;
+      byId.set(a.offer.id, o);
+    }
+    return [...byId.values()].sort((a, b) => b.n - a.n);
+  }, [all]);
+
+  const scoped = all.filter((a) => (offerId === "all" || a.offer.id === offerId) && (!q.trim() || fold(`${a.worker.firstName} ${a.worker.lastName} ${a.offer.title}`).includes(fold(q.trim()))));
+  const count = (k: (typeof TABS)[number]["key"]) => (k === "all" ? scoped.length : scoped.filter((a) => applicationStage(a.status) === k).length);
+  const shown = tab === "all" ? scoped : scoped.filter((a) => applicationStage(a.status) === tab);
+
+  return (
+    <div className="w-full space-y-6 pt-2">
+      <div className="space-y-1.5">
+        <h1 className="font-semibold text-3xl tracking-tight">Candidatures</h1>
+        <p className="text-muted-foreground">Toutes les candidatures à vos offres, au même endroit : retenez, refusez, écrivez.</p>
+      </div>
+
+      <section className="space-y-5 rounded-3xl bg-card p-6">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative min-w-60 flex-1">
+            <IconSearch className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Rechercher un candidat, une offre…"
+              className="h-11 rounded-full border-0 bg-page pl-10 shadow-none"
+            />
+          </div>
+          {offers.length > 1 && (
+            <select
+              value={offerId}
+              onChange={(e) => setOfferId(e.target.value)}
+              aria-label="Offre"
+              className="h-11 max-w-full rounded-full bg-page px-4 font-medium text-sm outline-none sm:max-w-80"
+            >
+              <option value="all">Toutes les offres</option>
+              {offers.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.title} ({o.n})
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        <div role="tablist" aria-label="Étape" className="flex gap-1 overflow-x-auto rounded-full bg-page p-1">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.key}
+              onClick={() => setTab(t.key)}
+              className={cn(
+                "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 font-medium text-sm transition-colors",
+                tab === t.key ? "bg-brand-lime text-[#0f2414]" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t.label}
+              <span className="tabular-nums opacity-70">{count(t.key)}</span>
+            </button>
+          ))}
+        </div>
+
+        {query.isLoading ? (
+          <Skeleton className="h-64 rounded-2xl" />
+        ) : !query.data ? (
+          <p className="text-muted-foreground">{friendlyError(query.error, "Vos candidatures sont indisponibles pour le moment.")}</p>
+        ) : shown.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 rounded-2xl bg-page px-6 py-12 text-center">
+            <span className="flex size-12 items-center justify-center rounded-2xl bg-card">
+              <IconInbox className="size-6 text-muted-foreground" />
+            </span>
+            <p className="font-medium">{all.length === 0 ? "Aucune candidature pour le moment" : "Aucune candidature ici"}</p>
+            <p className="max-w-sm text-muted-foreground text-sm">
+              {all.length === 0
+                ? "Publiez une offre : les travailleurs correspondants en sont prévenus et leurs candidatures arrivent ici."
+                : tab === "new"
+                  ? "Vous avez répondu à tout le monde."
+                  : "Changez d'étape ou de filtre pour en voir d'autres."}
+            </p>
+          </div>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {shown.map((a) => (
+              <Row key={a.applicationId} application={a} />
+            ))}
+          </ul>
+        )}
+
+        {query.hasNextPage && (
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => void query.fetchNextPage()}
+              disabled={query.isFetchingNextPage}
+              className="rounded-full bg-page px-5 py-2 font-medium text-sm hover:bg-page/70"
+            >
+              {query.isFetchingNextPage ? "Chargement…" : `Charger les plus anciennes (${total - all.length})`}
+            </button>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function Row({ application: a }: Readonly<{ application: ReceivedApplication }>) {
+  const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
+  return (
+    <li className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl bg-page p-3 pr-4">
+      <Link href={`/espace/candidats/${a.worker.id}`} className="group flex min-w-0 flex-1 items-center gap-4">
+        <Avatar className="size-11 rounded-xl">
+          {a.worker.avatarUrl && <AvatarImage src={a.worker.avatarUrl} alt="" className="object-cover" />}
+          <AvatarFallback className="rounded-xl bg-card font-medium">{getInitials(name)}</AvatarFallback>
+        </Avatar>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate font-medium group-hover:underline">{name}</span>
+          <span className="block truncate text-muted-foreground text-xs">
+            {new Date(a.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
+            {a.worker.reliabilityScore !== null && ` · fiabilité ${a.worker.reliabilityScore}/100`}
+          </span>
+        </span>
+      </Link>
+      <Link
+        href={`/espace/offres/${a.offer.id}`}
+        className="hidden max-w-56 truncate rounded-full bg-card px-3 py-1 font-medium text-xs hover:underline md:block"
+        title={a.offer.title}
+      >
+        {a.offer.title}
+      </Link>
+      <span className={cn("shrink-0 rounded-full px-2.5 py-1 font-medium text-xs", STAGE_CLASS[applicationStage(a.status)])}>
+        {APPLICATION_STATUS[a.status] ?? a.status}
+      </span>
+      <ApplicationActions applicant={a} name={name} />
+    </li>
+  );
+}

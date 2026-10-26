@@ -43,6 +43,8 @@ export type OfferApplicant = {
   applicationId: string;
   status: string;
   createdAt: string;
+  /** Rated by this employer already (finished missions only). */
+  ratedByEmployer?: boolean;
   worker: {
     id: string;
     firstName: string;
@@ -50,6 +52,11 @@ export type OfferApplicant = {
     avatarUrl: string | null;
     reliabilityScore: number | null;
   };
+};
+
+/** An application in the employer's inbox: the applicant and the offer it is for. */
+export type ReceivedApplication = OfferApplicant & {
+  offer: { id: string; title: string; scheduledAt: string | null; status: OfferStatus };
 };
 
 export type OfferInput = {
@@ -127,6 +134,7 @@ class OfferController extends BusinessBaseController {
         applicationId: String(a.id),
         status: String(a.status),
         createdAt: String(a.created_at ?? ""),
+        ratedByEmployer: Boolean(a.ratedByEmployer),
         worker: {
           id: String(w.id ?? ""),
           firstName: String(w.first_name ?? ""),
@@ -136,6 +144,40 @@ class OfferController extends BusinessBaseController {
         },
       };
     });
+  }
+
+  /**
+   * Every application to the employer's offers, newest first (the client
+   * app's « Candidatures reçues »). The server sends the worker's phone too:
+   * it is dropped here, never mapped — contact details are what an unlock sells.
+   */
+  async received(page = 0, pageSize = 100): Promise<{ items: ReceivedApplication[]; total: number }> {
+    const res = await this.get<{ items: Raw[]; total: number }>(`/profile/received-applications?page=${page}&pageSize=${pageSize}`);
+    return {
+      total: res.total,
+      items: res.items.map((a) => {
+        const w = (a.worker ?? {}) as Raw;
+        const o = (a.job_offer ?? {}) as Raw;
+        return {
+          applicationId: String(a.id),
+          status: String(a.status),
+          createdAt: String(a.created_at ?? ""),
+          worker: {
+            id: String(w.id ?? ""),
+            firstName: String(w.first_name ?? ""),
+            lastName: String(w.last_name ?? ""),
+            avatarUrl: str(w.avatar_url),
+            reliabilityScore: w.reliability_score == null ? null : Number(w.reliability_score),
+          },
+          offer: {
+            id: String(o.id ?? ""),
+            title: String(o.title ?? ""),
+            scheduledAt: str(o.scheduled_at),
+            status: (o.status as OfferStatus) ?? "ACTIVE",
+          },
+        };
+      }),
+    };
   }
 
   create(input: OfferInput): Promise<{ id: string; reference: string }> {
@@ -164,6 +206,7 @@ const controller = new OfferController();
 export const listOffers = controller.list.bind(controller);
 export const getOffer = controller.detail.bind(controller);
 export const getOfferApplicants = controller.applicants.bind(controller);
+export const listReceivedApplications = controller.received.bind(controller);
 export const createOffer = controller.create.bind(controller);
 export const updateOffer = controller.update.bind(controller);
 export const deleteOffer = controller.remove.bind(controller);

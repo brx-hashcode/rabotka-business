@@ -44,6 +44,11 @@ class ApplicationController extends BusinessBaseController {
     return this.post(`/profile/applications/${encodeURIComponent(id)}/cancel`, reason ? { reason } : {});
   }
 
+  /** Rates the worker of a finished mission (1–5, optional note). Only once the worker has confirmed it. */
+  rate(id: string, score: number, note?: string): Promise<unknown> {
+    return this.post(`/profile/applications/${encodeURIComponent(id)}/rate`, note ? { score, note } : { score });
+  }
+
   async payWithWallet(id: string): Promise<ApplicationDetail> {
     return toDetail(await this.post<Raw>(`/profile/applications/${encodeURIComponent(id)}/unlock/pay-wallet`));
   }
@@ -55,6 +60,7 @@ export const getApplication = controller.detail.bind(controller);
 export const acceptApplication = controller.accept.bind(controller);
 export const rejectApplication = controller.reject.bind(controller);
 export const cancelApplication = controller.cancel.bind(controller);
+export const rateWorker = controller.rate.bind(controller);
 export const payUnlockWithWallet = controller.payWithWallet.bind(controller);
 
 export const applicationKey = (id: string) => ["application", id] as const;
