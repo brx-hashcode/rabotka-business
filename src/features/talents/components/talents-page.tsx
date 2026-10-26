@@ -64,7 +64,7 @@ export function TalentsPage() {
   return (
     <div className="w-full space-y-6 pt-2">
       <div className="space-y-1.5">
-        <h1 className="font-semibold text-3xl tracking-tight">Vivier</h1>
+        <h1 className="font-semibold text-3xl tracking-tight">Mes profils</h1>
         <p className="text-muted-foreground">
           Les profils que vous gardez et ceux qui ont déjà travaillé pour vous : invitez-les sur une nouvelle offre.
         </p>
@@ -132,13 +132,13 @@ export function TalentsPage() {
             ))}
           </div>
         ) : !talents.data ? (
-          <p className="text-muted-foreground">{friendlyError(talents.error, "Votre vivier est indisponible pour le moment.")}</p>
+          <p className="text-muted-foreground">{friendlyError(talents.error, "Vos profils sont indisponibles pour le moment.")}</p>
         ) : shown.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-2xl bg-page px-6 py-14 text-center">
             <span className="flex size-12 items-center justify-center rounded-2xl bg-card">
               <IconBookmark className="size-6 text-muted-foreground" />
             </span>
-            <p className="font-medium">{all.length === 0 ? "Votre vivier est vide" : "Personne ici"}</p>
+            <p className="font-medium">{all.length === 0 ? "Aucun profil pour le moment" : "Personne ici"}</p>
             <p className="max-w-md text-muted-foreground text-sm">
               {all.length === 0
                 ? "Gardez un profil avec le bouton « Garder », depuis la recherche ou une fiche : il apparaît ici, comme ceux que vous avez déjà recrutés."
@@ -172,18 +172,18 @@ function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
     mutationFn: () => saveTalent(t.workerId),
     onSuccess: () => {
       refresh();
-      toast.success(`${name} fait partie de votre vivier.`);
+      toast.success(`Profil de ${name} ajouté à « Mes profils ».`);
     },
-    onError: (err) => toast.error(friendlyError(err, "Le vivier n'a pas pu être mis à jour.")),
+    onError: (err) => toast.error(friendlyError(err, "Vos profils n'ont pas pu être mis à jour.")),
   });
   const remove = useMutation({
     mutationFn: () => removeTalent(t.workerId),
     onSuccess: () => {
       refresh();
       setDialog(null);
-      toast.success(`${name} ne fait plus partie de votre vivier.`);
+      toast.success(`Profil de ${name} retiré de « Mes profils ».`);
     },
-    onError: (err) => toast.error(friendlyError(err, "Le vivier n'a pas pu être mis à jour.")),
+    onError: (err) => toast.error(friendlyError(err, "Vos profils n'ont pas pu être mis à jour.")),
   });
 
   return (
@@ -239,7 +239,7 @@ function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
             ) : (
               <DropdownMenuItem onSelect={() => keep.mutate()} className="cursor-pointer gap-2.5 rounded-xl px-3 py-2.5 text-sm focus:bg-page">
                 <IconBookmark className="size-4" />
-                Garder dans le vivier
+                Garder dans mes profils
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>

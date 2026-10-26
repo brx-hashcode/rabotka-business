@@ -21,9 +21,9 @@ export function KeepButton({ workerId, name, className }: Readonly<{ workerId: s
     mutationFn: () => (kept ? removeTalent(workerId) : saveTalent(workerId)),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: talentsKey });
-      toast.success(kept ? `${name} ne fait plus partie de votre vivier.` : `${name} fait partie de votre vivier.`);
+      toast.success(kept ? `Profil de ${name} retiré de « Mes profils ».` : `Profil de ${name} ajouté à « Mes profils ».`);
     },
-    onError: (err) => toast.error(friendlyError(err, "Le vivier n'a pas pu être mis à jour.")),
+    onError: (err) => toast.error(friendlyError(err, "Vos profils n'ont pas pu être mis à jour.")),
   });
 
   return (
@@ -32,8 +32,8 @@ export function KeepButton({ workerId, name, className }: Readonly<{ workerId: s
       onClick={() => toggle.mutate()}
       disabled={talents.isLoading || toggle.isPending}
       aria-pressed={kept}
-      aria-label={kept ? `Retirer ${name} du vivier` : `Garder ${name} dans le vivier`}
-      title={kept ? "Dans votre vivier" : "Garder dans le vivier"}
+      aria-label={kept ? `Retirer ${name} de mes profils` : `Garder ${name} dans mes profils`}
+      title={kept ? "Dans « Mes profils »" : "Garder dans « Mes profils »"}
       className={cn(
         "flex size-9 shrink-0 items-center justify-center rounded-full transition-colors disabled:opacity-50",
         kept ? "bg-brand-lime text-[#0f2414]" : "bg-card text-muted-foreground hover:text-foreground",
