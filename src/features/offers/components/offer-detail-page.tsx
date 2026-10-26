@@ -25,6 +25,7 @@ import { ActionDialog } from "#/components/action-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Input } from "#/components/ui/input";
 import { Skeleton } from "#/components/ui/skeleton";
+import { Bone, RowsSkeleton, TilesSkeleton } from "#/components/page-skeletons";
 import { CandidateCard } from "#/features/candidates/components/candidate-card";
 import { mySubscriptionKey } from "#/lib/api/business-controller";
 import { findCandidates } from "#/lib/api/candidate-controller";
@@ -110,10 +111,19 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
       </Link>
 
       {offer.isLoading ? (
-        <div className="space-y-6">
-          <Skeleton className="h-64 rounded-3xl" />
-          <Skeleton className="h-96 rounded-3xl" />
-        </div>
+        <>
+          <div className="space-y-8 rounded-3xl bg-card p-6 sm:p-8">
+            <div className="space-y-3">
+              <Bone className="h-6 w-48 rounded-full" />
+              <Bone className="h-10 w-2/3" />
+              <Bone className="h-4 w-64" />
+            </div>
+            <TilesSkeleton />
+          </div>
+          <div className="rounded-3xl bg-card p-6">
+            <RowsSkeleton count={4} />
+          </div>
+        </>
       ) : !o ? (
         <p className="rounded-3xl bg-card p-6 text-muted-foreground">{friendlyError(offer.error, "Cette offre est introuvable.")}</p>
       ) : (

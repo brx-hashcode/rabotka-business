@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IconBell } from "@tabler/icons-react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
+import { Bone } from "#/components/page-skeletons";
 import {
   getUnreadCount,
   listNotifications,
@@ -97,7 +98,21 @@ export function NotificationList({
   onOpen?: (n: AppNotification) => void;
   max?: number;
 }>) {
-  if (loading) return <p className="py-6 text-center text-muted-foreground text-sm">Chargement…</p>;
+  if (loading) {
+    return (
+      <div className="space-y-1" role="status" aria-label="Chargement">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="flex gap-3 p-2.5">
+            <Bone className="size-10 shrink-0 rounded-full" />
+            <div className="flex-1 space-y-2 pt-1">
+              <Bone className="h-3.5 w-1/2" />
+              <Bone className="h-3 w-5/6" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
   if (!items?.length) return <p className="py-6 text-center text-muted-foreground text-sm">Aucune notification pour le moment.</p>;
   return (
     <ul className="flex flex-col gap-1">

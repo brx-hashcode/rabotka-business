@@ -7,7 +7,7 @@ import { IconCheck, IconClock, IconFileText, IconLockOpen } from "@tabler/icons-
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
-import { Skeleton } from "#/components/ui/skeleton";
+import { Bone } from "#/components/page-skeletons";
 import { getMySubscription, mySubscriptionKey, subscribeToPlan } from "#/lib/api/business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import type { BusinessPlan, MySubscription, SubscriptionStatus } from "#/lib/api/types";
@@ -44,10 +44,22 @@ export function SubscriptionPage() {
 
       {isLoading ? (
         <div className="space-y-6">
-          <Skeleton className="h-44 rounded-3xl" />
+          <div className="space-y-5 rounded-3xl bg-card p-6 sm:p-8">
+            <Bone className="h-7 w-40" />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Bone className="h-20 rounded-2xl" />
+              <Bone className="h-20 rounded-2xl" />
+            </div>
+          </div>
           <div className="grid gap-4 md:grid-cols-3">
             {[0, 1, 2].map((i) => (
-              <Skeleton key={i} className="h-96 rounded-3xl" />
+              <div key={i} className="space-y-4 rounded-3xl bg-card p-6">
+                <Bone className="h-6 w-28" />
+                <Bone className="h-10 w-40" />
+                <Bone className="h-4 w-3/4" />
+                <Bone className="h-4 w-2/3" />
+                <Bone className="h-12 rounded-full" />
+              </div>
             ))}
           </div>
         </div>

@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { IconDownload, IconMinus, IconPlus, IconPrinter, IconX } from "@tabler/icons-react";
-import { Loader } from "lucide-react";
 import { Dialog as SheetPrimitive } from "radix-ui";
 import { toast } from "sonner";
+import { DocumentPageSkeleton } from "./page-skeletons";
 
 const PdfPages = dynamic(() => import("./pdf-pages"), { ssr: false });
 
@@ -142,8 +142,8 @@ export function PreviewSheet({
             ) : failed ? (
               <Message>Le fichier n&apos;a pas pu être affiché. Réessayez dans un instant.</Message>
             ) : !file.url ? (
-              <div className="flex h-full items-center justify-center">
-                <Loader aria-label="Chargement" className="size-8 animate-spin text-muted-foreground" />
+              <div className="px-4 py-6 sm:px-8">
+                <DocumentPageSkeleton />
               </div>
             ) : kind === "pdf" ? (
               <div className="px-4 py-6 sm:px-8">

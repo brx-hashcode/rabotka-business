@@ -7,6 +7,7 @@ import { IconCalendarCheck, IconCalendarEvent, IconCash, IconChevronRight, IconM
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Skeleton } from "#/components/ui/skeleton";
+import { CardGridSkeleton, TilesSkeleton } from "#/components/page-skeletons";
 import { StatTile } from "#/features/home/components/stat-tile";
 import { ApplicationActions } from "#/features/offers/components/application-actions";
 import { APPLICATION_STATUS, applicationStage, fcfa, PAYMENT_SUFFIX, STAGE_CLASS, STATUS } from "#/features/offers/offer-labels";
@@ -70,7 +71,12 @@ export function MissionsPage() {
       </div>
 
       {loading ? (
-        <Skeleton className="h-96 rounded-3xl" />
+        <>
+          <div className="rounded-3xl bg-card p-6 sm:p-8">
+            <TilesSkeleton />
+          </div>
+          <CardGridSkeleton count={3} />
+        </>
       ) : !offers.data || !received.data ? (
         <p className="rounded-3xl bg-card p-6 text-muted-foreground">
           {friendlyError(offers.error ?? received.error, "Vos missions sont indisponibles pour le moment.")}
