@@ -369,3 +369,6 @@ export type CvChat = {
   /** False once the CV's file was purged: the conversation stays readable, no new question. */
   available: boolean;
 };
+
+/** A conversation comparing 2 to 5 CVs of one analysis (one per selection). */
+export type CvComparison = CvChat & { id: string; resumeIds: string[] };
