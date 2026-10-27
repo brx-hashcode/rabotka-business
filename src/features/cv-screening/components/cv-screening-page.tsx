@@ -15,7 +15,6 @@ import {
   IconEye,
   IconFileTypeDocx,
   IconFileTypePdf,
-  IconHourglass,
   IconPhoto,
   IconMail,
   IconMapPin,
@@ -253,7 +252,6 @@ function WaitingCard({ r, reading }: Readonly<{ r: CvResume; reading: boolean }>
   return (
     <article className="rounded-3xl bg-card p-5 sm:p-6" aria-busy="true">
       <div className="flex items-start gap-4">
-        <span className="hidden w-6 sm:block" />
         <span className={cn("flex size-14 shrink-0 items-center justify-center rounded-full", kind.tile)}>
           <kind.icon className="size-6" />
         </span>
@@ -264,11 +262,10 @@ function WaitingCard({ r, reading }: Readonly<{ r: CvResume; reading: boolean }>
             </p>
             <span
               className={cn(
-                "inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-medium text-xs",
+                "rounded-full px-2.5 py-1 font-medium text-xs",
                 reading ? "bg-chip-green text-chip-green-foreground" : "bg-page text-muted-foreground",
               )}
             >
-              {reading ? <IconSparkles className="size-3.5" /> : <IconHourglass className="size-3.5" />}
               {reading ? "Lecture en cours" : "En attente"}
             </span>
           </div>
