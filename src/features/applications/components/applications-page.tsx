@@ -3,14 +3,18 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { IconCalendarEvent, IconClock, IconInbox, IconSearch, IconShieldCheck } from "@tabler/icons-react";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { IconCalendarEvent, IconCalendarPlus, IconClock, IconInbox, IconSearch, IconShieldCheck } from "@tabler/icons-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Input } from "#/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { CardGridSkeleton } from "#/components/page-skeletons";
 import { ApplicationActions } from "#/features/offers/components/application-actions";
+import { InterviewLine, latestInterview } from "#/features/interviews/components/interview-bits";
+import { ScheduleInterviewDialog } from "#/features/interviews/components/schedule-interview-dialog";
+import { interviewsKey, listInterviews } from "#/lib/api/interview-controller";
+import type { Interview } from "#/lib/api/types";
 import { APPLICATION_STATUS, applicationStage, STAGE_CLASS, type ApplicationStage } from "#/features/offers/offer-labels";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { listReceivedApplications, offersKey, type ReceivedApplication } from "#/lib/api/offer-controller";
@@ -42,6 +46,8 @@ export function ApplicationsPage() {
     refetchInterval: 30_000,
   });
   const all = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
+  // The interviews already proposed, to show each on its candidate's card.
+  const interviews = useQuery({ queryKey: [...interviewsKey, "all"], queryFn: () => listInterviews() });
   const total = query.data?.pages[0]?.total ?? 0;
 
   // Opened from a notification: that application, on its own tab, in view.
@@ -154,7 +160,12 @@ export function ApplicationsPage() {
         ) : (
           <ul className="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
             {shown.map((a) => (
-              <ApplicationCard key={a.applicationId} application={a} focused={a.applicationId === focusId} />
+              <ApplicationCard
+                key={a.applicationId}
+                application={a}
+                focused={a.applicationId === focusId}
+                interview={latestInterview(interviews.data, (i) => i.applicationId === a.applicationId)}
+              />
             ))}
           </ul>
         )}
@@ -191,8 +202,14 @@ function ago(iso: string): string {
 }
 
 /** One application: who, for which offer, how long it has waited — and the decision. */
-function ApplicationCard({ application: a, focused }: Readonly<{ application: ReceivedApplication; focused?: boolean }>) {
+function ApplicationCard({
+  application: a,
+  focused,
+  interview,
+}: Readonly<{ application: ReceivedApplication; focused?: boolean; interview?: Interview }>) {
   const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
+  const [planning, setPlanning] = useState(false);
+  const stage = applicationStage(a.status);
   const waitingDays = a.status === "PENDING" ? daysSince(a.createdAt) : 0;
   const at = a.offer.scheduledAt ? new Date(a.offer.scheduledAt) : null;
   return (
@@ -244,9 +261,34 @@ function ApplicationCard({ application: a, focused }: Readonly<{ application: Re
         </p>
       )}
 
+      {interview ? (
+        <Link href="/espace/entretiens" className="-mt-1 rounded-2xl bg-card px-3 py-2.5 hover:bg-card/70">
+          <InterviewLine interview={interview} />
+        </Link>
+      ) : (
+        stage !== "closed" && (
+          <button
+            type="button"
+            onClick={() => setPlanning(true)}
+            className="-mt-1 inline-flex items-center gap-1.5 self-start font-medium text-sm underline-offset-2 hover:underline"
+          >
+            <IconCalendarPlus className="size-4" />
+            Planifier un entretien
+          </button>
+        )
+      )}
+
       <div className="mt-auto">
         <ApplicationActions applicant={a} name={name} variant="card" />
       </div>
+      {planning && (
+        <ScheduleInterviewDialog
+          open={planning}
+          onOpenChange={setPlanning}
+          candidate={{ name, applicationId: a.applicationId }}
+          jobTitle={a.offer.title}
+        />
+      )}
     </li>
   );
 }

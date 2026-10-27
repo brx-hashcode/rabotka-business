@@ -9,6 +9,7 @@ import {
   IconBriefcase,
   IconCalendarEvent,
   IconCheck,
+  IconCalendarPlus,
   IconChevronDown,
   IconClock,
   IconDownload,
@@ -32,11 +33,14 @@ import { Bone, ClaimDetailSkeleton } from "#/components/page-skeletons";
 import { PreviewSheet } from "#/components/preview-sheet";
 import { cvFileUrl, cvScreeningsKey, deleteCvScreening, getCvScreening } from "#/lib/api/cv-screening-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
-import type { CvResume, CvScreening } from "#/lib/api/types";
+import type { CvResume, CvScreening, Interview } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { CRITERIA, CriterionBar, ScoreRing, VerdictChip, band } from "./cv-bits";
 import { CvChatSheet } from "./cv-chat-sheet";
 import { CvCompareSheet } from "./cv-compare-sheet";
+import { InterviewLine, latestInterview } from "#/features/interviews/components/interview-bits";
+import { ScheduleInterviewDialog } from "#/features/interviews/components/schedule-interview-dialog";
+import { interviewsKey, listInterviews } from "#/lib/api/interview-controller";
 
 /** CVs compared at once (the backend's limit too). */
 const MAX_COMPARED = 5;
@@ -60,6 +64,8 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
   // CVs picked to compare (ids), and the comparison drawer.
   const [selected, setSelected] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
+  // The interviews already proposed, to show each on its candidate's card.
+  const interviews = useQuery({ queryKey: [...interviewsKey, "all"], queryFn: () => listInterviews() });
   const toggle = (rid: string) =>
     setSelected((ids) => (ids.includes(rid) ? ids.filter((x) => x !== rid) : ids.length < MAX_COMPARED ? [...ids, rid] : ids));
   const remove = useMutation({
@@ -162,6 +168,7 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
                 jobTitle={s.jobTitle}
                 selected={selected.includes(r.id)}
                 canSelect={selected.length < MAX_COMPARED}
+                interview={latestInterview(interviews.data, (i) => i.cvResumeId === r.id)}
                 onToggle={() => toggle(r.id)}
               />
             ))}
@@ -429,6 +436,7 @@ function ResumeCard({
   selected,
   canSelect,
   onToggle,
+  interview,
 }: Readonly<{
   r: CvResume;
   onPreview: () => void;
@@ -437,9 +445,11 @@ function ResumeCard({
   selected: boolean;
   canSelect: boolean;
   onToggle: () => void;
+  interview?: Interview;
 }>) {
   const [open, setOpen] = useState(r.rank === 1);
   const [chatOpen, setChatOpen] = useState(false);
+  const [planning, setPlanning] = useState(false);
   const c = r.candidate;
   const name = c?.name ?? r.fileName;
   const score = r.score ?? 0;
@@ -486,6 +496,14 @@ function ResumeCard({
           <span className="sm:hidden">Questions</span>
         </button>
       </div>
+      {planning && (
+        <ScheduleInterviewDialog
+          open={planning}
+          onOpenChange={setPlanning}
+          candidate={{ name, cvResumeId: r.id, email: c?.email }}
+          jobTitle={jobTitle}
+        />
+      )}
       <CvChatSheet open={chatOpen} onOpenChange={setChatOpen} screeningId={screeningId} jobTitle={jobTitle} resume={r} />
 
       {r.summary && <p className="mt-4 text-sm leading-relaxed">{r.summary}</p>}
@@ -502,7 +520,26 @@ function ResumeCard({
         </div>
       )}
 
+      {interview && (
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-page px-4 py-3">
+          <InterviewLine interview={interview} />
+          <Link href="/espace/entretiens" className="font-medium text-sm underline-offset-2 hover:underline">
+            Voir mes entretiens
+          </Link>
+        </div>
+      )}
+
       <div className="mt-5 flex flex-wrap items-center gap-2">
+        {!interview && (
+          <button
+            type="button"
+            onClick={() => setPlanning(true)}
+            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-ink px-4 font-medium text-sm text-white hover:bg-ink/90"
+          >
+            <IconCalendarPlus className="size-4" />
+            Planifier un entretien
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setOpen(!open)}
