@@ -62,7 +62,13 @@ export function askCvComparison(screeningId: string, comparisonId: string, quest
  * stream route, not the API proxy (which would hold the answer until the
  * end); a 401 refreshes the session once, as every other call does.
  */
-async function askStream(url: string, question: string, { signal, onText }: AskOptions): Promise<{ remaining: number | null }> {
+export type AskResult = {
+  remaining: number | null;
+  /** Set when the question was outside the recruitment: the reply to show, nothing saved or counted. */
+  offTopic: string | null;
+};
+
+async function askStream(url: string, question: string, { signal, onText }: AskOptions): Promise<AskResult> {
   const send = () =>
     fetch(url, {
       method: "POST",
@@ -81,6 +87,7 @@ async function askStream(url: string, question: string, { signal, onText }: AskO
   const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
   let buffer = "";
   let remaining: number | null = null;
+  let offTopic: string | null = null;
   for (;;) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -89,10 +96,11 @@ async function askStream(url: string, question: string, { signal, onText }: AskO
     for (const { event, data } of parsed.events) {
       if (event === "delta" && typeof data.text === "string") onText(data.text);
       else if (event === "done") remaining = typeof data.remaining === "number" ? data.remaining : null;
+      else if (event === "off_topic" && typeof data.message === "string") offTopic = data.message;
       else if (event === "error") throw new SessionError(typeof data.message === "string" ? data.message : "", 502, data);
     }
   }
-  return { remaining };
+  return { remaining, offTopic };
 }
 
 /** Same-origin: the preview fetches it with the session cookie. */
