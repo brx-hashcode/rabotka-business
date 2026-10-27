@@ -353,8 +353,27 @@ export type CvResume = {
     yearsExperience: number | null;
     email: string | null;
     phone: string | null;
+    /** The jobs the CV lists (absent for a CV analysed before). */
+    experiences?: CvExperience[];
+    /** Every month worked, jobs held at the same time counted once. */
+    experienceMonths?: number | null;
+    /** Full-time months related to the post. */
+    relevantMonths?: number | null;
   } | null;
   error: string | null;
+};
+
+/** One job of a CV, as the analysis read it. */
+export type CvExperience = {
+  title: string;
+  employer: string | null;
+  /** `YYYY-MM`. */
+  start: string | null;
+  end: string | null;
+  current: boolean;
+  type: "FULL_TIME" | "PART_TIME" | "INTERNSHIP" | "FREELANCE" | "VOLUNTEER" | "UNKNOWN";
+  relevance: "HIGH" | "PARTIAL" | "NONE";
+  months: number | null;
 };
 
 export type CvScreening = CvScreeningSummary & { jobText: string; resumes: CvResume[] };

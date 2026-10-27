@@ -35,7 +35,7 @@ import { cvFileUrl, cvScreeningsKey, deleteCvScreening, getCvScreening } from "#
 import { friendlyError } from "#/lib/api/friendly-error";
 import type { CvResume, CvScreening, Interview } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
-import { CRITERIA, CriterionBar, ScoreRing, VerdictChip, band } from "./cv-bits";
+import { CRITERIA, Career, CriterionBar, ScoreRing, VerdictChip, band, duration } from "./cv-bits";
 import { CvChatSheet } from "./cv-chat-sheet";
 import { CvCompareSheet } from "./cv-compare-sheet";
 import { InterviewLine, latestInterview } from "#/features/interviews/components/interview-bits";
@@ -455,7 +455,11 @@ function ResumeCard({
   const score = r.score ?? 0;
   const facts = [
     c?.currentTitle,
-    c?.yearsExperience !== null && c?.yearsExperience !== undefined ? `${c.yearsExperience} an${c.yearsExperience > 1 ? "s" : ""} d'expérience` : null,
+    typeof c?.experienceMonths === "number"
+      ? `${duration(c.experienceMonths)} d'expérience${typeof c.relevantMonths === "number" ? `, dont ${duration(c.relevantMonths)} en lien avec le poste` : ""}`
+      : c?.yearsExperience !== null && c?.yearsExperience !== undefined
+        ? `${c.yearsExperience} an${c.yearsExperience > 1 ? "s" : ""} d'expérience`
+        : null,
   ].filter(Boolean);
   const isDocx = r.mimeType.includes("wordprocessingml");
 
@@ -517,6 +521,11 @@ function ResumeCard({
               <CriterionBar key={k.key} label={k.label} value={r.criteria?.[k.key] ?? 0} />
             ))}
           </div>
+          {!!c?.experiences?.length && (
+            <div className="md:col-span-2 2xl:col-span-3">
+              <Career experiences={c.experiences} totalMonths={c.experienceMonths ?? null} relevantMonths={c.relevantMonths ?? null} />
+            </div>
+          )}
         </div>
       )}
 
