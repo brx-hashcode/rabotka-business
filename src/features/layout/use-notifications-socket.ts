@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { io } from "socket.io-client";
 
+import { myBusinessKey } from "#/lib/api/business-controller";
 import { cvScreeningsKey } from "#/lib/api/cv-screening-controller";
 import { notificationsKey } from "#/lib/api/notification-controller";
 import { offersKey } from "#/lib/api/offer-controller";
@@ -28,6 +29,9 @@ export function useNotificationsSocket() {
       void queryClient.invalidateQueries({ queryKey: notificationsKey });
       // Most of them are about an application: the inbox and offers follow.
       void queryClient.invalidateQueries({ queryKey: offersKey });
+      // Others change the business itself (plan paid or ended, organisation
+      // verified): its subscription, quotas and figures, all under one prefix.
+      void queryClient.invalidateQueries({ queryKey: myBusinessKey });
     });
     // A CV of an « Analyse de CV » was read: the ranking fills in as it goes.
     socket.on("cv-screening:progress", () => {

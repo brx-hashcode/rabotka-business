@@ -20,7 +20,7 @@ import { toast } from "sonner";
 
 import { Bone } from "#/components/page-skeletons";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
-import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
+import { getMySubscription, myBusinessKey, mySubscriptionKey } from "#/lib/api/business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { getPaymentByToken, getPaymentGateways, initiatePayment } from "#/lib/api/payment-controller";
 import type { BusinessPlan, PaymentOperator } from "#/lib/api/types";
@@ -170,6 +170,8 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
         const queued = sub.upcoming.find((p) => p.planName.toLowerCase() === what?.planName.toLowerCase());
         setStartsAt(queued?.startsAt ?? null);
         setPhase("approved");
+        // Quotas, offers allowed, dashboard figures: everything the plan sets.
+        void queryClient.invalidateQueries({ queryKey: myBusinessKey });
       }
       else if (polls.current > POLL_LIMIT) setPhase("failed");
     }, POLL_MS);
