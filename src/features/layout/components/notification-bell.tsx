@@ -17,15 +17,17 @@ import {
   type AppNotification,
 } from "#/lib/api/notification-controller";
 import { cn } from "#/lib/utils";
+import { useNotificationsSocket } from "../use-notifications-socket";
 
 /**
- * The bell: the unread count (refreshed every minute) and the latest
- * notifications. A notification opens the page it is about when that page is
- * in this space.
+ * The bell: the unread count (pushed live, and refreshed every minute) and the
+ * latest notifications. A notification opens the page it is about when that
+ * page is in this space.
  */
 export function NotificationBell() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  useNotificationsSocket();
   const [open, setOpen] = useState(false);
   const unread = useQuery({
     queryKey: [...notificationsKey, "unread"],
