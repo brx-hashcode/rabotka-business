@@ -79,7 +79,7 @@ export function CvLocked() {
       <span className="flex size-12 items-center justify-center rounded-2xl bg-page">
         <IconLock className="size-6 text-muted-foreground" />
       </span>
-      <p className="font-medium">Le tri des CV n&apos;est pas inclus dans votre formule</p>
+      <p className="font-medium">L&apos;analyse de CV n&apos;est pas incluse dans votre formule</p>
       <p className="max-w-md text-muted-foreground text-sm">
         Envoyez les CV reçus pour un poste : Rabotka les lit, même scannés ou pris en photo, et les classe du plus adapté au moins adapté.
       </p>

@@ -57,7 +57,7 @@ const SORTS = [
 ] as const;
 type Sort = (typeof SORTS)[number]["key"];
 
-/** « Tri des CV »: the figures first, then the analyses, findable and sortable. */
+/** « Analyse de CV »: the figures first, then the analyses, findable and sortable. */
 export function CvScreeningsPage() {
   const subscription = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   const screenings = useQuery({ queryKey: [...cvScreeningsKey, "list"], queryFn: () => listCvScreenings(0, 50) });
@@ -85,19 +85,19 @@ export function CvScreeningsPage() {
     <div className="w-full space-y-6 pt-2">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1.5">
-          <h1 className="font-semibold text-3xl tracking-tight">Tri des CV</h1>
+          <h1 className="font-semibold text-3xl tracking-tight">Analyse de CV</h1>
           <p className="text-muted-foreground">
             Envoyez les CV reçus pour un poste : Rabotka les lit et les classe, du plus adapté au moins adapté.
           </p>
         </div>
         {!locked && (
           <Link
-            href="/espace/tri-cv/nouveau"
+            href="/espace/analyse-cv/nouvelle"
             aria-disabled={e?.cvRemaining === 0}
             className="inline-flex h-12 items-center gap-2 rounded-full bg-ink px-5 font-medium text-white hover:bg-ink/90 aria-disabled:pointer-events-none aria-disabled:opacity-40"
           >
             <IconPlus className="size-4" />
-            Nouveau tri
+            Nouvelle analyse
           </Link>
         )}
       </div>
@@ -267,7 +267,7 @@ function ScreeningCard({ s }: Readonly<{ s: CvScreeningSummary }>) {
   const left = daysLeft(s.expiresAt);
   return (
     <li>
-      <Link href={`/espace/tri-cv/${s.id}`} className="group flex h-full flex-col gap-4 rounded-3xl bg-page p-5 transition-colors hover:bg-page/70">
+      <Link href={`/espace/analyse-cv/${s.id}`} className="group flex h-full flex-col gap-4 rounded-3xl bg-page p-5 transition-colors hover:bg-page/70">
         <div className="flex items-center justify-between gap-2 text-xs">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-2.5 py-1 font-medium text-muted-foreground">
             {s.offerId ? <IconBriefcase className="size-3.5" /> : <IconPencil className="size-3.5" />}

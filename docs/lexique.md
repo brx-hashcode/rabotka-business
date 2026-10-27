@@ -13,7 +13,7 @@ part, période).
 | Accéder au téléphone et à l'e-mail | **obtenir le contact** · **Contact** | débloquer, déblocage, coordonnées débloquées |
 | Le candidat doit confirmer de son côté | **En attente du candidat** · « dès qu'il a confirmé » | sa part du déblocage, réglée |
 | Ce que la formule couvre | **contacts inclus** (« 7 sur 30 ») | quota, période, compté sur |
-| CV lus et classés par Rabotka pour un poste | **Tri des CV**, **CV inclus**, **analyse**, **non lu** (non décompté) | screening, IA, scoring, quota de CV |
+| CV lus et classés par Rabotka pour un poste | **Analyse de CV**, **CV inclus**, **analyse**, **non lu** (non décompté) | screening, IA, scoring, quota de CV |
 | Contact au-delà de la formule | **payant** | payé à l'unité, frais de déblocage |
 | Le métier d'une offre ou d'un profil | **métier** | domaine, catégorie |
 | Une offre qui reçoit des candidatures | **en ligne** | active, ouverte |

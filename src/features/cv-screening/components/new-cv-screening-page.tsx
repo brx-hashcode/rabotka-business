@@ -51,7 +51,7 @@ const KIND = {
 } as const;
 
 /**
- * A new « Tri des CV »: the job (an offer, or one described here), then the
+ * A new « Analyse de CV »: the job (an offer, or one described here), then the
  * CVs, within what the plan covers. The analysis runs in the background; the
  * page it opens fills in as each CV is read.
  */
@@ -98,7 +98,7 @@ export function NewCvScreeningPage() {
     onSuccess: (screening) => {
       void queryClient.invalidateQueries({ queryKey: cvScreeningsKey });
       void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
-      router.push(`/espace/tri-cv/${screening.id}`);
+      router.push(`/espace/analyse-cv/${screening.id}`);
     },
     onError: (err) => toast.error(friendlyError(err, "L'analyse n'a pas pu démarrer. Réessayez dans un instant.")),
   });
@@ -107,12 +107,12 @@ export function NewCvScreeningPage() {
 
   return (
     <div className="w-full space-y-6 pt-2">
-      <Link href="/espace/tri-cv" className="inline-flex items-center gap-1.5 text-muted-foreground text-sm hover:text-foreground">
+      <Link href="/espace/analyse-cv" className="inline-flex items-center gap-1.5 text-muted-foreground text-sm hover:text-foreground">
         <IconArrowLeft className="size-4" />
-        Tri des CV
+        Analyse de CV
       </Link>
       <div className="space-y-1.5">
-        <h1 className="font-semibold text-3xl tracking-tight">Nouveau tri</h1>
+        <h1 className="font-semibold text-3xl tracking-tight">Nouvelle analyse</h1>
         <p className="text-muted-foreground">Le poste, puis les CV : Rabotka lit chacun et le note par rapport au poste.</p>
       </div>
 
@@ -244,7 +244,7 @@ export function NewCvScreeningPage() {
             </Section>
 
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-              <Link href="/espace/tri-cv" className="inline-flex h-12 items-center justify-center rounded-full bg-page px-6 font-medium hover:bg-page/70">
+              <Link href="/espace/analyse-cv" className="inline-flex h-12 items-center justify-center rounded-full bg-page px-6 font-medium hover:bg-page/70">
                 Annuler
               </Link>
               <button

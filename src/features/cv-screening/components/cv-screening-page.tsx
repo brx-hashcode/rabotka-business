@@ -56,7 +56,7 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: cvScreeningsKey });
       toast.success("Analyse supprimée, avec ses fichiers.");
-      router.push("/espace/tri-cv");
+      router.push("/espace/analyse-cv");
     },
     onError: (err) => toast.error(friendlyError(err, "L'analyse n'a pas pu être supprimée.")),
   });
@@ -74,9 +74,9 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
 
   return (
     <div className="w-full space-y-6 pt-2">
-      <Link href="/espace/tri-cv" className="inline-flex items-center gap-1.5 text-muted-foreground text-sm hover:text-foreground">
+      <Link href="/espace/analyse-cv" className="inline-flex items-center gap-1.5 text-muted-foreground text-sm hover:text-foreground">
         <IconArrowLeft className="size-4" />
-        Tri des CV
+        Analyse de CV
       </Link>
 
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -507,7 +507,7 @@ function exportCsv(s: CvScreening) {
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
   const a = document.createElement("a");
   a.href = url;
-  a.download = `tri-cv-${s.jobTitle.toLowerCase().replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "")}.csv`;
+  a.download = `analyse-cv-${s.jobTitle.toLowerCase().replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "")}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }

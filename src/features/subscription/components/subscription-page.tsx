@@ -116,7 +116,7 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
           hint={e.unlocksRemaining === 0 ? "Tous vos contacts inclus sont utilisés : les suivants sont payants." : undefined}
         />
         <Meter icon={IconFileText} label="Offres en ligne" used={e.activeOffers} limit={e.activeOffersLimit} />
-        {e.cvQuota !== 0 && <Meter icon={IconFileSearch} label="CV inclus (tri des CV)" used={e.cvUsed} limit={e.cvQuota} />}
+        {e.cvQuota !== 0 && <Meter icon={IconFileSearch} label="CV inclus (analyse de CV)" used={e.cvUsed} limit={e.cvQuota} />}
       </div>
 
       {(e.includesPreselection || e.includesFieldAgents || e.priorityVisibility) && (
@@ -136,10 +136,10 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
   );
 }
 
-/** « Tri des CV » as a plan line; nothing when the plan leaves it out. */
+/** « Analyse de CV » as a plan line; nothing when the plan leaves it out. */
 export function cvLine(plan: BusinessPlan): string | null {
   if (plan.cvScreeningsPerPeriod === 0) return null;
-  return plan.cvScreeningsPerPeriod === null ? "Tri des CV illimité" : `Tri des CV : ${plan.cvScreeningsPerPeriod} CV inclus`;
+  return plan.cvScreeningsPerPeriod === null ? "Analyse de CV illimitée" : `Analyse de CV : ${plan.cvScreeningsPerPeriod} CV inclus`;
 }
 
 function Meter({
