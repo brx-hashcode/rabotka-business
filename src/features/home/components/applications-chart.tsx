@@ -17,8 +17,10 @@ export function ApplicationsChart({ series }: Readonly<{ series: BusinessStats["
   const [active, setActive] = useState<number | null>(null);
   const max = Math.max(1, ...series.map((d) => d.applications));
   // A round top for the scale: the gridline reads as a real value.
-  const top = max <= 4 ? max : Math.ceil(max / 2) * 2;
-  const ticks = [0, Math.round(top / 2), top];
+  // Even above 2, so the middle line is a whole number too.
+  const top = max <= 2 ? max : Math.ceil(max / 2) * 2;
+  // A top of 1 has no middle line: [0, 1], not [0, 1, 1].
+  const ticks = [...new Set([0, top / 2, top])].filter(Number.isInteger);
   const day = active === null ? null : series[active];
 
   return (
