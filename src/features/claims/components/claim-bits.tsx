@@ -1,11 +1,46 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import { IconPhotoPlus, IconX } from "@tabler/icons-react";
+import {
+  IconBug,
+  IconCreditCard,
+  IconFileCertificate,
+  IconMessageQuestion,
+  IconPhotoPlus,
+  IconReceipt,
+  IconUserExclamation,
+  IconX,
+  type Icon as TablerIcon,
+} from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { CLAIM_IMAGE_ACCEPT, CLAIM_IMAGE_MAX_BYTES, CLAIM_MAX_IMAGES, type ClaimStatus } from "#/lib/api/claim-controller";
 import { cn } from "#/lib/utils";
+
+/** What the request is about: the team reads it first, in the title. */
+export const TOPICS = [
+  { value: "candidate", label: "Candidat ou mission", hint: "Absence, retard, travail mal fait…", icon: IconUserExclamation },
+  { value: "payment", label: "Paiement ou facture", hint: "Montant, prélèvement, facture…", icon: IconReceipt },
+  { value: "plan", label: "Abonnement", hint: "Formule, contacts inclus…", icon: IconCreditCard },
+  { value: "account", label: "Compte et documents", hint: "Vérification, informations…", icon: IconFileCertificate },
+  { value: "bug", label: "Problème technique", hint: "Une page ou une action qui ne marche pas", icon: IconBug },
+  { value: "other", label: "Autre", hint: "Une question, une idée…", icon: IconMessageQuestion },
+] as const;
+export type Topic = (typeof TOPICS)[number]["value"];
+
+/**
+ * The topic and the subject, out of a title written as « Topic — subject »;
+ * a title from elsewhere (the client app, the demo) has no topic.
+ */
+export function splitTitle(title: string): { topic: { label: string; icon: TablerIcon } | null; subject: string } {
+  const at = title.indexOf(" — ");
+  if (at > 0) {
+    const label = title.slice(0, at);
+    const topic = TOPICS.find((t) => t.label === label);
+    if (topic) return { topic, subject: title.slice(at + 3).trim() || title };
+  }
+  return { topic: null, subject: title };
+}
 
 export const CLAIM_STATUS: Record<ClaimStatus, { label: string; className: string }> = {
   CREATED: { label: "Envoyée", className: "bg-chip-amber text-chip-amber-foreground" },
