@@ -6,6 +6,7 @@ import {
   IconCalendarCheck,
   IconCreditCard,
   IconFileInvoice,
+  IconFileSearch,
   IconLayoutDashboard,
   IconMessageCircle,
   IconSearch,
@@ -39,6 +40,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Offres", href: "/espace/offres", icon: IconBriefcase },
       { label: "Candidatures", href: "/espace/candidatures", icon: IconUsers },
+      { label: "Tri des CV", href: "/espace/tri-cv", icon: IconFileSearch },
       { label: "Trouver des profils", href: "/espace/recherche", icon: IconSearch },
       { label: "Mes profils", href: "/espace/vivier", icon: IconBookmark },
       { label: "Messages", href: "/espace/discussions", icon: IconMessageCircle },

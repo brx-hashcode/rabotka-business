@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { IconCheck, IconClock, IconFileText, IconLockOpen } from "@tabler/icons-react";
+import { IconCheck, IconClock, IconFileSearch, IconFileText, IconLockOpen } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
@@ -107,7 +107,7 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className={cn("grid gap-4 sm:grid-cols-2", e.cvQuota !== 0 && "xl:grid-cols-3")}>
         <Meter
           icon={IconLockOpen}
           label="Contacts inclus"
@@ -116,6 +116,7 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
           hint={e.unlocksRemaining === 0 ? "Tous vos contacts inclus sont utilisés : les suivants sont payants." : undefined}
         />
         <Meter icon={IconFileText} label="Offres en ligne" used={e.activeOffers} limit={e.activeOffersLimit} />
+        {e.cvQuota !== 0 && <Meter icon={IconFileSearch} label="CV inclus (tri des CV)" used={e.cvUsed} limit={e.cvQuota} />}
       </div>
 
       {(e.includesPreselection || e.includesFieldAgents || e.priorityVisibility) && (
@@ -133,6 +134,12 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
       )}
     </section>
   );
+}
+
+/** « Tri des CV » as a plan line; nothing when the plan leaves it out. */
+export function cvLine(plan: BusinessPlan): string | null {
+  if (plan.cvScreeningsPerPeriod === 0) return null;
+  return plan.cvScreeningsPerPeriod === null ? "Tri des CV illimité" : `Tri des CV : ${plan.cvScreeningsPerPeriod} CV inclus`;
 }
 
 function Meter({
@@ -269,6 +276,7 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
                 <PlanLine>
                   {plan.activeOffersLimit === null ? "Offres en ligne illimitées" : `${plan.activeOffersLimit} offre${plan.activeOffersLimit > 1 ? "s" : ""} en ligne`}
                 </PlanLine>
+                {cvLine(plan) && <PlanLine>{cvLine(plan)}</PlanLine>}
                 {plan.includesPreselection && <PlanLine>Recherche de profils</PlanLine>}
                 {plan.includesFieldAgents && <PlanLine>Aide d&apos;un agent sur le terrain</PlanLine>}
                 {plan.priorityVisibility && <PlanLine>Offres affichées en premier</PlanLine>}

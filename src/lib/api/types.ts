@@ -166,6 +166,11 @@ export type BusinessPlan = {
   annualPriceFcfa: number;
   unlocksPerPeriod: number | null;
   activeOffersLimit: number | null;
+  /** CVs the AI sorting reads per period. Null: unlimited; 0: not in the plan. */
+  cvScreeningsPerPeriod: number | null;
+  cvBatchMax: number;
+  cvFileMaxMb: number;
+  cvRetentionDays: number;
   includesPreselection: boolean;
   includesFieldAgents: boolean;
   priorityVisibility: boolean;
@@ -195,6 +200,13 @@ export type MySubscription = {
     unlocksUsed: number;
     activeOffersLimit: number | null;
     activeOffers: number;
+    /** CVs the AI sorting may still read this period. Null: unlimited; 0: none. */
+    cvRemaining: number | null;
+    cvQuota: number | null;
+    cvUsed: number;
+    cvBatchMax: number;
+    cvFileMaxMb: number;
+    cvRetentionDays: number;
     includesPreselection: boolean;
     includesFieldAgents: boolean;
     priorityVisibility: boolean;
@@ -292,3 +304,49 @@ export type ContactedProfile = {
   origin: "MISSION" | "DIRECT" | string;
   offers: { id: string; title: string }[];
 };
+
+/** « Tri des CV » (`business/me/cv-screenings`). */
+export type CvResumeStatus = "QUEUED" | "SCORED" | "UNREADABLE" | "FAILED";
+export type CvCriterion = "skills" | "experience" | "training" | "location" | "languages";
+
+export type CvScreeningSummary = {
+  id: string;
+  jobTitle: string;
+  offerId: string | null;
+  status: "PROCESSING" | "DONE";
+  createdAt: string;
+  /** When the files and contact details go; the scores stay. */
+  expiresAt: string;
+  purged: boolean;
+  total: number;
+  done: number;
+  scored: number;
+  bestScore: number | null;
+};
+
+export type CvResume = {
+  id: string;
+  /** 1 for the best scored CV; null until scored, or when it could not be read. */
+  rank: number | null;
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  hasFile: boolean;
+  status: CvResumeStatus;
+  score: number | null;
+  criteria: Partial<Record<CvCriterion, number>> | null;
+  summary: string | null;
+  strengths: string[];
+  gaps: string[];
+  candidate: {
+    name: string | null;
+    currentTitle: string | null;
+    city: string | null;
+    yearsExperience: number | null;
+    email: string | null;
+    phone: string | null;
+  } | null;
+  error: string | null;
+};
+
+export type CvScreening = CvScreeningSummary & { jobText: string; resumes: CvResume[] };

@@ -26,6 +26,7 @@ import { getPaymentByToken, getPaymentGateways, initiatePayment } from "#/lib/ap
 import type { BusinessPlan, PaymentOperator } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { PaymentDialog, REQUEST_SECONDS, type PaymentPhase } from "./payment-dialog";
+import { cvLine } from "./subscription-page";
 
 
 const POLL_MS = 3000;
@@ -45,6 +46,7 @@ function planLines(p: BusinessPlan): string[] {
   return [
     p.unlocksPerPeriod === null ? "Contacts illimités" : `${p.unlocksPerPeriod} contact${p.unlocksPerPeriod > 1 ? "s" : ""} inclus`,
     p.activeOffersLimit === null ? "Offres en ligne illimitées" : `${p.activeOffersLimit} offre${p.activeOffersLimit > 1 ? "s" : ""} en ligne`,
+    ...(cvLine(p) ? [cvLine(p) as string] : []),
     ...(p.includesPreselection ? ["Recherche de profils"] : []),
     ...(p.includesFieldAgents ? ["Aide d'un agent sur le terrain"] : []),
     ...(p.priorityVisibility ? ["Offres affichées en premier"] : []),
