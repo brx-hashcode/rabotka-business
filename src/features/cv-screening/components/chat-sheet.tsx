@@ -2,10 +2,12 @@
 
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
-import { IconArrowUp, IconPlayerStopFilled, IconX } from "@tabler/icons-react";
+import { IconArrowUp, IconFileTypePdf, IconLoader2, IconPlayerStopFilled, IconX } from "@tabler/icons-react";
 import { Dialog as SheetPrimitive } from "radix-ui";
+import { toast } from "sonner";
 
 import { Bone } from "#/components/page-skeletons";
+import { downloadFile } from "#/lib/api/cv-screening-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import type { CvChat } from "#/lib/api/types";
 
@@ -35,6 +37,7 @@ export function ChatSheet({
   placeholder,
   usedUp,
   unavailable,
+  pdfUrl,
 }: Readonly<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -52,6 +55,8 @@ export function ChatSheet({
   placeholder: string;
   usedUp: (limit: number) => string;
   unavailable: string;
+  /** The conversation as a PDF; null while it can't be known yet. */
+  pdfUrl?: () => string | null;
 }>) {
   const queryClient = useQueryClient();
   const key = queryKey;
@@ -64,6 +69,7 @@ export function ChatSheet({
   const [error, setError] = useState<string | null>(null);
   const abort = useRef<AbortController | null>(null);
   const end = useRef<HTMLDivElement>(null);
+  const [exporting, setExporting] = useState(false);
 
   const data = chat.data;
   const remaining = data ? data.remaining - (live ? 1 : 0) : 0;
@@ -78,6 +84,19 @@ export function ChatSheet({
     if (!open) abort.current?.abort();
   }, [open]);
   useEffect(() => () => abort.current?.abort(), []);
+
+  async function exportPdf() {
+    const url = pdfUrl?.();
+    if (!url || exporting) return;
+    setExporting(true);
+    try {
+      await downloadFile(url, "conversation.pdf");
+    } catch (err) {
+      toast.error(friendlyError(err, "Le PDF n'a pas pu être créé. Réessayez dans un instant."));
+    } finally {
+      setExporting(false);
+    }
+  }
 
   async function ask(question: string) {
     const q = question.trim();
@@ -123,6 +142,20 @@ export function ChatSheet({
                 )}
               </div>
             </div>
+            {pdfUrl && (
+              <button
+                type="button"
+                onClick={() => void exportPdf()}
+                // Nothing to print before the first question, nor while an answer is being written.
+                disabled={exporting || !!live || !data?.messages.length}
+                title="Télécharger la conversation en PDF"
+                className="flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-page px-3.5 font-medium text-sm hover:bg-page/70 disabled:opacity-40"
+              >
+                {exporting ? <IconLoader2 className="size-4 animate-spin" /> : <IconFileTypePdf className="size-4" />}
+                <span className="hidden sm:inline">{exporting ? "Préparation…" : "PDF"}</span>
+                <span className="sr-only sm:hidden">Télécharger en PDF</span>
+              </button>
+            )}
             <SheetPrimitive.Close
               aria-label="Fermer"
               className="flex size-10 shrink-0 items-center justify-center rounded-full bg-page hover:bg-page/70"
