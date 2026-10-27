@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  IconAlertTriangle,
   IconArrowLeft,
   IconBell,
   IconClock,
   IconFileText,
+  IconFilePlus,
   IconFileTypeDocx,
   IconFileTypePdf,
   IconPhoto,
@@ -42,7 +44,11 @@ function kindOf(file: File): "pdf" | "docx" | "image" | null {
   return TYPES[file.type] ?? (/\.docx$/i.test(file.name) ? "docx" : /\.pdf$/i.test(file.name) ? "pdf" : null);
 }
 
-const KIND_ICON = { pdf: IconFileTypePdf, docx: IconFileTypeDocx, image: IconPhoto } as const;
+const KIND = {
+  pdf: { icon: IconFileTypePdf, label: "PDF", tile: "bg-destructive/10 text-destructive" },
+  docx: { icon: IconFileTypeDocx, label: "Word", tile: "bg-chip-violet text-chip-violet-foreground" },
+  image: { icon: IconPhoto, label: "Photo", tile: "bg-chip-amber text-chip-amber-foreground" },
+} as const;
 
 /**
  * A new « Tri des CV »: the job (an offer, or one described here), then the
@@ -196,34 +202,21 @@ export function NewCvScreeningPage() {
             </Section>
 
             <Section title="Les CV">
-              <button
-                type="button"
-                onClick={() => input.current?.click()}
-                onDragOver={(ev) => {
-                  ev.preventDefault();
-                  setDragging(true);
+              <CvDrop
+                files={files}
+                room={room === Number.POSITIVE_INFINITY ? e.cvBatchMax : room}
+                maxMb={e.cvFileMaxMb}
+                dragging={dragging}
+                disabled={start.isPending}
+                onPick={() => input.current?.click()}
+                onDragging={setDragging}
+                onDrop={add}
+                onRemove={(file) => setFiles(files.filter((f) => f !== file))}
+                onClear={() => {
+                  setFiles([]);
+                  setRefused([]);
                 }}
-                onDragLeave={() => setDragging(false)}
-                onDrop={(ev) => {
-                  ev.preventDefault();
-                  setDragging(false);
-                  add(ev.dataTransfer.files);
-                }}
-                disabled={start.isPending || files.length >= room}
-                className={cn(
-                  "flex w-full flex-col items-center gap-2 rounded-2xl px-6 py-10 text-center transition-colors disabled:opacity-50",
-                  // Flat like every card here: the drop is shown by the fill and a ring, not a border.
-                  dragging ? "bg-chip-green ring-2 ring-whatsapp-dark" : "bg-page hover:bg-page/70",
-                )}
-              >
-                <span className="flex size-12 items-center justify-center rounded-2xl bg-card">
-                  <IconUpload className="size-6" />
-                </span>
-                <span className="font-medium">Déposez les CV ici, ou cliquez pour les choisir</span>
-                <span className="text-muted-foreground text-sm">
-                  PDF, Word (.docx) ou photo · {e.cvFileMaxMb} Mo au plus · {room === Number.POSITIVE_INFINITY ? e.cvBatchMax : room} CV au plus
-                </span>
-              </button>
+              />
               <input
                 ref={input}
                 type="file"
@@ -237,37 +230,16 @@ export function NewCvScreeningPage() {
               />
 
               {refused.length > 0 && (
-                <ul className="space-y-1 rounded-2xl bg-chip-amber px-4 py-3 text-chip-amber-foreground text-sm">
-                  {refused.map((r) => (
-                    <li key={r.name}>
-                      « {r.name} » non ajouté : {r.reason}.
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {files.length > 0 && (
-                <ul className="space-y-2">
-                  {files.map((file) => {
-                    const Icon = KIND_ICON[kindOf(file) ?? "pdf"];
-                    return (
-                      <li key={`${file.name}-${file.size}`} className="flex items-center gap-3 rounded-2xl bg-page px-4 py-3">
-                        <Icon className="size-5 shrink-0 text-muted-foreground" />
-                        <span className="min-w-0 flex-1 truncate text-sm">{file.name}</span>
-                        <span className="shrink-0 text-muted-foreground text-xs tabular-nums">{fileSize(file.size)}</span>
-                        <button
-                          type="button"
-                          aria-label={`Retirer ${file.name}`}
-                          onClick={() => setFiles(files.filter((f) => f !== file))}
-                          disabled={start.isPending}
-                          className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-card hover:text-foreground"
-                        >
-                          <IconX className="size-4" />
-                        </button>
+                <div className="flex gap-3 rounded-2xl bg-chip-amber px-4 py-3 text-chip-amber-foreground text-sm">
+                  <IconAlertTriangle className="mt-0.5 size-4 shrink-0" />
+                  <ul className="space-y-1">
+                    {refused.map((r) => (
+                      <li key={r.name}>
+                        <span className="font-medium">{r.name}</span> non ajouté : {r.reason}.
                       </li>
-                    );
-                  })}
-                </ul>
+                    ))}
+                  </ul>
+                </div>
               )}
             </Section>
 
@@ -338,5 +310,160 @@ function Step({ icon: Icon, children }: Readonly<{ icon: typeof IconClock; child
       <Icon className="mt-0.5 size-4 shrink-0" />
       <span>{children}</span>
     </li>
+  );
+}
+
+/**
+ * The CVs to send. Empty: one large drop area. With files: the area shrinks
+ * to a bar (more can still be dropped there) and the files show as tiles,
+ * with how many more the analysis can take.
+ */
+function CvDrop({
+  files,
+  room,
+  maxMb,
+  dragging,
+  disabled,
+  onPick,
+  onDragging,
+  onDrop,
+  onRemove,
+  onClear,
+}: Readonly<{
+  files: File[];
+  room: number;
+  maxMb: number;
+  dragging: boolean;
+  disabled: boolean;
+  onPick: () => void;
+  onDragging: (on: boolean) => void;
+  onDrop: (files: FileList) => void;
+  onRemove: (file: File) => void;
+  onClear: () => void;
+}>) {
+  const full = files.length >= room;
+  const dropProps = {
+    onDragOver: (ev: React.DragEvent) => {
+      ev.preventDefault();
+      onDragging(true);
+    },
+    onDragLeave: () => onDragging(false),
+    onDrop: (ev: React.DragEvent) => {
+      ev.preventDefault();
+      onDragging(false);
+      if (!full) onDrop(ev.dataTransfer.files);
+    },
+  };
+  // Flat like every card here: a drop is shown by the fill and a ring, not a border.
+  const surface = dragging ? "bg-chip-green ring-2 ring-whatsapp-dark" : "bg-page hover:bg-page/70";
+  const hint = `PDF, Word (.docx) ou photo · ${maxMb} Mo au plus par fichier`;
+
+  if (files.length === 0) {
+    return (
+      <button
+        type="button"
+        onClick={onPick}
+        disabled={disabled}
+        {...dropProps}
+        className={cn("flex w-full flex-col items-center gap-3 rounded-3xl px-6 py-12 text-center transition-colors disabled:opacity-50", surface)}
+      >
+        <span className="flex size-14 items-center justify-center rounded-2xl bg-card">
+          <IconUpload className="size-6" />
+        </span>
+        <span className="space-y-1">
+          <span className="block font-medium">Déposez les CV ici</span>
+          <span className="block text-muted-foreground text-sm">
+            ou <span className="font-medium text-foreground underline underline-offset-4">choisissez-les</span> sur votre appareil
+          </span>
+        </span>
+        <span className="flex flex-wrap justify-center gap-1.5 pt-1">
+          {Object.values(KIND).map((k) => (
+            <span key={k.label} className={cn("rounded-full px-2.5 py-1 font-medium text-xs", k.tile)}>
+              {k.label}
+            </span>
+          ))}
+        </span>
+        <span className="text-muted-foreground text-xs">
+          {maxMb} Mo au plus par fichier · {room} CV au plus
+        </span>
+      </button>
+    );
+  }
+
+  const total = files.reduce((n, f) => n + f.size, 0);
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-40 flex-1 space-y-1.5">
+          <p className="text-sm">
+            <span className="font-semibold tabular-nums">
+              {files.length} / {room}
+            </span>{" "}
+            <span className="text-muted-foreground">CV · {fileSize(total)}</span>
+          </p>
+          <div className="h-1.5 max-w-64 overflow-hidden rounded-full bg-page">
+            <div className="h-full rounded-full bg-whatsapp-dark transition-[width]" style={{ width: `${Math.min(100, (files.length / room) * 100)}%` }} />
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onClear}
+          disabled={disabled}
+          className="font-medium text-muted-foreground text-sm hover:text-foreground disabled:opacity-50"
+        >
+          Tout retirer
+        </button>
+      </div>
+
+      <ul className="grid gap-2.5 sm:grid-cols-2">
+        {files.map((file) => {
+          const k = KIND[kindOf(file) ?? "pdf"];
+          return (
+            <li key={`${file.name}-${file.size}`} className="group flex items-center gap-3 rounded-2xl bg-page p-3">
+              <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-xl", k.tile)}>
+                <k.icon className="size-5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-medium text-sm" title={file.name}>
+                  {file.name}
+                </span>
+                <span className="block text-muted-foreground text-xs">
+                  {k.label} · {fileSize(file.size)}
+                </span>
+              </span>
+              <button
+                type="button"
+                aria-label={`Retirer ${file.name}`}
+                onClick={() => onRemove(file)}
+                disabled={disabled}
+                className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-card hover:text-foreground"
+              >
+                <IconX className="size-4" />
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
+      {!full && (
+        <button
+          type="button"
+          onClick={onPick}
+          disabled={disabled}
+          {...dropProps}
+          className={cn("flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition-colors disabled:opacity-50", surface)}
+        >
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-card">
+            <IconFilePlus className="size-4" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-medium text-sm">Ajouter des CV</span>
+            <span className="block truncate text-muted-foreground text-xs">
+              Encore {room - files.length} possible{room - files.length > 1 ? "s" : ""} · {hint}
+            </span>
+          </span>
+        </button>
+      )}
+    </div>
   );
 }
