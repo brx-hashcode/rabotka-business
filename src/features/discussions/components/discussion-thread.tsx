@@ -7,6 +7,7 @@ import { IconArrowLeft, IconDots, IconLock, IconSend2, IconTrash, IconUser } fro
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
+import { ChatDoodleBg } from "#/components/chat-doodle-bg";
 import { Skeleton } from "#/components/ui/skeleton";
 import {
   DropdownMenu,
@@ -153,64 +154,68 @@ export function DiscussionThread({ id }: Readonly<{ id: string }>) {
         {discussionsContent.warning.header}
       </p>
 
-      <div
-        ref={scroller}
-        onScroll={(e) => {
-          const el = e.currentTarget;
-          stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
-        }}
-        className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6"
-      >
-        {thread.isLoading ? (
-          <div className="space-y-3">
-            <Skeleton className="h-12 w-2/3 rounded-2xl" />
-            <Skeleton className="ml-auto h-12 w-1/2 rounded-2xl" />
-            <Skeleton className="h-16 w-3/5 rounded-2xl" />
-          </div>
-        ) : !thread.data ? (
-          <p className="py-10 text-center text-muted-foreground text-sm">{friendlyError(thread.error, "Cette conversation est indisponible.")}</p>
-        ) : messages.length === 0 ? (
-          <p className="py-10 text-center text-muted-foreground text-sm">{content.empty}</p>
-        ) : (
-          <>
-            {hasOlder && (
-              <div className="mb-2 flex justify-center">
-                <button
-                  type="button"
-                  disabled={history.isFetching}
-                  onClick={() => {
-                    stickToBottom.current = false;
-                    if (historyWanted) void history.fetchNextPage();
-                    else setHistoryWanted(true);
-                  }}
-                  className="rounded-full bg-page px-4 py-1.5 font-medium text-muted-foreground text-xs hover:text-foreground"
-                >
-                  {history.isFetching ? content.olderLoading : content.older}
-                </button>
-              </div>
-            )}
-            {messages.map((m, i) => {
-              const prev = messages[i - 1];
-              const newDay = !prev || new Date(prev.createdAt).toDateString() !== new Date(m.createdAt).toDateString();
-              return (
-                <div key={m.id}>
-                  {newDay && (
-                    <p className="my-4 text-center">
-                      <span className="rounded-full bg-page px-3 py-1 font-medium text-muted-foreground text-xs">{dayLabel(m.createdAt)}</span>
-                    </p>
-                  )}
-                  <MessageBubble
-                    message={m}
-                    firstOfGroup={newDay || prev?.senderId !== m.senderId}
-                    showRecipientNotice={m.id === firstHoleId}
-                    onReport={(messageId) => report.mutate(messageId)}
-                    onDelete={setToDelete}
-                  />
+      {/* The admin's chat wallpaper: doodles in currentColor, behind the scroller. */}
+      <div className="relative min-h-0 flex-1 overflow-hidden text-foreground">
+        <ChatDoodleBg />
+        <div
+          ref={scroller}
+          onScroll={(e) => {
+            const el = e.currentTarget;
+            stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+          }}
+          className="absolute inset-0 overflow-y-auto px-4 py-4 sm:px-6"
+        >
+          {thread.isLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-12 w-2/3 rounded-2xl" />
+              <Skeleton className="ml-auto h-12 w-1/2 rounded-2xl" />
+              <Skeleton className="h-16 w-3/5 rounded-2xl" />
+            </div>
+          ) : !thread.data ? (
+            <p className="py-10 text-center text-muted-foreground text-sm">{friendlyError(thread.error, "Cette conversation est indisponible.")}</p>
+          ) : messages.length === 0 ? (
+            <p className="py-10 text-center text-muted-foreground text-sm">{content.empty}</p>
+          ) : (
+            <>
+              {hasOlder && (
+                <div className="mb-2 flex justify-center">
+                  <button
+                    type="button"
+                    disabled={history.isFetching}
+                    onClick={() => {
+                      stickToBottom.current = false;
+                      if (historyWanted) void history.fetchNextPage();
+                      else setHistoryWanted(true);
+                    }}
+                    className="rounded-full bg-page px-4 py-1.5 font-medium text-muted-foreground text-xs hover:text-foreground"
+                  >
+                    {history.isFetching ? content.olderLoading : content.older}
+                  </button>
                 </div>
-              );
-            })}
-          </>
-        )}
+              )}
+              {messages.map((m, i) => {
+                const prev = messages[i - 1];
+                const newDay = !prev || new Date(prev.createdAt).toDateString() !== new Date(m.createdAt).toDateString();
+                return (
+                  <div key={m.id}>
+                    {newDay && (
+                      <p className="my-4 text-center">
+                        <span className="rounded-full bg-page px-3 py-1 font-medium text-muted-foreground text-xs">{dayLabel(m.createdAt)}</span>
+                      </p>
+                    )}
+                    <MessageBubble
+                      message={m}
+                      firstOfGroup={newDay || prev?.senderId !== m.senderId}
+                      showRecipientNotice={m.id === firstHoleId}
+                      onReport={(messageId) => report.mutate(messageId)}
+                      onDelete={setToDelete}
+                    />
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
       </div>
 
       {d?.closed ? (
