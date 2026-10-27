@@ -2,7 +2,7 @@ import { appConfig } from "#/config";
 import { refreshSession, SessionError } from "#/lib/auth/session-client";
 import { BusinessBaseController } from "./base-controller";
 import { parseSse } from "./sse";
-import type { CvChat, CvScreening, CvScreeningSummary } from "./types";
+import type { CvChat, CvComparison, CvScreening, CvScreeningSummary } from "./types";
 
 /** « Analyse de CV »: CVs the AI reads and ranks against one job. */
 class CvScreeningController extends BusinessBaseController {
@@ -26,6 +26,11 @@ class CvScreeningController extends BusinessBaseController {
     return this.get(`/business/me/cv-screenings/${encodeURIComponent(id)}/resumes/${encodeURIComponent(resumeId)}/chat`);
   }
 
+  /** Opens (or reopens) the conversation comparing these CVs. */
+  compare(id: string, resumeIds: string[]): Promise<CvComparison> {
+    return this.post(`/business/me/cv-screenings/${encodeURIComponent(id)}/comparisons`, { resumeIds });
+  }
+
   remove(id: string): Promise<unknown> {
     return this.delete(`/business/me/cv-screenings/${encodeURIComponent(id)}`);
   }
@@ -38,21 +43,28 @@ export const getCvScreening = controller.one.bind(controller);
 export const createCvScreening = controller.create.bind(controller);
 export const deleteCvScreening = controller.remove.bind(controller);
 export const getCvChat = controller.chat.bind(controller);
+export const openCvComparison = controller.compare.bind(controller);
+
+type AskOptions = { signal: AbortSignal; onText: (text: string) => void };
+
+/** Asks about one CV; `onText` gets the answer as it is written. */
+export function askCvChat(screeningId: string, resumeId: string, question: string, opts: AskOptions) {
+  return askStream(`/stream/cv-chat/${encodeURIComponent(screeningId)}/${encodeURIComponent(resumeId)}`, question, opts);
+}
+
+/** Asks about the compared CVs; `onText` gets the answer as it is written. */
+export function askCvComparison(screeningId: string, comparisonId: string, question: string, opts: AskOptions) {
+  return askStream(`/stream/cv-compare/${encodeURIComponent(screeningId)}/${encodeURIComponent(comparisonId)}`, question, opts);
+}
 
 /**
- * Asks about one CV; `onText` gets the answer as it is written. Resolves with
- * the questions left once it is complete. Through the stream route, not the
- * API proxy (which would hold the answer until the end); a 401 refreshes the
- * session once, as every other call does.
+ * Resolves with the questions left once the answer is complete. Through a
+ * stream route, not the API proxy (which would hold the answer until the
+ * end); a 401 refreshes the session once, as every other call does.
  */
-export async function askCvChat(
-  screeningId: string,
-  resumeId: string,
-  question: string,
-  { signal, onText }: { signal: AbortSignal; onText: (text: string) => void },
-): Promise<{ remaining: number | null }> {
+async function askStream(url: string, question: string, { signal, onText }: AskOptions): Promise<{ remaining: number | null }> {
   const send = () =>
-    fetch(`/stream/cv-chat/${encodeURIComponent(screeningId)}/${encodeURIComponent(resumeId)}`, {
+    fetch(url, {
       method: "POST",
       credentials: "same-origin",
       headers: { "content-type": "application/json" },

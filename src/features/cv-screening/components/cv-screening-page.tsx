@@ -22,10 +22,12 @@ import {
   IconShieldLock,
   IconTrash,
   IconTrophy,
+  IconX,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
+import { Checkbox } from "#/components/ui/checkbox";
 import { Bone, ClaimDetailSkeleton } from "#/components/page-skeletons";
 import { PreviewSheet } from "#/components/preview-sheet";
 import { cvFileUrl, cvScreeningsKey, deleteCvScreening, getCvScreening } from "#/lib/api/cv-screening-controller";
@@ -34,6 +36,10 @@ import type { CvResume, CvScreening } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { CRITERIA, CriterionBar, ScoreRing, VerdictChip, band } from "./cv-bits";
 import { CvChatSheet } from "./cv-chat-sheet";
+import { CvCompareSheet } from "./cv-compare-sheet";
+
+/** CVs compared at once (the backend's limit too). */
+const MAX_COMPARED = 5;
 
 const date = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
@@ -51,6 +57,11 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
   });
   const [preview, setPreview] = useState<CvResume | null>(null);
   const [confirm, setConfirm] = useState(false);
+  // CVs picked to compare (ids), and the comparison drawer.
+  const [selected, setSelected] = useState<string[]>([]);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const toggle = (rid: string) =>
+    setSelected((ids) => (ids.includes(rid) ? ids.filter((x) => x !== rid) : ids.length < MAX_COMPARED ? [...ids, rid] : ids));
   const remove = useMutation({
     mutationFn: () => deleteCvScreening(id),
     onSuccess: () => {
@@ -86,7 +97,31 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
             {s.total} CV · le {date(s.createdAt)}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {selected.length > 0 && (
+            <div className="flex items-center gap-1 rounded-full bg-card p-1 pl-4">
+              <span className="text-muted-foreground text-sm tabular-nums">
+                {selected.length} sélectionné{selected.length > 1 ? "s" : ""}
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelected([])}
+                aria-label="Effacer la sélection"
+                className="flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-page hover:text-foreground"
+              >
+                <IconX className="size-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setCompareOpen(true)}
+                disabled={selected.length < 2}
+                title={selected.length < 2 ? "Choisissez au moins 2 CV" : undefined}
+                className="inline-flex h-9 items-center rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm hover:bg-brand-lime/80 disabled:opacity-40"
+              >
+                Comparer{selected.length > 1 ? ` (${selected.length})` : ""}
+              </button>
+            </div>
+          )}
           <button
             type="button"
             onClick={() => exportCsv(s)}
@@ -119,7 +154,16 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
 
           <section className="space-y-3">
             {scored.map((r) => (
-              <ResumeCard key={r.id} r={r} onPreview={() => setPreview(r)} screeningId={s.id} jobTitle={s.jobTitle} />
+              <ResumeCard
+                key={r.id}
+                r={r}
+                onPreview={() => setPreview(r)}
+                screeningId={s.id}
+                jobTitle={s.jobTitle}
+                selected={selected.includes(r.id)}
+                canSelect={selected.length < MAX_COMPARED}
+                onToggle={() => toggle(r.id)}
+              />
             ))}
             {waiting.map((r, i) => (
               <WaitingCard key={r.id} r={r} reading={i < READING_AT_ONCE} />
@@ -146,6 +190,16 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
 
         <JobAside s={s} scored={scored.length} unread={unread.length} />
       </div>
+
+      {selected.length >= 2 && (
+        <CvCompareSheet
+          open={compareOpen}
+          onOpenChange={setCompareOpen}
+          screeningId={s.id}
+          jobTitle={s.jobTitle}
+          resumes={scored.filter((r) => selected.includes(r.id))}
+        />
+      )}
 
       <PreviewSheet
         open={!!preview}
@@ -372,7 +426,18 @@ function ResumeCard({
   onPreview,
   screeningId,
   jobTitle,
-}: Readonly<{ r: CvResume; onPreview: () => void; screeningId: string; jobTitle: string }>) {
+  selected,
+  canSelect,
+  onToggle,
+}: Readonly<{
+  r: CvResume;
+  onPreview: () => void;
+  screeningId: string;
+  jobTitle: string;
+  selected: boolean;
+  canSelect: boolean;
+  onToggle: () => void;
+}>) {
   const [open, setOpen] = useState(r.rank === 1);
   const [chatOpen, setChatOpen] = useState(false);
   const c = r.candidate;
@@ -387,7 +452,17 @@ function ResumeCard({
   return (
     <article className="rounded-3xl bg-card p-5 sm:p-6">
       <div className="flex items-start gap-4">
-        <span className="hidden w-6 pt-4 text-center font-semibold text-muted-foreground tabular-nums sm:block">{r.rank}</span>
+        <label className="flex w-6 shrink-0 cursor-pointer flex-col items-center gap-1.5 pt-3">
+          <Checkbox
+            checked={selected}
+            disabled={!selected && !canSelect}
+            onCheckedChange={onToggle}
+            aria-label={`Comparer ${name}`}
+            title={!selected && !canSelect ? `${MAX_COMPARED} CV au plus` : undefined}
+            className="size-5 rounded-md"
+          />
+          <span className="font-semibold text-muted-foreground text-xs tabular-nums">{r.rank}</span>
+        </label>
         <ScoreRing score={score} />
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
