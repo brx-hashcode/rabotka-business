@@ -7,13 +7,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IconArrowLeft,
   IconBriefcase,
+  IconCalendarEvent,
   IconChevronDown,
   IconDownload,
   IconEye,
   IconMail,
   IconMapPin,
   IconPhone,
+  IconShieldLock,
   IconTrash,
+  IconTrophy,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 
@@ -75,14 +78,6 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
           <h1 className="break-words font-semibold text-3xl tracking-tight">{s.jobTitle}</h1>
           <p className="text-muted-foreground">
             {s.total} CV · le {date(s.createdAt)}
-            {s.offerId && (
-              <>
-                {" · "}
-                <Link href={`/espace/offres/${s.offerId}`} className="underline-offset-2 hover:underline">
-                  voir l&apos;offre
-                </Link>
-              </>
-            )}
           </p>
         </div>
         <div className="flex gap-2">
@@ -106,60 +101,64 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
         </div>
       </div>
 
-      {running && (
-        <section className="space-y-3 rounded-3xl bg-card p-6" aria-live="polite">
-          <div className="flex items-baseline justify-between gap-3">
-            <p className="font-medium">Lecture des CV…</p>
-            <p className="text-muted-foreground text-sm tabular-nums">
-              {s.done} / {s.total}
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_26rem]">
+        <div className="min-w-0 space-y-6">
+          {running && (
+            <section className="space-y-3 rounded-3xl bg-card p-6" aria-live="polite">
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="font-medium">Lecture des CV…</p>
+                <p className="text-muted-foreground text-sm tabular-nums">
+                  {s.done} / {s.total}
+                </p>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-page">
+                <div className="h-full rounded-full bg-whatsapp-dark transition-[width] duration-500" style={{ width: `${(s.done / s.total) * 100}%` }} />
+              </div>
+              <p className="text-muted-foreground text-xs">Le classement se complète au fil de la lecture. Vous pouvez quitter la page : une notification vous prévient à la fin.</p>
+            </section>
+          )}
+
+          {s.purged && (
+            <p className="rounded-2xl bg-card px-4 py-3 text-muted-foreground text-sm">
+              Les fichiers et les coordonnées ont été supprimés à la fin de leur durée de conservation ; les notes restent.
             </p>
-          </div>
-          <div className="h-2 overflow-hidden rounded-full bg-page">
-            <div className="h-full rounded-full bg-whatsapp-dark transition-[width] duration-500" style={{ width: `${(s.done / s.total) * 100}%` }} />
-          </div>
-          <p className="text-muted-foreground text-xs">Le classement se complète au fil de la lecture. Vous pouvez quitter la page : une notification vous prévient à la fin.</p>
-        </section>
-      )}
+          )}
 
-      {s.purged && (
-        <p className="rounded-2xl bg-card px-4 py-3 text-muted-foreground text-sm">
-          Les fichiers et les coordonnées ont été supprimés à la fin de leur durée de conservation ; les notes restent.
-        </p>
-      )}
-
-      <JobBrief text={s.jobText} />
-
-      <section className="space-y-3">
-        {scored.map((r) => (
-          <ResumeCard key={r.id} r={r} onPreview={() => setPreview(r)} screeningId={s.id} />
-        ))}
-        {waiting.map((r) => (
-          <div key={r.id} className="flex items-center gap-4 rounded-3xl bg-card p-5">
-            <Bone className="size-14 shrink-0 rounded-full" />
-            <div className="min-w-0 flex-1 space-y-2">
-              <p className="truncate font-medium text-sm">{r.fileName}</p>
-              <p className="text-muted-foreground text-xs">En cours de lecture…</p>
-            </div>
-          </div>
-        ))}
-      </section>
-
-      {unread.length > 0 && (
-        <section className="space-y-3 rounded-3xl bg-card p-6">
-          <div className="space-y-1">
-            <h2 className="font-semibold">Non lus</h2>
-            <p className="text-muted-foreground text-sm">Ces fichiers ne sont pas décomptés de vos CV inclus.</p>
-          </div>
-          <ul className="space-y-2">
-            {unread.map((r) => (
-              <li key={r.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl bg-page px-4 py-3 text-sm">
-                <span className="min-w-0 flex-1 truncate font-medium">{r.fileName}</span>
-                <span className="text-muted-foreground">{r.error}</span>
-              </li>
+          <section className="space-y-3">
+            {scored.map((r) => (
+              <ResumeCard key={r.id} r={r} onPreview={() => setPreview(r)} screeningId={s.id} />
             ))}
-          </ul>
-        </section>
-      )}
+            {waiting.map((r) => (
+              <div key={r.id} className="flex items-center gap-4 rounded-3xl bg-card p-5">
+                <Bone className="size-14 shrink-0 rounded-full" />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <p className="truncate font-medium text-sm">{r.fileName}</p>
+                  <p className="text-muted-foreground text-xs">En cours de lecture…</p>
+                </div>
+              </div>
+            ))}
+          </section>
+
+          {unread.length > 0 && (
+            <section className="space-y-3 rounded-3xl bg-card p-6">
+              <div className="space-y-1">
+                <h2 className="font-semibold">Non lus</h2>
+                <p className="text-muted-foreground text-sm">Ces fichiers ne sont pas décomptés de vos CV inclus.</p>
+              </div>
+              <ul className="space-y-2">
+                {unread.map((r) => (
+                  <li key={r.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl bg-page px-4 py-3 text-sm">
+                    <span className="min-w-0 flex-1 truncate font-medium">{r.fileName}</span>
+                    <span className="text-muted-foreground">{r.error}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
+
+        <JobAside s={s} scored={scored.length} unread={unread.length} />
+      </div>
 
       <PreviewSheet
         open={!!preview}
@@ -187,18 +186,86 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
   );
 }
 
-/** What the CVs were measured against, folded: it is the reference, not the subject. */
-function JobBrief({ text }: Readonly<{ text: string }>) {
+/** What the CVs were measured against, beside them: the analysis in figures, then the job itself. */
+function JobAside({ s, scored, unread }: Readonly<{ s: CvScreening; scored: number; unread: number }>) {
   const [open, setOpen] = useState(false);
+  const long = s.jobText.length > 700;
   return (
-    <section className="rounded-3xl bg-card p-6">
-      <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} className="flex w-full items-center gap-3 text-left">
-        <IconBriefcase className="size-5 shrink-0 text-muted-foreground" />
-        <span className="flex-1 font-medium">Le poste</span>
-        <IconChevronDown className={cn("size-5 text-muted-foreground transition-transform", open && "rotate-180")} />
-      </button>
-      {open && <p className="mt-4 whitespace-pre-line text-muted-foreground text-sm">{text}</p>}
-    </section>
+    <aside className="space-y-6 lg:sticky lg:top-24">
+      <section className="space-y-4 rounded-3xl bg-card p-6">
+        <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">L&apos;analyse</p>
+        <dl className="grid grid-cols-3 gap-2 text-center">
+          <Figure label="CV" value={s.total} />
+          <Figure label={scored > 1 ? "Classés" : "Classé"} value={scored} />
+          <Figure label={unread > 1 ? "Non lus" : "Non lu"} value={unread} />
+        </dl>
+        <dl className="space-y-3 text-sm">
+          <Meta icon={IconCalendarEvent} label="Créée le" value={date(s.createdAt)} />
+          {s.bestScore !== null && <Meta icon={IconTrophy} label="Meilleur score" value={`${s.bestScore}/100`} />}
+          <Meta
+            icon={IconShieldLock}
+            label="Fichiers et coordonnées"
+            value={s.purged ? "Supprimés" : `Conservés jusqu'au ${date(s.expiresAt)}`}
+          />
+          {s.offerId && (
+            <Meta
+              icon={IconBriefcase}
+              label="Offre"
+              value={
+                <Link href={`/espace/offres/${s.offerId}`} className="underline-offset-2 hover:underline">
+                  Voir l&apos;offre
+                </Link>
+              }
+            />
+          )}
+        </dl>
+      </section>
+
+      <section className="space-y-3 rounded-3xl bg-card p-6">
+        <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Le poste</p>
+        <h2 className="break-words font-semibold text-lg leading-snug">{s.jobTitle}</h2>
+        <div className="relative">
+          <p className={cn("whitespace-pre-line text-muted-foreground text-sm leading-relaxed", long && !open && "max-h-80 overflow-hidden")}>
+            {s.jobText}
+          </p>
+          {long && !open && <span aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent" />}
+        </div>
+        {long && (
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            aria-expanded={open}
+            className="inline-flex items-center gap-1 font-medium text-sm hover:underline"
+          >
+            {open ? "Réduire" : "Voir tout"}
+            <IconChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
+          </button>
+        )}
+      </section>
+    </aside>
+  );
+}
+
+function Figure({ label, value }: Readonly<{ label: string; value: number }>) {
+  return (
+    <div className="rounded-2xl bg-page px-2 py-3">
+      <dd className="font-semibold text-xl tabular-nums leading-none">{value}</dd>
+      <dt className="mt-1 text-muted-foreground text-xs">{label}</dt>
+    </div>
+  );
+}
+
+function Meta({ icon: Icon, label, value }: Readonly<{ icon: typeof IconBriefcase; label: string; value: React.ReactNode }>) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-page">
+        <Icon className="size-4 text-muted-foreground" />
+      </span>
+      <div className="min-w-0">
+        <dt className="text-muted-foreground text-xs">{label}</dt>
+        <dd className="font-medium">{value}</dd>
+      </div>
+    </div>
   );
 }
 
@@ -236,10 +303,10 @@ function ResumeCard({ r, onPreview, screeningId }: Readonly<{ r: CvResume; onPre
       {r.summary && <p className="mt-4 text-sm leading-relaxed">{r.summary}</p>}
 
       {open && (
-        <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_1fr_16rem]">
+        <div className="mt-5 grid gap-5 md:grid-cols-2 2xl:grid-cols-[1fr_1fr_15rem]">
           <Points title="Points forts" items={r.strengths} tone="good" />
           <Points title="Points d'attention" items={r.gaps} tone="gap" />
-          <div className="space-y-2.5 rounded-2xl bg-page p-4">
+          <div className="space-y-2.5 rounded-2xl bg-page p-4 md:col-span-2 2xl:col-span-1">
             {CRITERIA.filter((k) => typeof r.criteria?.[k.key] === "number").map((k) => (
               <CriterionBar key={k.key} label={k.label} value={r.criteria?.[k.key] ?? 0} />
             ))}
