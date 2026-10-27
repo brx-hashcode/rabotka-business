@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { IconLock } from "@tabler/icons-react";
 
-import type { CvCriterion } from "#/lib/api/types";
+import type { CvCriterion, CvExperience } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 
 export const CRITERIA: { key: CvCriterion; label: string }[] = [
@@ -92,3 +92,82 @@ export function CvLocked() {
 
 export const fileSize = (bytes: number) =>
   bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} Ko` : `${(bytes / 1024 / 1024).toFixed(1).replace(".", ",")} Mo`;
+
+/** `3 ans et 4 mois`, `8 mois`. */
+export function duration(months: number): string {
+  const years = Math.floor(months / 12);
+  const rest = months % 12;
+  const parts = [years ? `${years} an${years > 1 ? "s" : ""}` : "", rest ? `${rest} mois` : ""].filter(Boolean);
+  return parts.join(" et ") || "moins d'un mois";
+}
+
+const TYPE_LABEL: Record<CvExperience["type"], string | null> = {
+  FULL_TIME: "Temps plein",
+  PART_TIME: "Temps partiel",
+  INTERNSHIP: "Stage",
+  FREELANCE: "Indépendant",
+  VOLUNTEER: "Bénévolat",
+  UNKNOWN: null,
+};
+
+const RELEVANCE: Record<CvExperience["relevance"], { label: string; dot: string }> = {
+  HIGH: { label: "En lien direct", dot: "bg-whatsapp-dark" },
+  PARTIAL: { label: "En lien partiel", dot: "bg-chip-amber-foreground" },
+  NONE: { label: "Sans lien", dot: "bg-muted-foreground/40" },
+};
+
+const month = (iso: string) => {
+  const [y, m] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, (m || 1) - 1, 1)).toLocaleDateString("fr-FR", { month: "short", year: "numeric", timeZone: "UTC" });
+};
+
+/**
+ * The career the analysis read: each job with its period, real duration, kind
+ * of contract and how close it is to the post, and what it adds up to.
+ */
+export function Career({
+  experiences,
+  totalMonths,
+  relevantMonths,
+}: Readonly<{ experiences: CvExperience[]; totalMonths: number | null; relevantMonths: number | null }>) {
+  return (
+    <section className="space-y-3 rounded-2xl bg-page p-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="font-medium text-sm">Parcours</p>
+        {totalMonths !== null && relevantMonths !== null && (
+          <p className="text-muted-foreground text-xs">
+            {duration(totalMonths)} au total · <span className="font-medium text-foreground">{duration(relevantMonths)} en lien avec le poste</span>
+          </p>
+        )}
+      </div>
+      <ol className="space-y-2">
+        {experiences.map((e, i) => {
+          const rel = RELEVANCE[e.relevance];
+          const type = TYPE_LABEL[e.type];
+          return (
+            <li key={`${e.title}-${i}`} className="flex gap-3 rounded-xl bg-card px-3.5 py-2.5">
+              <span aria-hidden className={cn("mt-1.5 size-2 shrink-0 rounded-full", rel.dot)} />
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-sm">
+                  {e.title}
+                  {e.employer && <span className="font-normal text-muted-foreground"> · {e.employer}</span>}
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {e.start ? `${month(e.start)} – ${e.current ? "aujourd'hui" : e.end ? month(e.end) : "?"}` : "Dates non précisées"}
+                  {e.months !== null && ` · ${duration(e.months)}`}
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-1 text-xs">
+                {type && <span className="rounded-full bg-page px-2 py-0.5">{type}</span>}
+                <span className="text-muted-foreground">{rel.label}</span>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+      <p className="text-muted-foreground text-xs">
+        Les emplois tenus en même temps ne comptent qu&apos;une fois ; un temps partiel ou un stage compte pour moitié.
+      </p>
+    </section>
+  );
+}
