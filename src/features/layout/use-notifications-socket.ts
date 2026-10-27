@@ -4,12 +4,14 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { io } from "socket.io-client";
 
+import { cvScreeningsKey } from "#/lib/api/cv-screening-controller";
 import { notificationsKey } from "#/lib/api/notification-controller";
 import { offersKey } from "#/lib/api/offer-controller";
 
 /**
  * Refreshes the bell the moment the backend pushes a notification
- * (`/notifications` namespace, `notification:new`).
+ * (`/notifications` namespace, `notification:new`), and a « Tri des CV »
+ * as its CVs are read (`cv-screening:progress`).
  *
  * Long-polling only: each request goes through `src/proxy.ts`, which swaps the
  * httpOnly session cookie for the bearer header — a WebSocket upgrade could not
@@ -26,6 +28,10 @@ export function useNotificationsSocket() {
       void queryClient.invalidateQueries({ queryKey: notificationsKey });
       // Most of them are about an application: the inbox and offers follow.
       void queryClient.invalidateQueries({ queryKey: offersKey });
+    });
+    // A CV of a « Tri des CV » was read: the ranking fills in as it goes.
+    socket.on("cv-screening:progress", () => {
+      void queryClient.invalidateQueries({ queryKey: cvScreeningsKey });
     });
     return () => {
       socket.disconnect();
