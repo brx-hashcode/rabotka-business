@@ -66,7 +66,7 @@ export function TilesSkeleton({ count = 4 }: Readonly<{ count?: number }>) {
 
 // ── Cards, each the shape of the real one ──
 
-export type CardKind = "offer" | "application" | "profile" | "talent" | "mission" | "contact";
+export type CardKind = "offer" | "application" | "profile" | "talent" | "mission";
 
 /** An offer in « Offres »: type and status, title, date, place, seats, pay. */
 function OfferCardBones() {
@@ -211,34 +211,12 @@ function MissionCardBones() {
   );
 }
 
-/** A contact: who, phone and e-mail, the offers, since when. */
-function ContactCardBones() {
-  return (
-    <div className="flex flex-col gap-5 rounded-3xl bg-card p-6">
-      <div className="flex items-center gap-4">
-        <Bone className="size-14 rounded-2xl" />
-        <div className="flex-1 space-y-2">
-          <Bone className="h-5 w-3/5" />
-          <Bone className="h-3.5 w-2/5" />
-        </div>
-      </div>
-      <div className="space-y-2">
-        <Bone className="h-11 rounded-2xl" />
-        <Bone className="h-11 rounded-2xl" />
-      </div>
-      <Bone className="h-5 w-40 rounded-full" />
-      <Bone className="h-3 w-32" />
-    </div>
-  );
-}
-
 const CARD: Record<CardKind, () => React.ReactElement> = {
   offer: OfferCardBones,
   application: ApplicationCardBones,
   profile: ProfileCardBones,
   talent: TalentCardBones,
   mission: MissionCardBones,
-  contact: ContactCardBones,
 };
 
 /** Cards of one kind, three to a row (two, one on smaller screens). */
@@ -362,7 +340,7 @@ export function DashboardSkeleton() {
 
 /**
  * Candidatures, Trouver des profils, Mes profils (cards in a section with
- * its filters), Offres, Missions, contacts (cards on the page).
+ * its filters), Offres, Missions (cards on the page).
  */
 export function GridPageSkeleton({
   kind,
@@ -370,7 +348,7 @@ export function GridPageSkeleton({
   filters = true,
   action,
 }: Readonly<{ kind: CardKind; tiles?: number; filters?: boolean; action?: boolean }>) {
-  const onPage = kind === "offer" || kind === "mission" || kind === "contact";
+  const onPage = kind === "offer" || kind === "mission";
   return (
     <Status>
       <HeaderSkeleton action={action} />

@@ -11,7 +11,7 @@ import { ContactDetails } from "./contact-details";
 
 /**
  * A hired candidate's unlocked details, over the page they were asked from —
- * the same list as « Profils contactés », read when the dialog opens.
+ * from the business's contacts, read when the dialog opens.
  */
 export function ContactDialog({
   workerId,
