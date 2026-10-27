@@ -9,12 +9,17 @@ const HOME = appConfig.homePath;
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (pathname.startsWith("/api/")) return forwardApi(request);
+  // Socket.IO's long-polling transport is plain HTTP: it goes the same way,
+  // so the socket is authenticated by the same cookie-to-bearer swap. Next
+  // redirects away a trailing slash, so it arrives without the one the
+  // server's path has (see use-notifications-socket).
+  if (pathname === "/socket.io") return forwardApi(request, "/socket.io/");
   if (pathname.startsWith("/auth/")) return redirectSignedIn(request);
   if (pathname === "/") return landing(request);
   return requireSession(request);
 }
 
-function forwardApi(request: NextRequest) {
+function forwardApi(request: NextRequest, path = request.nextUrl.pathname) {
   const backend = process.env.BACKEND_URL;
   if (!backend) {
     return NextResponse.json(
@@ -38,7 +43,7 @@ function forwardApi(request: NextRequest) {
   const token = request.cookies.get(ACCESS_COOKIE)?.value;
   if (token) headers.set("authorization", `Bearer ${token}`);
 
-  const target = new URL(request.nextUrl.pathname + request.nextUrl.search, backend);
+  const target = new URL(path + request.nextUrl.search, backend);
   return NextResponse.rewrite(target, { request: { headers } });
 }
 
