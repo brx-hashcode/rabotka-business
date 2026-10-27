@@ -233,22 +233,23 @@ function CardLink({ href, children }: Readonly<{ href: string; children: React.R
   );
 }
 
-/** A share of a whole as a thin bar: one hue, from the left. */
-function Bar({ value, max }: Readonly<{ value: number; max: number }>) {
+/** A share of a whole as a thin bar: one hue (green unless told), from the left. */
+function Bar({ value, max, color = "bg-whatsapp-dark" }: Readonly<{ value: number; max: number; color?: string }>) {
   return (
     <div className="h-2 overflow-hidden rounded-full bg-page">
-      <div className="h-full rounded-full bg-whatsapp-dark" style={{ width: `${max === 0 ? 0 : (value / max) * 100}%` }} />
+      <div className={cn("h-full rounded-full", color)} style={{ width: `${max === 0 ? 0 : (value / max) * 100}%` }} />
     </div>
   );
 }
 
 function FunnelCard({ funnel }: Readonly<{ funnel: BusinessStats["funnel"] }>) {
   const steps = [
-    { label: "Reçues", value: funnel.received },
-    { label: "Consultées", value: funnel.viewed },
-    { label: "Retenues", value: funnel.hired },
-    { label: "Mission démarrée", value: funnel.started },
-    { label: "Mission terminée", value: funnel.completed },
+    // One colour per stage, in order, so each step reads at a glance.
+    { label: "Reçues", value: funnel.received, color: "bg-sky-500" },
+    { label: "Consultées", value: funnel.viewed, color: "bg-violet-500" },
+    { label: "Retenues", value: funnel.hired, color: "bg-whatsapp-dark" },
+    { label: "Mission démarrée", value: funnel.started, color: "bg-amber-500" },
+    { label: "Mission terminée", value: funnel.completed, color: "bg-teal-500" },
   ];
   return (
     <Card title="Où en sont vos candidatures">
@@ -259,13 +260,16 @@ function FunnelCard({ funnel }: Readonly<{ funnel: BusinessStats["funnel"] }>) {
           {steps.map((step) => (
             <li key={step.label} className="space-y-1.5">
               <div className="flex items-baseline justify-between gap-3 text-sm">
-                <span className="font-medium">{step.label}</span>
+                <span className="flex items-center gap-2 font-medium">
+                  <span aria-hidden className={cn("size-2 shrink-0 rounded-full", step.color)} />
+                  {step.label}
+                </span>
                 <span className="tabular-nums">
                   <span className="font-semibold">{step.value}</span>
                   <span className="text-muted-foreground"> · {Math.round((step.value / funnel.received) * 100)} %</span>
                 </span>
               </div>
-              <Bar value={step.value} max={funnel.received} />
+              <Bar value={step.value} max={funnel.received} color={step.color} />
             </li>
           ))}
         </ol>
