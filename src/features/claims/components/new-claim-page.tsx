@@ -28,18 +28,8 @@ import { claimsKey, createClaim, uploadClaimImages } from "#/lib/api/claim-contr
 import { friendlyError } from "#/lib/api/friendly-error";
 import { listOffers, listReceivedApplications, offersKey } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
-import { ImagePicker } from "./claim-bits";
+import { ImagePicker, TOPICS, type Topic } from "./claim-bits";
 
-/** What the request is about: the team reads it first, in the title. */
-const TOPICS = [
-  { value: "candidate", label: "Candidat ou mission", hint: "Absence, retard, travail mal fait…" },
-  { value: "payment", label: "Paiement ou facture", hint: "Montant, prélèvement, facture…" },
-  { value: "plan", label: "Abonnement", hint: "Formule, contacts inclus…" },
-  { value: "account", label: "Compte et documents", hint: "Vérification, informations…" },
-  { value: "bug", label: "Problème technique", hint: "Une page ou une action qui ne marche pas" },
-  { value: "other", label: "Autre", hint: "Une question, une idée…" },
-] as const;
-type Topic = (typeof TOPICS)[number]["value"];
 
 /** The client app's rules, plus the subject and what it concerns. */
 const schema = z.object({
