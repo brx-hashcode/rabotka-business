@@ -20,7 +20,6 @@ import {
   IconMapPin,
   IconPhone,
   IconShieldLock,
-  IconSparkles,
   IconTrash,
   IconTrophy,
 } from "@tabler/icons-react";
@@ -34,6 +33,7 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import type { CvResume, CvScreening } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { CRITERIA, CriterionBar, ScoreRing, VerdictChip, band } from "./cv-bits";
+import { CvChatSheet } from "./cv-chat-sheet";
 
 const date = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
@@ -119,7 +119,7 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
 
           <section className="space-y-3">
             {scored.map((r) => (
-              <ResumeCard key={r.id} r={r} onPreview={() => setPreview(r)} screeningId={s.id} />
+              <ResumeCard key={r.id} r={r} onPreview={() => setPreview(r)} screeningId={s.id} jobTitle={s.jobTitle} />
             ))}
             {waiting.map((r, i) => (
               <WaitingCard key={r.id} r={r} reading={i < READING_AT_ONCE} />
@@ -194,9 +194,6 @@ function ProgressCard({ done, total }: Readonly<{ done: number; total: number }>
   return (
     <section className="space-y-5 rounded-3xl bg-card p-6" aria-live="polite">
       <div className="flex items-start gap-4">
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-brand-lime text-[#0f2414]">
-          <IconSparkles className="size-6" />
-        </span>
         <div className="min-w-0 flex-1 space-y-0.5">
           <p className="font-semibold text-lg">Analyse en cours</p>
           <p className="text-muted-foreground text-sm">Rabotka lit chaque CV et le compare au poste.</p>
@@ -370,8 +367,14 @@ function Meta({ icon: Icon, label, value }: Readonly<{ icon: typeof IconBriefcas
   );
 }
 
-function ResumeCard({ r, onPreview, screeningId }: Readonly<{ r: CvResume; onPreview: () => void; screeningId: string }>) {
+function ResumeCard({
+  r,
+  onPreview,
+  screeningId,
+  jobTitle,
+}: Readonly<{ r: CvResume; onPreview: () => void; screeningId: string; jobTitle: string }>) {
   const [open, setOpen] = useState(r.rank === 1);
+  const [chatOpen, setChatOpen] = useState(false);
   const c = r.candidate;
   const name = c?.name ?? r.fileName;
   const score = r.score ?? 0;
@@ -399,7 +402,16 @@ function ResumeCard({ r, onPreview, screeningId }: Readonly<{ r: CvResume; onPre
             </p>
           )}
         </div>
+        <button
+          type="button"
+          onClick={() => setChatOpen(true)}
+          className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm transition-colors hover:bg-brand-lime/80"
+        >
+          <span className="hidden sm:inline">Interroger le CV</span>
+          <span className="sm:hidden">Questions</span>
+        </button>
       </div>
+      <CvChatSheet open={chatOpen} onOpenChange={setChatOpen} screeningId={screeningId} jobTitle={jobTitle} resume={r} />
 
       {r.summary && <p className="mt-4 text-sm leading-relaxed">{r.summary}</p>}
 

@@ -171,6 +171,7 @@ export type BusinessPlan = {
   cvBatchMax: number;
   cvFileMaxMb: number;
   cvRetentionDays: number;
+  cvChatQuestions: number;
   includesPreselection: boolean;
   includesFieldAgents: boolean;
   priorityVisibility: boolean;
@@ -207,6 +208,8 @@ export type MySubscription = {
     cvBatchMax: number;
     cvFileMaxMb: number;
     cvRetentionDays: number;
+    /** Questions about one analysed CV; 0: no chat. */
+    cvChatQuestions: number;
     includesPreselection: boolean;
     includesFieldAgents: boolean;
     priorityVisibility: boolean;
@@ -355,3 +358,14 @@ export type CvResume = {
 };
 
 export type CvScreening = CvScreeningSummary & { jobText: string; resumes: CvResume[] };
+
+/** A business's conversation about one analysed CV. */
+export type CvChatMessage = { id: string; role: "user" | "assistant"; content: string; createdAt: string };
+export type CvChat = {
+  messages: CvChatMessage[];
+  /** Questions the plan allows per CV, and those left for this one. */
+  limit: number;
+  remaining: number;
+  /** False once the CV's file was purged: the conversation stays readable, no new question. */
+  available: boolean;
+};
