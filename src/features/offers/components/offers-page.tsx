@@ -73,7 +73,7 @@ export function OffersPage() {
             onClick={() => setTab(t.key)}
             className={cn(
               "h-10 rounded-full px-4 font-medium text-sm transition-colors",
-              tab === t.key ? "bg-brand-lime text-[#0f2414]" : "bg-card text-muted-foreground hover:text-foreground",
+              tab === t.key ? "bg-selected text-selected-foreground" : "bg-card text-muted-foreground hover:text-foreground",
             )}
           >
             {t.label}

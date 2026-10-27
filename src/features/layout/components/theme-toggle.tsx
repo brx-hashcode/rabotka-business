@@ -15,7 +15,7 @@ export function ThemeToggle() {
   const segment = (on: boolean) =>
     cn(
       "flex size-10 items-center justify-center rounded-xl transition-colors",
-      on ? "bg-brand-lime text-[#0f2414]" : "text-muted-foreground hover:text-foreground",
+      on ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
     );
 
   return (

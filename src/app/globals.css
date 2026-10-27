@@ -63,9 +63,13 @@
   --header-muted: #3f5f3a;
   /* Dark ink for fills that need white on top (ticked checkboxes, active tabs). */
   --ink: #0f2414;
-  /* The brand lime as a fill (active nav pill, toggles), the same in both
+  /* The brand lime as a fill (brand marks, accents), the same in both
      themes — unlike --header, which darkens with the dark theme. */
   --brand-lime: #cbffa5;
+  /* What is selected (active nav item, tab, toggle): the lime in the light
+     theme, a quiet grey in the dark one, as in the admin. */
+  --selected: #cbffa5;
+  --selected-foreground: #0f2414;
   /* Soft job-card chips. */
   --chip-violet: #f1ecfd;
   --chip-violet-foreground: #6b46c1;
@@ -360,6 +364,8 @@ a {
   --color-header-muted: var(--header-muted);
   --color-ink: var(--ink);
   --color-brand-lime: var(--brand-lime);
+  --color-selected: var(--selected);
+  --color-selected-foreground: var(--selected-foreground);
   --color-chip-violet: var(--chip-violet);
   --color-chip-violet-foreground: var(--chip-violet-foreground);
   --color-chip-green: var(--chip-green);
@@ -401,10 +407,13 @@ a {
 }
 
 .dark {
-  --page: #0b1114;
+  /* Neutral blacks and greys, as the admin's dark theme: no blue cast. */
+  --page: oklch(0.145 0 0);
   /* Buttons filled with ink stay readable on the dark page. */
   --ink: #2c7a45;
-  --header: #05080a;
+  --header: oklch(0.12 0 0);
+  --selected: oklch(0.269 0 0);
+  --selected-foreground: oklch(0.985 0 0);
   --chip-violet: rgb(139 92 246 / 0.16);
   --chip-violet-foreground: #c4b5fd;
   --chip-green: rgb(34 197 94 / 0.14);

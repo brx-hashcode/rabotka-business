@@ -130,7 +130,7 @@ export function ApplicationsPage() {
               onClick={() => setTab(t.key)}
               className={cn(
                 "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 font-medium text-sm transition-colors",
-                tab === t.key ? "bg-brand-lime text-[#0f2414]" : "text-muted-foreground hover:text-foreground",
+                tab === t.key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
               {t.label}

@@ -168,7 +168,7 @@ function PeriodPicker({ value, onChange }: Readonly<{ value: StatsPeriod; onChan
           onClick={() => onChange(p.days)}
           className={cn(
             "rounded-full px-4 py-1.5 font-medium text-sm transition-colors",
-            value === p.days ? "bg-brand-lime text-[#0f2414]" : "text-muted-foreground hover:text-foreground",
+            value === p.days ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
           )}
         >
           {p.label}

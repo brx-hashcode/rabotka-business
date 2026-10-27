@@ -68,7 +68,7 @@ export function InterviewsPage() {
               onClick={() => setTab(t.key)}
               className={cn(
                 "rounded-full px-4 py-1.5 font-medium text-sm",
-                tab === t.key ? "bg-brand-lime text-[#0f2414]" : "text-muted-foreground hover:text-foreground",
+                tab === t.key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
               {t.label}

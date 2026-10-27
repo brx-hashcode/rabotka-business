@@ -54,7 +54,7 @@ export function ClaimsPage() {
               onClick={() => setTab(key)}
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 font-medium text-sm",
-                tab === key ? "bg-brand-lime text-[#0f2414]" : "text-muted-foreground hover:text-foreground",
+                tab === key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
               {label}
