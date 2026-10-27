@@ -25,26 +25,33 @@ export type NavItem = {
 export type NavGroup = { title: string | null; items: NavItem[] };
 
 /**
- * The business space's pages, grouped as an employer works: the employer
- * options of the client app (offres, candidatures, missions, discussions,
- * profils contactés, réclamations) plus what is a business's own
- * (organisation, abonnement, factures). Pages not built yet are « Bientôt ».
+ * The business space's pages, grouped as an employer works: the daily stops
+ * first (dashboard, messages), then hiring (offer → candidatures → mission),
+ * then people (search, kept profiles, CV analysis), then the account, and
+ * help apart at the end. Pages not built yet are « Bientôt ».
  */
 export const NAV_GROUPS: NavGroup[] = [
   {
     title: null,
-    items: [{ label: "Tableau de bord", href: "/espace", icon: IconLayoutDashboard }],
+    items: [
+      { label: "Tableau de bord", href: "/espace", icon: IconLayoutDashboard },
+      { label: "Messages", href: "/espace/discussions", icon: IconMessageCircle },
+    ],
   },
   {
-    title: "Recruter",
+    title: "Recrutement",
     items: [
       { label: "Offres", href: "/espace/offres", icon: IconBriefcase },
       { label: "Candidatures", href: "/espace/candidatures", icon: IconUsers },
-      { label: "Analyse de CV", href: "/espace/analyse-cv", icon: IconFileSearch },
+      { label: "Missions", href: "/espace/missions", icon: IconCalendarCheck },
+    ],
+  },
+  {
+    title: "Profils",
+    items: [
       { label: "Trouver des profils", href: "/espace/recherche", icon: IconSearch },
       { label: "Mes profils", href: "/espace/vivier", icon: IconBookmark },
-      { label: "Messages", href: "/espace/discussions", icon: IconMessageCircle },
-      { label: "Missions", href: "/espace/missions", icon: IconCalendarCheck },
+      { label: "Analyse de CV", href: "/espace/analyse-cv", icon: IconFileSearch },
     ],
   },
   {
@@ -53,8 +60,11 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Organisation", href: "/espace/organisation", icon: IconBuilding },
       { label: "Abonnement", href: "/espace/abonnement", icon: IconCreditCard },
       { label: "Factures", href: "/espace/factures", icon: IconFileInvoice },
-      { label: "Aide", href: "/espace/reclamations", icon: IconAlertCircle },
     ],
+  },
+  {
+    title: null,
+    items: [{ label: "Aide", href: "/espace/reclamations", icon: IconAlertCircle }],
   },
 ];
 

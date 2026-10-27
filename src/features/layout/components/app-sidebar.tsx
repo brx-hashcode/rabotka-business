@@ -36,8 +36,8 @@ export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>
       </Link>
 
       <nav className="mt-6 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto">
-        {NAV_GROUPS.map((group) => (
-          <div key={group.title ?? "home"} className="flex flex-col gap-0.5">
+        {NAV_GROUPS.map((group, i) => (
+          <div key={group.title ?? `group-${i}`} className="flex flex-col gap-0.5">
             {group.title && (
               <p className="mb-1 px-3 font-medium text-[11px] text-muted-foreground uppercase tracking-wider">{group.title}</p>
             )}
