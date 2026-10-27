@@ -8,13 +8,20 @@ import {
   IconArrowLeft,
   IconBriefcase,
   IconCalendarEvent,
+  IconCheck,
   IconChevronDown,
+  IconClock,
   IconDownload,
   IconEye,
+  IconFileTypeDocx,
+  IconFileTypePdf,
+  IconHourglass,
+  IconPhoto,
   IconMail,
   IconMapPin,
   IconPhone,
   IconShieldLock,
+  IconSparkles,
   IconTrash,
   IconTrophy,
 } from "@tabler/icons-react";
@@ -103,20 +110,7 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_26rem]">
         <div className="min-w-0 space-y-6">
-          {running && (
-            <section className="space-y-3 rounded-3xl bg-card p-6" aria-live="polite">
-              <div className="flex items-baseline justify-between gap-3">
-                <p className="font-medium">Lecture des CV…</p>
-                <p className="text-muted-foreground text-sm tabular-nums">
-                  {s.done} / {s.total}
-                </p>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-page">
-                <div className="h-full rounded-full bg-whatsapp-dark transition-[width] duration-500" style={{ width: `${(s.done / s.total) * 100}%` }} />
-              </div>
-              <p className="text-muted-foreground text-xs">Le classement se complète au fil de la lecture. Vous pouvez quitter la page : une notification vous prévient à la fin.</p>
-            </section>
-          )}
+          {running && <ProgressCard done={s.done} total={s.total} />}
 
           {s.purged && (
             <p className="rounded-2xl bg-card px-4 py-3 text-muted-foreground text-sm">
@@ -128,14 +122,8 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
             {scored.map((r) => (
               <ResumeCard key={r.id} r={r} onPreview={() => setPreview(r)} screeningId={s.id} />
             ))}
-            {waiting.map((r) => (
-              <div key={r.id} className="flex items-center gap-4 rounded-3xl bg-card p-5">
-                <Bone className="size-14 shrink-0 rounded-full" />
-                <div className="min-w-0 flex-1 space-y-2">
-                  <p className="truncate font-medium text-sm">{r.fileName}</p>
-                  <p className="text-muted-foreground text-xs">En cours de lecture…</p>
-                </div>
-              </div>
+            {waiting.map((r, i) => (
+              <WaitingCard key={r.id} r={r} reading={i < READING_AT_ONCE} />
             ))}
           </section>
 
@@ -183,6 +171,122 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
         pending={remove.isPending}
       />
     </div>
+  );
+}
+
+/** The queue reads this many CVs at a time (CvScreeningScheduler). */
+const READING_AT_ONCE = 3;
+/** Seconds one CV usually takes, for a rough « time left ». */
+const SECONDS_PER_CV = 15;
+
+function timeLeft(remaining: number): string {
+  if (remaining <= READING_AT_ONCE) return "Quelques secondes encore";
+  const secs = Math.ceil(remaining / READING_AT_ONCE) * SECONDS_PER_CV;
+  return secs < 60 ? `Environ ${secs} s restantes` : `Environ ${Math.ceil(secs / 60)} min restantes`;
+}
+
+/** Where the analysis is: received, being read (n of m), ranked; and about how long is left. */
+function ProgressCard({ done, total }: Readonly<{ done: number; total: number }>) {
+  const steps = [
+    { label: "CV reçus", state: "done" as const },
+    { label: `Lecture · ${done}/${total}`, state: "active" as const },
+    { label: "Classement", state: done === total ? ("active" as const) : ("todo" as const) },
+  ];
+  return (
+    <section className="space-y-5 rounded-3xl bg-card p-6" aria-live="polite">
+      <div className="flex items-start gap-4">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-brand-lime text-[#0f2414]">
+          <IconSparkles className="size-6" />
+        </span>
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <p className="font-semibold text-lg">Analyse en cours</p>
+          <p className="text-muted-foreground text-sm">Rabotka lit chaque CV et le compare au poste.</p>
+        </div>
+        <p className="shrink-0 font-semibold text-2xl tabular-nums">
+          {done}
+          <span className="text-base text-muted-foreground">/{total}</span>
+        </p>
+      </div>
+
+      <ol className="grid grid-cols-3 gap-2">
+        {steps.map((step) => (
+          <li key={step.label} className="space-y-2">
+            <div
+              className={cn(
+                "h-1.5 rounded-full",
+                step.state === "done" ? "bg-whatsapp-dark" : step.state === "active" ? "bg-whatsapp-dark/40" : "bg-page",
+              )}
+            >
+              {step.state === "active" && step.label.startsWith("Lecture") && (
+                <div className="h-full rounded-full bg-whatsapp-dark transition-[width] duration-500" style={{ width: `${(done / total) * 100}%` }} />
+              )}
+            </div>
+            <p className={cn("flex items-center gap-1.5 text-xs", step.state === "todo" ? "text-muted-foreground" : "font-medium")}>
+              {step.state === "done" && <IconCheck className="size-3.5 text-whatsapp-dark" />}
+              {step.label}
+            </p>
+          </li>
+        ))}
+      </ol>
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-2xl bg-page px-4 py-3 text-sm">
+        <span className="flex items-center gap-1.5 font-medium">
+          <IconClock className="size-4" />
+          {timeLeft(total - done)}
+        </span>
+        <span className="text-muted-foreground">Vous pouvez quitter la page : une notification vous prévient à la fin.</span>
+      </div>
+    </section>
+  );
+}
+
+const FILE_KIND = (mime: string) =>
+  mime.startsWith("image/")
+    ? { icon: IconPhoto, label: "Photo", tile: "bg-chip-amber text-chip-amber-foreground" }
+    : mime.includes("wordprocessingml")
+      ? { icon: IconFileTypeDocx, label: "Word", tile: "bg-chip-violet text-chip-violet-foreground" }
+      : { icon: IconFileTypePdf, label: "PDF", tile: "bg-destructive/10 text-destructive" };
+
+/** A CV not read yet, in the shape its result will take, so the ranking fills in without jumping. */
+function WaitingCard({ r, reading }: Readonly<{ r: CvResume; reading: boolean }>) {
+  const kind = FILE_KIND(r.mimeType);
+  return (
+    <article className="rounded-3xl bg-card p-5 sm:p-6" aria-busy="true">
+      <div className="flex items-start gap-4">
+        <span className="hidden w-6 sm:block" />
+        <span className={cn("flex size-14 shrink-0 items-center justify-center rounded-full", kind.tile)}>
+          <kind.icon className="size-6" />
+        </span>
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="min-w-0 truncate font-semibold" title={r.fileName}>
+              {r.fileName}
+            </p>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-medium text-xs",
+                reading ? "bg-chip-green text-chip-green-foreground" : "bg-page text-muted-foreground",
+              )}
+            >
+              {reading ? <IconSparkles className="size-3.5" /> : <IconHourglass className="size-3.5" />}
+              {reading ? "Lecture en cours" : "En attente"}
+            </span>
+          </div>
+          <p className="text-muted-foreground text-xs">
+            {kind.label} · {reading ? "le score et l'avis arrivent dans quelques secondes" : "sera lu juste après"}
+          </p>
+        </div>
+      </div>
+      <div className="mt-5 space-y-2">
+        <Bone className="h-3 w-full" />
+        <Bone className="h-3 w-11/12" />
+        <Bone className="h-3 w-2/3" />
+      </div>
+      <div className="mt-5 flex gap-2">
+        <Bone className="h-10 w-28 rounded-full" />
+        <Bone className="h-10 w-28 rounded-full" />
+      </div>
+    </article>
   );
 }
 
