@@ -10,7 +10,7 @@ import { offersKey } from "#/lib/api/offer-controller";
 
 /**
  * Refreshes the bell the moment the backend pushes a notification
- * (`/notifications` namespace, `notification:new`), and a « Tri des CV »
+ * (`/notifications` namespace, `notification:new`), and an « Analyse de CV »
  * as its CVs are read (`cv-screening:progress`).
  *
  * Long-polling only: each request goes through `src/proxy.ts`, which swaps the
@@ -29,7 +29,7 @@ export function useNotificationsSocket() {
       // Most of them are about an application: the inbox and offers follow.
       void queryClient.invalidateQueries({ queryKey: offersKey });
     });
-    // A CV of a « Tri des CV » was read: the ranking fills in as it goes.
+    // A CV of an « Analyse de CV » was read: the ranking fills in as it goes.
     socket.on("cv-screening:progress", () => {
       void queryClient.invalidateQueries({ queryKey: cvScreeningsKey });
     });

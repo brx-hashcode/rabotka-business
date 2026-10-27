@@ -2,7 +2,7 @@ import { appConfig } from "#/config";
 import { BusinessBaseController } from "./base-controller";
 import type { CvScreening, CvScreeningSummary } from "./types";
 
-/** « Tri des CV »: CVs the AI reads and ranks against one job. */
+/** « Analyse de CV »: CVs the AI reads and ranks against one job. */
 class CvScreeningController extends BusinessBaseController {
   list(page = 0, limit = 20): Promise<{ items: CvScreeningSummary[]; total: number }> {
     return this.get(`/business/me/cv-screenings?page=${page}&limit=${limit}`);

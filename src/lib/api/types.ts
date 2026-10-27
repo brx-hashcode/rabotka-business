@@ -305,7 +305,7 @@ export type ContactedProfile = {
   offers: { id: string; title: string }[];
 };
 
-/** « Tri des CV » (`business/me/cv-screenings`). */
+/** « Analyse de CV » (`business/me/cv-screenings`). */
 export type CvResumeStatus = "QUEUED" | "SCORED" | "UNREADABLE" | "FAILED";
 export type CvCriterion = "skills" | "experience" | "training" | "location" | "languages";
 
