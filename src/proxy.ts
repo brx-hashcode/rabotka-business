@@ -16,6 +16,8 @@ export function proxy(request: NextRequest) {
   if (pathname === "/socket.io") return forwardApi(request, "/socket.io/");
   if (pathname.startsWith("/auth/")) return redirectSignedIn(request);
   if (pathname === "/") return landing(request);
+  // A candidate's interview invitation: answered from the e-mail, signed out.
+  if (pathname.startsWith("/entretien/")) return NextResponse.next();
   return requireSession(request);
 }
 

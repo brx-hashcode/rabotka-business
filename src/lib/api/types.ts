@@ -372,3 +372,61 @@ export type CvChat = {
 
 /** A conversation comparing 2 to 5 CVs of one analysis (one per selection). */
 export type CvComparison = CvChat & { id: string; resumeIds: string[] };
+
+/** « Entretiens » (`business/me/interviews`). */
+export type InterviewMode = "IN_PERSON" | "PHONE" | "VIDEO";
+export type InterviewStatus = "PENDING" | "CONFIRMED" | "DECLINED" | "RESCHEDULE_REQUESTED" | "CANCELLED";
+export type InterviewAnswer = "CONFIRMED" | "DECLINED" | "RESCHEDULE_REQUESTED";
+
+export type InterviewSlot = {
+  startsAt: string;
+  durationMinutes: number;
+  mode: InterviewMode;
+  /** The address, the video link, or the number to call. */
+  location?: string;
+  message?: string;
+};
+
+export type InterviewInput = InterviewSlot & {
+  /** One of the two: an analysed CV or an application. */
+  cvResumeId?: string;
+  applicationId?: string;
+  /** For an analysed CV: where the invitation goes. */
+  candidateEmail?: string;
+};
+
+export type Interview = {
+  id: string;
+  cvResumeId: string | null;
+  applicationId: string | null;
+  offerId: string | null;
+  jobTitle: string;
+  candidateName: string;
+  /** Null for an applicant: their e-mail is never shown here. */
+  candidateEmail: string | null;
+  startsAt: string;
+  durationMinutes: number;
+  mode: InterviewMode;
+  location: string | null;
+  message: string | null;
+  status: InterviewStatus;
+  responseNote: string | null;
+  respondedAt: string | null;
+  createdAt: string;
+};
+
+/** What the candidate sees behind their private link. */
+export type InterviewInvitation = {
+  businessName: string;
+  businessLogoUrl: string | null;
+  jobTitle: string;
+  candidateName: string;
+  startsAt: string;
+  durationMinutes: number;
+  mode: InterviewMode;
+  location: string | null;
+  message: string | null;
+  status: InterviewStatus;
+  responseNote: string | null;
+  past: boolean;
+};

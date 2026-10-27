@@ -6,6 +6,7 @@ import { io } from "socket.io-client";
 
 import { myBusinessKey } from "#/lib/api/business-controller";
 import { cvScreeningsKey } from "#/lib/api/cv-screening-controller";
+import { interviewsKey } from "#/lib/api/interview-controller";
 import { notificationsKey } from "#/lib/api/notification-controller";
 import { offersKey } from "#/lib/api/offer-controller";
 
@@ -32,6 +33,8 @@ export function useNotificationsSocket() {
       // Others change the business itself (plan paid or ended, organisation
       // verified): its subscription, quotas and figures, all under one prefix.
       void queryClient.invalidateQueries({ queryKey: myBusinessKey });
+      // A candidate answered an interview: the agenda shows it at once.
+      void queryClient.invalidateQueries({ queryKey: interviewsKey });
     });
     // A CV of an « Analyse de CV » was read: the ranking fills in as it goes.
     socket.on("cv-screening:progress", () => {
