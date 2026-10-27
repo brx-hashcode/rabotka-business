@@ -9,7 +9,7 @@ import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-control
 import { cvScreeningsKey, listCvScreenings } from "#/lib/api/cv-screening-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import type { CvScreeningSummary } from "#/lib/api/types";
-import { CvAllowance, VerdictChip } from "./cv-bits";
+import { CvAllowance, ScoreRing, VerdictChip } from "./cv-bits";
 
 const date = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
@@ -62,9 +62,9 @@ export function CvScreeningsPage() {
               </p>
             </div>
           ) : (
-            <ul className="space-y-2">
+            <ul className="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
               {items.map((s) => (
-                <ScreeningRow key={s.id} s={s} />
+                <ScreeningCard key={s.id} s={s} />
               ))}
             </ul>
           )}
@@ -74,31 +74,56 @@ export function CvScreeningsPage() {
   );
 }
 
-function ScreeningRow({ s }: Readonly<{ s: CvScreeningSummary }>) {
+/** One analysis: the best score up front, what was read, when. */
+function ScreeningCard({ s }: Readonly<{ s: CvScreeningSummary }>) {
   const running = s.status === "PROCESSING";
+  const unread = running ? 0 : s.total - s.scored;
   return (
     <li>
-      <Link href={`/espace/tri-cv/${s.id}`} className="flex items-center gap-4 rounded-2xl bg-page p-4 transition-colors hover:bg-page/70">
-        <div className="min-w-0 flex-1 space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="truncate font-medium">{s.jobTitle}</p>
+      <Link
+        href={`/espace/tri-cv/${s.id}`}
+        className="group flex h-full flex-col gap-4 rounded-3xl bg-page p-5 transition-colors hover:bg-page/70"
+      >
+        <div className="flex items-start gap-3.5">
+          {s.bestScore !== null && !running ? (
+            <ScoreRing score={s.bestScore} />
+          ) : (
+            <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-card">
+              <IconFileSearch className="size-6 text-muted-foreground" />
+            </span>
+          )}
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <p className="line-clamp-2 font-semibold leading-snug group-hover:underline">{s.jobTitle}</p>
             {running ? (
-              <span className="rounded-full bg-chip-amber px-2.5 py-1 font-medium text-chip-amber-foreground text-xs">
+              <span className="inline-flex rounded-full bg-chip-amber px-2.5 py-1 font-medium text-chip-amber-foreground text-xs">
                 En cours · {s.done}/{s.total}
               </span>
             ) : (
               s.bestScore !== null && <VerdictChip score={s.bestScore} />
             )}
           </div>
-          <p className="text-muted-foreground text-sm">
-            {s.total} CV
-            {!running && s.bestScore !== null && ` · meilleur score ${s.bestScore}/100`}
-            {!running && s.scored < s.total && ` · ${s.total - s.scored} non lu${s.total - s.scored > 1 ? "s" : ""}`}
-          </p>
-          <p className="text-muted-foreground text-xs">Le {date(s.createdAt)}</p>
         </div>
-        <IconChevronRight className="size-5 shrink-0 text-muted-foreground" />
+
+        <dl className="grid grid-cols-3 gap-2 text-center">
+          <Stat label="CV" value={s.total} />
+          <Stat label={s.scored > 1 ? "Classés" : "Classé"} value={running ? s.done : s.scored} />
+          <Stat label={unread > 1 ? "Non lus" : "Non lu"} value={unread} />
+        </dl>
+
+        <div className="mt-auto flex items-center justify-between gap-3 text-muted-foreground text-xs">
+          <span>Le {date(s.createdAt)}</span>
+          <IconChevronRight className="size-4 shrink-0" />
+        </div>
       </Link>
     </li>
+  );
+}
+
+function Stat({ label, value }: Readonly<{ label: string; value: number }>) {
+  return (
+    <div className="rounded-2xl bg-card px-2 py-2.5">
+      <dd className="font-semibold text-lg tabular-nums leading-none">{value}</dd>
+      <dt className="mt-1 text-muted-foreground text-xs">{label}</dt>
+    </div>
   );
 }
