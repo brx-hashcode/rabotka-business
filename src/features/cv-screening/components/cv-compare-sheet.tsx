@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 
-import { askCvComparison, cvScreeningsKey, openCvComparison } from "#/lib/api/cv-screening-controller";
+import { askCvComparison, cvComparisonPdfUrl, cvScreeningsKey, openCvComparison } from "#/lib/api/cv-screening-controller";
 import type { CvResume } from "#/lib/api/types";
 import { ChatSheet } from "./chat-sheet";
 import { ScoreRing } from "./cv-bits";
@@ -48,6 +48,7 @@ export function CvCompareSheet({
         comparisonId.current = comparison.id;
         return comparison;
       }}
+      pdfUrl={() => (comparisonId.current ? cvComparisonPdfUrl(screeningId, comparisonId.current) : null)}
       ask={(question, opts) => {
         if (!comparisonId.current) return Promise.reject(new Error("Comparaison non ouverte"));
         return askCvComparison(screeningId, comparisonId.current, question, opts);

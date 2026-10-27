@@ -1,6 +1,6 @@
 "use client";
 
-import { askCvChat, cvScreeningsKey, getCvChat } from "#/lib/api/cv-screening-controller";
+import { askCvChat, cvChatPdfUrl, cvScreeningsKey, getCvChat } from "#/lib/api/cv-screening-controller";
 import type { CvResume } from "#/lib/api/types";
 import { ChatSheet } from "./chat-sheet";
 import { ScoreRing, VerdictChip } from "./cv-bits";
@@ -34,6 +34,7 @@ export function CvChatSheet({
       queryKey={[...cvScreeningsKey, screeningId, resume.id, "chat"]}
       load={() => getCvChat(screeningId, resume.id)}
       ask={(question, opts) => askCvChat(screeningId, resume.id, question, opts)}
+      pdfUrl={() => cvChatPdfUrl(screeningId, resume.id)}
       title={name}
       subtitle={jobTitle}
       lead={resume.score !== null && <ScoreRing score={resume.score} size={48} />}
