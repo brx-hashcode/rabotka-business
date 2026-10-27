@@ -42,7 +42,6 @@ const PERIODS: { days: StatsPeriod; label: string }[] = [
 ];
 
 const date = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-const of = (used: number, limit: number | null) => (limit === null ? `${used}` : `${used}/${limit}`);
 const nf = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 1 });
 const percent = (n: number | null) => (n === null ? "—" : `${n} %`);
 
@@ -412,47 +411,130 @@ function SubscriptionCard({
       </Card>
     );
   }
-  const quota = e.unlocksQuota;
-  const pct = quota === null || quota === 0 ? 0 : Math.min(100, (e.unlocksUsed / quota) * 100);
+  const period = currentPeriod(subscription);
+  const meters = [
+    { label: "Contacts inclus", used: e.unlocksUsed, limit: e.unlocksQuota, unit: ["contact", "contacts"] as const },
+    { label: "Offres en ligne", used: e.activeOffers, limit: e.activeOffersLimit, unit: ["offre", "offres"] as const },
+    ...(e.cvQuota !== 0 ? [{ label: "CV inclus", used: e.cvUsed, limit: e.cvQuota, unit: ["CV", "CV"] as const }] : []),
+  ];
   return (
     <Card title="Abonnement" action={<CardLink href="/espace/abonnement">Gérer</CardLink>}>
-      <div className="flex items-center gap-6">
-        {/* Contacts used against the period's quota. */}
-        <div
-          role="img"
-          aria-label={`${e.unlocksUsed} contacts obtenus${quota === null ? "" : ` sur ${quota}`}`}
-          className="relative size-32 shrink-0 rounded-full"
-          style={{ background: `conic-gradient(var(--color-whatsapp-dark) ${pct}%, var(--page) ${pct}% 100%)` }}
-        >
-          <div className="absolute inset-3.5 flex flex-col items-center justify-center rounded-full bg-card text-center">
-            <span className="font-semibold text-2xl">{e.unlocksUsed}</span>
-            <span className="text-muted-foreground text-xs">{quota === null ? "contacts" : `sur ${quota}`}</span>
-          </div>
-        </div>
-        <dl className="space-y-3 text-sm">
-          <div>
-            <dt className="text-muted-foreground">Formule</dt>
-            <dd className="font-semibold">
-              {e.plan.name}
-              {e.status === "TRIAL" ? " · essai" : ""}
-            </dd>
+      <div className="flex items-center gap-5">
+        {period && <TimeLeftRing period={period} />}
+        <div className="min-w-0 space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="truncate font-semibold text-lg">{e.plan.name}</p>
+            <span
+              className={cn(
+                "rounded-full px-2.5 py-0.5 font-medium text-xs",
+                e.status === "TRIAL" ? "bg-chip-violet text-chip-violet-foreground" : "bg-chip-green text-chip-green-foreground",
+              )}
+            >
+              {e.status === "TRIAL" ? "Essai" : "Active"}
+            </span>
           </div>
           {e.endsAt && (
-            <div>
-              <dt className="text-muted-foreground">{e.status === "TRIAL" ? "Fin de l'essai" : "Fin de l'abonnement"}</dt>
-              <dd className="font-semibold">{date(e.endsAt)}</dd>
-            </div>
+            <p className="text-muted-foreground text-sm">
+              {e.status === "TRIAL" ? "Essai jusqu'au" : "Jusqu'au"} <span className="font-medium text-foreground">{date(e.endsAt)}</span>
+            </p>
           )}
-          <div>
-            <dt className="text-muted-foreground">Offres en ligne</dt>
-            <dd className="font-semibold">{of(e.activeOffers, e.activeOffersLimit)}</dd>
-          </div>
-        </dl>
+        </div>
       </div>
+
+      <ul className="space-y-4">
+        {meters.map((m) => (
+          <Meter key={m.label} {...m} />
+        ))}
+      </ul>
+
       <p className="mt-auto text-muted-foreground text-xs">
         {unlocked} contact{unlocked > 1 ? "s" : ""} obtenu{unlocked > 1 ? "s" : ""} sur les {days} derniers jours.
       </p>
     </Card>
+  );
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** The period running now (trial or paid), from the history. A module helper: reading the clock is not render's business. */
+function currentPeriod(s: MySubscription): { startsAt: string; endsAt: string } | null {
+  const now = Date.now();
+  return (
+    s.history.find(
+      (p) => (p.status === "ACTIVE" || p.status === "TRIAL") && new Date(p.startsAt).getTime() <= now && new Date(p.endsAt).getTime() > now,
+    ) ?? null
+  );
+}
+
+function daysLeft(endsAt: string): number {
+  return Math.max(0, Math.ceil((new Date(endsAt).getTime() - Date.now()) / DAY_MS));
+}
+
+/** What is left of the period, as a ring: days left in the middle, the share of the period still to come around it. */
+function TimeLeftRing({ period }: Readonly<{ period: { startsAt: string; endsAt: string } }>) {
+  const total = Math.max(1, Math.round((new Date(period.endsAt).getTime() - new Date(period.startsAt).getTime()) / DAY_MS));
+  const left = Math.min(total, daysLeft(period.endsAt));
+  const pct = (left / total) * 100;
+  const tone = left <= 3 ? "var(--color-destructive)" : left <= 7 ? "rgb(245 158 11)" : "var(--color-whatsapp-dark)";
+  return (
+    <div
+      role="img"
+      aria-label={`${left} jour${left > 1 ? "s" : ""} restant${left > 1 ? "s" : ""} sur ${total}`}
+      className="relative size-24 shrink-0 rounded-full"
+      style={{ background: `conic-gradient(${tone} ${pct}%, var(--page) ${pct}% 100%)` }}
+    >
+      <div className="absolute inset-2.5 flex flex-col items-center justify-center rounded-full bg-card text-center">
+        <span className="font-semibold text-2xl leading-none tabular-nums">{left}</span>
+        <span className="mt-1 text-[11px] text-muted-foreground leading-tight">
+          jour{left > 1 ? "s" : ""}
+          <br />
+          restant{left > 1 ? "s" : ""}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** One thing the plan covers: used against included, green, then amber near the limit, red at or past it. */
+function Meter({
+  label,
+  used,
+  limit,
+  unit,
+}: Readonly<{ label: string; used: number; limit: number | null; unit: readonly [string, string] }>) {
+  const ratio = limit === null || limit === 0 ? 0 : used / limit;
+  const over = limit !== null && used > limit;
+  const full = limit !== null && used >= limit;
+  const color = full ? "bg-destructive" : ratio >= 0.8 ? "bg-amber-500" : "bg-whatsapp-dark";
+  return (
+    <li className="space-y-1.5">
+      <div className="flex items-baseline justify-between gap-3 text-sm">
+        <span className="font-medium">{label}</span>
+        <span className="tabular-nums">
+          {limit === null ? (
+            <>
+              <span className="font-semibold">{used}</span>
+              <span className="text-muted-foreground"> · illimité</span>
+            </>
+          ) : (
+            <>
+              <span className={cn("font-semibold", over && "text-destructive")}>{used}</span>
+              <span className="text-muted-foreground"> / {limit}</span>
+            </>
+          )}
+        </span>
+      </div>
+      {limit !== null && (
+        <div className="h-2 overflow-hidden rounded-full bg-page">
+          <div className={cn("h-full rounded-full", color)} style={{ width: `${Math.min(100, ratio * 100)}%` }} />
+        </div>
+      )}
+      {over && (
+        <p className="text-destructive text-xs">
+          {used} {unit[1]} pour {limit} inclus{limit > 1 ? "es" : "e"} : changez de formule pour aller au-delà.
+        </p>
+      )}
+    </li>
   );
 }
 
