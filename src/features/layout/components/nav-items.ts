@@ -1,5 +1,4 @@
 import {
-  IconAddressBook,
   IconAlertCircle,
   IconBookmark,
   IconBriefcase,
@@ -54,8 +53,6 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Trouver des profils", href: "/espace/recherche", icon: IconSearch },
       { label: "Mes profils", href: "/espace/vivier", icon: IconBookmark },
-      // Every contact obtained, plan or no plan: the place to call or write to them.
-      { label: "Profils contactés", href: "/espace/contacts", icon: IconAddressBook },
       { label: "Analyse de CV", href: "/espace/analyse-cv", icon: IconFileSearch },
     ],
   },

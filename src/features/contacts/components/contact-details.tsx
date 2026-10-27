@@ -11,8 +11,7 @@ import { cn, getInitials } from "#/lib/utils";
 
 /**
  * A worker's unlocked details: who, how to reach them (call, write, copy),
- * through which offers, since when. On « Profils contactés » and in the
- * contact dialog of a hired candidate.
+ * through which offers, since when. In the contact dialog of a candidate.
  */
 export function ContactDetails({ contact: c }: Readonly<{ contact: ContactedProfile }>) {
   const name = `${c.firstName} ${c.lastName}`.trim();
