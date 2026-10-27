@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { IconFileSearch, IconLock } from "@tabler/icons-react";
+import { IconLock } from "@tabler/icons-react";
 
-import type { CvCriterion, MySubscription } from "#/lib/api/types";
+import type { CvCriterion } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 
 export const CRITERIA: { key: CvCriterion; label: string }[] = [
@@ -70,37 +70,6 @@ export function CriterionBar({ label, value }: Readonly<{ label: string; value: 
         <div className={cn("h-full rounded-full bg-current", band(value).ring)} style={{ width: `${value}%` }} />
       </div>
     </div>
-  );
-}
-
-const longDate = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-
-/** What the plan still covers, or why the page is closed. */
-export function CvAllowance({ e }: Readonly<{ e: MySubscription["entitlements"] }>) {
-  if (e.cvQuota === 0) return <CvLocked />;
-  const pct = e.cvQuota === null ? 0 : Math.min(100, Math.round((e.cvUsed / e.cvQuota) * 100));
-  return (
-    <section className="space-y-3 rounded-3xl bg-card p-6">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <p className="flex items-center gap-2 font-medium">
-          <IconFileSearch className="size-5" />
-          CV inclus
-        </p>
-        <p className="text-sm tabular-nums">
-          {e.cvQuota === null ? `${e.cvUsed} analysés · illimité` : `${e.cvUsed} / ${e.cvQuota}`}
-          {e.endsAt && <span className="text-muted-foreground"> · jusqu&apos;au {longDate(e.endsAt)}</span>}
-        </p>
-      </div>
-      {e.cvQuota !== null && (
-        <div className="h-2 overflow-hidden rounded-full bg-page">
-          <div className={cn("h-full rounded-full", pct >= 100 ? "bg-destructive" : "bg-ink")} style={{ width: `${pct}%` }} />
-        </div>
-      )}
-      <p className="text-muted-foreground text-xs">
-        Jusqu&apos;à {e.cvBatchMax} CV par analyse, {e.cvFileMaxMb} Mo chacun. Un CV illisible n&apos;est pas décompté.
-        {e.cvRemaining === 0 && " Tous vos CV inclus sont utilisés : changez de formule pour en analyser davantage."}
-      </p>
-    </section>
   );
 }
 

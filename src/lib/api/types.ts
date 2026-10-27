@@ -322,6 +322,11 @@ export type CvScreeningSummary = {
   done: number;
   scored: number;
   bestScore: number | null;
+  /** The name the best CV gives, when it gives one. */
+  bestCandidate: string | null;
+  averageScore: number | null;
+  /** Scored CVs per verdict: ≥80, 60–79, 40–59, <40. */
+  bands: { very: number; good: number; partial: number; low: number };
 };
 
 export type CvResume = {
