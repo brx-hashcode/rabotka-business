@@ -2,19 +2,22 @@
 
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
-import { IconArrowUp, IconFileTypePdf, IconLoader2, IconPlayerStopFilled, IconX } from "@tabler/icons-react";
+import { IconArrowUp, IconFileTypePdf, IconInfoCircle, IconLoader2, IconPlayerStopFilled, IconX } from "@tabler/icons-react";
 import { Dialog as SheetPrimitive } from "radix-ui";
 import { toast } from "sonner";
 
 import { Bone } from "#/components/page-skeletons";
-import { downloadFile } from "#/lib/api/cv-screening-controller";
+import { downloadFile, type AskResult } from "#/lib/api/cv-screening-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
-import type { CvChat } from "#/lib/api/types";
+import type { CvChat, CvChatMessage } from "#/lib/api/types";
 
 export type ChatAsk = (
   question: string,
   opts: { signal: AbortSignal; onText: (text: string) => void },
-) => Promise<unknown>;
+) => Promise<AskResult>;
+
+/** A question refused as outside the recruitment: shown here only, never saved. */
+type Refused = { id: string; question: string; answer: string; at: string };
 
 /**
  * A conversation with the AI about CVs, in a drawer: questions on the right,
@@ -67,11 +70,20 @@ export function ChatSheet({
   // conversation is read back.
   const [live, setLive] = useState<{ question: string; answer: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [refused, setRefused] = useState<Refused[]>([]);
   const abort = useRef<AbortController | null>(null);
   const end = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
 
   const data = chat.data;
+  // The saved conversation, with the refused questions where they were asked.
+  const thread: (CvChatMessage & { note?: boolean })[] = [
+    ...(data?.messages ?? []),
+    ...refused.flatMap((r) => [
+      { id: `${r.id}-q`, role: "user" as const, content: r.question, createdAt: r.at },
+      { id: `${r.id}-a`, role: "assistant" as const, content: r.answer, createdAt: r.at, note: true },
+    ]),
+  ].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   const remaining = data ? data.remaining - (live ? 1 : 0) : 0;
   const canAsk = !!data && data.available && remaining > 0 && !live;
 
@@ -107,10 +119,14 @@ export function ChatSheet({
     const controller = new AbortController();
     abort.current = controller;
     try {
-      await send(q, {
+      const result = await send(q, {
         signal: controller.signal,
         onText: (text) => setLive((l) => (l ? { ...l, answer: l.answer + text } : l)),
       });
+      const offTopic = result.offTopic;
+      if (offTopic) {
+        setRefused((r) => [...r, { id: `refused-${Date.now()}`, question: q, answer: offTopic, at: new Date().toISOString() }]);
+      }
     } catch (err) {
       if (!controller.signal.aborted) setError(friendlyError(err, "La réponse n'a pas pu être rédigée. Réessayez dans un instant."));
     } finally {
@@ -174,9 +190,9 @@ export function ChatSheet({
               <p className="text-muted-foreground text-sm">{friendlyError(chat.error, "La conversation est indisponible pour le moment.")}</p>
             ) : (
               <div className="space-y-4">
-                {data.messages.length === 0 && !live && <Intro intro={intro} suggestions={suggestions} available={data.available} onPick={(q) => void ask(q)} disabled={!canAsk} />}
-                {data.messages.map((m) => (
-                  <Bubble key={m.id} role={m.role} text={m.content} />
+                {thread.length === 0 && !live && <Intro intro={intro} suggestions={suggestions} available={data.available} onPick={(q) => void ask(q)} disabled={!canAsk} />}
+                {thread.map((m) => (
+                  <Bubble key={m.id} role={m.role} text={m.content} note={m.note} />
                 ))}
                 {live && (
                   <>
@@ -294,7 +310,18 @@ function Intro({
   );
 }
 
-function Bubble({ role, text, writing }: Readonly<{ role: "user" | "assistant"; text: string; writing?: boolean }>) {
+function Bubble({ role, text, writing, note }: Readonly<{ role: "user" | "assistant"; text: string; writing?: boolean; note?: boolean }>) {
+  if (note) {
+    // A refusal, not an answer: said plainly, in the assistant's place.
+    return (
+      <div className="flex">
+        <p className="flex max-w-[90%] gap-2 rounded-3xl rounded-tl-lg bg-card px-4 py-3 text-muted-foreground text-sm leading-relaxed">
+          <IconInfoCircle className="mt-0.5 size-4 shrink-0" />
+          {text}
+        </p>
+      </div>
+    );
+  }
   if (role === "user") {
     return (
       <div className="flex justify-end">
