@@ -76,7 +76,7 @@ function DiscussionList({ activeId }: Readonly<{ activeId?: string }>) {
               onClick={() => setUnreadOnly(f.v)}
               className={cn(
                 "rounded-full px-3.5 py-1.5 font-medium text-sm transition-colors",
-                unreadOnly === f.v ? "bg-brand-lime text-[#0f2414]" : "bg-page text-muted-foreground hover:text-foreground",
+                unreadOnly === f.v ? "bg-selected text-selected-foreground" : "bg-page text-muted-foreground hover:text-foreground",
               )}
             >
               {f.l}

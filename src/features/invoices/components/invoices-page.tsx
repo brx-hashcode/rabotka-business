@@ -88,7 +88,7 @@ export function InvoicesPage() {
                       onClick={() => setYear(y)}
                       className={cn(
                         "rounded-full px-3.5 py-1.5 font-medium text-sm",
-                        year === y ? "bg-brand-lime text-[#0f2414]" : "text-muted-foreground hover:text-foreground",
+                        year === y ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
                       )}
                     >
                       {y === "all" ? "Toutes" : y}

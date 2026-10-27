@@ -141,7 +141,7 @@ export function CvScreeningsPage() {
                   onClick={() => setFilter(f.key)}
                   className={cn(
                     "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 font-medium text-sm transition-colors",
-                    filter === f.key ? "bg-brand-lime text-[#0f2414]" : "text-muted-foreground hover:text-foreground",
+                    filter === f.key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {f.label}

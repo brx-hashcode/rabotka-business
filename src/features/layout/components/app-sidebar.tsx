@@ -65,7 +65,7 @@ export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>
                   aria-current={active ? "page" : undefined}
                   className={cn(
                     "flex h-10 items-center gap-3 rounded-xl px-3 font-medium text-sm transition-colors",
-                    active ? "bg-brand-lime text-[#0f2414]" : "text-foreground/80 hover:bg-page hover:text-foreground",
+                    active ? "bg-selected text-selected-foreground" : "text-foreground/80 hover:bg-page hover:text-foreground",
                   )}
                 >
                   <Icon className="size-[18px] shrink-0" />
