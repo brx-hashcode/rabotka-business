@@ -64,6 +64,7 @@ import {
 } from "../offer-labels";
 import { failedLabel, KIND_LABEL } from "../offer-questions";
 import { ApplicationActions } from "./application-actions";
+import { ShareOfferButton } from "./share-offer-button";
 import { REFUSAL_TEMPLATES, RefusalMessageField } from "./refusal-message";
 import { Checkbox } from "#/components/ui/checkbox";
 import { CriterionBar, Points, ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
@@ -156,6 +157,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                     Modifier
                   </Link>
                 )}
+                {o.publicUrl && <ShareOfferButton url={o.publicUrl} title={o.title} />}
                 {o.status === "EXPIRED" && (
                   <button
                     type="button"
