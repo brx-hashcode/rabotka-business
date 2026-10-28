@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { IconInfoCircle, IconLoader2, IconRefresh, IconWand } from "@tabler/icons-react";
+import { IconInfoCircle, IconRefresh, IconWand } from "@tabler/icons-react";
+import { Loader } from "lucide-react";
 
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
 import { Textarea } from "#/components/ui/textarea";
@@ -132,7 +133,7 @@ export function OfferAiDialog({
                 onClick={() => write.mutate()}
                 className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-page font-medium hover:bg-page/70 disabled:opacity-40"
               >
-                {write.isPending ? <IconLoader2 className="size-4 animate-spin" /> : <IconRefresh className="size-4" />}
+                {write.isPending ? <Loader className="size-4 animate-spin" /> : <IconRefresh className="size-4" />}
                 Autre version
               </button>
               <button
@@ -162,7 +163,7 @@ export function OfferAiDialog({
                 onClick={() => write.mutate()}
                 className="inline-flex h-12 flex-[2] items-center justify-center gap-2 rounded-full bg-ink font-medium text-white hover:bg-ink/90 disabled:opacity-40"
               >
-                {write.isPending ? <IconLoader2 className="size-4 animate-spin" /> : <IconWand className="size-4" />}
+                {write.isPending ? <Loader className="size-4 animate-spin" /> : <IconWand className="size-4" />}
                 {write.isPending ? "Rédaction…" : "Rédiger"}
               </button>
             </>

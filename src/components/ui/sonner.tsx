@@ -5,8 +5,8 @@ import {
   IconCircleCheck,
   IconCircleX,
   IconInfoCircle,
-  IconLoader2,
 } from "@tabler/icons-react";
+import { Loader } from "lucide-react";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 
 /**
@@ -23,7 +23,7 @@ const Toaster = ({ ...props }: ToasterProps) => (
       info: <IconInfoCircle className="size-5" />,
       warning: <IconAlertTriangle className="size-5" />,
       error: <IconCircleX className="size-5" />,
-      loading: <IconLoader2 className="size-5 animate-spin" />,
+      loading: <Loader className="size-5 animate-spin" />,
     }}
     toastOptions={{
       unstyled: true,

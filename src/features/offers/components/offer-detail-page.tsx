@@ -12,7 +12,6 @@ import {
   IconChevronDown,
   IconInbox,
   IconInfoCircle,
-  IconLoader2,
   IconMapPin,
   IconPencil,
   IconRefresh,
@@ -21,6 +20,7 @@ import {
   IconUsers,
   type Icon as TablerIcon,
 } from "@tabler/icons-react";
+import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
@@ -402,7 +402,7 @@ function ApplicantsCard({
 
           {pending > 0 && (
             <p className="flex items-center gap-2 text-muted-foreground text-sm">
-              <IconLoader2 className="size-4 animate-spin" />
+              <Loader className="size-4 animate-spin" />
               {pending === 1 ? "1 candidature en cours d'analyse" : `${pending} candidatures en cours d'analyse`} : le classement se met à
               jour seul.
             </p>
@@ -413,7 +413,7 @@ function ApplicantsCard({
           ) : (
             <ul className="flex flex-col gap-2">
               {ranked.map((a, i) => (
-                <ApplicantRow key={a.applicationId} applicant={a} rank={i + 1} assessment={scores.get(a.applicationId)} />
+                <ApplicantRow key={a.applicationId} applicant={a} rank={i + 1} assessment={scores.get(a.applicationId)} waiting={pending > 0} />
               ))}
             </ul>
           )}
@@ -435,7 +435,8 @@ function ApplicantRow({
   applicant: a,
   rank,
   assessment,
-}: Readonly<{ applicant: OfferApplicant; rank: number; assessment?: ApplicantAssessment }>) {
+  waiting,
+}: Readonly<{ applicant: OfferApplicant; rank: number; assessment?: ApplicantAssessment; waiting: boolean }>) {
   const [open, setOpen] = useState(false);
   const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
   const score = assessment?.score ?? null;
@@ -446,8 +447,12 @@ function ApplicantRow({
         {score !== null ? (
           <ScoreRing score={score} size={46} />
         ) : (
-          <span className="flex size-[46px] shrink-0 items-center justify-center rounded-full bg-card text-muted-foreground" title="Analyse en cours">
-            <IconLoader2 className="size-4 animate-spin" />
+          // A spinner only while scores are on their way; otherwise no score (yet).
+          <span
+            className="flex size-[46px] shrink-0 items-center justify-center rounded-full bg-card text-muted-foreground"
+            title={waiting ? "Analyse en cours" : "Pas encore de score"}
+          >
+            {waiting ? <Loader className="size-4 animate-spin" /> : "–"}
           </span>
         )}
         <Link href={`/espace/candidats/${a.worker.id}`} className="group flex min-w-0 flex-1 items-center gap-3">
