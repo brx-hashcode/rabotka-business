@@ -8,6 +8,7 @@ import type {
   OfferDraft,
   OfferDraftInput,
   StatsPeriod,
+  SubscriptionPeriod,
   UpdateMyBusiness,
 } from "./types";
 
@@ -58,6 +59,11 @@ class BusinessController extends BusinessBaseController {
     return this.post("/business/me/subscription", { planId, billingPeriod });
   }
 
+  /** Starts the next, already paid period today; the running one ends now. */
+  startPeriodNow(subscriptionId: string): Promise<SubscriptionPeriod> {
+    return this.post(`/business/me/subscription/${encodeURIComponent(subscriptionId)}/start-now`);
+  }
+
   /** A new paper, or the replacement of a refused one (`replacesId`). */
   uploadDocument(file: File, documentType: string, replacesId?: string): Promise<MyBusiness> {
     const form = new FormData();
@@ -84,6 +90,7 @@ export const getMyStats = controller.getStats.bind(controller);
 export const getMySubscription = controller.getSubscription.bind(controller);
 export const draftOffer = controller.draftOffer.bind(controller);
 export const subscribeToPlan = controller.subscribe.bind(controller);
+export const startPeriodNow = controller.startPeriodNow.bind(controller);
 
 export const myStatsKey = (days: StatsPeriod) => ["business", "me", "stats", days] as const;
 
