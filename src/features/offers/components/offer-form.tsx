@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import Link from "next/link";
 import { useForm, useWatch, type Control, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { IconWand } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 
@@ -12,9 +14,11 @@ import { Textarea } from "#/components/ui/textarea";
 import { Combobox, type ComboboxOption } from "#/features/sign-up/components/combobox";
 import { FIELD_CLASS, FieldLabel, StepActions, TextField } from "#/features/sign-up/components/form-bits";
 import { useCities, useCountries } from "#/hooks/use-geo";
+import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
 import { getJobCategories, type EmploymentType, type Offer, type OfferInput, type PaymentFlow } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
 import { AVAILABLE_EMPLOYMENT_TYPES, EMPLOYMENT_TYPES, isDatedMission, PAYMENT_FLOWS } from "../offer-labels";
+import { OfferAiDialog } from "./offer-ai-dialog";
 import { OfferSummary } from "./offer-summary";
 
 /** Mirrors the server (and the client app): a new date is at least 4 h ahead. */
@@ -158,6 +162,10 @@ export function OfferForm({
   const { data: countries } = useCountries();
   const { data: cities } = useCities(country);
   const { data: categories } = useQuery({ queryKey: ["job-categories"], queryFn: getJobCategories, staleTime: Infinity });
+  const { data: subscription } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
+  const [writing, setWriting] = useState(false);
+  // No AI writing in the plan: the button says where to find it instead.
+  const aiIncluded = subscription?.entitlements.offerDraftsQuota !== 0;
 
   useEffect(() => {
     if (cities && city && !cities.includes(city)) form.setValue("city", "");
@@ -181,6 +189,57 @@ export function OfferForm({
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_26rem]">
         <form onSubmit={form.handleSubmit(submit)} noValidate className="space-y-10 rounded-3xl bg-card p-5 sm:p-8">
           <Section title="L'offre">
+            {aiIncluded ? (
+              <button
+                type="button"
+                onClick={() => setWriting(true)}
+                className="flex w-full items-center gap-3 rounded-2xl bg-brand-lime/40 px-4 py-3 text-left transition-colors hover:bg-brand-lime/60"
+              >
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-brand-lime text-[#0f2414]">
+                  <IconWand className="size-5" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-medium text-sm">Rédiger avec l&apos;IA</span>
+                  <span className="block text-muted-foreground text-xs">
+                    Quelques mots suffisent : l&apos;intitulé, la description et le métier sont proposés.
+                  </span>
+                </span>
+              </button>
+            ) : (
+              <Link
+                href="/espace/abonnement"
+                className="flex items-center gap-3 rounded-2xl bg-page px-4 py-3 text-muted-foreground text-sm hover:text-foreground"
+              >
+                <IconWand className="size-5 shrink-0" />
+                La rédaction d&apos;offres par l&apos;IA est incluse dans les formules supérieures.
+              </Link>
+            )}
+            <OfferAiDialog
+              open={writing}
+              onOpenChange={setWriting}
+              context={{
+                title: form.getValues("title") || undefined,
+                employmentType: type,
+                city: remote ? undefined : city || undefined,
+                isRemote: remote,
+                quantity: Number(form.getValues("quantity")) || undefined,
+              }}
+              onUse={(draft) => {
+                const set = { shouldValidate: true, shouldDirty: true } as const;
+                form.setValue("title", draft.title, set);
+                form.setValue("description", draft.description, set);
+                // The trade and the type only where the business has not chosen.
+                if (draft.categoryId && !form.getValues("categoryId")) form.setValue("categoryId", draft.categoryId, set);
+                if (
+                  draft.employmentType &&
+                  draft.employmentType !== type &&
+                  AVAILABLE_EMPLOYMENT_TYPES.includes(draft.employmentType) &&
+                  !form.formState.dirtyFields.employmentType
+                ) {
+                  form.setValue("employmentType", draft.employmentType, set);
+                }
+              }}
+            />
             <TextField control={form.control} name="title" label="Intitulé" placeholder="Agent d'entretien pour nos bureaux" autoFocus />
             <FormField
               control={form.control}

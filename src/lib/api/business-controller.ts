@@ -1,6 +1,15 @@
 import { appConfig } from "#/config";
 import { BusinessBaseController } from "./base-controller";
-import type { BusinessStats, ContactedProfile, MyBusiness, MySubscription, StatsPeriod, UpdateMyBusiness } from "./types";
+import type {
+  BusinessStats,
+  ContactedProfile,
+  MyBusiness,
+  MySubscription,
+  OfferDraft,
+  OfferDraftInput,
+  StatsPeriod,
+  UpdateMyBusiness,
+} from "./types";
 
 /** The signed-in business's own routes (`business/*`, BusinessProfileGuard). */
 class BusinessController extends BusinessBaseController {
@@ -18,6 +27,11 @@ class BusinessController extends BusinessBaseController {
     const form = new FormData();
     form.append("avatar", file);
     return this.post("/profile/avatar", form);
+  }
+
+  /** « Rédiger avec l'IA »: an offer written from a few words (one of the plan's drafts). */
+  draftOffer(body: OfferDraftInput): Promise<OfferDraft> {
+    return this.post("/business/me/offer-drafts", body);
   }
 
   /** Recruitment figures over the last `days`, with the previous period. */
@@ -68,6 +82,7 @@ export const unlockWorkerContact = controller.unlockContact.bind(controller);
 export const myContactsKey = ["business", "me", "contacts"] as const;
 export const getMyStats = controller.getStats.bind(controller);
 export const getMySubscription = controller.getSubscription.bind(controller);
+export const draftOffer = controller.draftOffer.bind(controller);
 export const subscribeToPlan = controller.subscribe.bind(controller);
 
 export const myStatsKey = (days: StatsPeriod) => ["business", "me", "stats", days] as const;
