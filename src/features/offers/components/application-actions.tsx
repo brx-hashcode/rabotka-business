@@ -246,6 +246,7 @@ export function ApplicationActions({
         name={name}
         open={dialog === "contact"}
         onOpenChange={(o) => setDialog(o ? "contact" : null)}
+        applicationId={hired ? id : undefined}
       />
 
       <AcceptDialog
