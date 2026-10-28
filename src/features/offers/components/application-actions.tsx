@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { ActionDialog } from "#/components/action-dialog";
 import { chattableApplicationId } from "#/features/discussions/chattable";
 import { ContactDialog } from "#/features/contacts/components/contact-dialog";
+import { RefusalMessageField } from "./refusal-message";
 import { useOpenDiscussion } from "#/features/discussions/use-discussions";
 import {
   DropdownMenu,
@@ -263,12 +264,12 @@ export function ApplicationActions({
         tone="warning"
         icon={<IconX className="size-5" />}
         title={`Refuser la candidature de ${name} ?`}
-        description="Le candidat est prévenu. Vous pouvez lui dire pourquoi, en quelques mots."
+        description="Le candidat est prévenu, avec votre message s'il y en a un."
         confirmLabel="Refuser"
         pending={reject.isPending}
         onConfirm={() => reject.mutate()}
       >
-        <ReasonField value={reason} onChange={setReason} placeholder="Ex. : profil ne correspondant pas aux horaires (facultatif)" />
+        <RefusalMessageField value={reason} onChange={setReason} />
       </ActionDialog>
 
       <ActionDialog

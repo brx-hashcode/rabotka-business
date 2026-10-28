@@ -239,7 +239,16 @@ class AssessmentController extends BusinessBaseController {
   forOffer(offerId: string): Promise<{ assessments: ApplicantAssessment[]; pending: number }> {
     return this.get(`/business/me/offers/${encodeURIComponent(offerId)}/assessments`);
   }
+
+  /** Refuses the applications picked, or every one still waiting, with one message. */
+  refuse(
+    offerId: string,
+    body: { applicationIds?: string[]; remaining?: boolean; message?: string },
+  ): Promise<{ refused: number; skipped: number }> {
+    return this.post(`/business/me/offers/${encodeURIComponent(offerId)}/applications/refuse`, body);
+  }
 }
 
 const assessments = new AssessmentController();
 export const getOfferAssessments = assessments.forOffer.bind(assessments);
+export const refuseApplications = assessments.refuse.bind(assessments);
