@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { IconFileText, IconLoader2, IconLockOpen } from "@tabler/icons-react";
-import { toast } from "sonner";
+import { IconFileText, IconLockOpen } from "@tabler/icons-react";
 
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
 import { Skeleton } from "#/components/ui/skeleton";
 import { getMyContacts, myContactsKey } from "#/lib/api/business-controller";
-import { downloadFile } from "#/lib/api/download";
+import { PreviewSheet } from "#/components/preview-sheet";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { applicationContractUrl } from "#/lib/api/offer-controller";
 import { ContactDetails } from "./contact-details";
@@ -16,7 +15,8 @@ import { ContactDetails } from "./contact-details";
 /**
  * A hired candidate's unlocked details, over the page they were asked from —
  * from the business's contacts, read when the dialog opens. Given the
- * application they were retained for, it also offers their contract.
+ * application they were retained for, it also shows their contract, in the
+ * document drawer (read there, downloaded from there).
  */
 export function ContactDialog({
   workerId,
@@ -33,22 +33,11 @@ export function ContactDialog({
   applicationId?: string;
 }>) {
   const contacts = useQuery({ queryKey: myContactsKey, queryFn: getMyContacts, enabled: open });
-  const [downloading, setDownloading] = useState(false);
-
-  async function downloadContract() {
-    if (!applicationId || downloading) return;
-    setDownloading(true);
-    try {
-      await downloadFile(applicationContractUrl(applicationId), "contrat.pdf");
-    } catch (err) {
-      toast.error(friendlyError(err, "Le contrat n'a pas pu être préparé. Réessayez dans un instant."));
-    } finally {
-      setDownloading(false);
-    }
-  }
+  const [contractOpen, setContractOpen] = useState(false);
   const contact = contacts.data?.find((c) => c.workerId === workerId);
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[calc(100vw-2rem)] gap-0 rounded-3xl border-0 bg-card p-6 shadow-soft sm:max-w-md">
         <DialogTitle className="sr-only">Contact de {name}</DialogTitle>
@@ -76,15 +65,31 @@ export function ContactDialog({
         {applicationId && (
           <button
             type="button"
-            onClick={() => void downloadContract()}
-            disabled={downloading}
-            className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-page font-medium hover:bg-page/70 disabled:opacity-60"
+            onClick={() => {
+              // One layer at a time: the drawer replaces the dialog.
+              onOpenChange(false);
+              setContractOpen(true);
+            }}
+            className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-page font-medium hover:bg-page/70"
           >
-            {downloading ? <IconLoader2 className="size-4 animate-spin" /> : <IconFileText className="size-4" />}
-            {downloading ? "Préparation du contrat…" : "Télécharger le contrat"}
+            <IconFileText className="size-4" />
+            Voir le contrat
           </button>
         )}
       </DialogContent>
     </Dialog>
+    {applicationId && (
+      <PreviewSheet
+        open={contractOpen}
+        onOpenChange={setContractOpen}
+        title={`Contrat de ${name}`}
+        subtitle="Contrat de prestation de services"
+        src={applicationContractUrl(applicationId)}
+        kind="pdf"
+        fileName={`contrat_${name.replaceAll(/\s+/g, "_")}.pdf`}
+        unavailable="Le contrat n'a pas pu être préparé. Réessayez dans un instant."
+      />
+    )}
+    </>
   );
 }
