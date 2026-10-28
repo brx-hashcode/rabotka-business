@@ -96,13 +96,8 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
         Analyse de CV
       </Link>
 
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="min-w-0 space-y-1.5">
-          <h1 className="break-words font-semibold text-3xl tracking-tight">{s.jobTitle}</h1>
-          <p className="text-muted-foreground">
-            {s.total} CV · le {date(s.createdAt)}
-          </p>
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="min-w-0 break-words font-semibold text-3xl tracking-tight">{s.jobTitle}</h1>
         <div className="flex flex-wrap items-center gap-2">
           {selected.length > 0 && (
             <div className="flex items-center gap-1 rounded-full bg-card p-1 pl-4">
