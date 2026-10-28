@@ -49,7 +49,7 @@ import {
   isDatedMission,
   offerDate,
   PAYMENT_SUFFIX,
-  STAGE_CLASS,
+  statusClass,
   STATUS,
   type ApplicationStage,
 } from "../offer-labels";
@@ -405,7 +405,7 @@ function ApplicantsCard({
                       <span
                         className={cn(
                           "shrink-0 rounded-full px-2.5 py-1 font-medium text-xs",
-                          STAGE_CLASS[applicationStage(a.status)],
+                          statusClass(a.status),
                         )}
                       >
                         {APPLICATION_STATUS[a.status] ?? a.status}

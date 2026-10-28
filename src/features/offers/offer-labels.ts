@@ -63,12 +63,22 @@ export function applicationStage(status: string): ApplicationStage {
   return "closed";
 }
 
-export const STAGE_CLASS: Record<ApplicationStage, string> = {
-  new: "bg-chip-amber text-chip-amber-foreground",
-  viewed: "bg-card text-foreground",
-  hired: "bg-chip-green text-chip-green-foreground",
-  closed: "bg-card text-muted-foreground",
+/**
+ * The pill colour of each status, so the steps after « retenue » read apart
+ * (they share one tab): retained violet, on the mission green, done sky.
+ */
+export const STATUS_CLASS: Record<string, string> = {
+  PENDING: "bg-chip-amber text-chip-amber-foreground",
+  VIEWED: "bg-card text-foreground",
+  WAITING_PAYMENT: "bg-chip-amber text-chip-amber-foreground",
+  ACCEPTED: "bg-chip-violet text-chip-violet-foreground",
+  STARTED: "bg-chip-green text-chip-green-foreground",
+  END: "bg-chip-sky text-chip-sky-foreground",
+  REJECTED: "bg-card text-muted-foreground",
+  CANCELLED: "bg-card text-muted-foreground",
 };
+
+export const statusClass = (status: string) => STATUS_CLASS[status] ?? "bg-card text-muted-foreground";
 
 /** Whether the date is the day of the work (a mission) or a closing date. */
 export const isDatedMission = (t: EmploymentType) => t === "MISSION";
