@@ -1,3 +1,4 @@
+import { appConfig } from "#/config";
 import { BusinessBaseController } from "./base-controller";
 
 export type OfferStatus =
@@ -218,3 +219,8 @@ export const republishOffer = controller.republish.bind(controller);
 export const getJobCategories = controller.categories.bind(controller);
 
 export const offersKey = ["offers"] as const;
+
+/** A retained candidate's contract (PDF), made by the server if it was missing. */
+export function applicationContractUrl(applicationId: string): string {
+  return `${appConfig.apiUrl}/business/me/applications/${encodeURIComponent(applicationId)}/contract.pdf`;
+}

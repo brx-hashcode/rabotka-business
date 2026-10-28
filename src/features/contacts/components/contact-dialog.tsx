@@ -1,25 +1,51 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { IconLockOpen } from "@tabler/icons-react";
+import { IconFileText, IconLoader2, IconLockOpen } from "@tabler/icons-react";
+import { toast } from "sonner";
 
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
 import { Skeleton } from "#/components/ui/skeleton";
 import { getMyContacts, myContactsKey } from "#/lib/api/business-controller";
+import { downloadFile } from "#/lib/api/download";
 import { friendlyError } from "#/lib/api/friendly-error";
+import { applicationContractUrl } from "#/lib/api/offer-controller";
 import { ContactDetails } from "./contact-details";
 
 /**
  * A hired candidate's unlocked details, over the page they were asked from —
- * from the business's contacts, read when the dialog opens.
+ * from the business's contacts, read when the dialog opens. Given the
+ * application they were retained for, it also offers their contract.
  */
 export function ContactDialog({
   workerId,
   name,
   open,
   onOpenChange,
-}: Readonly<{ workerId: string; name: string; open: boolean; onOpenChange: (open: boolean) => void }>) {
+  applicationId,
+}: Readonly<{
+  workerId: string;
+  name: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** The retained application: its contract can be downloaded. */
+  applicationId?: string;
+}>) {
   const contacts = useQuery({ queryKey: myContactsKey, queryFn: getMyContacts, enabled: open });
+  const [downloading, setDownloading] = useState(false);
+
+  async function downloadContract() {
+    if (!applicationId || downloading) return;
+    setDownloading(true);
+    try {
+      await downloadFile(applicationContractUrl(applicationId), "contrat.pdf");
+    } catch (err) {
+      toast.error(friendlyError(err, "Le contrat n'a pas pu être préparé. Réessayez dans un instant."));
+    } finally {
+      setDownloading(false);
+    }
+  }
   const contact = contacts.data?.find((c) => c.workerId === workerId);
 
   return (
@@ -46,6 +72,17 @@ export function ContactDialog({
                 : `Elles apparaissent dès que ${name} a confirmé.`}
             </p>
           </div>
+        )}
+        {applicationId && (
+          <button
+            type="button"
+            onClick={() => void downloadContract()}
+            disabled={downloading}
+            className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-page font-medium hover:bg-page/70 disabled:opacity-60"
+          >
+            {downloading ? <IconLoader2 className="size-4 animate-spin" /> : <IconFileText className="size-4" />}
+            {downloading ? "Préparation du contrat…" : "Télécharger le contrat"}
+          </button>
         )}
       </DialogContent>
     </Dialog>

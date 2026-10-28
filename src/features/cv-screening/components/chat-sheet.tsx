@@ -7,7 +7,8 @@ import { Dialog as SheetPrimitive } from "radix-ui";
 import { toast } from "sonner";
 
 import { Bone } from "#/components/page-skeletons";
-import { downloadFile, type AskResult } from "#/lib/api/cv-screening-controller";
+import type { AskResult } from "#/lib/api/cv-screening-controller";
+import { downloadFile } from "#/lib/api/download";
 import { friendlyError } from "#/lib/api/friendly-error";
 import type { CvChat, CvChatMessage } from "#/lib/api/types";
 
