@@ -2,15 +2,25 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { IconCheck, IconClock, IconFileSearch, IconFileText, IconLockOpen, IconWand } from "@tabler/icons-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  IconCalendarRepeat,
+  IconCheck,
+  IconClock,
+  IconFileSearch,
+  IconFileText,
+  IconLockOpen,
+  IconPlayerPlay,
+  IconWand,
+} from "@tabler/icons-react";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
 import { Bone } from "#/components/page-skeletons";
-import { getMySubscription, mySubscriptionKey, subscribeToPlan } from "#/lib/api/business-controller";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
+import { getMySubscription, mySubscriptionKey, startPeriodNow, subscribeToPlan } from "#/lib/api/business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
-import type { BusinessPlan, MySubscription, SubscriptionStatus } from "#/lib/api/types";
+import type { BusinessPlan, MySubscription, SubscriptionPeriod, SubscriptionStatus } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { offersPerPeriodLabel, offersUsed } from "../offers-quota";
 
@@ -146,12 +156,128 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
         </ul>
       )}
 
-      {data.upcoming.length > 0 && (
-        <p className="rounded-2xl bg-page px-4 py-3 text-sm">
-          À suivre : {data.upcoming.map((p) => `${p.planName} du ${date(p.startsAt)} au ${date(p.endsAt)}`).join(" ; ")}, déjà payé.
-        </p>
-      )}
+      {data.upcoming.length > 0 && <UpcomingPeriods upcoming={data.upcoming} entitlements={e} />}
     </section>
+  );
+}
+
+const LENGTH: Record<string, string> = { MONTHLY: "1 mois", ANNUAL: "1 an" };
+
+/** What the running period still has, in words, for the « start now » warning. */
+function leftover(e: MySubscription["entitlements"]): string[] {
+  const out: string[] = [];
+  const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
+  if (e.unlocksRemaining) out.push(plural(e.unlocksRemaining, "contact inclus", "contacts inclus"));
+  if (e.cvRemaining) out.push(plural(e.cvRemaining, "CV inclus", "CV inclus"));
+  if (e.offerDraftsRemaining) out.push(plural(e.offerDraftsRemaining, "rédaction IA", "rédactions IA"));
+  if (e.offersRemaining) out.push(plural(e.offersRemaining, "offre à publier", "offres à publier"));
+  if (e.endsAt) {
+    const days = Math.ceil((new Date(e.endsAt).getTime() - Date.now()) / 86_400_000);
+    if (days > 0) out.push(plural(days, "jour", "jours"));
+  }
+  return out;
+}
+
+/**
+ * The periods already paid that follow the running one. The very next one
+ * can start today, when the business cannot wait: the running period then
+ * ends now, and what it had left is lost.
+ */
+function UpcomingPeriods({
+  upcoming,
+  entitlements,
+}: Readonly<{ upcoming: SubscriptionPeriod[]; entitlements: MySubscription["entitlements"] }>) {
+  const queryClient = useQueryClient();
+  const [confirm, setConfirm] = useState<SubscriptionPeriod | null>(null);
+  const start = useMutation({
+    mutationFn: (id: string) => startPeriodNow(id),
+    onSuccess: (period) => {
+      setConfirm(null);
+      void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
+      toast.success(`${period.planName} a commencé : vos compteurs repartent à zéro jusqu'au ${date(period.endsAt)}.`);
+    },
+    onError: (err) => toast.error(friendlyError(err, "La formule n'a pas pu démarrer. Réessayez dans un instant.")),
+  });
+  const lost = leftover(entitlements);
+
+  return (
+    <div className="space-y-2">
+      <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">À suivre</p>
+      {upcoming.map((p, i) => (
+        <div key={p.id} className="flex flex-wrap items-start gap-4 rounded-2xl bg-page p-4 sm:items-center">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-card">
+            <IconCalendarRepeat className="size-5" />
+          </span>
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="font-semibold">{p.planName}</p>
+              {(p.paid || p.granted) && (
+                <span className="rounded-full bg-chip-green px-2.5 py-0.5 font-medium text-chip-green-foreground text-xs">
+                  {p.paid ? "Déjà payée" : "Offerte"}
+                </span>
+              )}
+            </div>
+            <p className="text-muted-foreground text-sm">
+              Du {date(p.startsAt)} au {date(p.endsAt)}
+              {i === 0 && " · commence automatiquement à la fin de votre formule"}
+            </p>
+          </div>
+          {i === 0 && (
+            <button
+              type="button"
+              onClick={() => setConfirm(p)}
+              className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-ink px-5 font-medium text-sm text-white hover:bg-ink/90"
+            >
+              <IconPlayerPlay className="size-4" />
+              Démarrer maintenant
+            </button>
+          )}
+        </div>
+      ))}
+
+      <Dialog open={confirm !== null} onOpenChange={(open) => !open && !start.isPending && setConfirm(null)}>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-md gap-0 overflow-hidden rounded-3xl border-0 bg-card p-0 shadow-soft">
+          {confirm && (
+            <div className="space-y-5 p-6">
+              <div className="space-y-1">
+                <DialogTitle className="font-semibold text-xl">Démarrer {confirm.planName} maintenant ?</DialogTitle>
+                <DialogDescription className="text-muted-foreground text-sm">
+                  {confirm.planName} commence aujourd&apos;hui pour {LENGTH[confirm.billingPeriod] ?? "toute sa durée"}, avec tous
+                  ses avantages à zéro.
+                </DialogDescription>
+              </div>
+              <div className="space-y-2 rounded-2xl bg-chip-amber/60 p-4 text-chip-amber-foreground text-sm">
+                <p className="font-medium">Attention : votre formule actuelle s&apos;arrête aujourd&apos;hui.</p>
+                {lost.length > 0 ? (
+                  <p>Ce qu&apos;il lui reste est perdu : {lost.join(", ")}.</p>
+                ) : (
+                  <p>Il ne lui reste plus rien à utiliser.</p>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={start.isPending}
+                  onClick={() => setConfirm(null)}
+                  className="h-12 flex-1 rounded-full bg-page font-medium hover:bg-page/70 disabled:opacity-50"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  disabled={start.isPending}
+                  onClick={() => start.mutate(confirm.id)}
+                  className="inline-flex h-12 flex-[1.4] items-center justify-center gap-2 rounded-full bg-ink font-medium text-white hover:bg-ink/90 disabled:opacity-60"
+                >
+                  {start.isPending && <Loader className="size-4 animate-spin" />}
+                  Démarrer maintenant
+                </button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
 
