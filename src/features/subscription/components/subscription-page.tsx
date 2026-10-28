@@ -91,7 +91,7 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
   }
   const status = STATUS[e.status];
   // Contacts, CVs and AI drafts count per period; online offers do not.
-  const renews = e.endsAt ? `Pour la période en cours, jusqu'au ${date(e.endsAt)}.` : undefined;
+  const renews = e.endsAt ? `Pour la période, jusqu'au ${date(e.endsAt)}.` : undefined;
   return (
     <section className="space-y-6 rounded-3xl bg-card p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -109,7 +109,7 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Meter
           icon={IconLockOpen}
           label="Contacts inclus"
@@ -123,23 +123,23 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
         />
         <Meter
           icon={IconFileText}
-          label="Offres en ligne en même temps"
+          label="Offres en ligne"
           used={e.activeOffers}
           limit={e.activeOffersLimit}
           hint={
             e.activeOffersLimit !== null && e.activeOffers > e.activeOffersLimit
-              ? "Les offres déjà en ligne le restent ; terminez-en pour en publier de nouvelles."
-              : "Les offres en ligne en ce moment : ce nombre ne repart pas à zéro à chaque période."
+              ? "En même temps. Les offres déjà en ligne le restent : terminez-en pour en publier."
+              : "En même temps : ce nombre ne repart pas à zéro à chaque période."
           }
         />
         {e.cvQuota !== 0 && (
-          <Meter icon={IconFileSearch} label="CV inclus (analyse de CV)" used={e.cvUsed} limit={e.cvQuota} hint={renews} />
+          <Meter icon={IconFileSearch} label="CV inclus" used={e.cvUsed} limit={e.cvQuota} hint={renews} />
         )}
         {/* Absent from a backend older than AI writing. */}
         {e.offerDraftsQuota !== undefined && e.offerDraftsQuota !== 0 && (
           <Meter
             icon={IconWand}
-            label="Offres rédigées par l'IA"
+            label="Rédactions IA"
             used={e.offerDraftsQuota === null ? 0 : e.offerDraftsQuota - (e.offerDraftsRemaining ?? 0)}
             limit={e.offerDraftsQuota}
             hint={renews}
@@ -185,7 +185,7 @@ function Meter({
           <Icon className="size-4" />
           {label}
         </span>
-        <span className="text-sm tabular-nums">{limit === null ? `${used} · illimité` : `${used} / ${limit}`}</span>
+        <span className="shrink-0 whitespace-nowrap text-sm tabular-nums">{limit === null ? `${used} · illimité` : `${used} / ${limit}`}</span>
       </div>
       {limit !== null && (
         <div className="h-2 overflow-hidden rounded-full bg-card">
