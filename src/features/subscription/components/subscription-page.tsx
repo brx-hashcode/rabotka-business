@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { IconCheck, IconClock, IconFileSearch, IconFileText, IconLockOpen } from "@tabler/icons-react";
+import { IconCheck, IconClock, IconFileSearch, IconFileText, IconLockOpen, IconWand } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
@@ -90,6 +90,8 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
     );
   }
   const status = STATUS[e.status];
+  // Contacts, CVs and AI drafts count per period; online offers do not.
+  const renews = e.endsAt ? `Pour la période en cours, jusqu'au ${date(e.endsAt)}.` : undefined;
   return (
     <section className="space-y-6 rounded-3xl bg-card p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -107,16 +109,42 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
         </div>
       </div>
 
-      <div className={cn("grid gap-4 sm:grid-cols-2", e.cvQuota !== 0 && "xl:grid-cols-3")}>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Meter
           icon={IconLockOpen}
           label="Contacts inclus"
           used={e.unlocksUsed}
           limit={e.unlocksQuota}
-          hint={e.unlocksRemaining === 0 ? "Tous vos contacts inclus sont utilisés : les suivants sont payants." : undefined}
+          hint={
+            e.unlocksRemaining === 0
+              ? "Tous vos contacts inclus sont utilisés : les suivants sont payants."
+              : renews
+          }
         />
-        <Meter icon={IconFileText} label="Offres en ligne" used={e.activeOffers} limit={e.activeOffersLimit} />
-        {e.cvQuota !== 0 && <Meter icon={IconFileSearch} label="CV inclus (analyse de CV)" used={e.cvUsed} limit={e.cvQuota} />}
+        <Meter
+          icon={IconFileText}
+          label="Offres en ligne en même temps"
+          used={e.activeOffers}
+          limit={e.activeOffersLimit}
+          hint={
+            e.activeOffersLimit !== null && e.activeOffers > e.activeOffersLimit
+              ? "Les offres déjà en ligne le restent ; terminez-en pour en publier de nouvelles."
+              : "Les offres en ligne en ce moment : ce nombre ne repart pas à zéro à chaque période."
+          }
+        />
+        {e.cvQuota !== 0 && (
+          <Meter icon={IconFileSearch} label="CV inclus (analyse de CV)" used={e.cvUsed} limit={e.cvQuota} hint={renews} />
+        )}
+        {/* Absent from a backend older than AI writing. */}
+        {e.offerDraftsQuota !== undefined && e.offerDraftsQuota !== 0 && (
+          <Meter
+            icon={IconWand}
+            label="Offres rédigées par l'IA"
+            used={e.offerDraftsQuota === null ? 0 : e.offerDraftsQuota - (e.offerDraftsRemaining ?? 0)}
+            limit={e.offerDraftsQuota}
+            hint={renews}
+          />
+        )}
       </div>
 
       {(e.includesPreselection || e.includesFieldAgents || e.priorityVisibility) && (
