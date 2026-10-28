@@ -47,10 +47,6 @@ export function FeaturesSection() {
               <FeatureMockup id={feature.id} />
             </div>
             <div className="space-y-5">
-              <span className={cn("inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-medium text-xs", feature.tone)}>
-                <feature.icon className="size-3.5" />
-                {feature.kicker}
-              </span>
               <h3 className="font-semibold text-2xl tracking-tight sm:text-3xl">{feature.title}</h3>
               <p className="text-muted-foreground">{feature.text}</p>
               <ul className="space-y-2.5">
