@@ -3,10 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog as SheetPrimitive } from "radix-ui";
-import { IconBrandGmail, IconBrandWindows, IconCheck, IconMail, IconPaperclip, IconSearch, IconShieldLock, IconX } from "@tabler/icons-react";
+import { IconCheck, IconChevronRight, IconEye, IconMail, IconPlugOff, IconPlus, IconSearch, IconShieldLock, IconX } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
+import { GmailLogo, OutlookLogo } from "#/components/mail-provider-logos";
+import { PreviewSheet } from "#/components/preview-sheet";
 import { Input } from "#/components/ui/input";
 import { friendlyError } from "#/lib/api/friendly-error";
 import {
@@ -14,6 +16,7 @@ import {
   disconnectMailbox,
   listMailboxes,
   listMailCvs,
+  mailAttachmentUrl,
   mailboxesKey,
   PROVIDER_LABEL,
   type Mailbox,
@@ -21,10 +24,20 @@ import {
   type MailProviderSlug,
 } from "#/lib/api/mailbox-controller";
 import { cn } from "#/lib/utils";
-import { kindFromName, pickKey, togglePick, toPick, type MailPick } from "../mail-picks";
+import { initials, kindFromName, looksLikeCv, pickKey, togglePick, toPick, type MailPick } from "../mail-picks";
 import { fileSize } from "./cv-bits";
 
-const ICON: Record<MailProviderSlug, typeof IconBrandGmail> = { gmail: IconBrandGmail, outlook: IconBrandWindows };
+export const PROVIDER_LOGO: Record<MailProviderSlug, typeof GmailLogo> = { gmail: GmailLogo, outlook: OutlookLogo };
+
+/** A provider's logo on a white tile, so its colours read the same in both themes. */
+export function ProviderTile({ provider, className }: Readonly<{ provider: MailProviderSlug; className?: string }>) {
+  const Logo = PROVIDER_LOGO[provider];
+  return (
+    <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl bg-white", className)}>
+      <Logo className="size-5" />
+    </span>
+  );
+}
 
 const KIND_TILE = {
   pdf: { label: "PDF", tile: "bg-destructive/10 text-destructive" },
@@ -139,25 +152,50 @@ export function MailImport({
   const open = data.mailboxes.find((b) => b.id === openId);
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="mr-1 text-muted-foreground text-sm">Ou importez-les depuis votre messagerie</span>
-      {providers.map((provider) => {
-        const box = data.mailboxes.find((b) => b.provider === provider && !b.expired);
-        const Icon = ICON[provider];
-        return (
-          <button
-            key={provider}
-            type="button"
-            disabled={disabled || pending !== null}
-            onClick={() => (box ? setOpenId(box.id) : void connect(provider))}
-            title={box?.email}
-            className="inline-flex h-10 items-center gap-2 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70 disabled:opacity-50"
-          >
-            {pending === provider ? <Loader className="size-4 animate-spin" /> : <Icon className="size-4" />}
-            {box ? PROVIDER_LABEL[provider] : `Connecter ${PROVIDER_LABEL[provider]}`}
-          </button>
-        );
-      })}
+    <div className="space-y-3">
+      <div className="flex items-center gap-3 text-muted-foreground text-xs">
+        <span aria-hidden className="h-px flex-1 bg-page" />
+        ou depuis votre messagerie
+        <span aria-hidden className="h-px flex-1 bg-page" />
+      </div>
+      <div className={cn("grid gap-2.5", providers.length > 1 && "sm:grid-cols-2")}>
+        {providers.map((provider) => {
+          const box = data.mailboxes.find((b) => b.provider === provider && !b.expired);
+          return (
+            <button
+              key={provider}
+              type="button"
+              disabled={disabled || pending !== null}
+              onClick={() => (box ? setOpenId(box.id) : void connect(provider))}
+              className="group flex min-w-0 items-center gap-3 rounded-2xl bg-page p-3 text-left transition-colors hover:bg-page/70 disabled:opacity-50"
+            >
+              <ProviderTile provider={provider} />
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium text-sm">{PROVIDER_LABEL[provider]}</span>
+                <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground text-xs">
+                  {box ? (
+                    <>
+                      <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-whatsapp-dark" />
+                      <span className="truncate">{box.email}</span>
+                    </>
+                  ) : (
+                    "Connecter votre compte"
+                  )}
+                </span>
+              </span>
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-card text-muted-foreground group-hover:text-foreground">
+                {pending === provider ? (
+                  <Loader className="size-4 animate-spin" />
+                ) : box ? (
+                  <IconChevronRight className="size-4" />
+                ) : (
+                  <IconPlus className="size-4" />
+                )}
+              </span>
+            </button>
+          );
+        })}
+      </div>
 
       {open && (
         <MailCvSheet
@@ -206,6 +244,7 @@ function MailCvSheet({
   const [q, setQ] = useState("");
   const search = useDebounced(q.trim());
   const [chosen, setChosen] = useState<MailPick[]>(picks);
+  const [preview, setPreview] = useState<{ pick: MailPick; kind: "pdf" | "image"; from: string } | null>(null);
   // For the picks of every mailbox together.
   const total = room;
 
@@ -233,8 +272,6 @@ function MailCvSheet({
     onError: (err) => toast.error(friendlyError(err, "La messagerie n'a pas pu être déconnectée.")),
   });
 
-  const Icon = ICON[mailbox.provider];
-
   return (
     <SheetPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <SheetPrimitive.Portal>
@@ -243,30 +280,30 @@ function MailCvSheet({
           aria-describedby={undefined}
           className="data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-card shadow-soft outline-none data-[state=closed]:duration-300 data-[state=open]:duration-500 sm:w-[min(40rem,92vw)]"
         >
-          <header className="flex items-start gap-3 px-5 pt-5 pb-3 sm:px-6">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-page">
-              <Icon className="size-5" />
-            </span>
+          <header className="flex items-center gap-3 px-5 pt-5 pb-4 sm:px-6">
+            <ProviderTile provider={mailbox.provider} className="size-11 rounded-2xl" />
             <div className="min-w-0 flex-1">
-              <SheetPrimitive.Title className="font-semibold text-lg">CV reçus par e-mail</SheetPrimitive.Title>
-              <p className="flex flex-wrap items-center gap-x-2 text-muted-foreground text-sm">
+              <SheetPrimitive.Title className="font-semibold text-lg leading-tight">CV reçus par e-mail</SheetPrimitive.Title>
+              <p className="flex min-w-0 items-center gap-1.5 text-muted-foreground text-sm">
+                <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-whatsapp-dark" />
                 <span className="truncate">{mailbox.email}</span>
-                <button
-                  type="button"
-                  disabled={disconnect.isPending}
-                  onClick={() => disconnect.mutate()}
-                  className="font-medium text-foreground underline underline-offset-2 hover:no-underline disabled:opacity-50"
-                >
-                  Déconnecter
-                </button>
               </p>
             </div>
-            <SheetPrimitive.Close aria-label="Fermer" className="flex size-9 shrink-0 items-center justify-center rounded-full hover:bg-page">
-              <IconX className="size-5" />
+            <button
+              type="button"
+              disabled={disconnect.isPending}
+              onClick={() => disconnect.mutate()}
+              className="hidden h-9 shrink-0 items-center gap-1.5 rounded-full bg-page px-3.5 font-medium text-muted-foreground text-sm hover:text-foreground disabled:opacity-50 sm:inline-flex"
+            >
+              <IconPlugOff className="size-4" />
+              Déconnecter
+            </button>
+            <SheetPrimitive.Close aria-label="Fermer" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-page hover:bg-page/70">
+              <IconX className="size-4" />
             </SheetPrimitive.Close>
           </header>
 
-          <div className="px-5 pb-3 sm:px-6">
+          <div className="space-y-3 px-5 pb-3 sm:px-6">
             <div className="relative">
               <IconSearch className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-4 size-4 text-muted-foreground" />
               <Input
@@ -277,6 +314,15 @@ function MailCvSheet({
                 className="h-11 rounded-full border-0 bg-page pr-4 pl-11 shadow-none"
               />
             </div>
+            <button
+              type="button"
+              disabled={disconnect.isPending}
+              onClick={() => disconnect.mutate()}
+              className="inline-flex items-center gap-1.5 font-medium text-muted-foreground text-xs hover:text-foreground disabled:opacity-50 sm:hidden"
+            >
+              <IconPlugOff className="size-3.5" />
+              Déconnecter {PROVIDER_LABEL[mailbox.provider]}
+            </button>
           </div>
 
           <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto px-5 pb-4 sm:px-6">
@@ -288,7 +334,7 @@ function MailCvSheet({
                   onClick={onReconnect}
                   className="inline-flex h-10 items-center gap-2 rounded-full bg-card px-4 font-medium text-foreground hover:bg-card/70"
                 >
-                  <Icon className="size-4" />
+                  <ProviderTile provider={mailbox.provider} className="size-6 rounded-md [&>svg]:size-3.5" />
                   Reconnecter {PROVIDER_LABEL[mailbox.provider]}
                 </button>
               </div>
@@ -307,22 +353,33 @@ function MailCvSheet({
             ) : (
               <>
                 {list.map((mail) => (
-                  <article key={mail.id} className="space-y-2.5 rounded-2xl bg-page p-4">
-                    <div className="flex items-baseline justify-between gap-3">
-                      <p className="min-w-0 truncate font-medium">{mail.fromName || "Expéditeur inconnu"}</p>
-                      <time className="shrink-0 text-muted-foreground text-xs" dateTime={mail.date}>
-                        {new Date(mail.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
-                      </time>
+                  <article key={mail.id} className="rounded-2xl bg-page p-3 sm:p-4">
+                    <div className="flex items-start gap-3">
+                      <span
+                        aria-hidden
+                        className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card font-semibold text-muted-foreground text-xs"
+                      >
+                        {initials(mail.fromName)}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <p className="min-w-0 truncate font-medium text-sm">{mail.fromName || "Expéditeur inconnu"}</p>
+                          <time className="shrink-0 text-muted-foreground text-xs" dateTime={mail.date}>
+                            {new Date(mail.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                          </time>
+                        </div>
+                        {mail.subject && <p className="truncate text-muted-foreground text-xs">{mail.subject}</p>}
+                      </div>
                     </div>
-                    {mail.subject && <p className="line-clamp-1 text-muted-foreground text-sm">{mail.subject}</p>}
-                    <ul className="grid gap-2 sm:grid-cols-2">
+                    <ul className="mt-3 space-y-1.5">
                       {mail.attachments.map((a) => {
                         const pick = toPick(mailbox.id, mail, a);
                         const on = picked.has(pickKey(pick));
                         const full = !on && chosen.length >= total;
-                        const k = KIND_TILE[kindFromName(a.name)];
+                        const kind = kindFromName(a.name);
+                        const k = KIND_TILE[kind];
                         return (
-                          <li key={a.id} className="min-w-0">
+                          <li key={a.id} className="flex min-w-0 items-center gap-1.5">
                             <button
                               type="button"
                               role="checkbox"
@@ -330,27 +387,39 @@ function MailCvSheet({
                               disabled={full}
                               onClick={() => setChosen((c) => togglePick(c, pick, total))}
                               className={cn(
-                                "flex w-full items-center gap-3 rounded-xl p-2.5 text-left transition-colors disabled:opacity-40",
-                                on ? "bg-selected text-selected-foreground" : "bg-card hover:bg-card/70",
+                                "flex min-w-0 flex-1 items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors disabled:opacity-40",
+                                on ? "bg-chip-green text-chip-green-foreground" : "bg-card hover:bg-card/70",
                               )}
                             >
-                              <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg font-semibold text-[10px]", k.tile)}>
-                                {k.label}
-                              </span>
-                              <span className="min-w-0 flex-1">
-                                <span className="block truncate font-medium text-sm" title={a.name}>
-                                  {a.name}
-                                </span>
-                                <span className={cn("block text-xs", on ? "opacity-70" : "text-muted-foreground")}>{fileSize(a.size)}</span>
-                              </span>
                               <span
+                                aria-hidden
                                 className={cn(
-                                  "flex size-5 shrink-0 items-center justify-center rounded-full",
+                                  "flex size-5 shrink-0 items-center justify-center rounded-md transition-colors",
                                   on ? "bg-whatsapp-dark text-white" : "bg-page",
                                 )}
                               >
-                                {on && <IconCheck className="size-3.5" />}
+                                {on && <IconCheck className="size-3.5" strokeWidth={3} />}
                               </span>
+                              <span className={cn("shrink-0 rounded-md px-1.5 py-0.5 font-semibold text-[10px]", k.tile)}>{k.label}</span>
+                              <span className="min-w-0 flex-1 truncate font-medium text-sm" title={a.name}>
+                                {a.name}
+                              </span>
+                              {looksLikeCv(a.name, mail.subject) && (
+                                <span className="hidden shrink-0 rounded-full bg-page px-2 py-0.5 font-medium text-[11px] text-whatsapp-dark sm:inline">
+                                  CV probable
+                                </span>
+                              )}
+                              <span className={cn("shrink-0 text-xs tabular-nums", on ? "opacity-70" : "text-muted-foreground")}>{fileSize(a.size)}</span>
+                            </button>
+                            <button
+                              type="button"
+                              disabled={kind === "docx"}
+                              onClick={() => setPreview({ pick, kind: kind === "image" ? "image" : "pdf", from: mail.fromName })}
+                              aria-label={`Aperçu de ${a.name}`}
+                              title={kind === "docx" ? "Aperçu disponible pour les PDF et les photos" : "Aperçu"}
+                              className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-card text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
+                            >
+                              <IconEye className="size-4" />
                             </button>
                           </li>
                         );
@@ -378,23 +447,39 @@ function MailCvSheet({
               <IconShieldLock className="mt-px size-4 shrink-0" />
               Rabotka lit uniquement les pièces jointes que vous choisissez ; rien n&apos;est envoyé depuis votre messagerie.
             </p>
-            <div className="flex items-center gap-3">
-              <p className="flex-1 text-sm">
-                <IconPaperclip className="mr-1 inline size-4 align-[-3px]" />
-                <span className="font-semibold tabular-nums">
-                  {chosen.length} / {total}
-                </span>{" "}
-                <span className="text-muted-foreground">CV choisis</span>
-              </p>
+            <div className="flex items-center gap-4">
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <p className="text-sm">
+                  <span className="font-semibold tabular-nums">
+                    {chosen.length} / {total}
+                  </span>{" "}
+                  <span className="text-muted-foreground">CV choisis</span>
+                </p>
+                <div className="flex gap-1" aria-hidden>
+                  {Array.from({ length: total }, (_, i) => (
+                    <span key={i} className={cn("h-1.5 flex-1 rounded-full", i < chosen.length ? "bg-whatsapp-dark" : "bg-page")} />
+                  ))}
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={() => onDone(chosen)}
-                className="h-12 rounded-full bg-ink px-6 font-medium text-white hover:bg-ink/90"
+                className="h-12 shrink-0 rounded-full bg-ink px-6 font-medium text-white hover:bg-ink/90"
               >
                 {added > 0 ? `Ajouter ${added} CV` : "Valider"}
               </button>
             </div>
           </footer>
+          <PreviewSheet
+            open={preview !== null}
+            onOpenChange={(next) => !next && setPreview(null)}
+            title={preview?.pick.name ?? ""}
+            subtitle={preview?.from || undefined}
+            src={preview ? mailAttachmentUrl(preview.pick) : undefined}
+            kind={preview?.kind ?? "pdf"}
+            fileName={preview?.pick.name}
+            unavailable="Cette pièce jointe n'a pas pu être affichée."
+          />
         </SheetPrimitive.Content>
       </SheetPrimitive.Portal>
     </SheetPrimitive.Root>
