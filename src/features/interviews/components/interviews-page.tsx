@@ -3,11 +3,19 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconCalendarEvent, IconCalendarPlus, IconExternalLink } from "@tabler/icons-react";
+import {
+  IconCalendarEvent,
+  IconCalendarPlus,
+  IconCalendarRepeat,
+  IconCircleCheck,
+  IconExternalLink,
+  IconHourglass,
+} from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
-import { ClaimRowsSkeleton } from "#/components/page-skeletons";
+import { CardGridSkeleton, TilesSkeleton } from "#/components/page-skeletons";
+import { StatTile } from "#/features/home/components/stat-tile";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { cancelInterview, interviewsKey, listInterviews } from "#/lib/api/interview-controller";
 import type { Interview } from "#/lib/api/types";
@@ -35,11 +43,14 @@ function dayLabel(iso: string): string {
 
 const time = (iso: string) => new Date(iso).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 
-/** The business's interviews, by day: who, when, how, and what the candidate answered. */
+/** The business's interviews, by day, as cards: who, when, how, and what the candidate answered. */
 export function InterviewsPage() {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [tab, setTab] = useState<"upcoming" | "past">("upcoming");
-  const query = useQuery({ queryKey: [...interviewsKey, tab], queryFn: () => listInterviews({ scope: tab }) });
+  // The upcoming ones feed the tiles whatever the tab.
+  const upcoming = useQuery({ queryKey: [...interviewsKey, "upcoming"], queryFn: () => listInterviews({ scope: "upcoming" }) });
+  const past = useQuery({ queryKey: [...interviewsKey, "past"], queryFn: () => listInterviews({ scope: "past" }), enabled: tab === "past" });
+  const query = tab === "upcoming" ? upcoming : past;
   const items = query.data ?? [];
 
   const days: { label: string; items: Interview[] }[] = [];
@@ -49,6 +60,9 @@ export function InterviewsPage() {
     if (last?.label === label) last.items.push(i);
     else days.push({ label, items: [i] });
   }
+
+  const live = (upcoming.data ?? []).filter((i) => i.status !== "CANCELLED");
+  const count = (status: Interview["status"]) => live.filter((i) => i.status === status).length;
 
   return (
     <div className="w-full space-y-6 pt-2">
@@ -70,8 +84,23 @@ export function InterviewsPage() {
       </div>
       <CalendarLinkDialog open={calendarOpen} onOpenChange={setCalendarOpen} />
 
-      <section className="space-y-5 rounded-3xl bg-card p-6">
-        <div role="tablist" aria-label="Période" className="inline-flex rounded-full bg-page p-1">
+      {upcoming.isLoading ? (
+        <div className="rounded-3xl bg-card p-6 sm:p-8">
+          <TilesSkeleton />
+        </div>
+      ) : (
+        upcoming.data && (
+          <section className="grid grid-cols-2 gap-3 rounded-3xl bg-card p-6 sm:gap-4 sm:p-8 xl:grid-cols-4">
+            <StatTile icon={IconCalendarEvent} label="À venir" value={String(live.length)} />
+            <StatTile icon={IconCircleCheck} label="Confirmés" value={String(count("CONFIRMED"))} />
+            <StatTile icon={IconHourglass} label="En attente" value={String(count("PENDING"))} hint="sans réponse du candidat" />
+            <StatTile icon={IconCalendarRepeat} label="À replanifier" value={String(count("RESCHEDULE_REQUESTED"))} hint="autre moment demandé" />
+          </section>
+        )
+      )}
+
+      <section className="space-y-4">
+        <div role="tablist" aria-label="Période" className="inline-flex rounded-full bg-card p-1">
           {TABS.map((t) => (
             <button
               key={t.key}
@@ -80,22 +109,25 @@ export function InterviewsPage() {
               aria-selected={tab === t.key}
               onClick={() => setTab(t.key)}
               className={cn(
-                "rounded-full px-4 py-1.5 font-medium text-sm",
+                "inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 font-medium text-sm",
                 tab === t.key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
               {t.label}
+              {t.key === "upcoming" && upcoming.data && <span className="tabular-nums opacity-70">{live.length}</span>}
             </button>
           ))}
         </div>
 
         {query.isLoading ? (
-          <ClaimRowsSkeleton />
+          <CardGridSkeleton kind="mission" count={3} />
         ) : !query.data ? (
-          <p className="text-muted-foreground">{friendlyError(query.error, "Vos entretiens sont indisponibles pour le moment.")}</p>
+          <p className="rounded-3xl bg-card p-6 text-muted-foreground">
+            {friendlyError(query.error, "Vos entretiens sont indisponibles pour le moment.")}
+          </p>
         ) : items.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-2xl bg-page px-6 py-12 text-center">
-            <span className="flex size-12 items-center justify-center rounded-2xl bg-card">
+          <div className="flex flex-col items-center gap-3 rounded-3xl bg-card px-6 py-14 text-center">
+            <span className="flex size-12 items-center justify-center rounded-2xl bg-page">
               <IconCalendarEvent className="size-6 text-muted-foreground" />
             </span>
             <p className="font-medium">{tab === "upcoming" ? "Aucun entretien prévu" : "Aucun entretien passé"}</p>
@@ -116,11 +148,16 @@ export function InterviewsPage() {
         ) : (
           <div className="space-y-6">
             {days.map((day) => (
-              <div key={day.label} className="space-y-2.5">
-                <h2 className="font-semibold text-sm">{day.label}</h2>
-                <ul className="space-y-2.5">
+              <div key={day.label} className="space-y-3">
+                <h2 className="flex items-center gap-2 font-semibold text-sm">
+                  {day.label}
+                  <span className="font-normal text-muted-foreground tabular-nums">
+                    {day.items.length} entretien{day.items.length > 1 ? "s" : ""}
+                  </span>
+                </h2>
+                <ul className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {day.items.map((i) => (
-                    <InterviewRow key={i.id} interview={i} past={tab === "past"} />
+                    <InterviewCard key={i.id} interview={i} past={tab === "past"} />
                   ))}
                 </ul>
               </div>
@@ -132,7 +169,12 @@ export function InterviewsPage() {
   );
 }
 
-function InterviewRow({ interview: i, past }: Readonly<{ interview: Interview; past: boolean }>) {
+const initials = (name: string) => {
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase() || "?";
+};
+
+function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; past: boolean }>) {
   const queryClient = useQueryClient();
   const [moving, setMoving] = useState(false);
   const [confirm, setConfirm] = useState(false);
@@ -147,30 +189,47 @@ function InterviewRow({ interview: i, past }: Readonly<{ interview: Interview; p
   });
   const Mode = MODES.find((m) => m.key === i.mode)?.icon ?? IconCalendarEvent;
   const cancelled = i.status === "CANCELLED";
+  const at = new Date(i.startsAt);
 
   return (
-    <li className={cn("flex flex-col gap-4 rounded-2xl bg-page p-4 sm:flex-row sm:items-start", cancelled && "opacity-60")}>
-      <div className="flex shrink-0 items-baseline gap-2 sm:w-24 sm:flex-col sm:gap-0.5">
-        <span className="font-semibold text-xl tabular-nums">{time(i.startsAt)}</span>
-        <span className="text-muted-foreground text-xs">{i.durationMinutes} min</span>
+    <li className={cn("flex h-full flex-col gap-4 rounded-3xl bg-card p-5", cancelled && "opacity-60")}>
+      <div className="flex items-start gap-3.5">
+        <div className="flex w-14 shrink-0 flex-col items-center rounded-2xl bg-brand-lime py-2 text-[#0f2414]">
+          <span className="font-semibold text-xl leading-none">{at.getDate()}</span>
+          <span className="mt-1 font-medium text-[11px] uppercase">{at.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "")}</span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-xl tabular-nums leading-tight">{time(i.startsAt)}</p>
+          <p className="text-muted-foreground text-xs">
+            {at.toLocaleDateString("fr-FR", { weekday: "long" })} · {i.durationMinutes} min
+          </p>
+        </div>
+        <StatusChip status={i.status} />
       </div>
 
-      <div className="min-w-0 flex-1 space-y-1.5">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="font-semibold">{i.candidateName}</p>
-          <StatusChip status={i.status} />
+      <div className="flex items-center gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-page font-semibold text-muted-foreground text-xs">
+          {initials(i.candidateName)}
+        </span>
+        <div className="min-w-0">
+          <p className="truncate font-semibold">{i.candidateName}</p>
+          <p className="truncate text-muted-foreground text-sm">
+            {i.applicationId ? (
+              <Link href={`/espace/candidatures?candidature=${i.applicationId}`} className="hover:underline">
+                {i.jobTitle}
+              </Link>
+            ) : (
+              i.jobTitle
+            )}
+          </p>
         </div>
-        <p className="text-muted-foreground text-sm">
-          {i.applicationId ? (
-            <Link href={`/espace/candidatures?candidature=${i.applicationId}`} className="hover:underline">
-              {i.jobTitle}
-            </Link>
-          ) : (
-            i.jobTitle
-          )}
-        </p>
-        <p className="flex items-center gap-1.5 text-sm">
-          <Mode className="size-4 shrink-0 text-muted-foreground" />
+      </div>
+
+      <div className="space-y-2 rounded-2xl bg-page p-3 text-sm">
+        <p className="flex items-center gap-2">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-card">
+            <Mode className="size-4 text-muted-foreground" />
+          </span>
           {i.mode === "VIDEO" && i.location ? (
             <a href={i.location} target="_blank" rel="noreferrer" className="inline-flex min-w-0 items-center gap-1 font-medium hover:underline">
               <span className="truncate">Rejoindre la visio</span>
@@ -181,7 +240,7 @@ function InterviewRow({ interview: i, past }: Readonly<{ interview: Interview; p
           )}
         </p>
         {i.responseNote && (
-          <p className="rounded-xl bg-card px-3 py-2 text-sm">
+          <p className="rounded-xl bg-card px-3 py-2">
             <span className="text-muted-foreground">Message du candidat : </span>
             {i.responseNote}
           </p>
@@ -189,14 +248,14 @@ function InterviewRow({ interview: i, past }: Readonly<{ interview: Interview; p
       </div>
 
       {!past && !cancelled && (
-        <div className="flex shrink-0 gap-2">
-          <button type="button" onClick={() => setMoving(true)} className="h-10 rounded-full bg-card px-4 font-medium text-sm hover:bg-card/70">
+        <div className="mt-auto flex gap-2">
+          <button type="button" onClick={() => setMoving(true)} className="h-10 flex-1 rounded-full bg-page font-medium text-sm hover:bg-page/70">
             Déplacer
           </button>
           <button
             type="button"
             onClick={() => setConfirm(true)}
-            className="h-10 rounded-full bg-card px-4 font-medium text-muted-foreground text-sm hover:bg-card/70 hover:text-destructive"
+            className="h-10 flex-1 rounded-full bg-page font-medium text-muted-foreground text-sm hover:bg-page/70 hover:text-destructive"
           >
             Annuler
           </button>
