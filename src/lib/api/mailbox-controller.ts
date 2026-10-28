@@ -1,3 +1,4 @@
+import { appConfig } from "#/config";
 import { BusinessBaseController } from "./base-controller";
 
 export type MailProviderSlug = "gmail" | "outlook";
@@ -59,5 +60,11 @@ export const listMailboxes = controller.list.bind(controller);
 export const connectMailbox = controller.connect.bind(controller);
 export const listMailCvs = controller.mails.bind(controller);
 export const disconnectMailbox = controller.disconnect.bind(controller);
+
+/** One attachment, served inline for a preview (PDF or photo). */
+export function mailAttachmentUrl(ref: MailAttachmentRef): string {
+  const { mailboxId, messageId, attachmentId } = ref;
+  return `${appConfig.apiUrl}/business/me/mailboxes/${encodeURIComponent(mailboxId)}/mails/${encodeURIComponent(messageId)}/attachments/${encodeURIComponent(attachmentId)}`;
+}
 
 export const PROVIDER_LABEL: Record<MailProviderSlug, string> = { gmail: "Gmail", outlook: "Outlook" };

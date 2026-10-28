@@ -1,15 +1,13 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconBrandGmail, IconBrandWindows, IconPlus } from "@tabler/icons-react";
+import { IconPlus } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
-import { useConnectMailbox } from "#/features/cv-screening/components/mail-import";
+import { ProviderTile, useConnectMailbox } from "#/features/cv-screening/components/mail-import";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { disconnectMailbox, listMailboxes, mailboxesKey, PROVIDER_LABEL, type MailProviderSlug } from "#/lib/api/mailbox-controller";
-
-const ICON: Record<MailProviderSlug, typeof IconBrandGmail> = { gmail: IconBrandGmail, outlook: IconBrandWindows };
 
 /**
  * « Messageries connectées »: the mailboxes « Analyse de CV » picks CVs from,
@@ -43,12 +41,9 @@ export function OrganisationMailboxes() {
       {data.mailboxes.length > 0 && (
         <ul className="space-y-2">
           {data.mailboxes.map((box) => {
-            const Icon = ICON[box.provider];
             return (
               <li key={box.id} className="flex items-center gap-3 rounded-2xl bg-page p-3">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-card">
-                  <Icon className="size-4" />
-                </span>
+                <ProviderTile provider={box.provider} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium text-sm">{box.email}</span>
                   <span className={box.expired ? "block text-chip-amber-foreground text-xs" : "block text-muted-foreground text-xs"}>
@@ -80,23 +75,25 @@ export function OrganisationMailboxes() {
       )}
 
       {missing.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {missing.map((provider) => {
-            const Icon = ICON[provider];
-            return (
-              <button
-                key={provider}
-                type="button"
-                disabled={pending !== null}
-                onClick={() => void connect(provider)}
-                className="inline-flex h-10 items-center gap-2 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70 disabled:opacity-50"
-              >
-                {pending === provider ? <Loader className="size-4 animate-spin" /> : <Icon className="size-4" />}
-                <IconPlus className="-ml-1 size-3.5" />
-                {PROVIDER_LABEL[provider]}
-              </button>
-            );
-          })}
+        <div className="space-y-2">
+          {missing.map((provider) => (
+            <button
+              key={provider}
+              type="button"
+              disabled={pending !== null}
+              onClick={() => void connect(provider)}
+              className="group flex w-full items-center gap-3 rounded-2xl bg-page p-3 text-left transition-colors hover:bg-page/70 disabled:opacity-50"
+            >
+              <ProviderTile provider={provider} />
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium text-sm">{PROVIDER_LABEL[provider]}</span>
+                <span className="block text-muted-foreground text-xs">Connecter votre compte</span>
+              </span>
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-card text-muted-foreground group-hover:text-foreground">
+                {pending === provider ? <Loader className="size-4 animate-spin" /> : <IconPlus className="size-4" />}
+              </span>
+            </button>
+          ))}
         </div>
       )}
     </section>
