@@ -11,6 +11,7 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import { listOffers, offersKey, type OfferListItem, type OfferStatus } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
 import { EMPLOYMENT_LABEL, fcfa, offerDate, PAYMENT_SUFFIX, STATUS } from "../offer-labels";
+import { offersFull, offersUsed } from "#/features/subscription/offers-quota";
 
 const TABS: { key: string; label: string; statuses?: OfferStatus[] }[] = [
   { key: "all", label: "Toutes" },
@@ -30,7 +31,7 @@ export function OffersPage() {
   });
   const { data: sub } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   const e = sub?.entitlements;
-  const atLimit = !!e && e.activeOffersLimit !== null && e.activeOffers >= (e.plan ? e.activeOffersLimit : 0);
+  const atLimit = !!e && offersFull(e);
 
   return (
     <div className="w-full space-y-6 pt-2">
@@ -40,12 +41,16 @@ export function OffersPage() {
           <p className="text-muted-foreground">
             {e
               ? e.plan
-                ? onlineLine(e.activeOffers, e.activeOffersLimit, e.plan.name)
+                ? publishedLine(offersUsed(e), e.activeOffersLimit, e.plan.name)
                 : "Choisissez une formule pour publier vos offres."
               : "Publiez vos offres et suivez les candidatures."}
           </p>
-          {e?.plan && atLimit && e.activeOffersLimit !== null && (
-            <p className="text-muted-foreground text-sm">{toEndLine(e.activeOffers, e.activeOffersLimit)}</p>
+          {e?.plan && atLimit && (
+            <p className="text-muted-foreground text-sm">
+              Les offres déjà en ligne le restent. Pour en publier une autre, attendez la prochaine période
+              {e.endsAt ? ` (le ${new Date(e.endsAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })})` : ""} ou
+              passez à une formule supérieure.
+            </p>
           )}
         </div>
         {atLimit ? (
@@ -149,16 +154,8 @@ function OfferCard({ offer: o }: Readonly<{ offer: OfferListItem }>) {
   );
 }
 
-const offers = (n: number) => `${n} offre${n > 1 ? "s" : ""}`;
-
-/** The limit counts offers online at the same time: it does not restart with a new period. */
-function onlineLine(online: number, limit: number | null, planName: string): string {
-  if (limit === null) return `${offers(online)} en ligne : votre formule ${planName} n'en limite pas le nombre.`;
-  return `${offers(online)} en ligne : votre formule ${planName} en permet ${limit} en même temps.`;
-}
-
-/** What to do at (or over) the limit: offers already online stay online. */
-function toEndLine(online: number, limit: number): string {
-  const toEnd = online - limit + 1;
-  return `${online > limit ? "Les offres déjà en ligne le restent. " : ""}Pour publier une nouvelle offre, terminez-en ${toEnd === 1 ? "une" : toEnd} ou passez à une formule supérieure.`;
+/** The plan counts offers published per period, like contacts and CVs. */
+function publishedLine(published: number, limit: number | null, planName: string): string {
+  const n = `${published} offre${published > 1 ? "s" : ""} publiée${published > 1 ? "s" : ""} cette période`;
+  return limit === null ? `${n} : votre formule ${planName} n'en limite pas le nombre.` : `${n} sur ${limit} avec votre formule ${planName}.`;
 }

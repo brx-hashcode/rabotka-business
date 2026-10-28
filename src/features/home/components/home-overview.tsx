@@ -34,6 +34,7 @@ import { cn } from "#/lib/utils";
 import { formatDelay, trend, type Trend } from "../stats-format";
 import { ApplicationsChart } from "./applications-chart";
 import { StatTile } from "./stat-tile";
+import { offersUsed } from "#/features/subscription/offers-quota";
 
 const PERIODS: { days: StatsPeriod; label: string }[] = [
   { days: 7, label: "7 jours" },
@@ -414,7 +415,7 @@ function SubscriptionCard({
   const period = currentPeriod(subscription);
   const meters = [
     { label: "Contacts inclus", used: e.unlocksUsed, limit: e.unlocksQuota, unit: ["contact", "contacts"] as const },
-    { label: "Offres en ligne", used: e.activeOffers, limit: e.activeOffersLimit, unit: ["offre", "offres"] as const },
+    { label: "Offres publiées", used: offersUsed(e), limit: e.activeOffersLimit, unit: ["offre", "offres"] as const },
     ...(e.cvQuota !== 0 ? [{ label: "CV inclus", used: e.cvUsed, limit: e.cvQuota, unit: ["CV", "CV"] as const }] : []),
   ];
   return (
