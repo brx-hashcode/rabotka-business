@@ -51,7 +51,6 @@ export type Feature = NavLink & {
   id: MockupKey;
   icon: Icon;
   tone: string;
-  kicker: string;
   title: string;
   text: string;
   points: string[];
@@ -66,7 +65,6 @@ export const FEATURES: Feature[] = [
     description: "Les CV lus, notés et classés pour chaque poste.",
     icon: IconFileSearch,
     tone: "bg-chip-green text-chip-green-foreground",
-    kicker: "Analyse de CV",
     title: "Des dizaines de CV, classés en quelques minutes",
     text: "Déposez les CV reçus pour un poste, ou choisissez-les directement dans votre messagerie Gmail ou Outlook. Rabotka lit chacun, même scanné ou pris en photo, et le note par rapport au poste.",
     points: [
@@ -83,7 +81,6 @@ export const FEATURES: Feature[] = [
     description: "Quelques mots suffisent : l'offre complète est prête.",
     icon: IconWand,
     tone: "bg-chip-violet text-chip-violet-foreground",
-    kicker: "Offres",
     title: "Une offre claire en quelques mots",
     text: "Décrivez votre besoin comme vous le diriez à un collègue : Rabotka rédige l'intitulé et la description, et propose le métier. Vous relisez, ajustez et publiez.",
     points: [
@@ -99,7 +96,6 @@ export const FEATURES: Feature[] = [
     description: "Les candidats les plus adaptés en tête de liste.",
     icon: IconListCheck,
     tone: "bg-chip-sky text-chip-sky-foreground",
-    kicker: "Candidatures",
     title: "Les meilleurs candidats en tête de liste",
     text: "Chaque candidature reçoit une note : métier, expérience, lieu et fiabilité. Vous voyez d'abord qui correspond, et pourquoi.",
     points: [
@@ -115,7 +111,6 @@ export const FEATURES: Feature[] = [
     description: "Invitations, réponses et agenda synchronisé.",
     icon: IconCalendarEvent,
     tone: "bg-chip-amber text-chip-amber-foreground",
-    kicker: "Entretiens",
     title: "Des entretiens organisés sans échanges sans fin",
     text: "Proposez un créneau : le candidat confirme, décline ou demande un autre moment, depuis l'e-mail qu'il reçoit. Vous suivez tout au même endroit.",
     points: [
@@ -131,7 +126,6 @@ export const FEATURES: Feature[] = [
     description: "Contrats, missions et rapport de recrutement.",
     icon: IconChartBar,
     tone: "bg-chip-green text-chip-green-foreground",
-    kicker: "Missions et suivi",
     title: "Du contrat au bilan, tout reste au même endroit",
     text: "Le contrat est généré dès qu'un candidat est retenu, et s'ouvre dans votre espace. Vos missions, vos candidatures et vos recrutements se suivent sur un seul tableau de bord.",
     points: [
@@ -147,7 +141,6 @@ export const FEATURES: Feature[] = [
     description: "Recherche de profils vérifiés et agents de terrain.",
     icon: IconUsersGroup,
     tone: "bg-chip-violet text-chip-violet-foreground",
-    kicker: "Profils et agents",
     title: "Allez chercher les profils, en ligne et sur le terrain",
     text: "Recherchez parmi les profils vérifiés par métier, compétence ou ville, gardez les plus intéressants et obtenez leur contact. Nos agents de terrain mobilisent aussi les candidats absents des plateformes.",
     points: [
