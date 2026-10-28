@@ -19,6 +19,16 @@ class InterviewController extends BusinessBaseController {
   cancel(id: string): Promise<Interview> {
     return this.post(`/business/me/interviews/${encodeURIComponent(id)}/cancel`);
   }
+  /** The private link of the interview calendar (made on first ask). */
+  calendar(): Promise<InterviewCalendarLink> {
+    return this.get("/business/me/interviews/calendar");
+  }
+
+  /** A new calendar link; the old one stops working. */
+  resetCalendar(): Promise<InterviewCalendarLink> {
+    return this.post("/business/me/interviews/calendar/reset");
+  }
+
 
   invitation(token: string): Promise<InterviewInvitation> {
     return this.get(`/public/interviews/${encodeURIComponent(token)}`);
@@ -35,9 +45,14 @@ export const listInterviews = controller.list.bind(controller);
 export const createInterview = controller.create.bind(controller);
 export const rescheduleInterview = controller.reschedule.bind(controller);
 export const cancelInterview = controller.cancel.bind(controller);
+export const getInterviewCalendar = controller.calendar.bind(controller);
+export const resetInterviewCalendar = controller.resetCalendar.bind(controller);
 export const getInvitation = controller.invitation.bind(controller);
 export const answerInvitation = controller.answer.bind(controller);
 
 export const interviewsKey = ["interviews"] as const;
+export const interviewCalendarKey = ["interviews", "calendar"] as const;
+
+export type InterviewCalendarLink = { url: string; webcalUrl: string };
 
 export const INTERVIEW_DURATIONS = [15, 30, 45, 60, 90, 120];

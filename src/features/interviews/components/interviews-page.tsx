@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconCalendarEvent, IconExternalLink } from "@tabler/icons-react";
+import { IconCalendarEvent, IconCalendarPlus, IconExternalLink } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
@@ -13,6 +13,7 @@ import { cancelInterview, interviewsKey, listInterviews } from "#/lib/api/interv
 import type { Interview } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { MODES, StatusChip, modeLabel } from "./interview-bits";
+import { CalendarLinkDialog } from "./calendar-link-dialog";
 import { ScheduleInterviewDialog } from "./schedule-interview-dialog";
 
 const TABS = [
@@ -36,6 +37,7 @@ const time = (iso: string) => new Date(iso).toLocaleTimeString("fr-FR", { hour: 
 
 /** The business's interviews, by day: who, when, how, and what the candidate answered. */
 export function InterviewsPage() {
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [tab, setTab] = useState<"upcoming" | "past">("upcoming");
   const query = useQuery({ queryKey: [...interviewsKey, tab], queryFn: () => listInterviews({ scope: tab }) });
   const items = query.data ?? [];
@@ -50,12 +52,23 @@ export function InterviewsPage() {
 
   return (
     <div className="w-full space-y-6 pt-2">
-      <div className="space-y-1.5">
-        <h1 className="font-semibold text-3xl tracking-tight">Entretiens</h1>
-        <p className="text-muted-foreground">
-          Les entretiens proposés à vos candidats, et leurs réponses. Planifiez-en depuis une analyse de CV ou une candidature.
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="space-y-1.5">
+          <h1 className="font-semibold text-3xl tracking-tight">Entretiens</h1>
+          <p className="text-muted-foreground">
+            Les entretiens proposés à vos candidats, et leurs réponses. Planifiez-en depuis une analyse de CV ou une candidature.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setCalendarOpen(true)}
+          className="inline-flex h-12 items-center gap-2 rounded-full bg-card px-5 font-medium hover:bg-card/70"
+        >
+          <IconCalendarPlus className="size-4" />
+          Ajouter à mon agenda
+        </button>
       </div>
+      <CalendarLinkDialog open={calendarOpen} onOpenChange={setCalendarOpen} />
 
       <section className="space-y-5 rounded-3xl bg-card p-6">
         <div role="tablist" aria-label="Période" className="inline-flex rounded-full bg-page p-1">
