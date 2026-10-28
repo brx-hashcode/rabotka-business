@@ -3,12 +3,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IconPlus } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { ProviderTile } from "#/components/mail-provider-logos";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
 import { useConnectMailbox } from "#/features/cv-screening/components/mail-import";
 import { friendlyError } from "#/lib/api/friendly-error";
-import { disconnectMailbox, listMailboxes, mailboxesKey, PROVIDER_LABEL, type MailProviderSlug } from "#/lib/api/mailbox-controller";
+import { disconnectMailbox, listMailboxes, mailboxesKey, PROVIDER_LABEL, type Mailbox, type MailProviderSlug } from "#/lib/api/mailbox-controller";
 
 /**
  * « Messageries connectées »: the mailboxes « Analyse de CV » picks CVs from,
@@ -18,9 +20,13 @@ export function OrganisationMailboxes() {
   const queryClient = useQueryClient();
   const boxes = useQuery({ queryKey: mailboxesKey, queryFn: listMailboxes });
   const { connect, pending } = useConnectMailbox((provider) => toast.success(`${PROVIDER_LABEL[provider]} connecté.`));
+  const [confirm, setConfirm] = useState<Mailbox | null>(null);
   const disconnect = useMutation({
     mutationFn: disconnectMailbox,
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: mailboxesKey }),
+    onSuccess: () => {
+      setConfirm(null);
+      void queryClient.invalidateQueries({ queryKey: mailboxesKey });
+    },
     onError: (err) => toast.error(friendlyError(err, "La messagerie n'a pas pu être déconnectée.")),
   });
 
@@ -64,7 +70,7 @@ export function OrganisationMailboxes() {
                 <button
                   type="button"
                   disabled={disconnect.isPending}
-                  onClick={() => disconnect.mutate(box.id)}
+                  onClick={() => setConfirm(box)}
                   className="font-medium text-muted-foreground text-sm hover:text-foreground disabled:opacity-50"
                 >
                   Déconnecter
@@ -97,6 +103,48 @@ export function OrganisationMailboxes() {
           ))}
         </div>
       )}
+
+      <Dialog open={confirm !== null} onOpenChange={(open) => !open && !disconnect.isPending && setConfirm(null)}>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-md gap-0 overflow-hidden rounded-3xl border-0 bg-card p-0 shadow-soft">
+          {confirm && (
+            <div className="space-y-5 p-6">
+              <div className="flex items-center gap-3">
+                <ProviderTile provider={confirm.provider} />
+                <span className="min-w-0">
+                  <span className="block truncate font-medium text-sm">{confirm.email}</span>
+                  <span className="block text-muted-foreground text-xs">{PROVIDER_LABEL[confirm.provider]}</span>
+                </span>
+              </div>
+              <div className="space-y-1">
+                <DialogTitle className="font-semibold text-xl">Déconnecter cette messagerie ?</DialogTitle>
+                <DialogDescription className="text-muted-foreground text-sm">
+                  Vous ne pourrez plus y choisir de CV dans « Analyse de CV ». Les analyses déjà faites sont conservées, et vous
+                  pourrez la reconnecter à tout moment.
+                </DialogDescription>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={disconnect.isPending}
+                  onClick={() => setConfirm(null)}
+                  className="h-12 flex-1 rounded-full bg-page font-medium hover:bg-page/70 disabled:opacity-50"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  disabled={disconnect.isPending}
+                  onClick={() => disconnect.mutate(confirm.id)}
+                  className="inline-flex h-12 flex-[1.4] items-center justify-center gap-2 rounded-full bg-destructive font-medium text-white hover:bg-destructive/90 disabled:opacity-60"
+                >
+                  {disconnect.isPending && <Loader className="size-4 animate-spin" />}
+                  Déconnecter
+                </button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
