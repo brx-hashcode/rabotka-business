@@ -1,3 +1,4 @@
+import { appConfig } from "#/config";
 import { BusinessBaseController } from "./base-controller";
 
 /** A worker as an employer sees them (RecommendedWorker in rabotka-backend). */
@@ -83,6 +84,11 @@ class CandidateController extends BusinessBaseController {
 }
 
 const controller = new CandidateController();
+
+/** The candidate's Rabotka CV (PDF, without contact details). */
+export function candidateResumeUrl(workerId: string): string {
+  return `${appConfig.apiUrl}/business/me/candidates/${encodeURIComponent(workerId)}/resume`;
+}
 
 export const searchCandidates = controller.search.bind(controller);
 export const getCandidate = controller.detail.bind(controller);

@@ -32,6 +32,7 @@ import { Input } from "#/components/ui/input";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Bone, RowsSkeleton, TilesSkeleton } from "#/components/page-skeletons";
 import { CandidateCard } from "#/features/candidates/components/candidate-card";
+import { ResumeButton } from "#/features/candidates/components/resume-button";
 import { mySubscriptionKey } from "#/lib/api/business-controller";
 import { findCandidates } from "#/lib/api/candidate-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
@@ -663,6 +664,7 @@ function ApplicantRow({
             <IconChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
           </button>
         )}
+        <ResumeButton workerId={a.worker.id} name={name} />
         <ApplicationActions applicant={a} name={name} />
       </div>
       {open && answers.length > 0 && <Answers answers={answers} />}
