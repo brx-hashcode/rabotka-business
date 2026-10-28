@@ -193,7 +193,7 @@ export function OfferForm({
               <button
                 type="button"
                 onClick={() => setWriting(true)}
-                className="flex w-full items-center gap-3 rounded-2xl bg-brand-lime/40 px-4 py-3 text-left transition-colors hover:bg-brand-lime/60"
+                className="flex w-full items-center gap-3 rounded-2xl bg-brand-lime/40 px-4 py-3 text-left transition-colors hover:bg-brand-lime/60 dark:bg-brand-lime/[0.08] dark:hover:bg-brand-lime/[0.16]"
               >
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-brand-lime text-[#0f2414]">
                   <IconWand className="size-5" />
