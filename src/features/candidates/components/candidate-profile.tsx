@@ -11,6 +11,7 @@ import { getCandidate, getCandidatePortfolio } from "#/lib/api/candidate-control
 import { friendlyError } from "#/lib/api/friendly-error";
 import { ImageGallerySheet } from "#/components/image-gallery-sheet";
 import { KeepButton } from "#/features/talents/components/keep-button";
+import { ReachButton } from "./reach-button";
 import { SafeImage } from "#/components/safe-image";
 import { getInitials } from "#/lib/utils";
 
@@ -22,7 +23,9 @@ const date = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { month:
  * them — no phone, no email, no address (only the city): that is what a
  * contact unlock sells.
  */
-export function CandidateProfile({ workerId }: Readonly<{ workerId: string }>) {
+/** `asPage`: the page's own heading (h1); in the dialog it stays a section title. */
+export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: string; asPage?: boolean }>) {
+  const Title = asPage ? "h1" : "h2";
   const { data: c, isLoading, error } = useQuery({
     queryKey: ["candidate", workerId],
     queryFn: () => getCandidate(workerId),
@@ -64,7 +67,7 @@ export function CandidateProfile({ workerId }: Readonly<{ workerId: string }>) {
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1 space-y-1">
-          <h2 className="truncate font-semibold text-2xl tracking-tight">{name}</h2>
+          <Title className="truncate font-semibold text-2xl tracking-tight">{name}</Title>
           {/* As the client app: only when verified — a pending or refused
               review is never shown to employers. */}
           {c.isVerified && (
@@ -82,6 +85,11 @@ export function CandidateProfile({ workerId }: Readonly<{ workerId: string }>) {
           )}
         </div>
         <KeepButton workerId={workerId} name={name} className="size-10 self-start bg-page" />
+      </div>
+
+      {/* Reaching them, from the profile as from the card: « Contact » once obtained. */}
+      <div className="flex sm:max-w-xs">
+        <ReachButton workerId={workerId} name={name} />
       </div>
 
       <div className="grid grid-cols-3 gap-3">

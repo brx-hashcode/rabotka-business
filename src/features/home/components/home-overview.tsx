@@ -68,8 +68,7 @@ export function HomeOverview() {
           <div className="space-y-1.5">
             <h1 className="font-semibold text-3xl tracking-tight sm:text-4xl">Tableau de bord</h1>
             <p className="text-muted-foreground">
-              {user?.first_name ? `Bonjour ${user.first_name}, ` : ""}
-              {b ? `voici le recrutement de ${b.name}` : "voici votre recrutement"} sur les {days} derniers jours.
+              {greeting(user?.first_name || b?.owner?.firstName, b?.name, days)}
             </p>
           </div>
           <PeriodPicker value={days} onChange={setDays} />
@@ -655,4 +654,10 @@ function NextSteps({ business, subscription }: Readonly<{ business: MyBusiness; 
       </ul>
     </Card>
   );
+}
+
+/** « Bonjour Awa, voici… », or « Voici… » when no first name is known (never a lowercase start). */
+function greeting(firstName: string | undefined, businessName: string | undefined, days: number): string {
+  const what = `${businessName ? `le recrutement de ${businessName}` : "votre recrutement"} sur les ${days} derniers jours.`;
+  return firstName?.trim() ? `Bonjour ${firstName.trim()}, voici ${what}` : `Voici ${what}`;
 }
