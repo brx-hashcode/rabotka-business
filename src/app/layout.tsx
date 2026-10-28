@@ -7,7 +7,7 @@ import "./globals.css";
 
 const TITLE = "Rabotka Business";
 const DESCRIPTION =
-  "Solutions de recrutement pour les entreprises, institutions et organisations : diffusion d'offres, présélection de candidats vérifiés, recrutement accompagné.";
+  "Le recrutement des organisations au même endroit : offres rédigées en quelques mots, CV lus et classés pour chaque poste (même depuis Gmail ou Outlook), candidatures triées, entretiens synchronisés avec votre agenda.";
 
 /**
  * Social previews need absolute image URLs. The base is the host the request

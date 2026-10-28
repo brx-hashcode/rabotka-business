@@ -7,7 +7,7 @@ import { IconCheck, IconChevronRight, IconEye, IconMail, IconPlugOff, IconPlus, 
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
-import { GmailLogo, OutlookLogo } from "#/components/mail-provider-logos";
+import { ProviderTile } from "#/components/mail-provider-logos";
 import { PreviewSheet } from "#/components/preview-sheet";
 import { Input } from "#/components/ui/input";
 import { friendlyError } from "#/lib/api/friendly-error";
@@ -27,17 +27,6 @@ import { cn } from "#/lib/utils";
 import { initials, kindFromName, looksLikeCv, pickKey, togglePick, toPick, type MailPick } from "../mail-picks";
 import { fileSize } from "./cv-bits";
 
-export const PROVIDER_LOGO: Record<MailProviderSlug, typeof GmailLogo> = { gmail: GmailLogo, outlook: OutlookLogo };
-
-/** A provider's logo on a white tile, so its colours read the same in both themes. */
-export function ProviderTile({ provider, className }: Readonly<{ provider: MailProviderSlug; className?: string }>) {
-  const Logo = PROVIDER_LOGO[provider];
-  return (
-    <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl bg-white", className)}>
-      <Logo className="size-5" />
-    </span>
-  );
-}
 
 const KIND_TILE = {
   pdf: { label: "PDF", tile: "bg-destructive/10 text-destructive" },

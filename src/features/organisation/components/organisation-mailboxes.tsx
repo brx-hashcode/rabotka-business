@@ -5,7 +5,8 @@ import { IconPlus } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
-import { ProviderTile, useConnectMailbox } from "#/features/cv-screening/components/mail-import";
+import { ProviderTile } from "#/components/mail-provider-logos";
+import { useConnectMailbox } from "#/features/cv-screening/components/mail-import";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { disconnectMailbox, listMailboxes, mailboxesKey, PROVIDER_LABEL, type MailProviderSlug } from "#/lib/api/mailbox-controller";
 

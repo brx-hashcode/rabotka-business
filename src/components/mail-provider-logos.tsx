@@ -1,5 +1,7 @@
 import type { SVGProps } from "react";
 
+import { cn } from "#/lib/utils";
+
 /** Gmail's « M », in its own colours. */
 export function GmailLogo(props: SVGProps<SVGSVGElement>) {
   return (
@@ -24,5 +26,17 @@ export function OutlookLogo(props: SVGProps<SVGSVGElement>) {
       <rect x="2" y="8.5" width="15" height="15" rx="2.2" fill="#0f78d4" />
       <ellipse cx="9.5" cy="16" rx="3.6" ry="4.3" fill="none" stroke="#fff" strokeWidth="2.1" />
     </svg>
+  );
+}
+
+export const PROVIDER_LOGO = { gmail: GmailLogo, outlook: OutlookLogo } as const;
+
+/** A provider's logo on a white tile, so its colours read the same in both themes. */
+export function ProviderTile({ provider, className }: Readonly<{ provider: keyof typeof PROVIDER_LOGO; className?: string }>) {
+  const Logo = PROVIDER_LOGO[provider];
+  return (
+    <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl bg-white", className)}>
+      <Logo className="size-5" />
+    </span>
   );
 }
