@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Bone, CardGridSkeleton, TilesSkeleton } from "#/components/page-skeletons";
 import { StatTile } from "#/features/home/components/stat-tile";
 import { ApplicationActions } from "#/features/offers/components/application-actions";
-import { APPLICATION_STATUS, applicationStage, fcfa, PAYMENT_SUFFIX, STAGE_CLASS, STATUS } from "#/features/offers/offer-labels";
+import { APPLICATION_STATUS, fcfa, PAYMENT_SUFFIX, statusClass, STATUS } from "#/features/offers/offer-labels";
 import { friendlyError } from "#/lib/api/friendly-error";
 import {
   getOfferApplicants,
@@ -246,7 +246,7 @@ function MissionCard({ offer: o }: Readonly<{ offer: OfferListItem }>) {
                   </Avatar>
                   <span className="min-w-0">
                     <span className="block truncate font-medium text-sm group-hover:underline">{name}</span>
-                    <span className={cn("mt-0.5 inline-block rounded-full px-1.5 font-medium text-[11px]", STAGE_CLASS[applicationStage(a.status)])}>{stage}</span>
+                    <span className={cn("mt-0.5 inline-block rounded-full px-1.5 font-medium text-[11px]", statusClass(a.status))}>{stage}</span>
                   </span>
                 </Link>
                 <ApplicationActions applicant={a} name={name} variant="compact" />

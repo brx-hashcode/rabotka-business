@@ -15,7 +15,7 @@ import { InterviewLine, latestInterview } from "#/features/interviews/components
 import { ScheduleInterviewDialog } from "#/features/interviews/components/schedule-interview-dialog";
 import { interviewsKey, listInterviews } from "#/lib/api/interview-controller";
 import type { Interview } from "#/lib/api/types";
-import { APPLICATION_STATUS, applicationStage, STAGE_CLASS, type ApplicationStage } from "#/features/offers/offer-labels";
+import { APPLICATION_STATUS, applicationStage, statusClass, type ApplicationStage } from "#/features/offers/offer-labels";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { listReceivedApplications, offersKey, type ReceivedApplication } from "#/lib/api/offer-controller";
 import { cn, getInitials } from "#/lib/utils";
@@ -229,7 +229,7 @@ function ApplicationCard({
             {name}
           </Link>
           <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className={cn("rounded-full px-2 py-0.5 font-medium text-[11px]", STAGE_CLASS[applicationStage(a.status)])}>
+            <span className={cn("rounded-full px-2 py-0.5 font-medium text-[11px]", statusClass(a.status))}>
               {APPLICATION_STATUS[a.status] ?? a.status}
             </span>
             <span className="text-muted-foreground text-xs">{ago(a.createdAt)}</span>
