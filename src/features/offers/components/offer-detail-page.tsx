@@ -18,6 +18,7 @@ import {
   IconTrash,
   IconUserCheck,
   IconUsers,
+  IconX,
   type Icon as TablerIcon,
 } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
@@ -38,6 +39,7 @@ import {
   getJobCategories,
   getOfferApplicants,
   getOfferAssessments,
+  refuseApplications,
   offersKey,
   republishOffer,
   type ApplicantAssessment,
@@ -58,6 +60,8 @@ import {
   type ApplicationStage,
 } from "../offer-labels";
 import { ApplicationActions } from "./application-actions";
+import { REFUSAL_TEMPLATES, RefusalMessageField } from "./refusal-message";
+import { Checkbox } from "#/components/ui/checkbox";
 import { CriterionBar, Points, ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
 import { scheduledIso } from "./offer-form";
 
@@ -351,6 +355,19 @@ function ApplicantsCard({
   });
   const scores = new Map((assessed.data?.assessments ?? []).map((x) => [x.applicationId, x]));
   const pending = assessed.data?.pending ?? 0;
+  // Refusals in bulk: those picked, or every one still waiting once the posts are filled.
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulk, setBulk] = useState<"selected" | "remaining" | null>(null);
+  const waiting = list.filter((a) => a.status === "PENDING" || a.status === "VIEWED");
+  const hiredCount = list.filter((a) => applicationStage(a.status) === "hired").length;
+  const filled = o.status === "FILLED" || hiredCount >= o.quantity;
+  const toggle = (id: string) =>
+    setSelected((s) => {
+      const next = new Set(s);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   const ranked = [...shown].sort((x, y) => {
     const sx = scores.get(x.applicationId)?.score ?? -1;
     const sy = scores.get(y.applicationId)?.score ?? -1;
@@ -408,18 +425,127 @@ function ApplicantsCard({
             </p>
           )}
 
+          {filled && waiting.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-chip-violet/60 px-4 py-3 text-chip-violet-foreground text-sm">
+              <span>
+                Tous les postes sont pourvus.{" "}
+                {waiting.length === 1 ? "1 candidature attend" : `${waiting.length} candidatures attendent`} encore une réponse.
+              </span>
+              <button
+                type="button"
+                onClick={() => setBulk("remaining")}
+                className="h-10 rounded-full bg-card px-4 font-medium text-foreground hover:bg-card/70"
+              >
+                Refuser les autres candidatures
+              </button>
+            </div>
+          )}
+
+          {selected.size > 0 && (
+            <div className="sticky top-20 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-ink px-4 py-3 text-sm text-white">
+              <span>{selected.size === 1 ? "1 candidature sélectionnée" : `${selected.size} candidatures sélectionnées`}</span>
+              <span className="flex gap-2">
+                <button type="button" onClick={() => setSelected(new Set())} className="h-9 rounded-full px-3 hover:bg-white/10">
+                  Annuler
+                </button>
+                <button type="button" onClick={() => setBulk("selected")} className="h-9 rounded-full bg-white px-4 font-medium text-ink hover:bg-white/90">
+                  Refuser la sélection
+                </button>
+              </span>
+            </div>
+          )}
+
+          <BulkRefuseDialog
+            offerId={o.id}
+            mode={bulk}
+            ids={[...selected]}
+            count={bulk === "remaining" ? waiting.length : selected.size}
+            onClose={() => setBulk(null)}
+            onDone={() => setSelected(new Set())}
+          />
+
           {shown.length === 0 ? (
             <p className="rounded-2xl bg-page p-4 text-muted-foreground text-sm">Aucun candidat à cette étape.</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {ranked.map((a, i) => (
-                <ApplicantRow key={a.applicationId} applicant={a} rank={i + 1} assessment={scores.get(a.applicationId)} waiting={pending > 0} />
+                <ApplicantRow
+                  key={a.applicationId}
+                  applicant={a}
+                  rank={i + 1}
+                  assessment={scores.get(a.applicationId)}
+                  waiting={pending > 0}
+                  selected={selected.has(a.applicationId)}
+                  onToggle={a.status === "PENDING" || a.status === "VIEWED" ? () => toggle(a.applicationId) : undefined}
+                />
               ))}
             </ul>
           )}
         </>
       )}
     </section>
+  );
+}
+
+/** « Refuser la sélection » / « Refuser les autres candidatures »: one message for all. */
+function BulkRefuseDialog({
+  offerId,
+  mode,
+  ids,
+  count,
+  onClose,
+  onDone,
+}: Readonly<{
+  offerId: string;
+  mode: "selected" | "remaining" | null;
+  ids: string[];
+  count: number;
+  onClose: () => void;
+  onDone: () => void;
+}>) {
+  const queryClient = useQueryClient();
+  const [message, setMessage] = useState<string>(mode === "remaining" ? REFUSAL_TEMPLATES[0].text : "");
+  const refuse = useMutation({
+    mutationFn: () =>
+      refuseApplications(offerId, {
+        ...(mode === "remaining" ? { remaining: true } : { applicationIds: ids }),
+        ...(message.trim() ? { message: message.trim() } : {}),
+      }),
+    onSuccess: ({ refused, skipped }) => {
+      void queryClient.invalidateQueries({ queryKey: offersKey });
+      void queryClient.invalidateQueries({ queryKey: ["business", "me", "stats"] });
+      toast.success(
+        `${refused === 1 ? "1 candidature refusée" : `${refused} candidatures refusées`}, les candidats en sont prévenus.` +
+          (skipped ? ` ${skipped} n'étai${skipped > 1 ? "ent" : "t"} plus en attente.` : ""),
+      );
+      onDone();
+      onClose();
+    },
+    onError: (err) => toast.error(friendlyError(err, "Les candidatures n'ont pas pu être refusées.")),
+  });
+  return (
+    <ActionDialog
+      open={mode !== null}
+      onOpenChange={(o) => {
+        if (!o) onClose();
+        else setMessage(mode === "remaining" ? REFUSAL_TEMPLATES[0].text : "");
+      }}
+      tone="warning"
+      icon={<IconX className="size-5" />}
+      title={
+        mode === "remaining"
+          ? `Refuser les ${count} autres candidatures ?`
+          : count === 1
+            ? "Refuser la candidature sélectionnée ?"
+            : `Refuser les ${count} candidatures sélectionnées ?`
+      }
+      description="Chaque candidat est prévenu, avec ce message."
+      confirmLabel="Refuser"
+      pending={refuse.isPending}
+      onConfirm={() => refuse.mutate()}
+    >
+      <RefusalMessageField value={message} onChange={setMessage} />
+    </ActionDialog>
   );
 }
 
@@ -436,14 +562,27 @@ function ApplicantRow({
   rank,
   assessment,
   waiting,
-}: Readonly<{ applicant: OfferApplicant; rank: number; assessment?: ApplicantAssessment; waiting: boolean }>) {
+  selected,
+  onToggle,
+}: Readonly<{
+  applicant: OfferApplicant;
+  rank: number;
+  assessment?: ApplicantAssessment;
+  waiting: boolean;
+  selected: boolean;
+  /** Present only for an application still waiting: it can be refused in bulk. */
+  onToggle?: () => void;
+}>) {
   const [open, setOpen] = useState(false);
   const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
   const score = assessment?.score ?? null;
   return (
     <li className="rounded-2xl bg-page p-3 pr-4">
       <div className="flex items-center gap-3">
-        <span className="w-4 shrink-0 text-center font-semibold text-muted-foreground text-xs tabular-nums">{rank}</span>
+        <span className="flex w-5 shrink-0 flex-col items-center gap-1">
+          {onToggle && <Checkbox checked={selected} onCheckedChange={onToggle} aria-label={`Sélectionner ${name}`} className="size-4 rounded" />}
+          <span className="font-semibold text-muted-foreground text-xs tabular-nums">{rank}</span>
+        </span>
         {score !== null ? (
           <ScoreRing score={score} size={46} />
         ) : (
