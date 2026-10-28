@@ -15,6 +15,7 @@ import { cn } from "#/lib/utils";
 import { sessionUserKey } from "#/hooks/use-session-user";
 import type { SessionUser } from "#/lib/api/types";
 import { OrganisationDocuments } from "./organisation-documents";
+import { OrganisationMailboxes } from "./organisation-mailboxes";
 import { OrganisationLogo } from "./organisation-logo";
 import { OrganisationOwner } from "./organisation-owner";
 
@@ -160,6 +161,7 @@ export function OrganisationPage() {
             <div className="order-1 space-y-6 lg:sticky lg:top-24 lg:order-2">
               {business.owner && <OrganisationOwner owner={business.owner} />}
               <OrganisationDocuments business={business} catalog={catalog} onChange={setBusiness} />
+              <OrganisationMailboxes />
             </div>
           </div>
         </>

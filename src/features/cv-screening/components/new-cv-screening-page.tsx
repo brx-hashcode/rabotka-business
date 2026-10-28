@@ -13,6 +13,7 @@ import {
   IconFilePlus,
   IconFileTypeDocx,
   IconFileTypePdf,
+  IconMail,
   IconPhoto,
   IconShieldLock,
   IconUpload,
@@ -29,7 +30,9 @@ import { CV_ACCEPT, createCvScreening, cvScreeningsKey } from "#/lib/api/cv-scre
 import { friendlyError } from "#/lib/api/friendly-error";
 import { listOffers, offersKey } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
+import { kindFromName, pickKey, type MailPick } from "../mail-picks";
 import { CvLocked, fileSize } from "./cv-bits";
+import { MailImport } from "./mail-import";
 
 const TYPES: Record<string, "pdf" | "docx" | "image"> = {
   "application/pdf": "pdf",
@@ -43,6 +46,9 @@ const TYPES: Record<string, "pdf" | "docx" | "image"> = {
 function kindOf(file: File): "pdf" | "docx" | "image" | null {
   return TYPES[file.type] ?? (/\.docx$/i.test(file.name) ? "docx" : /\.pdf$/i.test(file.name) ? "pdf" : null);
 }
+
+/** One CV in the list: a file from the device, or one ticked in a mail. */
+type CvItem = { key: string; name: string; size: number; kind: "pdf" | "docx" | "image"; from?: string };
 
 const KIND = {
   pdf: { icon: IconFileTypePdf, label: "PDF", tile: "bg-destructive/10 text-destructive" },
@@ -66,12 +72,18 @@ export function NewCvScreeningPage() {
   const [jobTitle, setJobTitle] = useState("");
   const [jobText, setJobText] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  const [mails, setMails] = useState<MailPick[]>([]);
   const [refused, setRefused] = useState<{ name: string; reason: string }[]>([]);
   const [dragging, setDragging] = useState(false);
   const input = useRef<HTMLInputElement>(null);
 
   const e = subscription.data?.entitlements;
   const room = e ? Math.min(e.cvBatchMax, e.cvRemaining ?? Number.POSITIVE_INFINITY) : 0;
+  const count = files.length + mails.length;
+  const items: CvItem[] = [
+    ...files.map((f) => ({ key: `f:${f.name}:${f.size}`, name: f.name, size: f.size, kind: kindOf(f) ?? "pdf" })),
+    ...mails.map((m) => ({ key: `m:${pickKey(m)}`, name: m.name, size: m.size, kind: kindFromName(m.name), from: m.fromName })),
+  ];
 
   const offerOptions = useMemo(() => (offers.data?.items ?? []).map((o) => ({ value: o.id, label: o.title })), [offers.data]);
   const offerTitle = offers.data?.items.find((o) => o.id === offerId)?.title;
@@ -85,7 +97,7 @@ export function NewCvScreeningPage() {
       if (!kindOf(file)) out.push({ name: file.name, reason: "type non pris en charge" });
       else if (file.size > e.cvFileMaxMb * 1024 * 1024) out.push({ name: file.name, reason: `plus de ${e.cvFileMaxMb} Mo` });
       else if (next.some((f) => f.name === file.name && f.size === file.size)) continue;
-      else if (next.length >= room) out.push({ name: file.name, reason: `${room} CV au plus pour cette analyse` });
+      else if (next.length + mails.length >= room) out.push({ name: file.name, reason: `${room} CV au plus pour cette analyse` });
       else next.push(file);
     }
     setFiles(next);
@@ -94,7 +106,11 @@ export function NewCvScreeningPage() {
 
   const start = useMutation({
     mutationFn: () =>
-      createCvScreening(files, source === "offer" ? { offerId } : { jobTitle: jobTitle.trim(), jobText: jobText.trim() }),
+      createCvScreening(
+        files,
+        source === "offer" ? { offerId } : { jobTitle: jobTitle.trim(), jobText: jobText.trim() },
+        mails.map(({ mailboxId, messageId, attachmentId }) => ({ mailboxId, messageId, attachmentId })),
+      ),
     onSuccess: (screening) => {
       void queryClient.invalidateQueries({ queryKey: cvScreeningsKey });
       void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
@@ -123,9 +139,9 @@ export function NewCvScreeningPage() {
           <form
             onSubmit={(ev) => {
               ev.preventDefault();
-              if (jobReady && files.length > 0) start.mutate();
+              if (jobReady && count > 0) start.mutate();
             }}
-            className="space-y-8 rounded-3xl bg-card p-5 sm:p-8"
+            className="min-w-0 space-y-8 rounded-3xl bg-card p-5 sm:p-8"
           >
             <Section title="Le poste">
               <div role="radiogroup" aria-label="Poste" className="inline-flex rounded-full bg-page p-1">
@@ -203,7 +219,7 @@ export function NewCvScreeningPage() {
 
             <Section title="Les CV">
               <CvDrop
-                files={files}
+                items={items}
                 room={room === Number.POSITIVE_INFINITY ? e.cvBatchMax : room}
                 maxMb={e.cvFileMaxMb}
                 dragging={dragging}
@@ -211,11 +227,21 @@ export function NewCvScreeningPage() {
                 onPick={() => input.current?.click()}
                 onDragging={setDragging}
                 onDrop={add}
-                onRemove={(file) => setFiles(files.filter((f) => f !== file))}
+                onRemove={(key) => {
+                  setFiles(files.filter((f) => `f:${f.name}:${f.size}` !== key));
+                  setMails(mails.filter((m) => `m:${pickKey(m)}` !== key));
+                }}
                 onClear={() => {
                   setFiles([]);
+                  setMails([]);
                   setRefused([]);
                 }}
+              />
+              <MailImport
+                picks={mails}
+                room={Math.max(0, (room === Number.POSITIVE_INFINITY ? e.cvBatchMax : room) - files.length)}
+                disabled={start.isPending}
+                onChange={setMails}
               />
               <input
                 ref={input}
@@ -249,10 +275,10 @@ export function NewCvScreeningPage() {
               </Link>
               <button
                 type="submit"
-                disabled={!jobReady || files.length === 0 || start.isPending}
+                disabled={!jobReady || count === 0 || start.isPending}
                 className="inline-flex h-12 items-center justify-center rounded-full bg-ink px-6 font-medium text-white hover:bg-ink/90 disabled:opacity-40"
               >
-                {start.isPending ? "Envoi des CV…" : `Lancer l'analyse${files.length ? ` de ${files.length} CV` : ""}`}
+                {start.isPending ? "Envoi des CV…" : `Lancer l'analyse${count ? ` de ${count} CV` : ""}`}
               </button>
             </div>
           </form>
@@ -266,11 +292,11 @@ export function NewCvScreeningPage() {
               <dl className="grid grid-cols-2 gap-3 text-sm">
                 <div className="rounded-2xl bg-page p-3">
                   <dt className="text-muted-foreground text-xs">CV ajoutés</dt>
-                  <dd className="font-semibold text-xl tabular-nums">{files.length}</dd>
+                  <dd className="font-semibold text-xl tabular-nums">{count}</dd>
                 </div>
                 <div className="rounded-2xl bg-page p-3">
                   <dt className="text-muted-foreground text-xs">CV inclus restants</dt>
-                  <dd className="font-semibold text-xl tabular-nums">{e.cvRemaining === null ? "illimité" : Math.max(0, e.cvRemaining - files.length)}</dd>
+                  <dd className="font-semibold text-xl tabular-nums">{e.cvRemaining === null ? "illimité" : Math.max(0, e.cvRemaining - count)}</dd>
                 </div>
               </dl>
             </section>
@@ -319,7 +345,7 @@ function Step({ icon: Icon, children }: Readonly<{ icon: typeof IconClock; child
  * with how many more the analysis can take.
  */
 function CvDrop({
-  files,
+  items,
   room,
   maxMb,
   dragging,
@@ -330,7 +356,7 @@ function CvDrop({
   onRemove,
   onClear,
 }: Readonly<{
-  files: File[];
+  items: CvItem[];
   room: number;
   maxMb: number;
   dragging: boolean;
@@ -338,10 +364,10 @@ function CvDrop({
   onPick: () => void;
   onDragging: (on: boolean) => void;
   onDrop: (files: FileList) => void;
-  onRemove: (file: File) => void;
+  onRemove: (key: string) => void;
   onClear: () => void;
 }>) {
-  const full = files.length >= room;
+  const full = items.length >= room;
   const dropProps = {
     onDragOver: (ev: React.DragEvent) => {
       ev.preventDefault();
@@ -358,7 +384,7 @@ function CvDrop({
   const surface = dragging ? "bg-chip-green ring-2 ring-whatsapp-dark" : "bg-page hover:bg-page/70";
   const hint = `PDF, Word (.docx) ou photo · ${maxMb} Mo au plus par fichier`;
 
-  if (files.length === 0) {
+  if (items.length === 0) {
     return (
       <button
         type="button"
@@ -390,19 +416,19 @@ function CvDrop({
     );
   }
 
-  const total = files.reduce((n, f) => n + f.size, 0);
+  const total = items.reduce((n, f) => n + f.size, 0);
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-40 flex-1 space-y-1.5">
           <p className="text-sm">
             <span className="font-semibold tabular-nums">
-              {files.length} / {room}
+              {items.length} / {room}
             </span>{" "}
             <span className="text-muted-foreground">CV · {fileSize(total)}</span>
           </p>
           <div className="h-1.5 max-w-64 overflow-hidden rounded-full bg-page">
-            <div className="h-full rounded-full bg-whatsapp-dark transition-[width]" style={{ width: `${Math.min(100, (files.length / room) * 100)}%` }} />
+            <div className="h-full rounded-full bg-whatsapp-dark transition-[width]" style={{ width: `${Math.min(100, (items.length / room) * 100)}%` }} />
           </div>
         </div>
         <button
@@ -416,10 +442,10 @@ function CvDrop({
       </div>
 
       <ul className="grid gap-2.5 sm:grid-cols-2">
-        {files.map((file) => {
-          const k = KIND[kindOf(file) ?? "pdf"];
+        {items.map((file) => {
+          const k = KIND[file.kind];
           return (
-            <li key={`${file.name}-${file.size}`} className="group flex items-center gap-3 rounded-2xl bg-page p-3">
+            <li key={file.key} className="group flex min-w-0 items-center gap-3 rounded-2xl bg-page p-3">
               <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-xl", k.tile)}>
                 <k.icon className="size-5" />
               </span>
@@ -427,14 +453,16 @@ function CvDrop({
                 <span className="block truncate font-medium text-sm" title={file.name}>
                   {file.name}
                 </span>
-                <span className="block text-muted-foreground text-xs">
+                <span className="flex items-center gap-1 truncate text-muted-foreground text-xs">
+                  {file.from !== undefined && <IconMail className="size-3.5 shrink-0" aria-label="Depuis votre messagerie" />}
                   {k.label} · {fileSize(file.size)}
+                  {file.from ? ` · ${file.from}` : ""}
                 </span>
               </span>
               <button
                 type="button"
                 aria-label={`Retirer ${file.name}`}
-                onClick={() => onRemove(file)}
+                onClick={() => onRemove(file.key)}
                 disabled={disabled}
                 className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-card hover:text-foreground"
               >
@@ -459,7 +487,7 @@ function CvDrop({
           <span className="min-w-0 flex-1">
             <span className="block font-medium text-sm">Ajouter des CV</span>
             <span className="block truncate text-muted-foreground text-xs">
-              Encore {room - files.length} possible{room - files.length > 1 ? "s" : ""} · {hint}
+              Encore {room - items.length} possible{room - items.length > 1 ? "s" : ""} · {hint}
             </span>
           </span>
         </button>
