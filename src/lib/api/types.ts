@@ -210,6 +210,9 @@ export type MySubscription = {
     cvRetentionDays: number;
     /** Questions about one analysed CV; 0: no chat. */
     cvChatQuestions: number;
+    /** Offers the AI may still write this period (« Rédiger avec l'IA »). Null: unlimited; 0: none. */
+    offerDraftsRemaining: number | null;
+    offerDraftsQuota: number | null;
     includesPreselection: boolean;
     includesFieldAgents: boolean;
     priorityVisibility: boolean;
@@ -448,4 +451,26 @@ export type InterviewInvitation = {
   status: InterviewStatus;
   responseNote: string | null;
   past: boolean;
+};
+
+/** `POST business/me/offer-drafts`: an offer the AI wrote, for the form. */
+export type OfferDraft = {
+  title: string;
+  description: string;
+  categoryId: string | null;
+  categoryName: string | null;
+  employmentType: "MISSION" | "CDD" | "CDI" | "STAGE" | null;
+  /** What was left out on purpose (a discriminatory criterion asked for). */
+  removed: string[];
+  /** Drafts left this period. Null: unlimited. */
+  remaining: number | null;
+};
+
+export type OfferDraftInput = {
+  brief: string;
+  title?: string;
+  employmentType?: "MISSION" | "CDD" | "CDI" | "STAGE";
+  city?: string;
+  isRemote?: boolean;
+  quantity?: number;
 };
