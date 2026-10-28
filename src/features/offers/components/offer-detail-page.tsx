@@ -9,8 +9,10 @@ import {
   IconBriefcase,
   IconCalendarEvent,
   IconCash,
+  IconChevronDown,
   IconInbox,
   IconInfoCircle,
+  IconLoader2,
   IconMapPin,
   IconPencil,
   IconRefresh,
@@ -35,8 +37,10 @@ import {
   getOffer,
   getJobCategories,
   getOfferApplicants,
+  getOfferAssessments,
   offersKey,
   republishOffer,
+  type ApplicantAssessment,
   type Offer,
   type OfferApplicant,
 } from "#/lib/api/offer-controller";
@@ -54,6 +58,7 @@ import {
   type ApplicationStage,
 } from "../offer-labels";
 import { ApplicationActions } from "./application-actions";
+import { CriterionBar, Points, ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
 import { scheduledIso } from "./offer-form";
 
 /**
@@ -338,11 +343,27 @@ function ApplicantsCard({
   const list = applicants ?? [];
   const count = (k: (typeof TABS)[number]["key"]) => (k === "all" ? list.length : list.filter((a) => applicationStage(a.status) === k).length);
   const shown = tab === "all" ? list : list.filter((a) => applicationStage(a.status) === tab);
+  // Ranked like CV analysis: best fit first; not scored yet, after, newest first.
+  const assessed = useQuery({
+    queryKey: [...offersKey, o.id, "assessments"],
+    queryFn: () => getOfferAssessments(o.id),
+    refetchInterval: (q) => ((q.state.data?.pending ?? 0) > 0 ? 30_000 : false),
+  });
+  const scores = new Map((assessed.data?.assessments ?? []).map((x) => [x.applicationId, x]));
+  const pending = assessed.data?.pending ?? 0;
+  const ranked = [...shown].sort((x, y) => {
+    const sx = scores.get(x.applicationId)?.score ?? -1;
+    const sy = scores.get(y.applicationId)?.score ?? -1;
+    return sy - sx || y.createdAt.localeCompare(x.createdAt);
+  });
   const open = o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED";
 
   return (
     <section className="space-y-5 rounded-3xl bg-card p-6">
-      <h2 className="font-semibold text-xl">Candidats</h2>
+      <div className="space-y-1">
+        <h2 className="font-semibold text-xl">Candidats</h2>
+        <p className="text-muted-foreground text-sm">Classés par adéquation avec l&apos;offre, d&apos;après leur profil Rabotka.</p>
+      </div>
 
       {loading ? (
         <Skeleton className="h-64 rounded-2xl" />
@@ -379,47 +400,105 @@ function ApplicantsCard({
             ))}
           </div>
 
+          {pending > 0 && (
+            <p className="flex items-center gap-2 text-muted-foreground text-sm">
+              <IconLoader2 className="size-4 animate-spin" />
+              {pending === 1 ? "1 candidature en cours d'analyse" : `${pending} candidatures en cours d'analyse`} : le classement se met à
+              jour seul.
+            </p>
+          )}
+
           {shown.length === 0 ? (
             <p className="rounded-2xl bg-page p-4 text-muted-foreground text-sm">Aucun candidat à cette étape.</p>
           ) : (
             <ul className="flex flex-col gap-2">
-              {shown.map((a) => {
-                const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
-                return (
-                  <li
-                    key={a.applicationId}
-                    className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl bg-page p-3 pr-4"
-                  >
-                    <Link href={`/espace/candidats/${a.worker.id}`} className="group flex min-w-0 flex-1 items-center gap-4">
-                      <Avatar className="size-11 rounded-xl">
-                        {a.worker.avatarUrl && <AvatarImage src={a.worker.avatarUrl} alt="" className="object-cover" />}
-                        <AvatarFallback className="rounded-xl bg-card font-medium">{getInitials(name)}</AvatarFallback>
-                      </Avatar>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium group-hover:underline">{name}</span>
-                        <span className="block text-muted-foreground text-xs">
-                          Candidature du {new Date(a.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
-                          {a.worker.reliabilityScore !== null && ` · fiabilité ${a.worker.reliabilityScore}/100`}
-                        </span>
-                      </span>
-                      <span
-                        className={cn(
-                          "shrink-0 rounded-full px-2.5 py-1 font-medium text-xs",
-                          statusClass(a.status),
-                        )}
-                      >
-                        {APPLICATION_STATUS[a.status] ?? a.status}
-                      </span>
-                    </Link>
-                    <ApplicationActions applicant={a} name={name} />
-                  </li>
-                );
-              })}
+              {ranked.map((a, i) => (
+                <ApplicantRow key={a.applicationId} applicant={a} rank={i + 1} assessment={scores.get(a.applicationId)} />
+              ))}
             </ul>
           )}
         </>
       )}
     </section>
+  );
+}
+
+const APPLICANT_CRITERIA = [
+  { key: "trade", label: "Métier" },
+  { key: "experience", label: "Expérience" },
+  { key: "location", label: "Proximité" },
+  { key: "reliability", label: "Fiabilité" },
+] as const;
+
+/** One applicant: rank, score and verdict as in CV analysis, and why on demand. */
+function ApplicantRow({
+  applicant: a,
+  rank,
+  assessment,
+}: Readonly<{ applicant: OfferApplicant; rank: number; assessment?: ApplicantAssessment }>) {
+  const [open, setOpen] = useState(false);
+  const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
+  const score = assessment?.score ?? null;
+  return (
+    <li className="rounded-2xl bg-page p-3 pr-4">
+      <div className="flex items-center gap-3">
+        <span className="w-4 shrink-0 text-center font-semibold text-muted-foreground text-xs tabular-nums">{rank}</span>
+        {score !== null ? (
+          <ScoreRing score={score} size={46} />
+        ) : (
+          <span className="flex size-[46px] shrink-0 items-center justify-center rounded-full bg-card text-muted-foreground" title="Analyse en cours">
+            <IconLoader2 className="size-4 animate-spin" />
+          </span>
+        )}
+        <Link href={`/espace/candidats/${a.worker.id}`} className="group flex min-w-0 flex-1 items-center gap-3">
+          <Avatar className="size-10 shrink-0 rounded-xl">
+            {a.worker.avatarUrl && <AvatarImage src={a.worker.avatarUrl} alt="" className="object-cover" />}
+            <AvatarFallback className="rounded-xl bg-card font-medium">{getInitials(name)}</AvatarFallback>
+          </Avatar>
+          <span className="min-w-0 flex-1">
+            <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="truncate font-medium group-hover:underline">{name}</span>
+              {score !== null && <VerdictChip score={score} />}
+            </span>
+            <span className="block truncate text-muted-foreground text-xs">
+              Candidature du {new Date(a.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
+              {a.worker.reliabilityScore !== null && ` · fiabilité ${a.worker.reliabilityScore}/100`}
+            </span>
+          </span>
+        </Link>
+        <span className={cn("shrink-0 rounded-full px-2.5 py-1 font-medium text-xs", statusClass(a.status))}>
+          {APPLICATION_STATUS[a.status] ?? a.status}
+        </span>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+        {assessment && (
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            className="mr-auto inline-flex h-10 shrink-0 items-center gap-1 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70"
+          >
+            Pourquoi ce score ?
+            <IconChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
+          </button>
+        )}
+        <ApplicationActions applicant={a} name={name} />
+      </div>
+      {open && assessment && (
+        <div className="mt-4 space-y-4">
+          {assessment.summary && <p className="text-sm leading-relaxed">{assessment.summary}</p>}
+          <div className="grid gap-5 md:grid-cols-[1fr_1fr_14rem]">
+            <Points title="Points forts" items={assessment.strengths} tone="good" />
+            <Points title="Points à vérifier" items={assessment.gaps} tone="gap" />
+            <div className="space-y-2.5 rounded-2xl bg-card p-4">
+              {APPLICANT_CRITERIA.filter((k) => typeof assessment.criteria?.[k.key] === "number").map((k) => (
+                <CriterionBar key={k.key} label={k.label} value={assessment.criteria?.[k.key] ?? 0} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </li>
   );
 }
 

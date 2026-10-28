@@ -171,3 +171,24 @@ export function Career({
     </section>
   );
 }
+
+/** Strong points or points to check, as a short list. */
+export function Points({ title, items, tone }: Readonly<{ title: string; items: string[]; tone: "good" | "gap" }>) {
+  return (
+    <div className="space-y-2">
+      <p className="font-medium text-sm">{title}</p>
+      {items.length === 0 ? (
+        <p className="text-muted-foreground text-sm">Aucun.</p>
+      ) : (
+        <ul className="space-y-1.5 text-sm">
+          {items.map((item) => (
+            <li key={item} className="flex gap-2">
+              <span aria-hidden className={cn("mt-2 size-1.5 shrink-0 rounded-full", tone === "good" ? "bg-whatsapp-dark" : "bg-chip-amber-foreground")} />
+              {item}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}

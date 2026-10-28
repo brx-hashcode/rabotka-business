@@ -527,26 +527,37 @@ export function ClaimDetailSkeleton() {
 export function ProfileSkeleton() {
   return (
     <Status>
-      <Card className="space-y-6 p-6 sm:p-8">
-        <div className="flex items-center gap-4">
-          <Bone className="size-20 rounded-2xl" />
-          <div className="flex-1 space-y-2">
-            <Bone className="h-7 w-1/2" />
-            <Bone className="h-4 w-1/3" />
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_28rem]">
+        <Card className="space-y-6 p-6 sm:p-8">
+          <div className="flex items-center gap-4">
+            <Bone className="size-20 rounded-2xl" />
+            <div className="flex-1 space-y-2">
+              <Bone className="h-7 w-1/2" />
+              <Bone className="h-4 w-1/3" />
+            </div>
           </div>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          <Bone className="h-20 rounded-2xl" />
-          <Bone className="h-20 rounded-2xl" />
-          <Bone className="h-20 rounded-2xl" />
-        </div>
-        <Bone className="h-24" />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <Bone className="aspect-square rounded-2xl" />
-          <Bone className="aspect-square rounded-2xl" />
-          <Bone className="aspect-square rounded-2xl" />
-        </div>
-      </Card>
+          <Bone className="h-11 w-full max-w-xs rounded-full" />
+          <Bone className="h-24" />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Bone className="aspect-square rounded-2xl" />
+            <Bone className="aspect-square rounded-2xl" />
+            <Bone className="aspect-square rounded-2xl" />
+          </div>
+        </Card>
+        <Card className="space-y-6">
+          <Bone className="h-6 w-24" />
+          <div className="grid grid-cols-3 gap-3 lg:grid-cols-1">
+            <Bone className="h-20 rounded-2xl" />
+            <Bone className="h-20 rounded-2xl" />
+            <Bone className="h-20 rounded-2xl" />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Bone className="h-8 w-24 rounded-full" />
+            <Bone className="h-8 w-32 rounded-full" />
+            <Bone className="h-8 w-28 rounded-full" />
+          </div>
+        </Card>
+      </div>
     </Status>
   );
 }

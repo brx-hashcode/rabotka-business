@@ -224,3 +224,22 @@ export const offersKey = ["offers"] as const;
 export function applicationContractUrl(applicationId: string): string {
   return `${appConfig.apiUrl}/business/me/applications/${encodeURIComponent(applicationId)}/contract.pdf`;
 }
+
+/** An applicant's fit with the offer, scored in the background (like a CV). */
+export type ApplicantAssessment = {
+  applicationId: string;
+  score: number | null;
+  criteria: Partial<Record<"trade" | "experience" | "location" | "reliability", number>> | null;
+  summary: string | null;
+  strengths: string[];
+  gaps: string[];
+};
+
+class AssessmentController extends BusinessBaseController {
+  forOffer(offerId: string): Promise<{ assessments: ApplicantAssessment[]; pending: number }> {
+    return this.get(`/business/me/offers/${encodeURIComponent(offerId)}/assessments`);
+  }
+}
+
+const assessments = new AssessmentController();
+export const getOfferAssessments = assessments.forOffer.bind(assessments);

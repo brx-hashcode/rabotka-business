@@ -9,9 +9,7 @@ export default async function Page({ params }: Readonly<{ params: Promise<{ id: 
   const { id } = await params;
   return (
     <div className="w-full pt-2">
-      <div className="mx-auto max-w-3xl rounded-3xl bg-card p-6 sm:p-8">
-        <CandidateProfile workerId={id} asPage />
-      </div>
+      <CandidateProfile workerId={id} asPage />
     </div>
   );
 }
