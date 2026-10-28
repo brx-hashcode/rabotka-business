@@ -1,6 +1,7 @@
 import { appConfig } from "#/config";
 import { refreshSession, SessionError } from "#/lib/auth/session-client";
 import { BusinessBaseController } from "./base-controller";
+import type { MailAttachmentRef } from "./mailbox-controller";
 import { parseSse } from "./sse";
 import type { CvChat, CvComparison, CvScreening, CvScreeningSummary } from "./types";
 
@@ -14,11 +15,19 @@ class CvScreeningController extends BusinessBaseController {
     return this.get(`/business/me/cv-screenings/${encodeURIComponent(id)}`);
   }
 
-  /** The files and the job, in one multipart request: an offer, or a title and a description. */
-  create(files: File[], job: { offerId: string } | { jobTitle: string; jobText: string }): Promise<CvScreening> {
+  /**
+   * The files and the job, in one multipart request: an offer, or a title and a
+   * description. CVs ticked in a connected mailbox go as references; the server reads them.
+   */
+  create(
+    files: File[],
+    job: { offerId: string } | { jobTitle: string; jobText: string },
+    mailAttachments: MailAttachmentRef[] = [],
+  ): Promise<CvScreening> {
     const form = new FormData();
     for (const [key, value] of Object.entries(job)) form.append(key, value);
     for (const file of files) form.append("files", file);
+    if (mailAttachments.length) form.append("mailAttachments", JSON.stringify(mailAttachments));
     return this.post("/business/me/cv-screenings", form);
   }
 
