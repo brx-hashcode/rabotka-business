@@ -18,6 +18,8 @@ import {
 } from "@tabler/icons-react";
 
 import { Skeleton } from "#/components/ui/skeleton";
+import { PreviewSheet } from "#/components/preview-sheet";
+import { appConfig } from "#/config";
 import { STATUS } from "#/features/offers/offer-labels";
 import { SubscriptionBanner } from "#/features/subscription/components/subscription-banner";
 import { useSessionUser } from "#/hooks/use-session-user";
@@ -54,6 +56,7 @@ const percent = (n: number | null) => (n === null ? "—" : `${n} %`);
 export function HomeOverview() {
   const { data: user } = useSessionUser();
   const [days, setDays] = useState<StatsPeriod>(30);
+  const [reportOpen, setReportOpen] = useState(false);
   const business = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
   const subscription = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   const stats = useQuery({ queryKey: myStatsKey(days), queryFn: () => getMyStats(days), placeholderData: (prev) => prev });
@@ -71,8 +74,29 @@ export function HomeOverview() {
               {greeting(user?.first_name || b?.owner?.firstName, b?.name, days)}
             </p>
           </div>
-          <PeriodPicker value={days} onChange={setDays} />
+          <div className="flex flex-wrap items-center gap-2">
+            <PeriodPicker value={days} onChange={setDays} />
+            <button
+              type="button"
+              onClick={() => setReportOpen(true)}
+              className="inline-flex h-11 items-center gap-2 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70"
+            >
+              <IconFileText className="size-4" />
+              Rapport PDF
+            </button>
+          </div>
         </div>
+        {/* The same period as a document to keep or send: read, downloaded and printed from the drawer. */}
+        <PreviewSheet
+          open={reportOpen}
+          onOpenChange={setReportOpen}
+          title="Rapport de recrutement"
+          subtitle={`${b?.name ?? "Votre organisation"} · ${days} derniers jours`}
+          src={`${appConfig.apiUrl}/business/me/report.pdf?days=${days}`}
+          kind="pdf"
+          fileName={`rapport-recrutement-${days}-jours.pdf`}
+          unavailable="Le rapport n'a pas pu être créé. Réessayez dans un instant."
+        />
         {/* Only when something is to do about the plan. */}
         <SubscriptionBanner className="mt-4 rounded-2xl p-4" />
 
