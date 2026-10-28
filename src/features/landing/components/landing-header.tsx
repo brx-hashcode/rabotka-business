@@ -106,8 +106,8 @@ function DesktopMenu({ label, links, wide }: Readonly<{ label: string; links: Na
 }
 
 /**
- * The Solutions menu as a small mega-menu: each solution with its photo from
- * the page, and a featured panel to open an account.
+ * The Solutions menu as a small mega-menu: each feature with its coloured
+ * tile from the page, and a featured panel to open an account.
  */
 function SolutionsPanel({ links }: Readonly<{ links: NavLink[] }>) {
   return (
@@ -115,9 +115,9 @@ function SolutionsPanel({ links }: Readonly<{ links: NavLink[] }>) {
       align="start"
       sideOffset={8}
       onCloseAutoFocus={(e) => e.preventDefault()}
-      className="grid w-[46rem] grid-cols-[1fr_15rem] gap-3 rounded-3xl border-0 bg-card p-3 shadow-soft"
+      className="grid w-[52rem] grid-cols-[1fr_15rem] gap-3 rounded-3xl border-0 bg-card p-3 shadow-soft"
     >
-      <div className="grid grid-cols-1 gap-1">
+      <div className="grid grid-cols-2 gap-1">
         {links.map((link) => (
           <DropdownMenuItem
             key={link.label}
@@ -125,15 +125,9 @@ function SolutionsPanel({ links }: Readonly<{ links: NavLink[] }>) {
             className="group cursor-pointer items-center gap-4 rounded-2xl p-2.5 focus:bg-page"
           >
             <a href={link.href}>
-              {link.photo && (
-                <span className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-page">
-                  <Image
-                    src={link.photo}
-                    alt=""
-                    fill
-                    sizes="64px"
-                    className="object-cover transition-transform duration-300 group-hover:scale-105 group-focus:scale-105"
-                  />
+              {link.icon && (
+                <span className={`flex size-12 shrink-0 items-center justify-center rounded-2xl transition-transform group-hover:scale-105 ${link.tone ?? "bg-page"}`}>
+                  <link.icon className="size-5" />
                 </span>
               )}
               <span className="min-w-0">
@@ -162,7 +156,7 @@ function SolutionsPanel({ links }: Readonly<{ links: NavLink[] }>) {
           <span className="absolute inset-0 bg-linear-to-t from-black/85 via-black/40 to-transparent" />
           <span className="relative space-y-2">
             <span className="block font-semibold text-base leading-snug">
-              Toutes vos solutions de recrutement, en un seul espace
+              Tout votre recrutement, de l&apos;offre à l&apos;entretien, en un seul espace
             </span>
             <span className="inline-flex items-center gap-1.5 font-medium text-sm text-white">
               Ouvrir un compte entreprise

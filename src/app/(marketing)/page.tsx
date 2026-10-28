@@ -4,8 +4,9 @@ import { LandingHero } from "#/features/landing/components/landing-hero";
 import {
   AudiencesSection,
   FaqSection,
-  SolutionsSection,
+  FeaturesSection,
   StepsSection,
+  TrustSection,
 } from "#/features/landing/components/landing-sections";
 
 /**
@@ -18,7 +19,8 @@ export default function LandingPage() {
       <LandingHeader />
       <main>
         <LandingHero />
-        <SolutionsSection />
+        <FeaturesSection />
+        <TrustSection />
         <StepsSection />
         <AudiencesSection />
         <FaqSection />
