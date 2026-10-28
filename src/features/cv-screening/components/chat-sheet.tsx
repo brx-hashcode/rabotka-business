@@ -2,7 +2,8 @@
 
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
-import { IconArrowUp, IconFileTypePdf, IconInfoCircle, IconLoader2, IconPlayerStopFilled, IconX } from "@tabler/icons-react";
+import { IconArrowUp, IconFileTypePdf, IconInfoCircle, IconPlayerStopFilled, IconX } from "@tabler/icons-react";
+import { Loader } from "lucide-react";
 import { Dialog as SheetPrimitive } from "radix-ui";
 import { toast } from "sonner";
 
@@ -168,7 +169,7 @@ export function ChatSheet({
                 title="Télécharger la conversation en PDF"
                 className="flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-page px-3.5 font-medium text-sm hover:bg-page/70 disabled:opacity-40"
               >
-                {exporting ? <IconLoader2 className="size-4 animate-spin" /> : <IconFileTypePdf className="size-4" />}
+                {exporting ? <Loader className="size-4 animate-spin" /> : <IconFileTypePdf className="size-4" />}
                 <span className="hidden sm:inline">{exporting ? "Préparation…" : "PDF"}</span>
                 <span className="sr-only sm:hidden">Télécharger en PDF</span>
               </button>
