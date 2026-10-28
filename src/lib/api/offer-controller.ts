@@ -55,8 +55,6 @@ export type Offer = OfferListItem & {
   categoryId: string | null;
   note: string | null;
   questions: OfferQuestion[];
-  /** Its page on www.rabotka.work, for anyone and search engines; null once closed. */
-  publicUrl: string | null;
 };
 
 /** A candidate's answer, as the business reads it (« Oui », « Non », the choice, the text). */
@@ -155,7 +153,6 @@ class OfferController extends BusinessBaseController {
       countryCode: str(o.country_code),
       categoryId: str(o.category_id),
       note: str(o.note),
-      publicUrl: str(o.public_url),
       // Absent from a backend older than the questions.
       questions: Array.isArray(o.questions)
         ? (o.questions as Raw[]).map((q) => ({
