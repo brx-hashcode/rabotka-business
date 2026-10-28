@@ -22,6 +22,13 @@ export function proxy(request: NextRequest) {
 }
 
 function forwardApi(request: NextRequest, path = request.nextUrl.pathname) {
+  // The session cookie becomes a bearer token below, so a write from another
+  // site must not ride on it. SameSite=Lax already keeps the cookie off
+  // cross-site writes; this refuses them outright (a browser always sends
+  // Origin on one). Same-origin calls and calls with no Origin pass.
+  if (isCrossSiteWrite(request)) {
+    return NextResponse.json({ message: "Requête refusée." }, { status: 403 });
+  }
   const backend = process.env.BACKEND_URL;
   if (!backend) {
     return NextResponse.json(
@@ -47,6 +54,20 @@ function forwardApi(request: NextRequest, path = request.nextUrl.pathname) {
 
   const target = new URL(path + request.nextUrl.search, backend);
   return NextResponse.rewrite(target, { request: { headers } });
+}
+
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
+export function isCrossSiteWrite(request: Pick<NextRequest, "method" | "headers">): boolean {
+  if (SAFE_METHODS.has(request.method)) return false;
+  const origin = request.headers.get("origin");
+  if (!origin) return false;
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  try {
+    return new URL(origin).host !== host;
+  } catch {
+    return true;
+  }
 }
 
 function redirectSignedIn(request: NextRequest) {

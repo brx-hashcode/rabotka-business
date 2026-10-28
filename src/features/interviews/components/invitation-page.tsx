@@ -64,7 +64,7 @@ export function InvitationPage({ token }: Readonly<{ token: string }>) {
             </div>
           ) : !i ? (
             <div className="space-y-2 text-center">
-              <p className="font-semibold text-lg">Invitation introuvable</p>
+              <h1 className="font-semibold text-lg">Invitation introuvable</h1>
               <p className="text-muted-foreground text-sm">
                 {friendlyError(query.error, "Ce lien n'est plus valable : l'entretien a peut-être été déplacé. Utilisez le dernier e-mail reçu.")}
               </p>

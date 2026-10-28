@@ -480,7 +480,7 @@ function ResumeCard({
         <ScoreRing score={score} />
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="truncate font-semibold text-lg">{name}</h2>
+            <h2 className="break-words font-semibold text-lg sm:truncate">{name}</h2>
             <VerdictChip score={score} />
           </div>
           {facts.length > 0 && <p className="text-muted-foreground text-sm">{facts.join(" · ")}</p>}
@@ -494,12 +494,19 @@ function ResumeCard({
         <button
           type="button"
           onClick={() => setChatOpen(true)}
-          className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm transition-colors hover:bg-brand-lime/80"
+          className="hidden h-10 shrink-0 items-center gap-2 rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm transition-colors hover:bg-brand-lime/80 sm:inline-flex"
         >
-          <span className="hidden sm:inline">Interroger le CV</span>
-          <span className="sm:hidden">Questions</span>
+          Interroger le CV
         </button>
       </div>
+      {/* Phones: under the header, so the name and the career get the width. */}
+      <button
+        type="button"
+        onClick={() => setChatOpen(true)}
+        className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full bg-brand-lime font-medium text-[#0f2414] text-sm transition-colors hover:bg-brand-lime/80 sm:hidden"
+      >
+        Interroger le CV
+      </button>
       {planning && (
         <ScheduleInterviewDialog
           open={planning}
