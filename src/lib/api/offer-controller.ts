@@ -32,6 +32,21 @@ export type OfferListItem = {
   address: string | null;
 };
 
+export type QuestionKind = "YES_NO" | "CHOICE" | "SHORT_TEXT";
+
+/** A question the candidates answer when they apply (« Questions aux candidats »). */
+export type OfferQuestion = {
+  kind: QuestionKind;
+  label: string;
+  /** CHOICE: the answers offered. */
+  options: string[];
+  required: boolean;
+  /** « Éliminatoire »: an answer outside `accepted` sets the application aside. */
+  knockout: boolean;
+  /** YES_NO: ["yes"] or ["no"]; CHOICE: some of `options`. */
+  accepted: string[];
+};
+
 export type Offer = OfferListItem & {
   reference: string;
   description: string;
@@ -39,7 +54,11 @@ export type Offer = OfferListItem & {
   countryCode: string | null;
   categoryId: string | null;
   note: string | null;
+  questions: OfferQuestion[];
 };
+
+/** A candidate's answer, as the business reads it (« Oui », « Non », the choice, the text). */
+export type ApplicantAnswer = { label: string; kind: QuestionKind; value: string; passed: boolean | null };
 
 /** One applicant on an offer — public fields only, never a phone. */
 export type OfferApplicant = {
@@ -48,6 +67,10 @@ export type OfferApplicant = {
   createdAt: string;
   /** Rated by this employer already (finished missions only). */
   ratedByEmployer?: boolean;
+  /** Its answers to the offer's questions; empty when it applied without them. */
+  answers?: ApplicantAnswer[];
+  /** A wrong answer to an « éliminatoire » question. */
+  knockedOut?: boolean;
   worker: {
     id: string;
     firstName: string;
@@ -78,6 +101,8 @@ export type OfferInput = {
   payment_flow?: PaymentFlow | null;
   note?: string;
   category_id: string;
+  /** Replaces the offer's questions; omitted leaves them alone. */
+  questions?: OfferQuestion[];
 };
 
 export type JobCategory = { id: string; name: string; slug: string };
@@ -128,6 +153,17 @@ class OfferController extends BusinessBaseController {
       countryCode: str(o.country_code),
       categoryId: str(o.category_id),
       note: str(o.note),
+      // Absent from a backend older than the questions.
+      questions: Array.isArray(o.questions)
+        ? (o.questions as Raw[]).map((q) => ({
+            kind: q.kind as QuestionKind,
+            label: String(q.label ?? ""),
+            options: Array.isArray(q.options) ? (q.options as string[]) : [],
+            required: q.required !== false,
+            knockout: Boolean(q.knockout),
+            accepted: Array.isArray(q.accepted) ? (q.accepted as string[]) : [],
+          }))
+        : [],
     };
   }
 
@@ -140,6 +176,8 @@ class OfferController extends BusinessBaseController {
         status: String(a.status),
         createdAt: String(a.created_at ?? ""),
         ratedByEmployer: Boolean(a.ratedByEmployer),
+        knockedOut: Boolean(a.knockedOut),
+        answers: Array.isArray(a.answers) ? (a.answers as ApplicantAnswer[]) : [],
         worker: {
           id: String(w.id ?? ""),
           firstName: String(w.first_name ?? ""),
