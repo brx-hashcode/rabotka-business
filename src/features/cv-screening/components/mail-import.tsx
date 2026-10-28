@@ -83,7 +83,11 @@ export function useConnectMailbox(onConnected: (provider: MailProviderSlug) => v
       setPending(null);
       if (status === "connected") {
         void queryClient.invalidateQueries({ queryKey: mailboxesKey }).then(() => onConnected(provider));
-      } else if (status === "error") {
+      } else if (status === "scope") {
+        toast.error(`L'accès à vos e-mails n'a pas été autorisé : reconnectez ${PROVIDER_LABEL[provider]} et cochez la case qui permet à Rabotka de lire vos e-mails.`);
+      } else if (status === "api_disabled") {
+        toast.error(`La lecture des e-mails ${PROVIDER_LABEL[provider]} n'est pas encore activée pour Rabotka. Réessayez plus tard.`);
+      } else if (status !== "denied") {
         toast.error(`La connexion à ${PROVIDER_LABEL[provider]} n'a pas abouti. Réessayez.`);
       }
     };
