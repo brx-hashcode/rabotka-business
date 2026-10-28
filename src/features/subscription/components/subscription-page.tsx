@@ -12,6 +12,7 @@ import { getMySubscription, mySubscriptionKey, subscribeToPlan } from "#/lib/api
 import { friendlyError } from "#/lib/api/friendly-error";
 import type { BusinessPlan, MySubscription, SubscriptionStatus } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
+import { offersPerPeriodLabel, offersUsed } from "../offers-quota";
 
 type Period = "MONTHLY" | "ANNUAL";
 
@@ -121,17 +122,7 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
               : renews
           }
         />
-        <Meter
-          icon={IconFileText}
-          label="Offres en ligne"
-          used={e.activeOffers}
-          limit={e.activeOffersLimit}
-          hint={
-            e.activeOffersLimit !== null && e.activeOffers > e.activeOffersLimit
-              ? "En même temps. Les offres déjà en ligne le restent : terminez-en pour en publier."
-              : "En même temps : ce nombre ne repart pas à zéro à chaque période."
-          }
-        />
+        <Meter icon={IconFileText} label="Offres publiées" used={offersUsed(e)} limit={e.activeOffersLimit} hint={renews} />
         {e.cvQuota !== 0 && (
           <Meter icon={IconFileSearch} label="CV inclus" used={e.cvUsed} limit={e.cvQuota} hint={renews} />
         )}
@@ -302,7 +293,7 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
                     : `${plan.unlocksPerPeriod} contact${plan.unlocksPerPeriod > 1 ? "s" : ""} inclus`}
                 </PlanLine>
                 <PlanLine>
-                  {plan.activeOffersLimit === null ? "Offres en ligne illimitées" : `${plan.activeOffersLimit} offre${plan.activeOffersLimit > 1 ? "s" : ""} en ligne`}
+                  {offersPerPeriodLabel(plan.activeOffersLimit)}
                 </PlanLine>
                 {cvLine(plan) && <PlanLine>{cvLine(plan)}</PlanLine>}
                 {plan.includesPreselection && <PlanLine>Recherche de profils</PlanLine>}

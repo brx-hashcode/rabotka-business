@@ -199,8 +199,13 @@ export type MySubscription = {
     unlocksRemaining: number | null;
     unlocksQuota: number | null;
     unlocksUsed: number;
+    /** Offers the plan lets the business publish per period. Null: unlimited. */
     activeOffersLimit: number | null;
+    /** Offers online right now (information only). */
     activeOffers: number;
+    /** Offers published this period (absent from a backend before the per-period rule). */
+    offersPublished?: number;
+    offersRemaining?: number | null;
     /** CVs the AI sorting may still read this period. Null: unlimited; 0: none. */
     cvRemaining: number | null;
     cvQuota: number | null;
