@@ -18,7 +18,9 @@ import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-control
 import { getJobCategories, type EmploymentType, type Offer, type OfferInput, type PaymentFlow } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
 import { AVAILABLE_EMPLOYMENT_TYPES, EMPLOYMENT_TYPES, isDatedMission, PAYMENT_FLOWS } from "../offer-labels";
+import { cleanQuestions, questionProblem } from "../offer-questions";
 import { OfferAiDialog } from "./offer-ai-dialog";
+import { OfferQuestionsField } from "./offer-questions-field";
 import { OfferSummary } from "./offer-summary";
 
 /** Mirrors the server (and the client app): a new date is at least 4 h ahead. */
@@ -44,6 +46,16 @@ const schema = z
     paymentFlow: z.string(),
     categoryId: z.string().min(1, "Choisissez un métier"),
     note: z.string().trim().max(500, "500 caractères au plus"),
+    questions: z.array(
+      z.object({
+        kind: z.enum(["YES_NO", "CHOICE", "SHORT_TEXT"]),
+        label: z.string(),
+        options: z.array(z.string()),
+        required: z.boolean(),
+        knockout: z.boolean(),
+        accepted: z.array(z.string()),
+      }),
+    ),
   })
   .superRefine((d, ctx) => {
     if (!d.scheduledDate) {
@@ -61,6 +73,9 @@ const schema = z
     if (!d.isRemote) {
       if (!d.countryCode) ctx.addIssue({ code: "custom", path: ["countryCode"], message: "Choisissez le pays" });
       if (!d.city) ctx.addIssue({ code: "custom", path: ["city"], message: "Choisissez la ville" });
+    }
+    if (d.questions.some((q) => questionProblem(q) !== null)) {
+      ctx.addIssue({ code: "custom", path: ["questions"], message: "Complétez ou retirez les questions signalées." });
     }
     if (d.amount) {
       const n = Number(d.amount);
@@ -96,6 +111,7 @@ export function offerFormValues(offer?: Offer): OfferFormValues {
     paymentFlow: offer?.paymentFlow ?? "",
     categoryId: offer?.categoryId ?? "",
     note: offer?.note ?? "",
+    questions: offer?.questions ?? [],
   };
 }
 
@@ -124,6 +140,7 @@ export function toOfferInput(v: OfferFormValues, countryName: string | undefined
     payment_flow: v.amount ? (v.paymentFlow as PaymentFlow) : null,
     ...(v.note ? { note: v.note } : {}),
     category_id: v.categoryId,
+    questions: cleanQuestions(v.questions),
   };
 }
 
@@ -404,6 +421,19 @@ export function OfferForm({
             />
           </Section>
 
+          <Section title="Questions aux candidats" optional>
+            <FormField
+              control={form.control}
+              name="questions"
+              render={({ field }) => (
+                <FormItem>
+                  <OfferQuestionsField value={field.value} onChange={field.onChange} />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </Section>
+
           <StepActions onBack={onCancel} continueLabel={submitLabel} pending={pending} />
         </form>
         <aside className="space-y-6 lg:sticky lg:top-24">
@@ -419,11 +449,14 @@ export function OfferForm({
   );
 }
 
-function Section({ title, children }: Readonly<{ title: string; children: ReactNode }>) {
+function Section({ title, optional, children }: Readonly<{ title: string; optional?: boolean; children: ReactNode }>) {
   return (
     <section className="space-y-5">
       <div className="flex items-center gap-3">
-        <h2 className="shrink-0 font-semibold text-base">{title}</h2>
+        <h2 className="shrink-0 font-semibold text-base">
+          {title}
+          {optional && <span className="font-normal text-muted-foreground"> (facultatif)</span>}
+        </h2>
         <span aria-hidden className="h-px flex-1 bg-page" />
       </div>
       {children}

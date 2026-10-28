@@ -9,10 +9,12 @@ import {
   IconBriefcase,
   IconCalendarEvent,
   IconCash,
+  IconCheck,
   IconChevronDown,
   IconInbox,
   IconInfoCircle,
   IconMapPin,
+  IconMinus,
   IconPencil,
   IconRefresh,
   IconTrash,
@@ -59,6 +61,7 @@ import {
   STATUS,
   type ApplicationStage,
 } from "../offer-labels";
+import { failedLabel, KIND_LABEL } from "../offer-questions";
 import { ApplicationActions } from "./application-actions";
 import { REFUSAL_TEMPLATES, RefusalMessageField } from "./refusal-message";
 import { Checkbox } from "#/components/ui/checkbox";
@@ -185,6 +188,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
             </div>
             <div className="space-y-6 lg:sticky lg:top-24">
               <DetailsCard offer={o} category={categories.data?.find((c) => c.id === o.categoryId)?.name} />
+              <QuestionsCard offer={o} />
               <section className="space-y-5 rounded-3xl bg-card p-6">
                 <div className="space-y-2">
                   <h2 className="font-semibold text-lg">Description</h2>
@@ -368,11 +372,18 @@ function ApplicantsCard({
       else next.add(id);
       return next;
     });
-  const ranked = [...shown].sort((x, y) => {
-    const sx = scores.get(x.applicationId)?.score ?? -1;
-    const sy = scores.get(y.applicationId)?.score ?? -1;
-    return sy - sx || y.createdAt.localeCompare(x.createdAt);
-  });
+  // Those who do not meet an « éliminatoire » question come last, and can be hidden.
+  const [hideOut, setHideOut] = useState(false);
+  const outCount = shown.filter((a) => a.knockedOut).length;
+  const ranked = [...shown]
+    .filter((a) => !(hideOut && a.knockedOut))
+    .sort((x, y) => {
+      if (!!x.knockedOut !== !!y.knockedOut) return x.knockedOut ? 1 : -1;
+      const sx = scores.get(x.applicationId)?.score ?? -1;
+      const sy = scores.get(y.applicationId)?.score ?? -1;
+      return sy - sx || y.createdAt.localeCompare(x.createdAt);
+    });
+  const asked = o.questions.length > 0;
   const open = o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED";
 
   return (
@@ -416,6 +427,14 @@ function ApplicantsCard({
               </button>
             ))}
           </div>
+
+          {outCount > 0 && (
+            <label className="flex w-fit cursor-pointer items-center gap-2 text-sm">
+              <Checkbox checked={hideOut} onCheckedChange={(v) => setHideOut(v === true)} className="size-4 rounded" />
+              Masquer les candidats qui ne remplissent pas les critères
+              <span className="text-muted-foreground tabular-nums">({outCount})</span>
+            </label>
+          )}
 
           {pending > 0 && (
             <p className="flex items-center gap-2 text-muted-foreground text-sm">
@@ -475,6 +494,7 @@ function ApplicantsCard({
                   rank={i + 1}
                   assessment={scores.get(a.applicationId)}
                   waiting={pending > 0}
+                  asked={asked}
                   selected={selected.has(a.applicationId)}
                   onToggle={a.status === "PENDING" || a.status === "VIEWED" ? () => toggle(a.applicationId) : undefined}
                 />
@@ -562,6 +582,7 @@ function ApplicantRow({
   rank,
   assessment,
   waiting,
+  asked,
   selected,
   onToggle,
 }: Readonly<{
@@ -569,6 +590,8 @@ function ApplicantRow({
   rank: number;
   assessment?: ApplicantAssessment;
   waiting: boolean;
+  /** The offer asks questions: say when this application has no answers. */
+  asked: boolean;
   selected: boolean;
   /** Present only for an application still waiting: it can be refused in bulk. */
   onToggle?: () => void;
@@ -576,6 +599,8 @@ function ApplicantRow({
   const [open, setOpen] = useState(false);
   const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
   const score = assessment?.score ?? null;
+  const answers = a.answers ?? [];
+  const failed = failedLabel(answers);
   return (
     <li className="rounded-2xl bg-page p-3 pr-4">
       <div className="flex items-center gap-3">
@@ -603,6 +628,18 @@ function ApplicantRow({
             <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="truncate font-medium group-hover:underline">{name}</span>
               {score !== null && <VerdictChip score={score} />}
+              {failed ? (
+                <span className="rounded-full bg-chip-amber px-2.5 py-1 font-medium text-chip-amber-foreground text-xs">
+                  Ne remplit pas : {failed}
+                </span>
+              ) : (
+                asked &&
+                answers.length === 0 && (
+                  <span className="rounded-full bg-foreground/[0.07] px-2.5 py-1 font-medium text-muted-foreground text-xs">
+                    Questions non répondues
+                  </span>
+                )
+              )}
             </span>
             <span className="block truncate text-muted-foreground text-xs">
               Candidature du {new Date(a.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
@@ -615,19 +652,20 @@ function ApplicantRow({
         </span>
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-        {assessment && (
+        {(assessment || answers.length > 0) && (
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
             className="mr-auto inline-flex h-10 shrink-0 items-center gap-1 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70"
           >
-            Pourquoi ce score ?
+            {assessment ? (answers.length > 0 ? "Score et réponses" : "Pourquoi ce score ?") : "Voir les réponses"}
             <IconChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
           </button>
         )}
         <ApplicationActions applicant={a} name={name} />
       </div>
+      {open && answers.length > 0 && <Answers answers={answers} />}
       {open && assessment && (
         <div className="mt-4 space-y-4">
           {assessment.summary && <p className="text-sm leading-relaxed">{assessment.summary}</p>}
@@ -643,6 +681,64 @@ function ApplicantRow({
         </div>
       )}
     </li>
+  );
+}
+
+/** What a candidate answered to the offer's questions; ✓ / ✕ on the « éliminatoires ». */
+function Answers({ answers }: Readonly<{ answers: NonNullable<OfferApplicant["answers"]> }>) {
+  return (
+    <div className="mt-4 space-y-2 rounded-2xl bg-card p-4">
+      <p className="font-medium text-sm">Réponses aux questions</p>
+      <dl className="space-y-2">
+        {answers.map((x) => (
+          <div key={x.label} className="flex items-start gap-2.5 text-sm">
+            <span
+              className={cn(
+                "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full",
+                x.passed === true && "bg-chip-green text-chip-green-foreground",
+                x.passed === false && "bg-chip-amber text-chip-amber-foreground",
+                x.passed === null && "bg-page text-muted-foreground",
+              )}
+            >
+              {x.passed === false ? <IconX className="size-3" /> : x.passed === true ? <IconCheck className="size-3" /> : <IconMinus className="size-3" />}
+            </span>
+            <div className="min-w-0">
+              <dt className="text-muted-foreground">{x.label}</dt>
+              <dd className="whitespace-pre-line break-words font-medium">{x.value}</dd>
+            </div>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+/** The offer's questions, as candidates see them, with the « éliminatoires » marked. */
+function QuestionsCard({ offer: o }: Readonly<{ offer: Offer }>) {
+  if (o.questions.length === 0) return null;
+  return (
+    <section className="space-y-3 rounded-3xl bg-card p-6">
+      <h2 className="font-semibold text-lg">Questions aux candidats</h2>
+      <ol className="space-y-2.5">
+        {o.questions.map((q, i) => (
+          <li key={i} className="space-y-1 rounded-2xl bg-page p-3 text-sm">
+            <p className="font-medium">
+              {i + 1}. {q.label}
+            </p>
+            <p className="flex flex-wrap items-center gap-1.5 text-muted-foreground text-xs">
+              {KIND_LABEL[q.kind]}
+              {q.kind === "CHOICE" && ` : ${q.options.join(", ")}`}
+              {!q.required && " · facultative"}
+              {q.knockout && (
+                <span className="rounded-full bg-chip-amber px-2 py-0.5 font-medium text-chip-amber-foreground">
+                  Éliminatoire : {q.kind === "YES_NO" ? (q.accepted[0] === "yes" ? "Oui" : "Non") : q.accepted.join(", ")} attendu
+                </span>
+              )}
+            </p>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 
