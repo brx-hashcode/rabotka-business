@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { parseAsStringLiteral, useQueryState } from "nuqs";
+import { useMemo } from "react";
+import { debounce, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -56,7 +56,6 @@ const SORTS = [
   { key: "recent", label: "Plus récentes" },
   { key: "best", label: "Meilleur score" },
 ] as const;
-type Sort = (typeof SORTS)[number]["key"];
 
 /** « Analyse de CV »: the figures first, then the analyses, findable and sortable. */
 export function CvScreeningsPage() {
@@ -66,10 +65,11 @@ export function CvScreeningsPage() {
   const locked = e?.cvQuota === 0;
   const items = useMemo(() => screenings.data?.items ?? [], [screenings.data]);
 
-  const [q, setQ] = useState("");
+  // The search and the sort live in the URL too (?q=, ?tri=), so a reload keeps them.
+  const [q, setQ] = useQueryState("q", parseAsString.withDefault("").withOptions({ limitUrlUpdates: debounce(300) }));
   // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
   const [filter, setFilter] = useQueryState("onglet", parseAsStringLiteral(FILTERS.map((f) => f.key)).withDefault("all"));
-  const [sort, setSort] = useState<Sort>("recent");
+  const [sort, setSort] = useQueryState("tri", parseAsStringLiteral(SORTS.map((s) => s.key)).withDefault("recent"));
 
   const shown = useMemo(() => {
     const needle = fold(q.trim());
@@ -124,7 +124,7 @@ export function CvScreeningsPage() {
               <IconSearch className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={q}
-                onChange={(ev) => setQ(ev.target.value)}
+                onChange={(ev) => void setQ(ev.target.value)}
                 placeholder="Poste ou candidat…"
                 aria-label="Rechercher une analyse"
                 className="h-10 rounded-full border-0 bg-page pl-10 shadow-none focus-visible:ring-2 focus-visible:ring-ink/10"
@@ -158,7 +158,7 @@ export function CvScreeningsPage() {
                   type="button"
                   role="radio"
                   aria-checked={sort === s.key}
-                  onClick={() => setSort(s.key)}
+                  onClick={() => void setSort(s.key)}
                   className={cn(
                     "rounded-full px-3.5 py-1.5 font-medium text-sm transition-colors",
                     sort === s.key ? "bg-card text-foreground" : "text-muted-foreground hover:text-foreground",

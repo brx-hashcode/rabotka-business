@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { parseAsStringLiteral, useQueryState } from "nuqs";
+import { debounce, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { IconCalendarEvent, IconCalendarPlus, IconClock, IconInbox, IconSearch, IconShieldCheck } from "@tabler/icons-react";
 
@@ -62,8 +62,9 @@ export function ApplicationsPage() {
     if (!focused) return;
     document.getElementById(`candidature-${focused.applicationId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [focused]);
-  const [offerId, setOfferId] = useState("all");
-  const [q, setQ] = useState("");
+  // The filters live in the URL too (?offre=, ?q=), so a reload keeps them.
+  const [offerId, setOfferId] = useQueryState("offre", parseAsString.withDefault("all"));
+  const [q, setQ] = useQueryState("q", parseAsString.withDefault("").withOptions({ limitUrlUpdates: debounce(300) }));
 
   const offers = useMemo(() => {
     const byId = new Map<string, { id: string; title: string; n: number }>();
@@ -92,13 +93,13 @@ export function ApplicationsPage() {
             <IconSearch className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={q}
-              onChange={(e) => setQ(e.target.value)}
+              onChange={(e) => void setQ(e.target.value)}
               placeholder="Rechercher un candidat, une offre…"
               className="h-11 rounded-full border-0 bg-page pl-10 shadow-none focus-visible:ring-2 focus-visible:ring-ink/10"
             />
           </div>
           {offers.length > 1 && (
-            <Select value={offerId} onValueChange={setOfferId}>
+            <Select value={offerId} onValueChange={(v) => void setOfferId(v)}>
               <SelectTrigger
                 aria-label="Offre"
                 className="h-11 w-full gap-3 rounded-full border-0 bg-page px-4 font-medium shadow-none focus-visible:ring-2 focus-visible:ring-ink/10 sm:w-80 dark:bg-page"

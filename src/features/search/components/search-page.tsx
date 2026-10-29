@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { debounce, parseAsString, useQueryStates } from "nuqs";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { IconLock, IconRefresh, IconSearch } from "@tabler/icons-react";
 
@@ -36,15 +36,19 @@ function useDebounced<T>(value: T, ms = 350): T {
  * Recherche: every verified worker, by what they do and where — the client
  * app's worker search, with its filters. Suggestions ranked for the business
  * while nothing is asked. Reaching someone spends one contact of the plan.
- * Opened from an offer, its trade and city come preset (`?categoryId&city`).
+ * Every filter lives in the URL (`?q&categoryId&city&minReliability&minRating`),
+ * so an offer can open it preset and a reload keeps it.
  */
 export function SearchPage() {
-  const params = useSearchParams();
-  const [q, setQ] = useState(params.get("q") ?? "");
-  const [categoryId, setCategoryId] = useState(params.get("categoryId") ?? ANY);
-  const [city, setCity] = useState(params.get("city") ?? ANY);
-  const [minReliability, setMinReliability] = useState(ANY);
-  const [minRating, setMinRating] = useState(ANY);
+  const [{ q, categoryId, city, minReliability, minRating }, setFilters] = useQueryStates({
+    q: parseAsString.withDefault("").withOptions({ limitUrlUpdates: debounce(300) }),
+    categoryId: parseAsString.withDefault(ANY),
+    city: parseAsString.withDefault(ANY),
+    minReliability: parseAsString.withDefault(ANY),
+    minRating: parseAsString.withDefault(ANY),
+  });
+  const set = (key: "categoryId" | "city" | "minReliability" | "minRating") => (value: string) =>
+    void setFilters({ [key]: value });
 
   const categories = useQuery({ queryKey: ["job-categories"], queryFn: getJobCategories, staleTime: Infinity });
   const cities = useCities("CG");
@@ -73,11 +77,7 @@ export function SearchPage() {
   const e = sub.data?.entitlements;
 
   function reset() {
-    setQ("");
-    setCategoryId(ANY);
-    setCity(ANY);
-    setMinReliability(ANY);
-    setMinRating(ANY);
+    void setFilters(null);
   }
 
   return (
@@ -118,13 +118,13 @@ export function SearchPage() {
               <IconSearch className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={q}
-                onChange={(ev) => setQ(ev.target.value)}
+                onChange={(ev) => void setFilters({ q: ev.target.value })}
                 placeholder="Métier, compétence, description… ex. « serveuse expérimentée »"
                 className="h-12 rounded-full border-0 bg-page pl-12 text-base shadow-none focus-visible:ring-2 focus-visible:ring-ink/10"
               />
             </div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr_auto]">
-              <Select value={categoryId} onValueChange={setCategoryId}>
+              <Select value={categoryId} onValueChange={set("categoryId")}>
                 <SelectTrigger aria-label="Métier" className={trigger}>
                   <SelectValue />
                 </SelectTrigger>
@@ -137,7 +137,7 @@ export function SearchPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={city} onValueChange={setCity}>
+              <Select value={city} onValueChange={set("city")}>
                 <SelectTrigger aria-label="Ville" className={trigger}>
                   <SelectValue />
                 </SelectTrigger>
@@ -150,7 +150,7 @@ export function SearchPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={minReliability} onValueChange={setMinReliability}>
+              <Select value={minReliability} onValueChange={set("minReliability")}>
                 <SelectTrigger aria-label="Fiabilité" className={trigger}>
                   <SelectValue />
                 </SelectTrigger>
@@ -161,7 +161,7 @@ export function SearchPage() {
                   <SelectItem value="90">Fiabilité 90+</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={minRating} onValueChange={setMinRating}>
+              <Select value={minRating} onValueChange={set("minRating")}>
                 <SelectTrigger aria-label="Note" className={trigger}>
                   <SelectValue />
                 </SelectTrigger>
