@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { IconArrowLeft, IconDots, IconLock, IconSend2, IconTrash, IconUser } from "@tabler/icons-react";
 import { toast } from "sonner";
 
@@ -16,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import type { DiscussionMessage } from "#/lib/api/discussions-controller";
+import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { discussionsContent } from "../content";
 import { mergeThread } from "../merge-thread";
@@ -55,6 +57,9 @@ export function DiscussionThread({ id }: Readonly<{ id: string }>) {
   const [historyWanted, setHistoryWanted] = useState(false);
   const history = useDiscussionHistory(id, historyWanted);
   const send = useSendMessage(id);
+  // Without a plan the business reads its conversations and writes in none.
+  const subscription = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
+  const noPlan = !!subscription.data && !subscription.data.entitlements.plan;
   const markRead = useMarkDiscussionRead();
   const report = useReportRedaction();
   const remove = useDeleteDiscussionMessage(id);
@@ -220,6 +225,16 @@ export function DiscussionThread({ id }: Readonly<{ id: string }>) {
 
       {d?.closed ? (
         <p className="border-page border-t-2 px-6 py-4 text-center text-muted-foreground text-sm">{content.closed}</p>
+      ) : noPlan ? (
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-page border-t-2 px-6 py-4 text-center text-sm">
+          <p className="flex items-center gap-2 text-muted-foreground">
+            <IconLock className="size-4 shrink-0" />
+            {content.noPlan}
+          </p>
+          <Link href="/espace/abonnement" className="inline-flex h-9 items-center rounded-full bg-ink px-4 font-medium text-white hover:bg-ink/90">
+            {content.noPlanCta}
+          </Link>
+        </div>
       ) : (
         <form
           onSubmit={(e) => {
