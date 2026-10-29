@@ -467,6 +467,8 @@ export type OfferDraft = {
   employmentType: "MISSION" | "CDD" | "CDI" | "STAGE" | null;
   /** What was left out on purpose (a discriminatory criterion asked for). */
   removed: string[];
+  /** What candidates look for and the request did not say (never invented). Absent from an older backend. */
+  toConfirm?: string[];
   /** Drafts left this period. Null: unlimited. */
   remaining: number | null;
 };

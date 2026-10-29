@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { IconInfoCircle, IconRefresh, IconWand } from "@tabler/icons-react";
+import { IconInfoCircle, IconListCheck, IconRefresh, IconWand } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
 
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
@@ -102,6 +102,18 @@ export function OfferAiDialog({
                 <p className="text-muted-foreground text-xs">
                   Métier proposé : <span className="font-medium text-foreground">{draft.categoryName}</span>
                 </p>
+              )}
+              {!!draft.toConfirm?.length && (
+                <div className="flex gap-2 rounded-xl bg-card px-3 py-2 text-xs">
+                  <IconListCheck className="mt-px size-4 shrink-0 text-whatsapp-dark" />
+                  <span>
+                    <span className="font-medium">À préciser avant de publier :</span>{" "}
+                    <span className="text-muted-foreground">
+                      {draft.toConfirm.join(", ")}. L&apos;IA ne les invente pas : ajoutez-les dans le formulaire, les candidats les
+                      recherchent en premier.
+                    </span>
+                  </span>
+                </div>
               )}
               {draft.removed.length > 0 && (
                 <p className="flex gap-2 rounded-xl bg-chip-amber/60 px-3 py-2 text-chip-amber-foreground text-xs">
