@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { debounce, parseAsBoolean, parseAsString, useQueryState } from "nuqs";
 import { IconCheck, IconChecks, IconMessageCircle, IconSearch } from "@tabler/icons-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
@@ -28,7 +29,10 @@ export function DiscussionsShell({ children }: Readonly<{ children: React.ReactN
   return (
     <div className="grid h-[calc(100svh-7.5rem)] min-h-[30rem] gap-6 pt-2 lg:grid-cols-[22rem_minmax(0,1fr)] 2xl:grid-cols-[26rem_minmax(0,1fr)]">
       <section className={cn("min-h-0 flex-col rounded-3xl bg-card", threadOpen ? "hidden lg:flex" : "flex")}>
-        <DiscussionList activeId={threadOpen ? pathname.split("/").pop() : undefined} />
+        {/* Suspense: the list reads its filters from the URL. */}
+        <Suspense>
+          <DiscussionList activeId={threadOpen ? pathname.split("/").pop() : undefined} />
+        </Suspense>
       </section>
       <section className={cn("min-h-0 flex-col overflow-hidden rounded-3xl bg-card", threadOpen ? "flex" : "hidden lg:flex")}>
         {children}
@@ -40,8 +44,11 @@ export function DiscussionsShell({ children }: Readonly<{ children: React.ReactN
 function DiscussionList({ activeId }: Readonly<{ activeId?: string }>) {
   const content = discussionsContent.list;
   const { data, isLoading, error } = useDiscussions();
-  const [q, setQ] = useState("");
-  const [unreadOnly, setUnreadOnly] = useState(false);
+  // In the URL (?q=, ?non-lues=), and carried to each conversation's link, so
+  // opening one keeps the list as it was filtered.
+  const [q, setQ] = useQueryState("q", parseAsString.withDefault("").withOptions({ limitUrlUpdates: debounce(300) }));
+  const [unreadOnly, setUnreadOnly] = useQueryState("non-lues", parseAsBoolean.withDefault(false));
+  const search = useSearchParams().toString();
   const all = data?.data;
 
   const shown = useMemo(() => {
@@ -59,7 +66,7 @@ function DiscussionList({ activeId }: Readonly<{ activeId?: string }>) {
           <IconSearch className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) => void setQ(e.target.value)}
             placeholder={content.searchPlaceholder}
             className="h-11 rounded-full border-0 bg-page pl-10 shadow-none"
           />
@@ -73,7 +80,7 @@ function DiscussionList({ activeId }: Readonly<{ activeId?: string }>) {
               key={f.l}
               type="button"
               aria-pressed={unreadOnly === f.v}
-              onClick={() => setUnreadOnly(f.v)}
+              onClick={() => void setUnreadOnly(f.v)}
               className={cn(
                 "rounded-full px-3.5 py-1.5 font-medium text-sm transition-colors",
                 unreadOnly === f.v ? "bg-selected text-selected-foreground" : "bg-page text-muted-foreground hover:text-foreground",
@@ -107,7 +114,7 @@ function DiscussionList({ activeId }: Readonly<{ activeId?: string }>) {
         ) : (
           <ul className="space-y-0.5">
             {shown.map((d) => (
-              <DiscussionRow key={d.id} discussion={d} active={d.id === activeId} />
+              <DiscussionRow key={d.id} discussion={d} active={d.id === activeId} search={search} />
             ))}
           </ul>
         )}
@@ -116,7 +123,11 @@ function DiscussionList({ activeId }: Readonly<{ activeId?: string }>) {
   );
 }
 
-function DiscussionRow({ discussion: d, active }: Readonly<{ discussion: Discussion; active: boolean }>) {
+function DiscussionRow({
+  discussion: d,
+  active,
+  search,
+}: Readonly<{ discussion: Discussion; active: boolean; search: string }>) {
   const unread = d.unreadCount > 0;
   const preview = d.closed
     ? discussionsContent.list.closed
@@ -126,7 +137,7 @@ function DiscussionRow({ discussion: d, active }: Readonly<{ discussion: Discuss
   return (
     <li>
       <Link
-        href={`/espace/discussions/${d.id}`}
+        href={`/espace/discussions/${d.id}${search ? `?${search}` : ""}`}
         className={cn("flex items-center gap-3 rounded-2xl p-3 transition-colors", active ? "bg-page" : "hover:bg-page/60")}
       >
         <CounterpartAvatar name={d.counterpartName} avatarUrl={d.counterpartAvatarUrl} online={d.counterpartOnline} />

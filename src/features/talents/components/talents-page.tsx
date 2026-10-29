@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { parseAsStringLiteral, useQueryState } from "nuqs";
+import { debounce, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -52,8 +52,9 @@ export function TalentsPage() {
   const talents = useQuery({ queryKey: talentsKey, queryFn: listTalents });
   // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
   const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TAB_KEYS).withDefault("all"));
-  const [q, setQ] = useState("");
-  const [tag, setTag] = useState<string | null>(null);
+  // The search and the tag live in the URL too (?q=, ?tag=), so a reload keeps them.
+  const [q, setQ] = useQueryState("q", parseAsString.withDefault("").withOptions({ limitUrlUpdates: debounce(300) }));
+  const [tag, setTag] = useQueryState("tag");
   const all = useMemo(() => talents.data ?? [], [talents.data]);
 
   const tags = useMemo(() => [...new Set(all.flatMap((t) => t.tags))].sort((a, b) => a.localeCompare(b, "fr")), [all]);
@@ -104,7 +105,7 @@ export function TalentsPage() {
             <IconSearch className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={q}
-              onChange={(e) => setQ(e.target.value)}
+              onChange={(e) => void setQ(e.target.value)}
               placeholder="Nom, métier, ville, note, mot-clé…"
               className="h-11 rounded-full border-0 bg-page pl-10 shadow-none focus-visible:ring-2 focus-visible:ring-ink/10"
             />
@@ -117,7 +118,7 @@ export function TalentsPage() {
                 key={t}
                 type="button"
                 aria-pressed={tag === t}
-                onClick={() => setTag(tag === t ? null : t)}
+                onClick={() => void setTag(tag === t ? null : t)}
                 className={cn(
                   "rounded-full px-3 py-1 font-medium text-xs transition-colors",
                   tag === t ? "bg-ink text-white" : "bg-page text-muted-foreground hover:text-foreground",
