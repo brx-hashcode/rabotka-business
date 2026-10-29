@@ -27,6 +27,8 @@ export const discussionsContent = {
     placeholder: "Écrivez votre message…",
     send: "Envoyer",
     closed: "Cette conversation est terminée : vous ne pouvez plus écrire.",
+    noPlan: "Choisissez une formule pour écrire aux candidats : vous pouvez lire vos conversations.",
+    noPlanCta: "Choisir une formule",
     empty: "Écrivez le premier message.",
     older: "Messages précédents",
     olderLoading: "Chargement…",
