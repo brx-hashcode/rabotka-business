@@ -49,7 +49,6 @@ function planLines(p: BusinessPlan): string[] {
     offersPerPeriodLabel(p.activeOffersLimit),
     ...(cvLine(p) ? [cvLine(p) as string] : []),
     ...(p.includesPreselection ? ["Recherche de profils"] : []),
-    ...(p.includesFieldAgents ? ["Aide d'un agent sur le terrain"] : []),
     ...(p.priorityVisibility ? ["Offres affichées en premier"] : []),
   ];
 }

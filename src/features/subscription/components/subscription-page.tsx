@@ -148,10 +148,9 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
         )}
       </div>
 
-      {(e.includesPreselection || e.includesFieldAgents || e.priorityVisibility) && (
+      {(e.includesPreselection || e.priorityVisibility) && (
         <ul className="flex flex-wrap gap-2">
           {e.includesPreselection && <Feature>Recherche de profils</Feature>}
-          {e.includesFieldAgents && <Feature>Aide d&apos;un agent sur le terrain</Feature>}
           {e.priorityVisibility && <Feature>Offres affichées en premier</Feature>}
         </ul>
       )}
@@ -423,7 +422,6 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
                 </PlanLine>
                 {cvLine(plan) && <PlanLine>{cvLine(plan)}</PlanLine>}
                 {plan.includesPreselection && <PlanLine>Recherche de profils</PlanLine>}
-                {plan.includesFieldAgents && <PlanLine>Aide d&apos;un agent sur le terrain</PlanLine>}
                 {plan.priorityVisibility && <PlanLine>Offres affichées en premier</PlanLine>}
               </ul>
               {when && <p className="text-muted-foreground text-xs">{when}</p>}
