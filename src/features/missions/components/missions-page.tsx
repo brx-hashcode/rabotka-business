@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { IconCalendarCheck, IconCalendarEvent, IconCash, IconChevronRight, IconMapPin, IconStar, IconUsers } from "@tabler/icons-react";
@@ -29,7 +30,8 @@ const HIRED = new Set(["ACCEPTED", "WAITING_PAYMENT", "STARTED", "END"]);
  * unlock, rate a finished mission). The same endpoints as the client app.
  */
 export function MissionsPage() {
-  const [tab, setTab] = useState<"current" | "done">("current");
+  // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
+  const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(["current", "done"] as const).withDefault("current"));
   const offers = useQuery({
     queryKey: [...offersKey, "list", "missions"],
     queryFn: () => listOffers({ statuses: ["ACTIVE", "PARTIALLY_FILLED", "FILLED", "IN_PROGRESS", "COMPLETED"], pageSize: 100 }),
@@ -102,7 +104,7 @@ export function MissionsPage() {
                   type="button"
                   role="tab"
                   aria-selected={tab === key}
-                  onClick={() => setTab(key)}
+                  onClick={() => void setTab(key)}
                   className={cn(
                     "inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 font-medium text-sm",
                     tab === key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",

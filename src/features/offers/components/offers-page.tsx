@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { IconBriefcase, IconCalendar, IconMapPin, IconPlus, IconUsers } from "@tabler/icons-react";
@@ -23,7 +23,8 @@ const TABS: { key: string; label: string; statuses?: OfferStatus[] }[] = [
 
 /** « Mes offres »: the organisation's offers, by state, and the way to publish one. */
 export function OffersPage() {
-  const [tab, setTab] = useState("all");
+  // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
+  const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS.map((t) => t.key)).withDefault("all"));
   const statuses = TABS.find((t) => t.key === tab)?.statuses;
   const { data, isLoading, error } = useQuery({
     queryKey: [...offersKey, "list", tab],
@@ -78,7 +79,7 @@ export function OffersPage() {
             type="button"
             role="tab"
             aria-selected={tab === t.key}
-            onClick={() => setTab(t.key)}
+            onClick={() => void setTab(t.key)}
             className={cn(
               "h-10 rounded-full px-4 font-medium text-sm transition-colors",
               tab === t.key ? "bg-selected text-selected-foreground" : "bg-card text-muted-foreground hover:text-foreground",

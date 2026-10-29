@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -39,7 +40,8 @@ import { cn, getInitials } from "#/lib/utils";
 const fold = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 const monthYear = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
 
-type Tab = "all" | "kept" | "alumni";
+const TAB_KEYS = ["all", "kept", "alumni"] as const;
+type Tab = (typeof TAB_KEYS)[number];
 
 /**
  * « Vivier »: the workers the business keeps and those it already hired —
@@ -48,7 +50,8 @@ type Tab = "all" | "kept" | "alumni";
  */
 export function TalentsPage() {
   const talents = useQuery({ queryKey: talentsKey, queryFn: listTalents });
-  const [tab, setTab] = useState<Tab>("all");
+  // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
+  const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TAB_KEYS).withDefault("all"));
   const [q, setQ] = useState("");
   const [tag, setTag] = useState<string | null>(null);
   const all = useMemo(() => talents.data ?? [], [talents.data]);
@@ -86,7 +89,7 @@ export function TalentsPage() {
                 type="button"
                 role="tab"
                 aria-selected={tab === key}
-                onClick={() => setTab(key)}
+                onClick={() => void setTab(key)}
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 font-medium text-sm",
                   tab === key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",

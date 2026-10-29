@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { IconArrowUpRight, IconHelp, IconMessageReport, IconPhoto, IconPlus } from "@tabler/icons-react";
@@ -27,7 +27,8 @@ function ago(iso: string): string {
 /** The account's claims to the Rabotka team — the client app's endpoints — as cards, open ones first. */
 export function ClaimsPage() {
   const claims = useQuery({ queryKey: claimsKey, queryFn: () => listClaims(1, 100) });
-  const [tab, setTab] = useState<"open" | "closed">("open");
+  // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
+  const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(["open", "closed"] as const).withDefault("open"));
   const all = claims.data?.data ?? [];
   const open = all.filter((c) => !isClosed(c.status as ClaimStatus));
   const closed = all.filter((c) => isClosed(c.status as ClaimStatus));
@@ -70,7 +71,7 @@ export function ClaimsPage() {
             type="button"
             role="tab"
             aria-selected={tab === key}
-            onClick={() => setTab(key)}
+            onClick={() => void setTab(key)}
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 font-medium text-sm",
               tab === key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",

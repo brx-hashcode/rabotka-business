@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { IconCalendarEvent, IconCalendarPlus, IconClock, IconInbox, IconSearch, IconShieldCheck } from "@tabler/icons-react";
 
@@ -53,10 +54,10 @@ export function ApplicationsPage() {
   // Opened from a notification: that application, on its own tab, in view.
   const focusId = useSearchParams().get("candidature");
   const focused = focusId ? all.find((a) => a.applicationId === focusId) : undefined;
-  // A tab chosen by hand holds until another notification opens the page.
-  const [picked, setPicked] = useState<{ for: string | null; key: (typeof TABS)[number]["key"] } | null>(null);
-  const setTab = (key: (typeof TABS)[number]["key"]) => setPicked({ for: focusId, key });
-  const tab = (picked?.for === focusId ? picked.key : null) ?? (focused ? applicationStage(focused.status) : "new");
+  // The tab lives in the URL. A notification's link carries none, so the
+  // candidature it opens picks its own tab until one is chosen by hand.
+  const [picked, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS.map((t) => t.key)));
+  const tab = picked ?? (focused ? applicationStage(focused.status) : "new");
   useEffect(() => {
     if (!focused) return;
     document.getElementById(`candidature-${focused.applicationId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -127,7 +128,7 @@ export function ApplicationsPage() {
               type="button"
               role="tab"
               aria-selected={tab === t.key}
-              onClick={() => setTab(t.key)}
+              onClick={() => void setTab(t.key)}
               className={cn(
                 "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 font-medium text-sm transition-colors",
                 tab === t.key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",

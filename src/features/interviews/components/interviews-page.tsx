@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -46,7 +47,8 @@ const time = (iso: string) => new Date(iso).toLocaleTimeString("fr-FR", { hour: 
 /** The business's interviews, by day, as cards: who, when, how, and what the candidate answered. */
 export function InterviewsPage() {
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [tab, setTab] = useState<"upcoming" | "past">("upcoming");
+  // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
+  const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(["upcoming", "past"] as const).withDefault("upcoming"));
   // The upcoming ones feed the tiles whatever the tab.
   const upcoming = useQuery({ queryKey: [...interviewsKey, "upcoming"], queryFn: () => listInterviews({ scope: "upcoming" }) });
   const past = useQuery({ queryKey: [...interviewsKey, "past"], queryFn: () => listInterviews({ scope: "past" }), enabled: tab === "past" });
@@ -107,7 +109,7 @@ export function InterviewsPage() {
               type="button"
               role="tab"
               aria-selected={tab === t.key}
-              onClick={() => setTab(t.key)}
+              onClick={() => void setTab(t.key)}
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 font-medium text-sm",
                 tab === t.key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
