@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { BadgeCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { IconMapPin, IconPhoto, IconStarFilled } from "@tabler/icons-react";
+import { IconArrowLeft, IconMapPin, IconPhoto, IconStarFilled } from "@tabler/icons-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Skeleton } from "#/components/ui/skeleton";
@@ -94,12 +95,13 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
         </div>
         <KeepButton workerId={workerId} name={name} className="size-10 self-start bg-page" />
       </div>
-
-      {/* Reaching them, from the profile as from the card: « Contact » once obtained. */}
-      <div className="flex sm:max-w-xs">
-        <ReachButton workerId={workerId} name={name} />
-      </div>
     </>
+  );
+  // Reaching them, from the profile as from the card: « Contact » once obtained.
+  const reach = (
+    <div className="flex sm:max-w-xs">
+      <ReachButton workerId={workerId} name={name} />
+    </div>
   );
   const figures = (
     <>
@@ -191,19 +193,29 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
 
   if (asPage) {
     return (
-      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_28rem]">
-        <div className="min-w-0 space-y-6 rounded-3xl bg-card p-6 sm:p-8">
-          {header}
-          {presentation}
-          {realisations}
+      <div className="space-y-6">
+        {/* As the other detail pages: the way back, and the page's action beside it. */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <Link href="/espace/recherche" className="inline-flex items-center gap-1.5 text-muted-foreground text-sm hover:text-foreground">
+            <IconArrowLeft className="size-4" />
+            Trouver des profils
+          </Link>
+          <ReachButton workerId={workerId} name={name} className="h-12 flex-none px-6 text-[15px]" />
         </div>
-        <aside className="space-y-6 rounded-3xl bg-card p-6 lg:sticky lg:top-24">
-          <section className="space-y-3">
-            <h2 className="font-semibold text-lg">En bref</h2>
-            <div className="grid grid-cols-3 gap-3 lg:grid-cols-1">{figures}</div>
-          </section>
-          {trades}
-        </aside>
+        <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_28rem]">
+          <div className="min-w-0 space-y-6 rounded-3xl bg-card p-6 sm:p-8">
+            {header}
+            {presentation}
+            {realisations}
+          </div>
+          <aside className="space-y-6 rounded-3xl bg-card p-6 lg:sticky lg:top-24">
+            <section className="space-y-3">
+              <h2 className="font-semibold text-lg">En bref</h2>
+              <div className="grid grid-cols-3 gap-3 lg:grid-cols-1">{figures}</div>
+            </section>
+            {trades}
+          </aside>
+        </div>
         {gallery}
       </div>
     );
@@ -212,6 +224,7 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
   return (
     <div className="space-y-6">
       {header}
+      {reach}
       <div className="grid grid-cols-3 gap-3">{figures}</div>
       {trades}
       {presentation}

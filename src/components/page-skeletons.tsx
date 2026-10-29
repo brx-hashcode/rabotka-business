@@ -527,6 +527,10 @@ export function ClaimDetailSkeleton() {
 export function ProfileSkeleton() {
   return (
     <Status>
+      <div className="flex items-center justify-between gap-4">
+        <Bone onPage className="h-4 w-36" />
+        <Bone onPage className="h-12 w-44 rounded-full" />
+      </div>
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_28rem]">
         <Card className="space-y-6 p-6 sm:p-8">
           <div className="flex items-center gap-4">
@@ -536,7 +540,6 @@ export function ProfileSkeleton() {
               <Bone className="h-4 w-1/3" />
             </div>
           </div>
-          <Bone className="h-11 w-full max-w-xs rounded-full" />
           <Bone className="h-24" />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Bone className="aspect-square rounded-2xl" />

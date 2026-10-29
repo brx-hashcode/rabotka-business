@@ -25,7 +25,8 @@ const button = "inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-
  * « Contact » for a worker already unlocked; otherwise « Débloquer », which
  * spends one contact of the plan after saying so — then shows the details.
  */
-export function ReachButton({ workerId, name }: Readonly<{ workerId: string; name: string }>) {
+/** `className`: sizing where it stands alone (a page header) rather than in a card. */
+export function ReachButton({ workerId, name, className }: Readonly<{ workerId: string; name: string; className?: string }>) {
   const queryClient = useQueryClient();
   const contacts = useQuery({ queryKey: myContactsKey, queryFn: getMyContacts });
   const [confirm, setConfirm] = useState(false);
@@ -47,7 +48,7 @@ export function ReachButton({ workerId, name }: Readonly<{ workerId: string; nam
   return (
     <>
       {unlocked ? (
-        <button type="button" onClick={() => setShow(true)} className={cn(button, "bg-ink text-white hover:bg-ink/90")}>
+        <button type="button" onClick={() => setShow(true)} className={cn(button, "bg-ink text-white hover:bg-ink/90", className)}>
           <IconAddressBook className="size-4 shrink-0" />
           Contact
         </button>
@@ -56,7 +57,7 @@ export function ReachButton({ workerId, name }: Readonly<{ workerId: string; nam
           type="button"
           disabled={contacts.isLoading}
           onClick={() => setConfirm(true)}
-          className={cn(button, "bg-ink text-white hover:bg-ink/90 disabled:opacity-50")}
+          className={cn(button, "bg-ink text-white hover:bg-ink/90 disabled:opacity-50", className)}
         >
           <IconLockOpen className="size-4 shrink-0" />
           Obtenir le contact
