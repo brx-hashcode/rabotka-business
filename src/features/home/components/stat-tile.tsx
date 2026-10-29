@@ -17,7 +17,7 @@ export function StatTile({
   return (
     <div className="flex flex-col gap-4 rounded-2xl bg-page p-5">
       <div className="flex items-center gap-3">
-        <span className="flex size-10 items-center justify-center rounded-xl bg-card">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-card">
           <IconCmp className="size-5" />
         </span>
         <span className="font-medium text-base leading-tight">{label}</span>

@@ -3,9 +3,19 @@
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { IconArrowUpRight, IconHelp, IconMessageReport, IconPhoto, IconPlus } from "@tabler/icons-react";
+import {
+  IconArrowUpRight,
+  IconCircleCheck,
+  IconClockHour4,
+  IconHelp,
+  IconMessageReport,
+  IconMessages,
+  IconPhoto,
+  IconPlus,
+} from "@tabler/icons-react";
 
-import { Bone } from "#/components/page-skeletons";
+import { Bone, TilesSkeleton } from "#/components/page-skeletons";
+import { StatTile } from "#/features/home/components/stat-tile";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { claimsKey, listClaims, type Claim, type ClaimStatus } from "#/lib/api/claim-controller";
 import { cn } from "#/lib/utils";
@@ -51,84 +61,85 @@ export function ClaimsPage() {
         </Link>
       </div>
 
-      {claims.data && all.length > 0 && (
-        <div className="grid grid-cols-3 gap-3">
-          <Stat value={open.length} label="En cours" />
-          <Stat value={waiting} label="En attente de l'équipe" />
-          <Stat value={closed.length} label="Terminées" />
-        </div>
-      )}
-
-      <div role="tablist" className="inline-flex rounded-full bg-card p-1">
-        {(
-          [
-            ["open", "En cours", open.length],
-            ["closed", "Terminées", closed.length],
-          ] as const
-        ).map(([key, label, n]) => (
-          <button
-            key={key}
-            type="button"
-            role="tab"
-            aria-selected={tab === key}
-            onClick={() => void setTab(key)}
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 font-medium text-sm",
-              tab === key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {label}
-            <span className="tabular-nums opacity-70">{n}</span>
-          </button>
-        ))}
-      </div>
-
+      {/* The summary, as on the other pages: one card of tiles. */}
       {claims.isLoading ? (
-        <CardsSkeleton />
-      ) : !claims.data ? (
-        <p className="rounded-3xl bg-card p-6 text-muted-foreground">{friendlyError(claims.error, "Vos demandes sont indisponibles pour le moment.")}</p>
-      ) : shown.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-3xl bg-card px-6 py-14 text-center">
-          <span className="flex size-12 items-center justify-center rounded-2xl bg-page">
-            <IconMessageReport className="size-6 text-muted-foreground" />
-          </span>
-          <p className="font-medium">{tab === "open" ? "Aucune demande en cours" : "Aucune demande terminée"}</p>
-          {tab === "open" && (
-            <p className="max-w-sm text-muted-foreground text-sm">Décrivez votre souci, joignez des photos si besoin : l&apos;équipe vous répond ici.</p>
-          )}
+        <div className="rounded-3xl bg-card p-6 sm:p-8">
+          <TilesSkeleton count={3} />
         </div>
       ) : (
-        <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {shown.map((c) => (
-            <li key={c.id}>
-              <ClaimCard claim={c} />
-            </li>
-          ))}
-          {tab === "open" && (
-            <li>
-              <Link
-                href="/espace/reclamations/nouvelle"
-                className="flex h-full min-h-48 flex-col items-center justify-center gap-3 rounded-3xl bg-card/60 p-5 text-center text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
-              >
-                <span className="flex size-11 items-center justify-center rounded-2xl bg-page">
-                  <IconHelp className="size-5" />
-                </span>
-                <span className="font-medium text-sm">Un autre souci ?</span>
-                <span className="text-xs">Ouvrez une nouvelle demande</span>
-              </Link>
-            </li>
-          )}
-        </ul>
+        claims.data &&
+        all.length > 0 && (
+          <section className="grid grid-cols-1 gap-3 rounded-3xl bg-card p-6 sm:grid-cols-3 sm:gap-4 sm:p-8">
+            <StatTile icon={IconMessages} label="En cours" value={String(open.length)} hint="demandes ouvertes" />
+            <StatTile icon={IconClockHour4} label="En attente de l'équipe" value={String(waiting)} hint="pas encore prises en charge" />
+            <StatTile icon={IconCircleCheck} label="Terminées" value={String(closed.length)} hint="résolues ou fermées" />
+          </section>
+        )
       )}
-    </div>
-  );
-}
 
-function Stat({ value, label }: Readonly<{ value: number; label: string }>) {
-  return (
-    <div className="rounded-3xl bg-card px-5 py-4">
-      <p className="font-semibold text-2xl tabular-nums">{value}</p>
-      <p className="text-muted-foreground text-sm">{label}</p>
+      <section className="space-y-4">
+        <div role="tablist" className="inline-flex rounded-full bg-card p-1">
+          {(
+            [
+              ["open", "En cours", open.length],
+              ["closed", "Terminées", closed.length],
+            ] as const
+          ).map(([key, label, n]) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={tab === key}
+              onClick={() => void setTab(key)}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 font-medium text-sm",
+                tab === key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {label}
+              <span className="tabular-nums opacity-70">{n}</span>
+            </button>
+          ))}
+        </div>
+
+        {claims.isLoading ? (
+          <CardsSkeleton />
+        ) : !claims.data ? (
+          <p className="rounded-3xl bg-card p-6 text-muted-foreground">{friendlyError(claims.error, "Vos demandes sont indisponibles pour le moment.")}</p>
+        ) : shown.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 rounded-3xl bg-card px-6 py-14 text-center">
+            <span className="flex size-12 items-center justify-center rounded-2xl bg-page">
+              <IconMessageReport className="size-6 text-muted-foreground" />
+            </span>
+            <p className="font-medium">{tab === "open" ? "Aucune demande en cours" : "Aucune demande terminée"}</p>
+            {tab === "open" && (
+              <p className="max-w-sm text-muted-foreground text-sm">Décrivez votre souci, joignez des photos si besoin : l&apos;équipe vous répond ici.</p>
+            )}
+          </div>
+        ) : (
+          <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {shown.map((c) => (
+              <li key={c.id}>
+                <ClaimCard claim={c} />
+              </li>
+            ))}
+            {tab === "open" && (
+              <li>
+                <Link
+                  href="/espace/reclamations/nouvelle"
+                  className="flex h-full min-h-48 flex-col items-center justify-center gap-3 rounded-3xl bg-card/60 p-5 text-center text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
+                >
+                  <span className="flex size-11 items-center justify-center rounded-2xl bg-page">
+                    <IconHelp className="size-5" />
+                  </span>
+                  <span className="font-medium text-sm">Un autre souci ?</span>
+                  <span className="text-xs">Ouvrez une nouvelle demande</span>
+                </Link>
+              </li>
+            )}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
