@@ -173,7 +173,6 @@ export type BusinessPlan = {
   cvRetentionDays: number;
   cvChatQuestions: number;
   includesPreselection: boolean;
-  includesFieldAgents: boolean;
   priorityVisibility: boolean;
 };
 
@@ -219,7 +218,6 @@ export type MySubscription = {
     offerDraftsRemaining: number | null;
     offerDraftsQuota: number | null;
     includesPreselection: boolean;
-    includesFieldAgents: boolean;
     priorityVisibility: boolean;
   };
   upcoming: SubscriptionPeriod[];
