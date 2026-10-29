@@ -147,13 +147,17 @@ export function NotificationList({
  * Where a notification opens in the space. Business notifications already
  * point into `/espace`; the employer ones carry the client app's paths
  * (`/candidatures/:applicationId`, `/missions/:offerId`, `/discussions/:id`,
- * `/claims/:id`…), each sent to the same page here. Anything else has no page
- * in the space.
+ * `/claims/:id`…), each sent to the same page here. A mission notice that
+ * names its candidature (`?candidature=`) opens that candidature instead of
+ * the offer. Anything else has no page in the space.
  */
 export function espaceLink(link: string | null | undefined): string | null {
   if (!link) return null;
   if (link.startsWith("/espace")) return link;
-  const [, root, id] = link.split("?")[0].split("/");
+  const [path, query] = link.split("?");
+  const [, root, id] = path.split("/");
+  const candidature = new URLSearchParams(query).get("candidature");
+  if (candidature) return `/espace/candidatures?candidature=${encodeURIComponent(candidature)}`;
   switch (root) {
     case "candidatures":
       return id ? `/espace/candidatures?candidature=${encodeURIComponent(id)}` : "/espace/candidatures";

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -66,7 +67,8 @@ export function CvScreeningsPage() {
   const items = useMemo(() => screenings.data?.items ?? [], [screenings.data]);
 
   const [q, setQ] = useState("");
-  const [filter, setFilter] = useState<Filter>("all");
+  // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
+  const [filter, setFilter] = useQueryState("onglet", parseAsStringLiteral(FILTERS.map((f) => f.key)).withDefault("all"));
   const [sort, setSort] = useState<Sort>("recent");
 
   const shown = useMemo(() => {
@@ -138,7 +140,7 @@ export function CvScreeningsPage() {
                   type="button"
                   role="tab"
                   aria-selected={filter === f.key}
-                  onClick={() => setFilter(f.key)}
+                  onClick={() => void setFilter(f.key)}
                   className={cn(
                     "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 font-medium text-sm transition-colors",
                     filter === f.key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 
 import { CvScreeningsPage } from "#/features/cv-screening/components/cv-screenings-page";
@@ -5,5 +6,10 @@ import { CvScreeningsPage } from "#/features/cv-screening/components/cv-screenin
 export const metadata: Metadata = { title: "Analyse de CV" };
 
 export default function Page() {
-  return <CvScreeningsPage />;
+  // Suspense: the page reads its tab from the URL (?onglet=).
+  return (
+    <Suspense>
+      <CvScreeningsPage />
+    </Suspense>
+  );
 }

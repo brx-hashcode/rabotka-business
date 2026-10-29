@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -348,7 +349,8 @@ function ApplicantsCard({
   applicants,
   loading,
 }: Readonly<{ offer: Offer; applicants?: OfferApplicant[]; loading: boolean }>) {
-  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("all");
+  // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
+  const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS.map((t) => t.key)).withDefault("all"));
   const list = applicants ?? [];
   const count = (k: (typeof TABS)[number]["key"]) => (k === "all" ? list.length : list.filter((a) => applicationStage(a.status) === k).length);
   const shown = tab === "all" ? list : list.filter((a) => applicationStage(a.status) === tab);
@@ -417,7 +419,7 @@ function ApplicantsCard({
                 type="button"
                 role="tab"
                 aria-selected={tab === t.key}
-                onClick={() => setTab(t.key)}
+                onClick={() => void setTab(t.key)}
                 className={cn(
                   "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 font-medium text-sm transition-colors",
                   tab === t.key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",

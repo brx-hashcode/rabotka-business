@@ -12,6 +12,10 @@ describe("espaceLink", () => {
     expect(espaceLink("/claims/k1")).toBe("/espace/reclamations/k1");
     expect(espaceLink("/espace/abonnement")).toBe("/espace/abonnement");
   });
+  it("opens the candidature a mission notice names", () => {
+    expect(espaceLink("/missions/o1?candidature=a1")).toBe("/espace/candidatures?candidature=a1");
+    expect(espaceLink("/espace/candidatures?candidature=a1")).toBe("/espace/candidatures?candidature=a1");
+  });
   it("has no page for the worker-side links", () => {
     expect(espaceLink("/portefeuille")).toBeNull();
     expect(espaceLink("/applications/a1")).toBeNull();
