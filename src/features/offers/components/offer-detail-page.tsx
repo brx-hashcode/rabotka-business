@@ -532,23 +532,31 @@ function ApplicantsCard({
           {shown.length + shownOutsiders.length === 0 ? (
             <p className="rounded-2xl bg-page p-4 text-muted-foreground text-sm">Aucun candidat à cette étape.</p>
           ) : (
-            <ul className="flex flex-col gap-2">
-              {ranked.map((a, i) => (
-                <ApplicantRow
-                  key={a.applicationId}
-                  applicant={a}
-                  rank={i + 1}
-                  assessment={scores.get(a.applicationId)}
-                  waiting={pending > 0}
-                  asked={asked}
-                  selected={selected.has(a.applicationId)}
-                  onToggle={a.status === "PENDING" || a.status === "VIEWED" ? () => toggle(a.applicationId) : undefined}
-                />
-              ))}
-              {shownOutsiders.map((a) => (
-                <ExternalApplicationCard key={a.id} application={a} />
-              ))}
-            </ul>
+            <div className="space-y-4">
+              {ranked.length > 0 && (
+                <ul className="flex flex-col gap-2">
+                  {ranked.map((a, i) => (
+                    <ApplicantRow
+                      key={a.applicationId}
+                      applicant={a}
+                      rank={i + 1}
+                      assessment={scores.get(a.applicationId)}
+                      waiting={pending > 0}
+                      asked={asked}
+                      selected={selected.has(a.applicationId)}
+                      onToggle={a.status === "PENDING" || a.status === "VIEWED" ? () => toggle(a.applicationId) : undefined}
+                    />
+                  ))}
+                </ul>
+              )}
+              {shownOutsiders.length > 0 && (
+                <ul className="grid items-stretch gap-4 md:grid-cols-2">
+                  {shownOutsiders.map((a) => (
+                    <ExternalApplicationCard key={a.id} application={a} />
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
         </>
       )}
