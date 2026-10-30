@@ -97,6 +97,8 @@ export type BusinessDocumentVersion = {
 export type MyBusiness = {
   id: string;
   name: string;
+  /** Its public careers page: /carrieres/<publicSlug>. */
+  publicSlug: string | null;
   /** The account's profile picture, used as the logo. */
   logoUrl: string | null;
   category: string;
