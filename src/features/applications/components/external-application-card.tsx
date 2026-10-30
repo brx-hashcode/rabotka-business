@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { IconAlertTriangle, IconCheck, IconDownload, IconFileText, IconMail, IconPhone, IconX } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCheck, IconChevronDown, IconChevronUp, IconDownload, IconFileText, IconMail, IconPhone, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
@@ -35,6 +35,7 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
   const name = `${a.firstName} ${a.lastName}`;
   const [refusing, setRefusing] = useState(false);
   const [retaining, setRetaining] = useState(false);
+  const [showAnswers, setShowAnswers] = useState(false);
   const [message, setMessage] = useState("");
   const [reading, setReading] = useState(false);
   const cvUrl = `/api/v1/business/me/external-applications/${encodeURIComponent(a.id)}/cv`;
@@ -112,14 +113,27 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
       )}
 
       {a.answers.length > 0 && (
-        <dl className="space-y-2 rounded-2xl bg-card p-3 text-sm">
-          {a.answers.map((answer) => (
-            <div key={answer.label}>
-              <dt className="text-muted-foreground text-xs">{answer.label}</dt>
-              <dd className="font-medium">{YES_NO[answer.value] ?? answer.value}</dd>
-            </div>
-          ))}
-        </dl>
+        <div className="space-y-2">
+          <button
+            type="button"
+            aria-expanded={showAnswers}
+            onClick={() => setShowAnswers(!showAnswers)}
+            className="inline-flex items-center gap-1 font-medium text-sm hover:underline"
+          >
+            {showAnswers ? "Masquer" : "Voir"} {a.answers.length > 1 ? `les ${a.answers.length} réponses` : "la réponse"}
+            {showAnswers ? <IconChevronUp className="size-4" /> : <IconChevronDown className="size-4" />}
+          </button>
+          {showAnswers && (
+            <dl className="space-y-2 rounded-2xl bg-card p-3 text-sm">
+              {a.answers.map((answer) => (
+                <div key={answer.label}>
+                  <dt className="text-muted-foreground text-xs">{answer.label}</dt>
+                  <dd className="font-medium">{YES_NO[answer.value] ?? answer.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        </div>
       )}
 
       {/* The decision reads left to right: look, say no, say yes. */}
