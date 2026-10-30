@@ -35,6 +35,8 @@ import { Skeleton } from "#/components/ui/skeleton";
 import { Bone, RowsSkeleton, TilesSkeleton } from "#/components/page-skeletons";
 import { ExternalApplicationCard, externalStage } from "#/features/applications/components/external-application-card";
 import { CandidateCard } from "#/features/candidates/components/candidate-card";
+import { CvCompareSheet } from "#/features/cv-screening/components/cv-compare-sheet";
+import { MAX_COMPARED } from "#/features/cv-screening/components/cv-screening-page";
 import { ResumeButton } from "#/features/candidates/components/resume-button";
 import { getMyBusiness, myBusinessKey, mySubscriptionKey } from "#/lib/api/business-controller";
 import {
@@ -44,6 +46,7 @@ import {
   type ExternalApplication,
 } from "#/lib/api/careers-controller";
 import { findCandidates } from "#/lib/api/candidate-controller";
+import { cvScreeningsKey, getCvScreening } from "#/lib/api/cv-screening-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import {
   closeOffer,
@@ -408,6 +411,16 @@ function ApplicantsCard({
       : list.filter((a) => applicationStage(a.status) === k).length + outsiders.filter((a) => externalStage(a) === k).length;
   const shown = tab === "all" ? list : list.filter((a) => applicationStage(a.status) === tab);
   const shownOutsiders = tab === "all" ? outsiders : outsiders.filter((a) => externalStage(a) === tab);
+  // Compared as in Analyse de CV: the CVs of one screening, a few at a time.
+  const [picked, setPicked] = useState<string[]>([]);
+  const [comparing, setComparing] = useState(false);
+  const pickedRows = outsiders.filter((a) => a.analysis && picked.includes(a.analysis.resumeId));
+  const comparedScreening = pickedRows[0]?.analysis?.screeningId;
+  const comparedResumes = useQuery({
+    queryKey: [...cvScreeningsKey, comparedScreening, "compare-rows", [...picked].sort().join(",")],
+    queryFn: async () => (await getCvScreening(comparedScreening as string)).resumes.filter((r) => picked.includes(r.id)),
+    enabled: !!comparedScreening && picked.length >= 2,
+  });
   // Ranked like CV analysis: best fit first; not scored yet, after, newest first.
   const assessed = useQuery({
     queryKey: [...offersKey, o.id, "assessments"],
@@ -563,9 +576,59 @@ function ApplicantsCard({
               {shownOutsiders.length > 0 && (
                 <>
                   <AnalyseAllBar offerId={o.id} outsiders={outsiders} />
+                  {picked.length > 0 && (
+                    <div className="ml-auto flex w-fit items-center gap-1 rounded-full bg-page p-1 pl-4">
+                      <span className="text-muted-foreground text-sm tabular-nums">
+                        {picked.length} sélectionné{picked.length > 1 ? "s" : ""}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setPicked([])}
+                        aria-label="Effacer la sélection"
+                        className="flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-card hover:text-foreground"
+                      >
+                        <IconX className="size-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setComparing(true)}
+                        disabled={picked.length < 2 || !comparedResumes.data}
+                        title={picked.length < 2 ? "Choisissez au moins 2 CV" : undefined}
+                        className="inline-flex h-9 items-center rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm disabled:opacity-50"
+                      >
+                        Comparer{picked.length > 1 ? ` (${picked.length})` : ""}
+                      </button>
+                    </div>
+                  )}
+                  {comparing && comparedScreening && comparedResumes.data && (
+                    <CvCompareSheet
+                      open={comparing}
+                      onOpenChange={setComparing}
+                      screeningId={comparedScreening}
+                      jobTitle={o.title}
+                      resumes={[...comparedResumes.data].sort((x, y) => (y.score ?? 0) - (x.score ?? 0))}
+                    />
+                  )}
                   <ul className="grid items-stretch gap-4 md:grid-cols-2">
                     {shownOutsiders.map((a) => (
-                      <ExternalApplicationCard key={a.id} application={a} />
+                      <ExternalApplicationCard
+                        key={a.id}
+                        application={a}
+                        compare={
+                          a.analysis
+                            ? {
+                                selected: picked.includes(a.analysis.resumeId),
+                                disabled:
+                                  !picked.includes(a.analysis.resumeId) &&
+                                  (picked.length >= MAX_COMPARED || (!!comparedScreening && a.analysis.screeningId !== comparedScreening)),
+                                onToggle: () => {
+                                  const id = a.analysis?.resumeId as string;
+                                  setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+                                },
+                              }
+                            : undefined
+                        }
+                      />
                     ))}
                   </ul>
                 </>
@@ -837,7 +900,7 @@ function AnalyseAllBar({ offerId, outsiders }: Readonly<{ offerId: string; outsi
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-page p-4">
       <p className="text-sm">
-        {waiting} CV à analyser pour obtenir leur score, discuter de chacun et les comparer.
+        {waiting} CV sans score : analysez-les pour les comparer.
       </p>
       <button
         type="button"

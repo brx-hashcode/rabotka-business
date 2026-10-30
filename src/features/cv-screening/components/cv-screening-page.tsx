@@ -43,7 +43,7 @@ import { ScheduleInterviewDialog } from "#/features/interviews/components/schedu
 import { interviewsKey, listInterviews } from "#/lib/api/interview-controller";
 
 /** CVs compared at once (the backend's limit too). */
-const MAX_COMPARED = 5;
+export const MAX_COMPARED = 5;
 
 const date = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
