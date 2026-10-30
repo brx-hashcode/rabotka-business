@@ -62,7 +62,7 @@ export function TalentsPage() {
     (t) =>
       (tab === "all" || (tab === "kept" ? t.saved : t.missionsWithUs > 0)) &&
       (!tag || t.tags.includes(tag)) &&
-      (!q.trim() || fold(`${t.firstName} ${t.lastName} ${t.categoryName ?? ""} ${t.city ?? ""} ${t.note ?? ""} ${t.tags.join(" ")}`).includes(fold(q.trim()))),
+      (!q.trim() || fold(`${t.firstName} ${t.lastName} ${t.categoryName ?? ""} ${t.city ?? ""} ${t.description ?? ""} ${t.note ?? ""} ${t.tags.join(" ")}`).includes(fold(q.trim()))),
   );
   const count = (k: Tab) => (k === "all" ? all.length : all.filter((t) => (k === "kept" ? t.saved : t.missionsWithUs > 0)).length);
 
@@ -273,6 +273,7 @@ function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
           Dernière mission : <span className="font-medium text-foreground">{t.lastMissionTitle}</span>, {monthYear(t.lastMissionAt)}
         </p>
       )}
+      {t.description && <p className="line-clamp-2 text-muted-foreground text-sm leading-relaxed">{t.description}</p>}
       {t.note && <p className="line-clamp-3 rounded-2xl bg-card p-3 text-sm italic">« {t.note} »</p>}
 
       <div className="mt-auto flex gap-2">
