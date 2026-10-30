@@ -87,25 +87,28 @@ export function ApplicationsChart({ series }: Readonly<{ series: BusinessStats["
         <span>{shortDay(series[series.length - 1].date)}</span>
       </div>
 
-      <table className="sr-only">
-        <caption>Candidatures et candidats retenus par jour</caption>
-        <thead>
-          <tr>
-            <th>Jour</th>
-            <th>Candidatures</th>
-            <th>Retenus</th>
-          </tr>
-        </thead>
-        <tbody>
-          {series.map((d) => (
-            <tr key={d.date}>
-              <td>{shortDay(d.date)}</td>
-              <td>{d.applications}</td>
-              <td>{d.hires}</td>
+      {/* On the wrapper: a table ignores sr-only's 1px height and would stretch the page. */}
+      <div className="sr-only">
+        <table>
+          <caption>Candidatures et candidats retenus par jour</caption>
+          <thead>
+            <tr>
+              <th>Jour</th>
+              <th>Candidatures</th>
+              <th>Retenus</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {series.map((d) => (
+              <tr key={d.date}>
+                <td>{shortDay(d.date)}</td>
+                <td>{d.applications}</td>
+                <td>{d.hires}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
