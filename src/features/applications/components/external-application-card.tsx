@@ -34,6 +34,7 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
   const queryClient = useQueryClient();
   const name = `${a.firstName} ${a.lastName}`;
   const [refusing, setRefusing] = useState(false);
+  const [retaining, setRetaining] = useState(false);
   const [message, setMessage] = useState("");
   const [reading, setReading] = useState(false);
   const cvUrl = `/api/v1/business/me/external-applications/${encodeURIComponent(a.id)}/cv`;
@@ -57,6 +58,7 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
     onSuccess: () => {
       refreshList();
       toast.success(`${name} est prévenu par e-mail.`);
+      setRetaining(false);
     },
     onError: (err) => toast.error(friendlyError(err, "La candidature n'a pas pu être retenue.")),
   });
@@ -120,37 +122,39 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
         </dl>
       )}
 
-      <div className="mt-auto flex flex-wrap gap-2">
-        {a.status === "PENDING" && (
-          <button
-            type="button"
-            disabled={retain.isPending}
-            onClick={() => retain.mutate()}
-            className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm disabled:opacity-60"
-          >
-            <IconCheck className="size-4" />
-            Retenir
-          </button>
-        )}
-        {a.hasCv && (
+      {/* The decision reads left to right: look, say no, say yes. */}
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-1">
+        {a.hasCv ? (
           <button
             type="button"
             onClick={() => (canShow ? setReading(true) : void saveCv())}
-            className="inline-flex h-10 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-ink px-4 font-medium text-sm text-white"
+            className="inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-full px-1 font-medium text-sm underline-offset-4 hover:underline"
           >
             {canShow ? <IconFileText className="size-4" /> : <IconDownload className="size-4" />}
             {canShow ? "Voir le CV" : "Télécharger le CV"}
           </button>
+        ) : (
+          <span />
         )}
         {a.status === "PENDING" && (
-          <button
-            type="button"
-            onClick={() => setRefusing(true)}
-            className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-card px-4 font-medium text-sm"
-          >
-            <IconX className="size-4" />
-            Refuser
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setRefusing(true)}
+              className="inline-flex h-10 items-center gap-2 rounded-full bg-card px-4 font-medium text-sm"
+            >
+              <IconX className="size-4" />
+              Refuser
+            </button>
+            <button
+              type="button"
+              onClick={() => setRetaining(true)}
+              className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white"
+            >
+              <IconCheck className="size-4" />
+              Retenir
+            </button>
+          </div>
         )}
       </div>
 
@@ -168,6 +172,16 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
         kind="pdf"
         fileName={a.cvFileName}
         unavailable="Ce CV n'est plus disponible."
+      />
+
+      <ActionDialog
+        open={retaining}
+        onOpenChange={setRetaining}
+        title={`Retenir ${name} ?`}
+        description="La personne est prévenue par e-mail, et compte dans vos postes pourvus."
+        confirmLabel="Retenir"
+        pending={retain.isPending}
+        onConfirm={() => retain.mutate()}
       />
 
       <ActionDialog
