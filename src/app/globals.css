@@ -117,14 +117,6 @@
 }
 
 :root[data-theme="dark"],
-/* On a computer no browser bar sits over it, so white would only show as a
-   strip past the end of the grey page. */
-@media (min-width: 64rem) {
-  :root:not(.dark) {
-    --chrome: var(--page);
-  }
-}
-
 :root.dark {
   --sea-ink: #d7ece8;
   --sea-ink-soft: #afcdc8;
