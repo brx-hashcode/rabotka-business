@@ -2,15 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { IconAlertTriangle, IconCalendarPlus, IconCheck, IconChevronDown, IconChevronUp, IconDownload, IconMessageCircle, IconSparkles, IconFileText, IconMail, IconPhone, IconX } from "@tabler/icons-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { IconAlertTriangle, IconCalendarPlus, IconCheck, IconChevronDown, IconChevronUp, IconDownload, IconSparkles, IconFileText, IconMail, IconPhone, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
 import { ScheduleInterviewDialog } from "#/features/interviews/components/schedule-interview-dialog";
 import { PreviewSheet } from "#/components/preview-sheet";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
+import { Checkbox } from "#/components/ui/checkbox";
 import { Textarea } from "#/components/ui/textarea";
+import { ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
+import { CvChatSheet } from "#/features/cv-screening/components/cv-chat-sheet";
 import {
   analyseExternalApplications,
   externalApplicationsKey,
@@ -18,6 +21,7 @@ import {
   retainExternalApplication,
   type ExternalApplication,
 } from "#/lib/api/careers-controller";
+import { cvScreeningsKey, getCvScreening } from "#/lib/api/cv-screening-controller";
 import { downloadFile } from "#/lib/api/download";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { getInitials } from "#/lib/utils";
@@ -32,7 +36,14 @@ export function externalStage(a: Pick<ExternalApplication, "status" | "viewedAt"
 }
 
 /** Someone who applied from the public page: their contact comes with it. */
-export function ExternalApplicationCard({ application: a }: Readonly<{ application: ExternalApplication }>) {
+export function ExternalApplicationCard({
+  application: a,
+  compare,
+}: Readonly<{
+  application: ExternalApplication;
+  /** On an offer's page: the checkbox of Analyse de CV. */
+  compare?: { selected: boolean; disabled: boolean; onToggle: () => void };
+}>) {
   const queryClient = useQueryClient();
   const name = `${a.firstName} ${a.lastName}`;
   const [refusing, setRefusing] = useState(false);
@@ -40,6 +51,14 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
   const [showAnswers, setShowAnswers] = useState(false);
   const [analysing, setAnalysing] = useState(false);
   const [scheduling, setScheduling] = useState(false);
+  const [chatting, setChatting] = useState(false);
+  const score = a.analysis?.status === "SCORED" ? a.analysis.score : null;
+  // Chat reads the resume as Analyse de CV holds it.
+  const resume = useQuery({
+    queryKey: [...cvScreeningsKey, a.analysis?.screeningId, "resume", a.analysis?.resumeId],
+    queryFn: async () => (await getCvScreening(a.analysis?.screeningId as string)).resumes.find((r) => r.id === a.analysis?.resumeId) ?? null,
+    enabled: score !== null,
+  });
   const [message, setMessage] = useState("");
   const [reading, setReading] = useState(false);
   const cvUrl = `/api/v1/business/me/external-applications/${encodeURIComponent(a.id)}/cv`;
@@ -89,16 +108,36 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
   return (
     <li className="flex flex-col gap-3 rounded-3xl bg-page p-5">
       <div className="flex items-start gap-3.5">
-        <Avatar className="size-14 rounded-2xl">
-          <AvatarFallback className="rounded-2xl bg-brand-lime font-semibold text-[#0f2414]">{getInitials(name)}</AvatarFallback>
-        </Avatar>
+        {compare && score !== null && (
+          <label className="flex w-6 shrink-0 cursor-pointer flex-col items-center pt-4">
+            <Checkbox
+              checked={compare.selected}
+              disabled={compare.disabled}
+              onCheckedChange={compare.onToggle}
+              aria-label={`Comparer ${name}`}
+              className="size-5 rounded-md"
+            />
+          </label>
+        )}
+        {score !== null ? (
+          <ScoreRing score={score} />
+        ) : (
+          <Avatar className="size-14 rounded-2xl">
+            <AvatarFallback className="rounded-2xl bg-brand-lime font-semibold text-[#0f2414]">{getInitials(name)}</AvatarFallback>
+          </Avatar>
+        )}
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold">{name}</p>
           <p className="mt-1 flex flex-wrap gap-1.5">
+            {score !== null && <VerdictChip score={score} />}
             <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px]">Hors Rabotka</span>
             {a.status === "REFUSED" && <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px]">Refusée</span>}
             {a.status === "RETAINED" && <span className="rounded-full bg-brand-lime px-2 py-0.5 font-medium text-[#0f2414] text-[11px]">Retenue</span>}
           </p>
+          {a.analysis?.status === "QUEUED" && <p className="mt-1 text-muted-foreground text-xs">Analyse du CV en cours…</p>}
+          {a.analysis && a.analysis.status !== "QUEUED" && score === null && (
+            <p className="mt-1 text-muted-foreground text-xs">Ce CV n&apos;a pas pu être lu.</p>
+          )}
         </div>
       </div>
 
@@ -118,7 +157,43 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
         </a>
       </div>
 
-      <AnalysisLine a={a} onAnalyse={() => setAnalysing(true)} onSchedule={() => setScheduling(true)} />
+      {a.analysis?.summary && <p className="line-clamp-3 text-sm leading-relaxed">{a.analysis.summary}</p>}
+
+      {score !== null ? (
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={!resume.data}
+            onClick={() => setChatting(true)}
+            className="inline-flex h-10 items-center rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm disabled:opacity-60"
+          >
+            Interroger le CV
+          </button>
+          {a.status !== "REFUSED" && (
+            <button
+              type="button"
+              onClick={() => setScheduling(true)}
+              className="inline-flex h-10 items-center gap-2 rounded-full bg-card px-4 font-medium text-sm"
+            >
+              <IconCalendarPlus className="size-4" />
+              Entretien
+            </button>
+          )}
+        </div>
+      ) : (
+        !a.analysis &&
+        a.status === "PENDING" &&
+        a.hasCv && (
+          <button
+            type="button"
+            onClick={() => setAnalysing(true)}
+            className="inline-flex w-fit items-center gap-1.5 font-medium text-sm hover:underline"
+          >
+            <IconSparkles className="size-4" />
+            Analyser le CV
+          </button>
+        )
+      )}
 
       {a.knockedOut && (
         <p className="flex items-center gap-1.5 text-chip-amber-foreground text-xs">
@@ -213,6 +288,16 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
         onConfirm={() => analyse.mutate()}
       />
 
+      {chatting && a.analysis && resume.data && (
+        <CvChatSheet
+          open={chatting}
+          onOpenChange={setChatting}
+          screeningId={a.analysis.screeningId}
+          jobTitle={a.offer.title}
+          resume={{ ...resume.data, score }}
+        />
+      )}
+
       {scheduling && a.analysis && (
         <ScheduleInterviewDialog
           open={scheduling}
@@ -245,57 +330,5 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
         <Textarea value={message} maxLength={500} onChange={(e) => setMessage(e.target.value)} placeholder="Un mot pour la personne (facultatif)" className="rounded-xl border-0 bg-page shadow-none" />
       </ActionDialog>
     </li>
-  );
-}
-
-/** The score, and the way into the conversation about this CV. */
-function AnalysisLine({
-  a,
-  onAnalyse,
-  onSchedule,
-}: Readonly<{ a: ExternalApplication; onAnalyse: () => void; onSchedule: () => void }>) {
-  const analysis = a.analysis;
-  if (!analysis) {
-    if (a.status !== "PENDING" || !a.hasCv) return null;
-    return (
-      <button
-        type="button"
-        onClick={onAnalyse}
-        className="inline-flex h-10 w-fit items-center gap-2 rounded-full bg-card px-4 font-medium text-sm"
-      >
-        <IconSparkles className="size-4" />
-        Analyser le CV
-      </button>
-    );
-  }
-  if (analysis.status === "QUEUED") {
-    return <p className="rounded-2xl bg-card p-3 text-muted-foreground text-sm">Analyse du CV en cours…</p>;
-  }
-  if (analysis.status !== "SCORED" || analysis.score === null) {
-    return <p className="rounded-2xl bg-card p-3 text-muted-foreground text-sm">Ce CV n&apos;a pas pu être lu.</p>;
-  }
-  return (
-    <div className="space-y-2 rounded-2xl bg-card p-3">
-      <p className="flex items-center gap-2">
-        <span className="rounded-full bg-brand-lime px-2.5 py-0.5 font-semibold text-[#0f2414] text-sm">{analysis.score}/100</span>
-        <span className="text-muted-foreground text-xs">pour cette offre</span>
-      </p>
-      {analysis.summary && <p className="line-clamp-3 text-sm leading-relaxed">{analysis.summary}</p>}
-      <div className="flex flex-wrap gap-x-4 gap-y-1">
-        <Link
-          href={`/espace/analyse-cv/${analysis.screeningId}`}
-          className="inline-flex items-center gap-1.5 font-medium text-sm hover:underline"
-        >
-          <IconMessageCircle className="size-4" />
-          Discuter et comparer
-        </Link>
-        {a.status !== "REFUSED" && (
-          <button type="button" onClick={onSchedule} className="inline-flex items-center gap-1.5 font-medium text-sm hover:underline">
-            <IconCalendarPlus className="size-4" />
-            Proposer un entretien
-          </button>
-        )}
-      </div>
-    </div>
   );
 }
