@@ -1,0 +1,137 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { IconAlertTriangle, IconFileText, IconMail, IconPhone, IconX } from "@tabler/icons-react";
+import { toast } from "sonner";
+
+import { ActionDialog } from "#/components/action-dialog";
+import { Avatar, AvatarFallback } from "#/components/ui/avatar";
+import { Textarea } from "#/components/ui/textarea";
+import { externalApplicationsKey, refuseExternalApplication, type ExternalApplication } from "#/lib/api/careers-controller";
+import { downloadFile } from "#/lib/api/download";
+import { friendlyError } from "#/lib/api/friendly-error";
+import { getInitials } from "#/lib/utils";
+
+const YES_NO: Record<string, string> = { yes: "Oui", no: "Non" };
+
+/** Where an application from the public careers page sits among the tabs. */
+export function externalStage(a: Pick<ExternalApplication, "status" | "viewedAt">) {
+  if (a.status === "REFUSED") return "closed";
+  return a.viewedAt ? "viewed" : "new";
+}
+
+/** Someone who applied from the public page: their contact comes with it. */
+export function ExternalApplicationCard({ application: a }: Readonly<{ application: ExternalApplication }>) {
+  const queryClient = useQueryClient();
+  const name = `${a.firstName} ${a.lastName}`;
+  const [refusing, setRefusing] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const refuse = useMutation({
+    mutationFn: () => refuseExternalApplication(a.id, message.trim() || undefined),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
+      toast.success(`${name} est prévenu par e-mail.`);
+      setRefusing(false);
+    },
+    onError: (err) => toast.error(friendlyError(err, "Le refus n'a pas pu être envoyé.")),
+  });
+
+  async function openCv() {
+    try {
+      await downloadFile(`/api/v1/business/me/external-applications/${encodeURIComponent(a.id)}/cv`, a.cvFileName);
+      void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
+    } catch (err) {
+      toast.error(friendlyError(err, "Ce CV n'a pas pu être ouvert."));
+    }
+  }
+
+  return (
+    <li className="flex flex-col gap-3 rounded-3xl bg-page p-5">
+      <div className="flex items-start gap-3.5">
+        <Avatar className="size-14 rounded-2xl">
+          <AvatarFallback className="rounded-2xl bg-brand-lime font-semibold text-[#0f2414]">{getInitials(name)}</AvatarFallback>
+        </Avatar>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-semibold">{name}</p>
+          <p className="mt-1 flex flex-wrap gap-1.5">
+            <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px]">Hors Rabotka</span>
+            {a.status === "REFUSED" && <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px]">Refusée</span>}
+          </p>
+        </div>
+      </div>
+
+      <Link href={`/espace/offres/${a.offer.id}`} className="group space-y-0.5 rounded-2xl bg-card p-3">
+        <span className="block text-muted-foreground text-[11px] uppercase tracking-wide">Pour l&apos;offre</span>
+        <span className="line-clamp-1 font-medium text-sm group-hover:underline">{a.offer.title}</span>
+      </Link>
+
+      <div className="space-y-1 text-sm">
+        <a href={`mailto:${a.email}`} className="flex items-center gap-2 hover:underline">
+          <IconMail className="size-4 shrink-0 text-muted-foreground" />
+          <span className="truncate">{a.email}</span>
+        </a>
+        <a href={`tel:${a.phone}`} className="flex items-center gap-2 hover:underline">
+          <IconPhone className="size-4 shrink-0 text-muted-foreground" />
+          {a.phone}
+        </a>
+      </div>
+
+      {a.knockedOut && (
+        <p className="flex items-center gap-1.5 text-chip-amber-foreground text-xs">
+          <IconAlertTriangle className="size-3.5 shrink-0" />
+          Ne remplit pas un critère éliminatoire
+        </p>
+      )}
+
+      {a.answers.length > 0 && (
+        <dl className="space-y-2 rounded-2xl bg-card p-3 text-sm">
+          {a.answers.map((answer) => (
+            <div key={answer.label}>
+              <dt className="text-muted-foreground text-xs">{answer.label}</dt>
+              <dd className="font-medium">{YES_NO[answer.value] ?? answer.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+
+      <div className="mt-auto flex gap-2">
+        {a.hasCv && (
+          <button
+            type="button"
+            onClick={() => void openCv()}
+            className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white"
+          >
+            <IconFileText className="size-4" />
+            Voir le CV
+          </button>
+        )}
+        {a.status === "PENDING" && (
+          <button
+            type="button"
+            onClick={() => setRefusing(true)}
+            className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-card px-4 font-medium text-sm"
+          >
+            <IconX className="size-4" />
+            Refuser
+          </button>
+        )}
+      </div>
+
+      <ActionDialog
+        open={refusing}
+        onOpenChange={setRefusing}
+        title={`Refuser ${name} ?`}
+        description="La personne est prévenue par e-mail."
+        confirmLabel="Refuser"
+        tone="warning"
+        pending={refuse.isPending}
+        onConfirm={() => refuse.mutate()}
+      >
+        <Textarea value={message} maxLength={500} onChange={(e) => setMessage(e.target.value)} placeholder="Un mot pour la personne (facultatif)" className="rounded-xl border-0 bg-page shadow-none" />
+      </ActionDialog>
+    </li>
+  );
+}

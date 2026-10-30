@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Input } from "#/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { CardGridSkeleton } from "#/components/page-skeletons";
+import { ExternalApplicationCard, externalStage } from "./external-application-card";
 import { ApplicationActions } from "#/features/offers/components/application-actions";
 import { InterviewLine, latestInterview } from "#/features/interviews/components/interview-bits";
 import { ScheduleInterviewDialog } from "#/features/interviews/components/schedule-interview-dialog";
@@ -18,6 +19,7 @@ import { interviewsKey, listInterviews } from "#/lib/api/interview-controller";
 import type { Interview } from "#/lib/api/types";
 import { APPLICATION_STATUS, applicationStage, statusClass, type ApplicationStage } from "#/features/offers/offer-labels";
 import { friendlyError } from "#/lib/api/friendly-error";
+import { externalApplicationsKey, listExternalApplications } from "#/lib/api/careers-controller";
 import { listReceivedApplications, offersKey, type ReceivedApplication } from "#/lib/api/offer-controller";
 import { cn, getInitials } from "#/lib/utils";
 
@@ -49,6 +51,7 @@ export function ApplicationsPage() {
   const all = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
   // The interviews already proposed, to show each on its candidate's card.
   const interviews = useQuery({ queryKey: [...interviewsKey, "all"], queryFn: () => listInterviews() });
+  const external = useQuery({ queryKey: externalApplicationsKey, queryFn: listExternalApplications });
   const total = query.data?.pages[0]?.total ?? 0;
 
   // Opened from a notification: that application, on its own tab, in view.
@@ -73,12 +76,24 @@ export function ApplicationsPage() {
       o.n++;
       byId.set(a.offer.id, o);
     }
+    for (const a of external.data ?? []) {
+      const o = byId.get(a.offer.id) ?? { id: a.offer.id, title: a.offer.title, n: 0 };
+      o.n++;
+      byId.set(a.offer.id, o);
+    }
     return [...byId.values()].sort((a, b) => b.n - a.n);
-  }, [all]);
+  }, [all, external.data]);
 
   const scoped = all.filter((a) => (offerId === "all" || a.offer.id === offerId) && (!q.trim() || fold(`${a.worker.firstName} ${a.worker.lastName} ${a.offer.title}`).includes(fold(q.trim()))));
-  const count = (k: (typeof TABS)[number]["key"]) => (k === "all" ? scoped.length : scoped.filter((a) => applicationStage(a.status) === k).length);
+  const scopedExternal = (external.data ?? []).filter(
+    (a) => (offerId === "all" || a.offer.id === offerId) && (!q.trim() || fold(`${a.firstName} ${a.lastName} ${a.email} ${a.offer.title}`).includes(fold(q.trim()))),
+  );
+  const count = (k: (typeof TABS)[number]["key"]) =>
+    k === "all"
+      ? scoped.length + scopedExternal.length
+      : scoped.filter((a) => applicationStage(a.status) === k).length + scopedExternal.filter((a) => externalStage(a) === k).length;
   const shown = tab === "all" ? scoped : scoped.filter((a) => applicationStage(a.status) === tab);
+  const shownExternal = tab === "all" ? scopedExternal : scopedExternal.filter((a) => externalStage(a) === tab);
 
   return (
     <div className="w-full space-y-6 pt-2">
@@ -145,14 +160,14 @@ export function ApplicationsPage() {
           <CardGridSkeleton kind="application" />
         ) : !query.data ? (
           <p className="text-muted-foreground">{friendlyError(query.error, "Vos candidatures sont indisponibles pour le moment.")}</p>
-        ) : shown.length === 0 ? (
+        ) : shown.length + shownExternal.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-2xl bg-page px-6 py-12 text-center">
             <span className="flex size-12 items-center justify-center rounded-2xl bg-card">
               <IconInbox className="size-6 text-muted-foreground" />
             </span>
-            <p className="font-medium">{all.length === 0 ? "Aucune candidature pour le moment" : "Aucune candidature ici"}</p>
+            <p className="font-medium">{all.length + scopedExternal.length === 0 ? "Aucune candidature pour le moment" : "Aucune candidature ici"}</p>
             <p className="max-w-sm text-muted-foreground text-sm">
-              {all.length === 0
+              {all.length + scopedExternal.length === 0
                 ? "Publiez une offre : les profils correspondants en sont prévenus et leurs candidatures arrivent ici."
                 : tab === "new"
                   ? "Vous avez répondu à tout le monde."
@@ -168,6 +183,9 @@ export function ApplicationsPage() {
                 focused={a.applicationId === focusId}
                 interview={latestInterview(interviews.data, (i) => i.applicationId === a.applicationId)}
               />
+            ))}
+            {shownExternal.map((a) => (
+              <ExternalApplicationCard key={a.id} application={a} />
             ))}
           </ul>
         )}

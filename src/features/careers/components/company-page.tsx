@@ -32,38 +32,40 @@ export function CompanyPage({ slug }: Readonly<{ slug: string }>) {
             <div className="flex items-center gap-3">
               <CompanyLogo company={page.company} />
               <div className="min-w-0">
-                <h1 className="truncate font-semibold text-xl">{page.company.name}</h1>
+                <h1 className="truncate font-semibold text-2xl tracking-tight">{page.company.name}</h1>
                 <p className="truncate text-muted-foreground text-sm">
                   {[page.company.categoryLabel, page.company.city].filter(Boolean).join(" · ")}
                 </p>
               </div>
             </div>
             {page.company.description && (
-              <p className="line-clamp-3 text-muted-foreground text-sm leading-relaxed">{page.company.description}</p>
+              <p className="line-clamp-3 text-[15px] text-foreground/85 leading-relaxed">{page.company.description}</p>
             )}
           </section>
 
           <section className="space-y-3">
-            <h2 className="px-2 font-semibold">
+            <h2 className="px-2 font-semibold text-lg">
               {page.offers.length === 0
                 ? "Aucune offre ouverte pour le moment."
                 : `${page.offers.length} offre${page.offers.length > 1 ? "s" : ""} ouverte${page.offers.length > 1 ? "s" : ""}`}
             </h2>
             {page.offers.length > 0 && (
-              <ul className="overflow-hidden rounded-3xl bg-card">
+              <ul className="space-y-3">
                 {page.offers.map((o) => (
                   <li key={o.reference}>
                     <Link
                       href={`/carrieres/${slug}/${o.reference}`}
-                      className="flex items-center gap-3 px-6 py-4 transition-colors hover:bg-page/60"
+                      className="flex items-center gap-3 rounded-3xl bg-card px-6 py-5 transition-colors hover:bg-card/70"
                     >
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium">{o.title}</span>
+                        <span className="block truncate font-semibold text-[17px]">{o.title}</span>
                         <span className="block truncate text-muted-foreground text-sm">
                           {[offerPlace(o), EMPLOYMENT_LABEL[o.employmentType]].filter(Boolean).join(" · ")}
                         </span>
                       </span>
-                      <IconChevronRight className="size-5 shrink-0 text-muted-foreground" />
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-lime text-[#0f2414]">
+                        <IconChevronRight className="size-5" />
+                      </span>
                     </Link>
                   </li>
                 ))}
