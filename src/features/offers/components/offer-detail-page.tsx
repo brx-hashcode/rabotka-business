@@ -14,7 +14,6 @@ import {
   IconChevronDown,
   IconCircleX,
   IconInbox,
-  IconInfoCircle,
   IconMapPin,
   IconMinus,
   IconPencil,
@@ -69,6 +68,7 @@ import {
 } from "../offer-labels";
 import { failedLabel, KIND_LABEL } from "../offer-questions";
 import { ApplicationActions } from "./application-actions";
+import { OfferDescriptionCard } from "./offer-description-card";
 import { REFUSAL_TEMPLATES, RefusalMessageField } from "./refusal-message";
 import { ShareOfferMenu } from "./share-offer-menu";
 import { Checkbox } from "#/components/ui/checkbox";
@@ -229,21 +229,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
             <div className="space-y-6 lg:sticky lg:top-24">
               <DetailsCard offer={o} category={categories.data?.find((c) => c.id === o.categoryId)?.name} />
               <QuestionsCard offer={o} />
-              <section className="space-y-5 rounded-3xl bg-card p-6">
-                <div className="space-y-2">
-                  <h2 className="font-semibold text-lg">Description</h2>
-                  <p className="whitespace-pre-line text-muted-foreground leading-relaxed">{o.description}</p>
-                </div>
-                {o.note && (
-                  <div className="space-y-2 rounded-2xl bg-page p-4">
-                    <h3 className="flex items-center gap-1.5 font-medium text-sm">
-                      <IconInfoCircle className="size-4" />
-                      Note pour les candidats
-                    </h3>
-                    <p className="whitespace-pre-line text-muted-foreground text-sm leading-relaxed">{o.note}</p>
-                  </div>
-                )}
-              </section>
+              <OfferDescriptionCard description={o.description} note={o.note} />
             </div>
           </div>
         </>
