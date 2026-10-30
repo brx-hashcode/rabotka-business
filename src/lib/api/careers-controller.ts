@@ -70,6 +70,10 @@ export const externalApplicationsKey = ["external-applications"];
 
 /** A business's public careers page (`public/careers/*`): no session. */
 class CareersController extends BusinessBaseController {
+  companies(): Promise<(CareersCompany & { openOffers: number })[]> {
+    return this.get("/public/careers");
+  }
+
   company(slug: string): Promise<{ company: CareersCompany; offers: CareersOfferSummary[] }> {
     return this.get(`/public/careers/${encodeURIComponent(slug)}`);
   }
@@ -102,6 +106,7 @@ class CareersController extends BusinessBaseController {
 
 const controller = new CareersController();
 
+export const getCareersCompanies = controller.companies.bind(controller);
 export const getCareersCompany = controller.company.bind(controller);
 export const getCareersOffer = controller.offer.bind(controller);
 export const applyToOffer = controller.apply.bind(controller);
