@@ -14,6 +14,7 @@ import type { MyBusiness, UpdateMyBusiness } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { sessionUserKey } from "#/hooks/use-session-user";
 import type { SessionUser } from "#/lib/api/types";
+import { OrganisationCareersLink } from "./organisation-careers-link";
 import { OrganisationDocuments } from "./organisation-documents";
 import { OrganisationMailboxes } from "./organisation-mailboxes";
 import { OrganisationLogo } from "./organisation-logo";
@@ -123,6 +124,12 @@ export function OrganisationPage() {
             <section className="order-2 space-y-6 rounded-3xl bg-card p-5 sm:p-8 lg:order-1">
               <OrganisationLogo name={business.name} logoUrl={business.logoUrl} onUploaded={setLogo} />
               <div aria-hidden className="h-px bg-page" />
+              {verified && business.publicSlug && (
+                <>
+                  <OrganisationCareersLink slug={business.publicSlug} />
+                  <div aria-hidden className="h-px bg-page" />
+                </>
+              )}
               <div className="space-y-1">
                 <h2 className="font-semibold text-lg">Informations</h2>
                 {verified && (

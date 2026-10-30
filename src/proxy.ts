@@ -18,6 +18,8 @@ export function proxy(request: NextRequest) {
   if (pathname === "/") return landing(request);
   // A candidate's interview invitation: answered from the e-mail, signed out.
   if (pathname.startsWith("/entretien/")) return NextResponse.next();
+  // A business's public careers page: for candidates who are not on Rabotka.
+  if (pathname.startsWith("/carrieres/")) return NextResponse.next();
   return requireSession(request);
 }
 

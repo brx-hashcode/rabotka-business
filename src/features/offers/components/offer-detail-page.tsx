@@ -18,6 +18,7 @@ import {
   IconMinus,
   IconPencil,
   IconRefresh,
+  IconShare,
   IconTrash,
   IconUserCheck,
   IconUsers,
@@ -34,8 +35,9 @@ import { Skeleton } from "#/components/ui/skeleton";
 import { Bone, RowsSkeleton, TilesSkeleton } from "#/components/page-skeletons";
 import { CandidateCard } from "#/features/candidates/components/candidate-card";
 import { ResumeButton } from "#/features/candidates/components/resume-button";
-import { mySubscriptionKey } from "#/lib/api/business-controller";
+import { getMyBusiness, myBusinessKey, mySubscriptionKey } from "#/lib/api/business-controller";
 import { findCandidates } from "#/lib/api/candidate-controller";
+import { copyText } from "#/lib/clipboard";
 import { friendlyError } from "#/lib/api/friendly-error";
 import {
   deleteOffer,
@@ -77,10 +79,18 @@ import { scheduledIso } from "./offer-form";
  * it at this stage: edit while active, delete while nobody is engaged,
  * republish once expired.
  */
+/** Its public page, for anyone not on Rabotka. */
+async function shareOffer(slug: string, reference: string) {
+  const copied = await copyText(`${window.location.origin}/carrieres/${slug}/${reference}`);
+  if (copied) toast.success("Lien de l'offre copié.");
+  else toast.error("Le lien n'a pas pu être copié.");
+}
+
 export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const offer = useQuery({ queryKey: [...offersKey, id], queryFn: () => getOffer(id) });
+  const { data: business } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
   // The candidate's side moves on its own (paying their part of an unlock): keep up.
   const applicants = useQuery({
     queryKey: [...offersKey, id, "applicants"],
@@ -148,6 +158,16 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
             applicants={applicants.data}
             actions={
               <div className="flex flex-wrap gap-2 empty:hidden">
+                {business?.publicSlug && business.verificationStatus === "VERIFIED" && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
+                  <button
+                    type="button"
+                    onClick={() => void shareOffer(business.publicSlug as string, o.reference)}
+                    className="inline-flex h-10 items-center gap-2 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70"
+                  >
+                    <IconShare className="size-4" />
+                    Partager
+                  </button>
+                )}
                 {o.status === "ACTIVE" && (
                   <Link
                     href={`/espace/offres/${o.id}/modifier`}
