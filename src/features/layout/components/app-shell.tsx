@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 
 import { Sheet, SheetContent, SheetTitle } from "#/components/ui/sheet";
+import { useOrganisationFavicon } from "#/features/layout/use-organisation-favicon";
 import { AppHeader } from "./app-header";
 import { AppSidebar } from "./app-sidebar";
 
@@ -12,6 +13,7 @@ import { AppSidebar } from "./app-sidebar";
  */
 export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
   const [menuOpen, setMenuOpen] = useState(false);
+  useOrganisationFavicon();
 
   return (
     <div className="min-h-svh bg-page lg:flex">

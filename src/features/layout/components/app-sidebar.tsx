@@ -25,14 +25,37 @@ export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>
 
   return (
     <div className="flex h-full flex-col rounded-3xl bg-card p-5">
-      <Link href="/espace" onClick={onNavigate} className="px-2 py-2" aria-label="Rabotka Business — tableau de bord">
-        {/* The dark-text lockup on white; the white one in the dark theme. */}
-        <span className="dark:hidden">
-          <BusinessLockup />
-        </span>
-        <span className="hidden dark:inline">
-          <BusinessLockup inverse />
-        </span>
+      <Link
+        href="/espace"
+        onClick={onNavigate}
+        className="px-2 py-2"
+        aria-label={`${business?.logoUrl ? business.name : "Rabotka Business"} — tableau de bord`}
+      >
+        {business?.logoUrl ? (
+          // The organisation's own brand, with the product still named under it.
+          <span className="flex items-center gap-3">
+            <Avatar className="size-10 rounded-xl">
+              <AvatarImage src={business.logoUrl} alt="" className="object-cover" />
+              <AvatarFallback className="rounded-xl bg-brand-lime font-semibold text-[#0f2414]">
+                {getInitials(business.name)}
+              </AvatarFallback>
+            </Avatar>
+            <span className="flex min-w-0 flex-col">
+              <span className="truncate font-semibold text-[15px]">{business.name}</span>
+              <span className="truncate text-muted-foreground text-xs">Rabotka Business</span>
+            </span>
+          </span>
+        ) : (
+          <>
+            {/* The dark-text lockup on white; the white one in the dark theme. */}
+            <span className="dark:hidden">
+              <BusinessLockup />
+            </span>
+            <span className="hidden dark:inline">
+              <BusinessLockup inverse />
+            </span>
+          </>
+        )}
       </Link>
 
       <nav className="mt-6 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto">
