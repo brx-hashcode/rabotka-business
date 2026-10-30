@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
   // Dev only: lets a phone on the local network load the dev server
   // (http://192.168.x.x:3000) with hot reload.
   allowedDevOrigins: ["192.168.*.*"],
+  experimental: {
+    // src/proxy.ts sees every /api call, and Next cuts a body it proxies at
+    // 10MB by default: an « Analyse de CV » sends all its files in one request.
+    proxyClientMaxBodySize: "50mb",
+  },
   // « Tri des CV » became « Analyse de CV »: links already sent (in-app
   // notifications, bookmarks) keep working.
   async redirects() {
