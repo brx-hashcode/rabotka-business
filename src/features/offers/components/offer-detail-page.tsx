@@ -190,7 +190,11 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
             <div className="min-w-0 space-y-6">
               <ApplicantsCard offer={o} applicants={applicants.data} loading={applicants.isLoading} />
               {(o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
-                <SuggestedCard offer={o} exclude={(applicants.data ?? []).map((a) => a.worker.id)} />
+                <SuggestedCard
+                  offer={o}
+                  category={categories.data?.find((c) => c.id === o.categoryId)?.name}
+                  exclude={(applicants.data ?? []).map((a) => a.worker.id)}
+                />
               )}
             </div>
             <div className="space-y-6 lg:sticky lg:top-24">
@@ -756,17 +760,24 @@ function QuestionsCard({ offer: o }: Readonly<{ offer: Offer }>) {
  * who have not applied: the business may reach them directly. Hidden when
  * the plan has no search (403) or nobody fits.
  */
-function SuggestedCard({ offer: o, exclude }: Readonly<{ offer: Offer; exclude: string[] }>) {
+function SuggestedCard({
+  offer: o,
+  category,
+  exclude,
+}: Readonly<{ offer: Offer; category?: string; exclude: string[] }>) {
   const filters = { categoryId: o.categoryId ?? undefined, city: o.isRemote ? undefined : (o.city ?? undefined), minReliability: 70 };
   const found = useQuery({
     queryKey: ["candidates", "for-offer", o.id],
     // The city first; too few there, the same trade anywhere (people travel for work).
     queryFn: async () => {
       const near = await findCandidates(filters, 0, 8);
-      if (!filters.city || near.items.length >= 4 + exclude.length) return near;
-      const wider = await findCandidates({ ...filters, city: undefined }, 0, 8 + exclude.length);
+      if (near.items.length >= 4 + exclude.length) return near;
+      const wider = filters.city ? await findCandidates({ ...filters, city: undefined }, 0, 8 + exclude.length) : near;
       const seen = new Set(near.items.map((c) => c.id));
-      return { total: wider.total, items: [...near.items, ...wider.items.filter((c) => !seen.has(c.id))] };
+      const found = { total: wider.total, items: [...near.items, ...wider.items.filter((c) => !seen.has(c.id))] };
+      if (found.items.length > 0 || !category) return found;
+      // Nobody with this exact trade: the search also finds the rest of its sector.
+      return findCandidates({ q: category, minReliability: filters.minReliability }, 0, 8 + exclude.length);
     },
     retry: false,
   });

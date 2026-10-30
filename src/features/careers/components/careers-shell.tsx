@@ -9,7 +9,7 @@ import { getInitials } from "#/lib/utils";
 export function CareersShell({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <main className="min-h-svh bg-page px-4 py-8 sm:py-14">
-      <div className="mx-auto w-full max-w-lg space-y-6">
+      <div className="mx-auto w-full max-w-2xl space-y-6">
         <div className="flex justify-center">
           <BusinessLockup />
         </div>
@@ -22,7 +22,7 @@ export function CareersShell({ children }: Readonly<{ children: ReactNode }>) {
 
 export function CompanyLogo({ company }: Readonly<{ company: Pick<CareersCompany, "name" | "logoUrl"> }>) {
   return (
-    <Avatar className="size-14 shrink-0 rounded-2xl">
+    <Avatar className="size-16 shrink-0 rounded-2xl">
       {company.logoUrl && <AvatarImage src={company.logoUrl} alt="" className="object-cover" />}
       <AvatarFallback className="rounded-2xl bg-brand-lime font-semibold text-[#0f2414]">{getInitials(company.name)}</AvatarFallback>
     </Avatar>
