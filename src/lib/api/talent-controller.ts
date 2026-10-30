@@ -8,6 +8,7 @@ export type Talent = {
   avatarUrl: string | null;
   city: string | null;
   categoryName: string | null;
+  description: string | null;
   reliabilityScore: number | null;
   ratingAvg: number | null;
   ratingCount: number;
