@@ -3,14 +3,19 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { IconAlertTriangle, IconDownload, IconFileText, IconMail, IconPhone, IconX } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCheck, IconDownload, IconFileText, IconMail, IconPhone, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
 import { PreviewSheet } from "#/components/preview-sheet";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Textarea } from "#/components/ui/textarea";
-import { externalApplicationsKey, refuseExternalApplication, type ExternalApplication } from "#/lib/api/careers-controller";
+import {
+  externalApplicationsKey,
+  refuseExternalApplication,
+  retainExternalApplication,
+  type ExternalApplication,
+} from "#/lib/api/careers-controller";
 import { downloadFile } from "#/lib/api/download";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { getInitials } from "#/lib/utils";
@@ -20,6 +25,7 @@ const YES_NO: Record<string, string> = { yes: "Oui", no: "Non" };
 /** Where an application from the public careers page sits among the tabs. */
 export function externalStage(a: Pick<ExternalApplication, "status" | "viewedAt">) {
   if (a.status === "REFUSED") return "closed";
+  if (a.status === "RETAINED") return "hired";
   return a.viewedAt ? "viewed" : "new";
 }
 
@@ -46,6 +52,15 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
 
   const refreshList = () => void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
 
+  const retain = useMutation({
+    mutationFn: () => retainExternalApplication(a.id),
+    onSuccess: () => {
+      refreshList();
+      toast.success(`${name} est prévenu par e-mail.`);
+    },
+    onError: (err) => toast.error(friendlyError(err, "La candidature n'a pas pu être retenue.")),
+  });
+
   async function saveCv() {
     try {
       await downloadFile(cvUrl, a.cvFileName);
@@ -66,6 +81,7 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
           <p className="mt-1 flex flex-wrap gap-1.5">
             <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px]">Hors Rabotka</span>
             {a.status === "REFUSED" && <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px]">Refusée</span>}
+            {a.status === "RETAINED" && <span className="rounded-full bg-brand-lime px-2 py-0.5 font-medium text-[#0f2414] text-[11px]">Retenue</span>}
           </p>
         </div>
       </div>
@@ -104,12 +120,23 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
         </dl>
       )}
 
-      <div className="mt-auto flex gap-2">
+      <div className="mt-auto flex flex-wrap gap-2">
+        {a.status === "PENDING" && (
+          <button
+            type="button"
+            disabled={retain.isPending}
+            onClick={() => retain.mutate()}
+            className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm disabled:opacity-60"
+          >
+            <IconCheck className="size-4" />
+            Retenir
+          </button>
+        )}
         {a.hasCv && (
           <button
             type="button"
             onClick={() => (canShow ? setReading(true) : void saveCv())}
-            className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white"
+            className="inline-flex h-10 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-ink px-4 font-medium text-sm text-white"
           >
             {canShow ? <IconFileText className="size-4" /> : <IconDownload className="size-4" />}
             {canShow ? "Voir le CV" : "Télécharger le CV"}

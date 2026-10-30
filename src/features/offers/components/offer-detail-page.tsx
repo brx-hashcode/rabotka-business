@@ -12,6 +12,7 @@ import {
   IconCash,
   IconCheck,
   IconChevronDown,
+  IconCircleX,
   IconInbox,
   IconInfoCircle,
   IconMapPin,
@@ -40,6 +41,7 @@ import { externalApplicationsKey, listExternalApplications, type ExternalApplica
 import { findCandidates } from "#/lib/api/candidate-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import {
+  closeOffer,
   deleteOffer,
   getOffer,
   getJobCategories,
@@ -97,12 +99,23 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const categories = useQuery({ queryKey: ["job-categories"], queryFn: getJobCategories, staleTime: Infinity });
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [republishing, setRepublishing] = useState(false);
+  const [confirmClose, setConfirmClose] = useState(false);
   const [newDate, setNewDate] = useState("");
 
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: offersKey });
     void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
   };
+  const close = useMutation({
+    mutationFn: () => closeOffer(id),
+    onSuccess: () => {
+      refresh();
+      void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
+      setConfirmClose(false);
+      toast.success("Offre fermée. Les candidats en attente sont prévenus.");
+    },
+    onError: (err) => toast.error(friendlyError(err, "L'offre n'a pas pu être fermée.")),
+  });
   const remove = useMutation({
     mutationFn: () => deleteOffer(id),
     onSuccess: () => {
@@ -167,6 +180,16 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                     <IconPencil className="size-4" />
                     Modifier
                   </Link>
+                )}
+                {(o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmClose(true)}
+                    className="inline-flex h-10 items-center gap-2 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70"
+                  >
+                    <IconCircleX className="size-4" />
+                    Fermer l&apos;offre
+                  </button>
                 )}
                 {o.status === "EXPIRED" && (
                   <button
@@ -239,6 +262,18 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
       />
 
       <ActionDialog
+        open={confirmClose}
+        onOpenChange={setConfirmClose}
+        icon={<IconCircleX className="size-5" />}
+        title="Fermer cette offre ?"
+        description="Elle ne recevra plus de candidatures et les candidats en attente sont prévenus. Vos candidats retenus restent."
+        confirmLabel="Fermer l'offre"
+        tone="warning"
+        pending={close.isPending}
+        onConfirm={() => close.mutate()}
+      />
+
+      <ActionDialog
         open={republishing}
         onOpenChange={setRepublishing}
         icon={<IconRefresh className="size-5" />}
@@ -280,7 +315,8 @@ function OfferHeader({
   const list = applicants ?? [];
   const toReview = list.filter((a) => applicationStage(a.status) === "new").length + outsiders.filter((a) => externalStage(a) === "new").length;
   // `acceptedCount` counts ACCEPTED only; a hire that has started or ended still fills its seat.
-  const hired = list.filter((a) => applicationStage(a.status) === "hired").length;
+  const hired =
+    list.filter((a) => applicationStage(a.status) === "hired").length + outsiders.filter((a) => a.status === "RETAINED").length;
   const filled = Math.min(Math.max(o.acceptedCount, hired), o.quantity);
   const left = o.scheduledAt ? daysUntil(o.scheduledAt) : null;
   const open = o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED";

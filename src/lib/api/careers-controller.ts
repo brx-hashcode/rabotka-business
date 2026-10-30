@@ -55,7 +55,7 @@ export type ExternalApplication = {
   lastName: string;
   email: string;
   phone: string;
-  status: "PENDING" | "REFUSED";
+  status: "PENDING" | "RETAINED" | "REFUSED";
   answers: { label: string; kind: CareersQuestion["kind"]; value: string; passed: boolean | null }[];
   knockedOut: boolean;
   hasCv: boolean;
@@ -91,6 +91,10 @@ class CareersController extends BusinessBaseController {
     return this.get("/business/me/external-applications");
   }
 
+  retainExternal(id: string): Promise<unknown> {
+    return this.post(`/business/me/external-applications/${encodeURIComponent(id)}/retain`);
+  }
+
   refuseExternal(id: string, message?: string): Promise<unknown> {
     return this.post(`/business/me/external-applications/${encodeURIComponent(id)}/refuse`, message ? { message } : {});
   }
@@ -102,4 +106,5 @@ export const getCareersCompany = controller.company.bind(controller);
 export const getCareersOffer = controller.offer.bind(controller);
 export const applyToOffer = controller.apply.bind(controller);
 export const listExternalApplications = controller.listExternal.bind(controller);
+export const retainExternalApplication = controller.retainExternal.bind(controller);
 export const refuseExternalApplication = controller.refuseExternal.bind(controller);

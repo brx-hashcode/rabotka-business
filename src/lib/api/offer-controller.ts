@@ -235,6 +235,11 @@ class OfferController extends BusinessBaseController {
     return this.delete(`/profile/job-offers/${encodeURIComponent(id)}`);
   }
 
+  /** Stops recruiting: those still waiting are told. */
+  close(id: string): Promise<unknown> {
+    return this.post(`/job-offers/${encodeURIComponent(id)}/close`);
+  }
+
   republish(id: string, scheduledAt: string): Promise<unknown> {
     return this.post(`/job-offers/${encodeURIComponent(id)}/republish`, { scheduledAt });
   }
@@ -253,6 +258,7 @@ export const listReceivedApplications = controller.received.bind(controller);
 export const createOffer = controller.create.bind(controller);
 export const updateOffer = controller.update.bind(controller);
 export const deleteOffer = controller.remove.bind(controller);
+export const closeOffer = controller.close.bind(controller);
 export const republishOffer = controller.republish.bind(controller);
 export const getJobCategories = controller.categories.bind(controller);
 
