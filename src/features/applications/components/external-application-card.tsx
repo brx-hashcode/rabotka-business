@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { IconAlertTriangle, IconFileText, IconMail, IconPhone, IconX } from "@tabler/icons-react";
+import { IconAlertTriangle, IconDownload, IconFileText, IconMail, IconPhone, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
+import { PreviewSheet } from "#/components/preview-sheet";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Textarea } from "#/components/ui/textarea";
 import { externalApplicationsKey, refuseExternalApplication, type ExternalApplication } from "#/lib/api/careers-controller";
@@ -28,6 +29,10 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
   const name = `${a.firstName} ${a.lastName}`;
   const [refusing, setRefusing] = useState(false);
   const [message, setMessage] = useState("");
+  const [reading, setReading] = useState(false);
+  const cvUrl = `/api/v1/business/me/external-applications/${encodeURIComponent(a.id)}/cv`;
+  // The sheet shows a PDF; a Word file can only be saved.
+  const canShow = a.cvMimeType === "application/pdf";
 
   const refuse = useMutation({
     mutationFn: () => refuseExternalApplication(a.id, message.trim() || undefined),
@@ -39,10 +44,12 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
     onError: (err) => toast.error(friendlyError(err, "Le refus n'a pas pu être envoyé.")),
   });
 
-  async function openCv() {
+  const refreshList = () => void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
+
+  async function saveCv() {
     try {
-      await downloadFile(`/api/v1/business/me/external-applications/${encodeURIComponent(a.id)}/cv`, a.cvFileName);
-      void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
+      await downloadFile(cvUrl, a.cvFileName);
+      refreshList();
     } catch (err) {
       toast.error(friendlyError(err, "Ce CV n'a pas pu être ouvert."));
     }
@@ -101,11 +108,11 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
         {a.hasCv && (
           <button
             type="button"
-            onClick={() => void openCv()}
+            onClick={() => (canShow ? setReading(true) : void saveCv())}
             className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white"
           >
-            <IconFileText className="size-4" />
-            Voir le CV
+            {canShow ? <IconFileText className="size-4" /> : <IconDownload className="size-4" />}
+            {canShow ? "Voir le CV" : "Télécharger le CV"}
           </button>
         )}
         {a.status === "PENDING" && (
@@ -119,6 +126,22 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
           </button>
         )}
       </div>
+
+      <PreviewSheet
+        open={reading}
+        onOpenChange={(open) => {
+          setReading(open);
+          // On close, not on open: being read moves the card to another tab,
+          // and the sheet would go with it.
+          if (!open) refreshList();
+        }}
+        title={name}
+        subtitle={a.offer.title}
+        src={cvUrl}
+        kind="pdf"
+        fileName={a.cvFileName}
+        unavailable="Ce CV n'est plus disponible."
+      />
 
       <ActionDialog
         open={refusing}

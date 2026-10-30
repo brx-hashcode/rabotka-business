@@ -60,6 +60,7 @@ export type ExternalApplication = {
   knockedOut: boolean;
   hasCv: boolean;
   cvFileName: string;
+  cvMimeType: string;
   createdAt: string;
   viewedAt: string | null;
   offer: { id: string; title: string };
