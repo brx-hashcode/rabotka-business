@@ -32,9 +32,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Input } from "#/components/ui/input";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Bone, RowsSkeleton, TilesSkeleton } from "#/components/page-skeletons";
+import { ExternalApplicationCard, externalStage } from "#/features/applications/components/external-application-card";
 import { CandidateCard } from "#/features/candidates/components/candidate-card";
 import { ResumeButton } from "#/features/candidates/components/resume-button";
 import { getMyBusiness, myBusinessKey, mySubscriptionKey } from "#/lib/api/business-controller";
+import { externalApplicationsKey, listExternalApplications, type ExternalApplication } from "#/lib/api/careers-controller";
 import { findCandidates } from "#/lib/api/candidate-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import {
@@ -83,6 +85,9 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const queryClient = useQueryClient();
   const offer = useQuery({ queryKey: [...offersKey, id], queryFn: () => getOffer(id) });
   const { data: business } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
+  // Those who applied from the public careers page.
+  const external = useQuery({ queryKey: externalApplicationsKey, queryFn: listExternalApplications });
+  const outsiders = (external.data ?? []).filter((a) => a.offer.id === id);
   // The candidate's side moves on its own (paying their part of an unlock): keep up.
   const applicants = useQuery({
     queryKey: [...offersKey, id, "applicants"],
@@ -148,6 +153,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
             offer={o}
             category={categories.data?.find((c) => c.id === o.categoryId)?.name}
             applicants={applicants.data}
+            outsiders={outsiders}
             actions={
               <div className="flex flex-wrap gap-2 empty:hidden">
                 {business?.publicSlug && business.verificationStatus === "VERIFIED" && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
@@ -188,7 +194,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
 
           <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_28rem]">
             <div className="min-w-0 space-y-6">
-              <ApplicantsCard offer={o} applicants={applicants.data} loading={applicants.isLoading} />
+              <ApplicantsCard offer={o} applicants={applicants.data} outsiders={outsiders} loading={applicants.isLoading} />
               {(o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
                 <SuggestedCard
                   offer={o}
@@ -267,11 +273,12 @@ function OfferHeader({
   offer: o,
   category,
   applicants,
+  outsiders,
   actions,
-}: Readonly<{ offer: Offer; category?: string; applicants?: OfferApplicant[]; actions: React.ReactNode }>) {
+}: Readonly<{ offer: Offer; category?: string; applicants?: OfferApplicant[]; outsiders: ExternalApplication[]; actions: React.ReactNode }>) {
   const status = STATUS[o.status];
   const list = applicants ?? [];
-  const toReview = list.filter((a) => applicationStage(a.status) === "new").length;
+  const toReview = list.filter((a) => applicationStage(a.status) === "new").length + outsiders.filter((a) => externalStage(a) === "new").length;
   // `acceptedCount` counts ACCEPTED only; a hire that has started or ended still fills its seat.
   const hired = list.filter((a) => applicationStage(a.status) === "hired").length;
   const filled = Math.min(Math.max(o.acceptedCount, hired), o.quantity);
@@ -297,7 +304,7 @@ function OfferHeader({
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        <Tile icon={IconInbox} label="Candidatures" value={applicants ? String(list.length) : "—"} />
+        <Tile icon={IconInbox} label="Candidatures" value={applicants ? String(list.length + outsiders.length) : "—"} />
         <Tile
           icon={IconUsers}
           label="À examiner"
@@ -356,13 +363,18 @@ const TABS: { key: "all" | ApplicationStage; label: string }[] = [
 function ApplicantsCard({
   offer: o,
   applicants,
+  outsiders,
   loading,
-}: Readonly<{ offer: Offer; applicants?: OfferApplicant[]; loading: boolean }>) {
+}: Readonly<{ offer: Offer; applicants?: OfferApplicant[]; outsiders: ExternalApplication[]; loading: boolean }>) {
   // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
   const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS.map((t) => t.key)).withDefault("all"));
   const list = applicants ?? [];
-  const count = (k: (typeof TABS)[number]["key"]) => (k === "all" ? list.length : list.filter((a) => applicationStage(a.status) === k).length);
+  const count = (k: (typeof TABS)[number]["key"]) =>
+    k === "all"
+      ? list.length + outsiders.length
+      : list.filter((a) => applicationStage(a.status) === k).length + outsiders.filter((a) => externalStage(a) === k).length;
   const shown = tab === "all" ? list : list.filter((a) => applicationStage(a.status) === tab);
+  const shownOutsiders = tab === "all" ? outsiders : outsiders.filter((a) => externalStage(a) === tab);
   // Ranked like CV analysis: best fit first; not scored yet, after, newest first.
   const assessed = useQuery({
     queryKey: [...offersKey, o.id, "assessments"],
@@ -407,7 +419,7 @@ function ApplicantsCard({
 
       {loading ? (
         <Skeleton className="h-64 rounded-2xl" />
-      ) : list.length === 0 ? (
+      ) : list.length + outsiders.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-2xl bg-page px-6 py-12 text-center">
           <span className="flex size-12 items-center justify-center rounded-2xl bg-card">
             <IconUsers className="size-6 text-muted-foreground" />
@@ -495,7 +507,7 @@ function ApplicantsCard({
             onDone={() => setSelected(new Set())}
           />
 
-          {shown.length === 0 ? (
+          {shown.length + shownOutsiders.length === 0 ? (
             <p className="rounded-2xl bg-page p-4 text-muted-foreground text-sm">Aucun candidat à cette étape.</p>
           ) : (
             <ul className="flex flex-col gap-2">
@@ -510,6 +522,9 @@ function ApplicantsCard({
                   selected={selected.has(a.applicationId)}
                   onToggle={a.status === "PENDING" || a.status === "VIEWED" ? () => toggle(a.applicationId) : undefined}
                 />
+              ))}
+              {shownOutsiders.map((a) => (
+                <ExternalApplicationCard key={a.id} application={a} />
               ))}
             </ul>
           )}
