@@ -3,14 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { IconAlertTriangle, IconCheck, IconChevronDown, IconChevronUp, IconDownload, IconFileText, IconMail, IconPhone, IconX } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCalendarPlus, IconCheck, IconChevronDown, IconChevronUp, IconDownload, IconMessageCircle, IconSparkles, IconFileText, IconMail, IconPhone, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
+import { ScheduleInterviewDialog } from "#/features/interviews/components/schedule-interview-dialog";
 import { PreviewSheet } from "#/components/preview-sheet";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Textarea } from "#/components/ui/textarea";
 import {
+  analyseExternalApplications,
   externalApplicationsKey,
   refuseExternalApplication,
   retainExternalApplication,
@@ -36,6 +38,8 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
   const [refusing, setRefusing] = useState(false);
   const [retaining, setRetaining] = useState(false);
   const [showAnswers, setShowAnswers] = useState(false);
+  const [analysing, setAnalysing] = useState(false);
+  const [scheduling, setScheduling] = useState(false);
   const [message, setMessage] = useState("");
   const [reading, setReading] = useState(false);
   const cvUrl = `/api/v1/business/me/external-applications/${encodeURIComponent(a.id)}/cv`;
@@ -53,6 +57,15 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
   });
 
   const refreshList = () => void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
+
+  const analyse = useMutation({
+    mutationFn: () => analyseExternalApplications(a.offer.id, a.id),
+    onSuccess: () => {
+      refreshList();
+      setAnalysing(false);
+    },
+    onError: (err) => toast.error(friendlyError(err, "Ce CV n'a pas pu être analysé.")),
+  });
 
   const retain = useMutation({
     mutationFn: () => retainExternalApplication(a.id),
@@ -104,6 +117,8 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
           {a.phone}
         </a>
       </div>
+
+      <AnalysisLine a={a} onAnalyse={() => setAnalysing(true)} onSchedule={() => setScheduling(true)} />
 
       {a.knockedOut && (
         <p className="flex items-center gap-1.5 text-chip-amber-foreground text-xs">
@@ -189,6 +204,25 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
       />
 
       <ActionDialog
+        open={analysing}
+        onOpenChange={setAnalysing}
+        title={`Analyser le CV de ${name} ?`}
+        description="Son CV est lu et noté pour cette offre. Cela utilise 1 CV inclus de votre formule."
+        confirmLabel="Analyser"
+        pending={analyse.isPending}
+        onConfirm={() => analyse.mutate()}
+      />
+
+      {scheduling && a.analysis && (
+        <ScheduleInterviewDialog
+          open={scheduling}
+          onOpenChange={setScheduling}
+          candidate={{ name, cvResumeId: a.analysis.resumeId, email: a.email }}
+          jobTitle={a.offer.title}
+        />
+      )}
+
+      <ActionDialog
         open={retaining}
         onOpenChange={setRetaining}
         title={`Retenir ${name} ?`}
@@ -211,5 +245,57 @@ export function ExternalApplicationCard({ application: a }: Readonly<{ applicati
         <Textarea value={message} maxLength={500} onChange={(e) => setMessage(e.target.value)} placeholder="Un mot pour la personne (facultatif)" className="rounded-xl border-0 bg-page shadow-none" />
       </ActionDialog>
     </li>
+  );
+}
+
+/** The score, and the way into the conversation about this CV. */
+function AnalysisLine({
+  a,
+  onAnalyse,
+  onSchedule,
+}: Readonly<{ a: ExternalApplication; onAnalyse: () => void; onSchedule: () => void }>) {
+  const analysis = a.analysis;
+  if (!analysis) {
+    if (a.status !== "PENDING" || !a.hasCv) return null;
+    return (
+      <button
+        type="button"
+        onClick={onAnalyse}
+        className="inline-flex h-10 w-fit items-center gap-2 rounded-full bg-card px-4 font-medium text-sm"
+      >
+        <IconSparkles className="size-4" />
+        Analyser le CV
+      </button>
+    );
+  }
+  if (analysis.status === "QUEUED") {
+    return <p className="rounded-2xl bg-card p-3 text-muted-foreground text-sm">Analyse du CV en cours…</p>;
+  }
+  if (analysis.status !== "SCORED" || analysis.score === null) {
+    return <p className="rounded-2xl bg-card p-3 text-muted-foreground text-sm">Ce CV n&apos;a pas pu être lu.</p>;
+  }
+  return (
+    <div className="space-y-2 rounded-2xl bg-card p-3">
+      <p className="flex items-center gap-2">
+        <span className="rounded-full bg-brand-lime px-2.5 py-0.5 font-semibold text-[#0f2414] text-sm">{analysis.score}/100</span>
+        <span className="text-muted-foreground text-xs">pour cette offre</span>
+      </p>
+      {analysis.summary && <p className="line-clamp-3 text-sm leading-relaxed">{analysis.summary}</p>}
+      <div className="flex flex-wrap gap-x-4 gap-y-1">
+        <Link
+          href={`/espace/analyse-cv/${analysis.screeningId}`}
+          className="inline-flex items-center gap-1.5 font-medium text-sm hover:underline"
+        >
+          <IconMessageCircle className="size-4" />
+          Discuter et comparer
+        </Link>
+        {a.status !== "REFUSED" && (
+          <button type="button" onClick={onSchedule} className="inline-flex items-center gap-1.5 font-medium text-sm hover:underline">
+            <IconCalendarPlus className="size-4" />
+            Proposer un entretien
+          </button>
+        )}
+      </div>
+    </div>
   );
 }

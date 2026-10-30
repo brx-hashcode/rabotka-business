@@ -51,7 +51,12 @@ export function ApplicationsPage() {
   const all = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
   // The interviews already proposed, to show each on its candidate's card.
   const interviews = useQuery({ queryKey: [...interviewsKey, "all"], queryFn: () => listInterviews() });
-  const external = useQuery({ queryKey: externalApplicationsKey, queryFn: listExternalApplications });
+  const external = useQuery({
+    queryKey: externalApplicationsKey,
+    queryFn: listExternalApplications,
+    // A CV being read gets its score in a few seconds.
+    refetchInterval: (q) => (q.state.data?.some((a) => a.analysis?.status === "QUEUED") ? 4000 : false),
+  });
   const total = query.data?.pages[0]?.total ?? 0;
 
   // Opened from a notification: that application, on its own tab, in view.

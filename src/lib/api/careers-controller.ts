@@ -64,6 +64,14 @@ export type ExternalApplication = {
   createdAt: string;
   viewedAt: string | null;
   offer: { id: string; title: string };
+  /** Once the business asked for it: the score lives in Analyse de CV. */
+  analysis: {
+    resumeId: string;
+    screeningId: string;
+    status: "QUEUED" | "SCORED" | "UNREADABLE" | "FAILED";
+    score: number | null;
+    summary: string | null;
+  } | null;
 };
 
 export const externalApplicationsKey = ["external-applications"];
@@ -95,6 +103,11 @@ class CareersController extends BusinessBaseController {
     return this.get("/business/me/external-applications");
   }
 
+  /** One candidate, or the offer's not yet read. Each CV uses one « CV inclus ». */
+  analyseExternal(offerId: string, applicationId?: string): Promise<{ screeningId: string; analysed: number; left: number }> {
+    return this.post("/business/me/external-applications/analyse", { offerId, ...(applicationId ? { applicationId } : {}) });
+  }
+
   retainExternal(id: string): Promise<unknown> {
     return this.post(`/business/me/external-applications/${encodeURIComponent(id)}/retain`);
   }
@@ -111,5 +124,6 @@ export const getCareersCompany = controller.company.bind(controller);
 export const getCareersOffer = controller.offer.bind(controller);
 export const applyToOffer = controller.apply.bind(controller);
 export const listExternalApplications = controller.listExternal.bind(controller);
+export const analyseExternalApplications = controller.analyseExternal.bind(controller);
 export const retainExternalApplication = controller.retainExternal.bind(controller);
 export const refuseExternalApplication = controller.refuseExternal.bind(controller);

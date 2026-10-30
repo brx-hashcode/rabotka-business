@@ -18,6 +18,7 @@ import {
   IconMinus,
   IconPencil,
   IconRefresh,
+  IconSparkles,
   IconTrash,
   IconUserCheck,
   IconUsers,
@@ -36,7 +37,12 @@ import { ExternalApplicationCard, externalStage } from "#/features/applications/
 import { CandidateCard } from "#/features/candidates/components/candidate-card";
 import { ResumeButton } from "#/features/candidates/components/resume-button";
 import { getMyBusiness, myBusinessKey, mySubscriptionKey } from "#/lib/api/business-controller";
-import { externalApplicationsKey, listExternalApplications, type ExternalApplication } from "#/lib/api/careers-controller";
+import {
+  analyseExternalApplications,
+  externalApplicationsKey,
+  listExternalApplications,
+  type ExternalApplication,
+} from "#/lib/api/careers-controller";
 import { findCandidates } from "#/lib/api/candidate-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import {
@@ -88,7 +94,12 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const offer = useQuery({ queryKey: [...offersKey, id], queryFn: () => getOffer(id) });
   const { data: business } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
   // Those who applied from the public careers page.
-  const external = useQuery({ queryKey: externalApplicationsKey, queryFn: listExternalApplications });
+  const external = useQuery({
+    queryKey: externalApplicationsKey,
+    queryFn: listExternalApplications,
+    // A CV being read gets its score in a few seconds.
+    refetchInterval: (q) => (q.state.data?.some((a) => a.analysis?.status === "QUEUED") ? 4000 : false),
+  });
   const outsiders = (external.data ?? []).filter((a) => a.offer.id === id);
   // The candidate's side moves on its own (paying their part of an unlock): keep up.
   const applicants = useQuery({
@@ -550,11 +561,14 @@ function ApplicantsCard({
                 </ul>
               )}
               {shownOutsiders.length > 0 && (
-                <ul className="grid items-stretch gap-4 md:grid-cols-2">
-                  {shownOutsiders.map((a) => (
-                    <ExternalApplicationCard key={a.id} application={a} />
-                  ))}
-                </ul>
+                <>
+                  <AnalyseAllBar offerId={o.id} outsiders={outsiders} />
+                  <ul className="grid items-stretch gap-4 md:grid-cols-2">
+                    {shownOutsiders.map((a) => (
+                      <ExternalApplicationCard key={a.id} application={a} />
+                    ))}
+                  </ul>
+                </>
               )}
             </div>
           )}
@@ -805,6 +819,48 @@ function QuestionsCard({ offer: o }: Readonly<{ offer: Offer }>) {
  * who have not applied: the business may reach them directly. Hidden when
  * the plan has no search (403) or nobody fits.
  */
+/** Reads every waiting CV of the offer at once: they can then be compared. */
+function AnalyseAllBar({ offerId, outsiders }: Readonly<{ offerId: string; outsiders: ExternalApplication[] }>) {
+  const queryClient = useQueryClient();
+  const [confirm, setConfirm] = useState(false);
+  const waiting = outsiders.filter((a) => a.status === "PENDING" && a.hasCv && !a.analysis).length;
+  const analyse = useMutation({
+    mutationFn: () => analyseExternalApplications(offerId),
+    onSuccess: ({ left }) => {
+      void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
+      setConfirm(false);
+      if (left > 0) toast.info(`Encore ${left} CV à analyser : votre formule en lit un nombre limité à la fois.`);
+    },
+    onError: (err) => toast.error(friendlyError(err, "Les CV n'ont pas pu être analysés.")),
+  });
+  if (waiting === 0) return null;
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-page p-4">
+      <p className="text-sm">
+        {waiting} CV à analyser pour obtenir leur score, discuter de chacun et les comparer.
+      </p>
+      <button
+        type="button"
+        onClick={() => setConfirm(true)}
+        className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white"
+      >
+        <IconSparkles className="size-4" />
+        Analyser tout
+      </button>
+      <ActionDialog
+        open={confirm}
+        onOpenChange={setConfirm}
+        icon={<IconSparkles className="size-5" />}
+        title="Analyser ces CV ?"
+        description="Chaque CV lu utilise 1 CV inclus de votre formule."
+        confirmLabel="Analyser"
+        pending={analyse.isPending}
+        onConfirm={() => analyse.mutate()}
+      />
+    </div>
+  );
+}
+
 function SuggestedCard({
   offer: o,
   category,
