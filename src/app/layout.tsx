@@ -28,14 +28,12 @@ export async function generateMetadata(): Promise<Metadata> {
     manifest: "/manifest.json",
     // Added to an iPhone home screen, open full screen like an app, under the
     // install icon (src/app/apple-icon.png, from public/rabotka-app-icon.jpg).
-    // black-translucent: in the iPhone home-screen app the page draws under
-    // the status bar, so the lime strip below fills it instead of iOS's own
-    // opaque black bar. The clock is then always white — iOS offers no dark
-    // text in this mode.
+    // default: iOS's own bar, with a dark clock on white. black-translucent
+    // forces a white clock, unreadable on the white chrome.
     appleWebApp: {
       capable: true,
       title: "Rabotka Business",
-      statusBarStyle: "black-translucent",
+      statusBarStyle: "default",
     },
     robots: { index: false, follow: false },
     openGraph: {
@@ -57,7 +55,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#CBFFA5",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
   // Lets env(safe-area-inset-top) report the status bar's height.
   viewportFit: "cover",
 };
@@ -70,19 +71,19 @@ export default async function RootLayout({ children, modal }: LayoutProps<"/">) 
   const isAuthenticated = (await cookies()).has(REFRESH_COOKIE);
 
   return (
-    // The document background is the header's lime: Safari (iOS 26+) tints
-    // its status bar with it, ignoring theme-color, and the top overscroll
-    // shows it too. The grey page colour lives on the wrapper below.
-    <html lang="fr" translate="no" className="bg-header" suppressHydrationWarning>
+    // The document background is the browser chrome's colour: Safari (iOS 26+)
+    // tints its bars with it, ignoring theme-color, and overscroll shows it
+    // too. The grey page colour lives on the wrapper below.
+    <html lang="fr" translate="no" className="bg-chrome" suppressHydrationWarning>
       {/* Extensions such as Grammarly add attributes to <body> before React
           hydrates; only this element's own attributes are exempt. */}
-      <body className="min-h-svh bg-header antialiased" suppressHydrationWarning>
+      <body className="min-h-svh bg-chrome antialiased" suppressHydrationWarning>
         {/* Behind the iPhone status bar in the installed app (zero tall
             anywhere else), fixed so scrolled content never slides under the
             clock. The wrapper below starts beneath it. */}
         <div
           aria-hidden
-          className="fixed inset-x-0 top-0 z-50 h-[env(safe-area-inset-top)] bg-header"
+          className="fixed inset-x-0 top-0 z-50 h-[env(safe-area-inset-top)] bg-chrome"
         />
         <div className="min-h-svh bg-page pt-[env(safe-area-inset-top)]">
           <Providers isAuthenticated={isAuthenticated}>

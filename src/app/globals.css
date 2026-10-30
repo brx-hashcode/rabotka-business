@@ -59,6 +59,8 @@
   --page: #f1f4f8;
   /* Brand lime band (header, hero, sign-in panel) with dark text on it. */
   --header: #cbffa5;
+  /* Behind the phone browser's bars and on overscroll. */
+  --chrome: #ffffff;
   --header-foreground: #0f2414;
   --header-muted: #3f5f3a;
   /* Dark ink for fills that need white on top (ticked checkboxes, active tabs). */
@@ -366,6 +368,7 @@ a {
   --color-header-muted: var(--header-muted);
   --color-ink: var(--ink);
   --color-brand-lime: var(--brand-lime);
+  --color-chrome: var(--chrome);
   --color-selected: var(--selected);
   --color-selected-foreground: var(--selected-foreground);
   --color-chip-violet: var(--chip-violet);
@@ -416,6 +419,7 @@ a {
   /* Buttons filled with ink stay readable on the dark page. */
   --ink: #2c7a45;
   --header: oklch(0.12 0 0);
+  --chrome: oklch(0.12 0 0);
   --selected: oklch(0.269 0 0);
   --selected-foreground: oklch(0.985 0 0);
   --chip-violet: rgb(139 92 246 / 0.16);
