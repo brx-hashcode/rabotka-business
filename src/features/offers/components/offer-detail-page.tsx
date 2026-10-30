@@ -18,7 +18,6 @@ import {
   IconMinus,
   IconPencil,
   IconRefresh,
-  IconShare,
   IconTrash,
   IconUserCheck,
   IconUsers,
@@ -37,7 +36,6 @@ import { CandidateCard } from "#/features/candidates/components/candidate-card";
 import { ResumeButton } from "#/features/candidates/components/resume-button";
 import { getMyBusiness, myBusinessKey, mySubscriptionKey } from "#/lib/api/business-controller";
 import { findCandidates } from "#/lib/api/candidate-controller";
-import { copyText } from "#/lib/clipboard";
 import { friendlyError } from "#/lib/api/friendly-error";
 import {
   deleteOffer,
@@ -68,6 +66,7 @@ import {
 import { failedLabel, KIND_LABEL } from "../offer-questions";
 import { ApplicationActions } from "./application-actions";
 import { REFUSAL_TEMPLATES, RefusalMessageField } from "./refusal-message";
+import { ShareOfferMenu } from "./share-offer-menu";
 import { Checkbox } from "#/components/ui/checkbox";
 import { CriterionBar, Points, ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
 import { scheduledIso } from "./offer-form";
@@ -79,13 +78,6 @@ import { scheduledIso } from "./offer-form";
  * it at this stage: edit while active, delete while nobody is engaged,
  * republish once expired.
  */
-/** Its public page, for anyone not on Rabotka. */
-async function shareOffer(slug: string, reference: string) {
-  const copied = await copyText(`${window.location.origin}/carrieres/${slug}/${reference}`);
-  if (copied) toast.success("Lien de l'offre copié.");
-  else toast.error("Le lien n'a pas pu être copié.");
-}
-
 export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -159,14 +151,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
             actions={
               <div className="flex flex-wrap gap-2 empty:hidden">
                 {business?.publicSlug && business.verificationStatus === "VERIFIED" && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
-                  <button
-                    type="button"
-                    onClick={() => void shareOffer(business.publicSlug as string, o.reference)}
-                    className="inline-flex h-10 items-center gap-2 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70"
-                  >
-                    <IconShare className="size-4" />
-                    Partager
-                  </button>
+                  <ShareOfferMenu slug={business.publicSlug} reference={o.reference} title={o.title} />
                 )}
                 {o.status === "ACTIVE" && (
                   <Link
