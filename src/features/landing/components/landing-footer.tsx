@@ -45,7 +45,7 @@ export function ClosingCta() {
   const { data: contact } = useSupportContact();
 
   return (
-    <section id="contact" className="scroll-mt-20 px-4 pb-20 sm:px-6">
+    <section id="contact" className="scroll-mt-20 px-4 pt-20 pb-20 sm:px-6 md:pt-28">
       <div className="mx-auto w-full max-w-7xl space-y-4">
         <div className="flex flex-col items-center gap-6 rounded-3xl bg-header px-6 py-14 text-center text-header-foreground sm:py-20">
           <h2 className="max-w-2xl font-semibold text-3xl tracking-tight sm:text-5xl">
