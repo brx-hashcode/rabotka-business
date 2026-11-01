@@ -33,7 +33,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Input } from "#/components/ui/input";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Bone, RowsSkeleton, TilesSkeleton } from "#/components/page-skeletons";
-import { CardColumns } from "#/components/card-columns";
 import { ExternalApplicationCard, externalStage, recruiting } from "#/features/applications/components/external-application-card";
 import { CandidateCard } from "#/features/candidates/components/candidate-card";
 import { CvCompareSheet } from "#/features/cv-screening/components/cv-compare-sheet";
@@ -610,7 +609,7 @@ function ApplicantsCard({
                       resumes={[...comparedResumes.data].sort((x, y) => (y.score ?? 0) - (x.score ?? 0))}
                     />
                   )}
-                  <CardColumns max={2}>
+                  <ul className="flex flex-col gap-4">
                     {shownOutsiders.map((a) => (
                       <ExternalApplicationCard
                         key={a.id}
@@ -631,7 +630,7 @@ function ApplicantsCard({
                         }
                       />
                     ))}
-                  </CardColumns>
+                  </ul>
                 </>
               )}
             </div>
