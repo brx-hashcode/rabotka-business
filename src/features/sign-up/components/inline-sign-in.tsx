@@ -52,7 +52,7 @@ export function InlineSignIn({ email, onSignedIn }: Readonly<{ email: string; on
       const { user } = await verifySession({ email, otp });
       queryClient.setQueryData(sessionUserKey, user);
       onSignedIn();
-      // A full load, for the reason SignUpDone gives: never the sign-in dialog.
+      // A full load, for the reason SignUpDone gives.
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- deliberate full load, see above
       globalThis.location.assign("/espace");
     } catch (err) {

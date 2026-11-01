@@ -35,7 +35,7 @@ async function postSession<T>(
 /**
  * Set by a deliberate sign-out. The screens still mounted then refetch, get
  * 401s, fail to refresh — and without this the "session expired" handler
- * opened the sign-in dialog right after the person chose to leave. A new
+ * opened sign-in right after the person chose to leave. A new
  * sign-in clears it.
  */
 let signedOut = false;
