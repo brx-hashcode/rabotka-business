@@ -63,7 +63,7 @@ export type ExternalApplication = {
   cvMimeType: string;
   createdAt: string;
   viewedAt: string | null;
-  offer: { id: string; title: string };
+  offer: { id: string; title: string; status: string };
   /** Once the business asked for it: the score lives in Analyse de CV. */
   analysis: {
     resumeId: string;

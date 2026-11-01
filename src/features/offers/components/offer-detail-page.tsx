@@ -33,7 +33,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Input } from "#/components/ui/input";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Bone, RowsSkeleton, TilesSkeleton } from "#/components/page-skeletons";
-import { ExternalApplicationCard, externalStage } from "#/features/applications/components/external-application-card";
+import { ExternalApplicationCard, externalStage, recruiting } from "#/features/applications/components/external-application-card";
 import { CandidateCard } from "#/features/candidates/components/candidate-card";
 import { CvCompareSheet } from "#/features/cv-screening/components/cv-compare-sheet";
 import { MAX_COMPARED } from "#/features/cv-screening/components/cv-screening-page";
@@ -886,7 +886,7 @@ function QuestionsCard({ offer: o }: Readonly<{ offer: Offer }>) {
 function AnalyseAllBar({ offerId, outsiders }: Readonly<{ offerId: string; outsiders: ExternalApplication[] }>) {
   const queryClient = useQueryClient();
   const [confirm, setConfirm] = useState(false);
-  const waiting = outsiders.filter((a) => a.status === "PENDING" && a.hasCv && !a.analysis).length;
+  const waiting = outsiders.filter((a) => a.status === "PENDING" && recruiting(a) && a.hasCv && !a.analysis).length;
   const analyse = useMutation({
     mutationFn: () => analyseExternalApplications(offerId),
     onSuccess: ({ left }) => {

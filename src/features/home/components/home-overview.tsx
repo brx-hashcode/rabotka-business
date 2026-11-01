@@ -652,7 +652,7 @@ function NextSteps({ business, subscription }: Readonly<{ business: MyBusiness; 
     { label: "Choisir une formule", done: !!subscription.entitlements.plan, href: "/espace/abonnement" },
     {
       label: "Publier votre première offre",
-      done: subscription.entitlements.activeOffers > 0,
+      done: subscription.entitlements.hasPublishedOffer,
       href: "/espace/offres/nouvelle",
     },
   ];
