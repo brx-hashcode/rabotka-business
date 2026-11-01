@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Input } from "#/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { CardGridSkeleton } from "#/components/page-skeletons";
+import { CardColumns } from "#/components/card-columns";
 import { ExternalApplicationCard, externalStage } from "./external-application-card";
 import { ApplicationActions } from "#/features/offers/components/application-actions";
 import { InterviewLine, latestInterview } from "#/features/interviews/components/interview-bits";
@@ -180,7 +181,7 @@ export function ApplicationsPage() {
             </p>
           </div>
         ) : (
-          <ul className="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <CardColumns>
             {shown.map((a) => (
               <ApplicationCard
                 key={a.applicationId}
@@ -192,7 +193,7 @@ export function ApplicationsPage() {
             {shownExternal.map((a) => (
               <ExternalApplicationCard key={a.id} application={a} />
             ))}
-          </ul>
+          </CardColumns>
         )}
 
         {query.hasNextPage && (
