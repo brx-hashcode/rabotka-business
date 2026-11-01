@@ -160,8 +160,7 @@ export function SignUpDone({
 }: Readonly<{ email: string; signInRequired: boolean; onLeave: () => void }>) {
   // A full page load, not a client-side navigation: the request then carries
   // the session cookies just set, and if there were none the gate's redirect
-  // lands on the sign-in PAGE. A soft navigation to /auth/sign-in is
-  // intercepted into the sign-in dialog (src/app/@modal), which is wrong here.
+  // lands on the sign-in page.
   function enter() {
     onLeave();
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- deliberate full load, see above

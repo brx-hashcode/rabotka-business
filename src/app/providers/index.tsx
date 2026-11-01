@@ -49,9 +49,8 @@ export function Providers({ children, isAuthenticated }: ProvidersProps) {
   const pathname = usePathname();
 
   // The session could not be refreshed (cookies already cleared by
-  // /session/refresh): drop cached data and open sign-in. A soft
-  // navigation, so it is intercepted into the dialog over the current page,
-  // and `next` brings the person back to it.
+  // /session/refresh): drop cached data and open sign-in. `next`
+  // brings the person back to the current page.
   useEffect(() => {
     setSessionExpiredHandler(() => {
       queryClient.clear();
