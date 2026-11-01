@@ -18,9 +18,7 @@ const POINTS = [
 ];
 
 /**
- * The sign-in page itself: what a direct visit, a refresh or a shared link
- * shows. Links from inside the app are intercepted into the dialog instead
- * (src/app/@modal/(.)auth/sign-in).
+ * The sign-in page: the only way in, from a link or an expired session alike.
  *
  * Full screen, no site header (it lives in the (site) group). Five columns on
  * large screens: the photo panel takes three, the form two. Below `lg` only

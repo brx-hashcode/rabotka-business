@@ -64,8 +64,8 @@ export const viewport: Viewport = {
 };
 
 /**
- * `modal` is the parallel-route slot that renders /auth/sign-in as a dialog
- * when it is reached by a link from inside the app (src/app/@modal).
+ * `modal` is the parallel-route slot that renders a candidate as a dialog
+ * when reached by a link from inside the app (src/app/@modal).
  */
 export default async function RootLayout({ children, modal }: LayoutProps<"/">) {
   const isAuthenticated = (await cookies()).has(REFRESH_COOKIE);

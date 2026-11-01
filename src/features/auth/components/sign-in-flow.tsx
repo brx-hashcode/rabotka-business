@@ -18,8 +18,7 @@ import { Step1EmailForm } from "./step1-email-form";
 import { Step2OtpForm } from "./step2-otp-form";
 
 /**
- * Email, then the 6-digit code. The same component fills the full
- * /auth/sign-in page and the intercepted dialog, so both behave identically.
+ * Email, then the 6-digit code, on the /auth/sign-in page.
  *
  * The backend answers send-otp with a 404 for an address that has no account,
  * shown as it comes ("Aucun compte trouvé…").
