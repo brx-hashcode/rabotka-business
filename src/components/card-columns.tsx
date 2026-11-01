@@ -18,11 +18,11 @@ function subscribe(onChange: () => void) {
  * its row. Real columns rather than CSS `columns`, so opening one card never
  * moves another to a different column. Children are `<li>`.
  */
-export function CardColumns({ max = 3, children }: Readonly<{ max?: 2 | 3; children: ReactNode }>) {
+export function CardColumns({ children }: Readonly<{ children: ReactNode }>) {
   const count = useSyncExternalStore(
     subscribe,
     () => {
-      if (max === 3 && globalThis.matchMedia(THREE_COLUMNS).matches) return 3;
+      if (globalThis.matchMedia(THREE_COLUMNS).matches) return 3;
       return globalThis.matchMedia(TWO_COLUMNS).matches ? 2 : 1;
     },
     () => 1,
