@@ -28,6 +28,11 @@ import { getInitials } from "#/lib/utils";
 
 const YES_NO: Record<string, string> = { yes: "Oui", no: "Non" };
 
+/** The offer still takes decisions; once it ended, only reading is left. */
+export function recruiting(a: Pick<ExternalApplication, "offer">) {
+  return a.offer.status === "ACTIVE" || a.offer.status === "PARTIALLY_FILLED";
+}
+
 /** Where an application from the public careers page sits among the tabs. */
 export function externalStage(a: Pick<ExternalApplication, "status" | "viewedAt">) {
   if (a.status === "REFUSED") return "closed";
@@ -169,7 +174,7 @@ export function ExternalApplicationCard({
           >
             Interroger le CV
           </button>
-          {a.status !== "REFUSED" && (
+          {a.status !== "REFUSED" && recruiting(a) && (
             <button
               type="button"
               onClick={() => setScheduling(true)}
@@ -183,6 +188,7 @@ export function ExternalApplicationCard({
       ) : (
         !a.analysis &&
         a.status === "PENDING" &&
+        recruiting(a) &&
         a.hasCv && (
           <button
             type="button"
@@ -250,14 +256,16 @@ export function ExternalApplicationCard({
               <IconX className="size-4" />
               Refuser
             </button>
-            <button
-              type="button"
-              onClick={() => setRetaining(true)}
-              className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white"
-            >
-              <IconCheck className="size-4" />
-              Retenir
-            </button>
+            {recruiting(a) && (
+              <button
+                type="button"
+                onClick={() => setRetaining(true)}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white"
+              >
+                <IconCheck className="size-4" />
+                Retenir
+              </button>
+            )}
           </div>
         )}
       </div>

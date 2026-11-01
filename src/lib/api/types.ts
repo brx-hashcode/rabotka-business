@@ -204,6 +204,8 @@ export type MySubscription = {
     activeOffersLimit: number | null;
     /** Offers online right now (information only). */
     activeOffers: number;
+    /** Has published at least once, whatever became of the offer since. */
+    hasPublishedOffer: boolean;
     /** Offers published this period (absent from a backend before the per-period rule). */
     offersPublished?: number;
     offersRemaining?: number | null;
