@@ -9,6 +9,8 @@ export type CareersCompany = {
   city: string | null;
   website: string | null;
   description: string | null;
+  /** Search engines may list its pages: it kept distribution on. */
+  indexable: boolean;
 };
 
 export type CareersOfferSummary = {
@@ -16,6 +18,7 @@ export type CareersOfferSummary = {
   title: string;
   employmentType: EmploymentType;
   closesAt: string | null;
+  publishedAt: string;
   isRemote: boolean;
   city: string | null;
   countryName: string | null;

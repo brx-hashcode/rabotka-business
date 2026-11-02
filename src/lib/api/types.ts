@@ -117,6 +117,8 @@ export type MyBusiness = {
   phone: string | null;
   website: string | null;
   description: string | null;
+  /** Its open offers go to Google and the job sites. */
+  distributeOffers: boolean;
   verificationStatus: VerificationStatus;
   verifiedAt: string | null;
   rejectionReason: string | null;
@@ -153,6 +155,7 @@ export type UpdateMyBusiness = Partial<{
   city: string | null;
   website: string | null;
   description: string | null;
+  distributeOffers: boolean;
 }>;
 
 export type SubscriptionStatus = "TRIAL" | "ACTIVE" | "EXPIRED" | "CANCELLED";
