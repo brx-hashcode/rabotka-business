@@ -11,6 +11,7 @@ import { Bone, CardGridSkeleton, TilesSkeleton } from "#/components/page-skeleto
 import { StatTile } from "#/features/home/components/stat-tile";
 import { ApplicationActions } from "#/features/offers/components/application-actions";
 import { APPLICATION_STATUS, fcfa, PAYMENT_SUFFIX, statusClass, STATUS } from "#/features/offers/offer-labels";
+import { allPages } from "#/lib/api/all-pages";
 import { friendlyError } from "#/lib/api/friendly-error";
 import {
   getOfferApplicants,
@@ -34,12 +35,13 @@ export function MissionsPage() {
   const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(["current", "done"] as const).withDefault("current"));
   const offers = useQuery({
     queryKey: [...offersKey, "list", "missions"],
-    queryFn: () => listOffers({ statuses: ["ACTIVE", "PARTIALLY_FILLED", "FILLED", "IN_PROGRESS", "COMPLETED"], pageSize: 100 }),
+    queryFn: () =>
+      allPages((page) => listOffers({ statuses: ["ACTIVE", "PARTIALLY_FILLED", "FILLED", "IN_PROGRESS", "COMPLETED"], page, pageSize: 100 })),
   });
   // Which offers have a hire, and how far each hire went: one call, not one per offer.
   const received = useQuery({
     queryKey: [...offersKey, "received", "missions"],
-    queryFn: () => listReceivedApplications(0, 100),
+    queryFn: () => allPages((page) => listReceivedApplications(page, 100)),
     refetchInterval: 30_000,
   });
 

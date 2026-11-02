@@ -34,14 +34,16 @@ import { Input } from "#/components/ui/input";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Bone, RowsSkeleton, TilesSkeleton } from "#/components/page-skeletons";
 import { ExternalApplicationCard, externalStage, recruiting } from "#/features/applications/components/external-application-card";
+import { offersFull } from "#/features/subscription/offers-quota";
 import { CandidateCard } from "#/features/candidates/components/candidate-card";
 import { CvCompareSheet } from "#/features/cv-screening/components/cv-compare-sheet";
 import { MAX_COMPARED } from "#/features/cv-screening/components/cv-screening-page";
 import { ResumeButton } from "#/features/candidates/components/resume-button";
-import { getMyBusiness, myBusinessKey, mySubscriptionKey } from "#/lib/api/business-controller";
+import { getMyBusiness, getMySubscription, myBusinessKey, mySubscriptionKey } from "#/lib/api/business-controller";
 import {
   analyseExternalApplications,
   externalApplicationsKey,
+  refuseExternalApplication,
   listExternalApplications,
   type ExternalApplication,
 } from "#/lib/api/careers-controller";
@@ -96,6 +98,8 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const queryClient = useQueryClient();
   const offer = useQuery({ queryKey: [...offersKey, id], queryFn: () => getOffer(id) });
   const { data: business } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
+  const { data: subscription } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
+  const noOfferLeft = !!subscription && offersFull(subscription.entitlements);
   // Those who applied from the public careers page.
   const external = useQuery({
     queryKey: externalApplicationsKey,
@@ -140,7 +144,9 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
     onError: (err) => toast.error(friendlyError(err, "L'offre n'a pas pu être supprimée.")),
   });
   const republish = useMutation({
-    mutationFn: () => republishOffer(id, scheduledIso(newDate, "")),
+    // The same hour: a mission keeps its start, a closing date its end of day.
+    mutationFn: () =>
+      republishOffer(id, scheduledIso(newDate, offer.data?.scheduledAt ? new Date(offer.data.scheduledAt).toTimeString().slice(0, 5) : "")),
     onSuccess: () => {
       refresh();
       setRepublishing(false);
@@ -278,9 +284,13 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
         onOpenChange={setRepublishing}
         icon={<IconRefresh className="size-5" />}
         title="Republier l'offre"
-        description="Choisissez la nouvelle date (au moins 4 heures à l'avance)."
+        description={
+          noOfferLeft
+            ? "Votre formule n'a plus d'offre à publier sur cette période."
+            : "Choisissez la nouvelle date (au moins 4 heures à l'avance). Elle compte comme une offre publiée sur votre formule."
+        }
         confirmLabel="Republier"
-        confirmDisabled={!newDate}
+        confirmDisabled={!newDate || noOfferLeft}
         pending={republish.isPending}
         onConfirm={() => republish.mutate()}
       >
@@ -433,7 +443,10 @@ function ApplicantsCard({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulk, setBulk] = useState<"selected" | "remaining" | null>(null);
   const waiting = list.filter((a) => a.status === "PENDING" || a.status === "VIEWED");
-  const hiredCount = list.filter((a) => applicationStage(a.status) === "hired").length;
+  const waitingOutsiders = outsiders.filter((a) => a.status === "PENDING");
+  const stillWaiting = waiting.length + waitingOutsiders.length;
+  const hiredCount =
+    list.filter((a) => applicationStage(a.status) === "hired").length + outsiders.filter((a) => a.status === "RETAINED").length;
   const filled = o.status === "FILLED" || hiredCount >= o.quantity;
   const toggle = (id: string) =>
     setSelected((s) => {
@@ -514,11 +527,11 @@ function ApplicantsCard({
             </p>
           )}
 
-          {filled && waiting.length > 0 && (
+          {filled && stillWaiting > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-chip-violet/60 px-4 py-3 text-chip-violet-foreground text-sm">
               <span>
                 Tous les postes sont pourvus.{" "}
-                {waiting.length === 1 ? "1 candidature attend" : `${waiting.length} candidatures attendent`} encore une réponse.
+                {stillWaiting === 1 ? "1 candidature attend" : `${stillWaiting} candidatures attendent`} encore une réponse.
               </span>
               <button
                 type="button"
@@ -548,7 +561,9 @@ function ApplicantsCard({
             offerId={o.id}
             mode={bulk}
             ids={[...selected]}
-            count={bulk === "remaining" ? waiting.length : selected.size}
+            count={bulk === "remaining" ? stillWaiting : selected.size}
+            rabotkaWaiting={waiting.length}
+            outsiderIds={waitingOutsiders.map((a) => a.id)}
             onClose={() => setBulk(null)}
             onDone={() => setSelected(new Set())}
           />
@@ -648,6 +663,8 @@ function BulkRefuseDialog({
   mode,
   ids,
   count,
+  rabotkaWaiting,
+  outsiderIds,
   onClose,
   onDone,
 }: Readonly<{
@@ -655,19 +672,30 @@ function BulkRefuseDialog({
   mode: "selected" | "remaining" | null;
   ids: string[];
   count: number;
+  rabotkaWaiting: number;
+  outsiderIds: string[];
   onClose: () => void;
   onDone: () => void;
 }>) {
   const queryClient = useQueryClient();
   const [message, setMessage] = useState<string>(mode === "remaining" ? REFUSAL_TEMPLATES[0].text : "");
   const refuse = useMutation({
-    mutationFn: () =>
-      refuseApplications(offerId, {
-        ...(mode === "remaining" ? { remaining: true } : { applicationIds: ids }),
-        ...(message.trim() ? { message: message.trim() } : {}),
-      }),
+    mutationFn: async () => {
+      const text = message.trim() || undefined;
+      const outside = mode === "remaining" ? outsiderIds : [];
+      const rabotka =
+        mode === "remaining" && rabotkaWaiting === 0
+          ? { refused: 0, skipped: 0 }
+          : await refuseApplications(offerId, {
+              ...(mode === "remaining" ? { remaining: true } : { applicationIds: ids }),
+              ...(text ? { message: text } : {}),
+            });
+      await Promise.all(outside.map((id) => refuseExternalApplication(id, text)));
+      return { refused: rabotka.refused + outside.length, skipped: rabotka.skipped };
+    },
     onSuccess: ({ refused, skipped }) => {
       void queryClient.invalidateQueries({ queryKey: offersKey });
+      void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
       void queryClient.invalidateQueries({ queryKey: ["business", "me", "stats"] });
       toast.success(
         `${refused === 1 ? "1 candidature refusée" : `${refused} candidatures refusées`}, les candidats en sont prévenus.` +

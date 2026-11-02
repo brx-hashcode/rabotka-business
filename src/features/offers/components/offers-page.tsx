@@ -2,7 +2,7 @@
 
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { IconBriefcase, IconCalendar, IconMapPin, IconPlus, IconUsers } from "@tabler/icons-react";
 
 import { CardGridSkeleton } from "#/components/page-skeletons";
@@ -12,6 +12,8 @@ import { listOffers, offersKey, type OfferListItem, type OfferStatus } from "#/l
 import { cn } from "#/lib/utils";
 import { EMPLOYMENT_LABEL, fcfa, offerChip, offerDate, PAYMENT_SUFFIX } from "../offer-labels";
 import { offersFull, offersUsed } from "#/features/subscription/offers-quota";
+
+const PAGE = 50;
 
 const TABS: { key: string; label: string; statuses?: OfferStatus[] }[] = [
   { key: "all", label: "Toutes" },
@@ -26,10 +28,13 @@ export function OffersPage() {
   // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
   const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS.map((t) => t.key)).withDefault("all"));
   const statuses = TABS.find((t) => t.key === tab)?.statuses;
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, hasNextPage, fetchNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: [...offersKey, "list", tab],
-    queryFn: () => listOffers({ statuses }),
+    queryFn: ({ pageParam }) => listOffers({ statuses, page: pageParam, pageSize: PAGE }),
+    initialPageParam: 0,
+    getNextPageParam: (last, all) => (all.length * PAGE < last.total ? all.length : undefined),
   });
+  const offers = data?.pages.flatMap((p) => p.items) ?? [];
   const { data: sub } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   const e = sub?.entitlements;
   const atLimit = !!e && offersFull(e);
@@ -94,7 +99,7 @@ export function OffersPage() {
         <CardGridSkeleton kind="offer" />
       ) : error ? (
         <p className="rounded-3xl bg-card p-6 text-muted-foreground">{friendlyError(error, "Vos offres n'ont pas pu être chargées.")}</p>
-      ) : !data?.items.length ? (
+      ) : offers.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-3xl bg-card px-6 py-16 text-center">
           <span className="flex size-14 items-center justify-center rounded-full bg-page">
             <IconBriefcase className="size-7 text-muted-foreground" />
@@ -108,9 +113,22 @@ export function OffersPage() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {data.items.map((o) => (
+          {offers.map((o) => (
             <OfferCard key={o.id} offer={o} />
           ))}
+        </div>
+      )}
+
+      {hasNextPage && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => void fetchNextPage()}
+            disabled={isFetchingNextPage}
+            className="rounded-full bg-card px-5 py-2 font-medium text-sm hover:bg-card/70"
+          >
+            {isFetchingNextPage ? "Chargement…" : "Voir plus"}
+          </button>
         </div>
       )}
     </div>
