@@ -1,5 +1,4 @@
 import type { SVGProps } from "react";
-import { IconMailForward } from "@tabler/icons-react";
 
 import { cn } from "#/lib/utils";
 
@@ -30,12 +29,7 @@ export function OutlookLogo(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-/** The business's own forwarding address: any mailbox can send to it. */
-export function ForwardLogo(props: SVGProps<SVGSVGElement>) {
-  return <IconMailForward {...(props as object)} className={cn("text-whatsapp-dark", props.className)} />;
-}
-
-export const PROVIDER_LOGO = { gmail: GmailLogo, outlook: OutlookLogo, forward: ForwardLogo } as const;
+export const PROVIDER_LOGO = { gmail: GmailLogo, outlook: OutlookLogo } as const;
 
 /** A provider's logo on a white tile, so its colours read the same in both themes. */
 export function ProviderTile({ provider, className }: Readonly<{ provider: keyof typeof PROVIDER_LOGO; className?: string }>) {
