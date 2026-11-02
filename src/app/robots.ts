@@ -12,7 +12,8 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   return {
     rules: {
       userAgent: "*",
-      allow: ["/carrieres", "/_next/", "/api/v1/public/careers"],
+      // The sitemap too: Google must be able to read it, not only be told where it is.
+      allow: ["/carrieres", "/sitemap.xml", "/_next/", "/api/v1/public/careers"],
       disallow: ["/"],
     },
     sitemap: `${origin}/sitemap.xml`,
