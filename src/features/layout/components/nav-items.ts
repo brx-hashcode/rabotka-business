@@ -12,6 +12,7 @@ import {
   IconMessageCircle,
   IconSearch,
   IconUsers,
+  IconUsersGroup,
   IconWorldWww,
   type Icon,
 } from "@tabler/icons-react";
@@ -62,6 +63,7 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Mon compte",
     items: [
       { label: "Organisation", href: "/espace/organisation", icon: IconBuilding },
+      { label: "Équipe", href: "/espace/equipe", icon: IconUsersGroup },
       { label: "Abonnement", href: "/espace/abonnement", icon: IconCreditCard },
       { label: "Factures", href: "/espace/factures", icon: IconFileInvoice },
     ],

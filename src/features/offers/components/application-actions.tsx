@@ -34,6 +34,8 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import { offersKey, type OfferApplicant } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
 import { fcfa } from "../offer-labels";
+import { canHire } from "#/features/team/member-access";
+import { useMember } from "#/features/team/use-member";
 
 type Dialog = "accept" | "reject" | "cancel" | "unlock" | "rate" | "contact" | null;
 
@@ -82,7 +84,13 @@ function ActionButton({ action: a, stretch, label }: Readonly<{ action: Action; 
  * turn down a new one; follow the contact unlock of a retained one; undo a
  * hire. The server decides — these only ask.
  */
-export function ApplicationActions({
+/** Retenir / Refuser and the rest: for those who hire, not for an Évaluateur. */
+export function ApplicationActions(props: Parameters<typeof Actions>[0]) {
+  const { role } = useMember();
+  return canHire(role) ? <Actions {...props} /> : null;
+}
+
+function Actions({
   applicant,
   name,
   variant = "inline",

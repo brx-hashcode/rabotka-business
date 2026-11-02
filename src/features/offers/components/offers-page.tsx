@@ -12,6 +12,8 @@ import { listOffers, offersKey, type OfferListItem, type OfferStatus } from "#/l
 import { cn } from "#/lib/utils";
 import { EMPLOYMENT_LABEL, fcfa, offerChip, offerDate, PAYMENT_SUFFIX } from "../offer-labels";
 import { offersFull, offersUsed } from "#/features/subscription/offers-quota";
+import { canHire } from "#/features/team/member-access";
+import { useMember } from "#/features/team/use-member";
 
 const PAGE = 50;
 
@@ -25,6 +27,7 @@ const TABS: { key: string; label: string; statuses?: OfferStatus[] }[] = [
 
 /** « Mes offres »: the organisation's offers, by state, and the way to publish one. */
 export function OffersPage() {
+  const hire = canHire(useMember().role);
   // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
   const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS.map((t) => t.key)).withDefault("all"));
   const statuses = TABS.find((t) => t.key === tab)?.statuses;
@@ -59,7 +62,7 @@ export function OffersPage() {
             </p>
           )}
         </div>
-        {atLimit ? (
+        {!hire ? null : atLimit ? (
           <Link
             href="/espace/abonnement"
             className="inline-flex h-12 items-center gap-2 rounded-full bg-card px-6 font-medium text-[15px] hover:bg-card/70"

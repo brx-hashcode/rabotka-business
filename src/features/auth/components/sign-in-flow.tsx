@@ -108,7 +108,7 @@ export function SignInFlow({
           <p className="text-muted-foreground text-sm">
             {email
               ? "Nous vous avons envoyé un code à 6 chiffres par e-mail."
-              : "Recevez un code de connexion sur l'adresse e-mail de votre compte."}
+              : "Recevez un code de connexion sur l'adresse e-mail de votre compte, ou celle de votre invitation."}
           </p>
         </div>
       </div>
@@ -128,6 +128,7 @@ export function SignInFlow({
         />
       ) : (
         <Step1EmailForm
+          defaultEmail={searchParams.get("email") ?? undefined}
           onSubmit={handleEmail}
           isLoading={sendOtp.isPending}
           serverError={error}

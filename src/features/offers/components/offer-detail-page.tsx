@@ -87,6 +87,8 @@ import { ShareOfferMenu } from "./share-offer-menu";
 import { Checkbox } from "#/components/ui/checkbox";
 import { CriterionBar, Points, ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
 import { scheduledIso } from "./offer-form";
+import { canHire } from "#/features/team/member-access";
+import { useMember } from "#/features/team/use-member";
 
 /**
  * One offer: where it stands (applications, positions filled, time left), its
@@ -101,6 +103,8 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const offer = useQuery({ queryKey: [...offersKey, id], queryFn: () => getOffer(id) });
   const { data: business } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
   const { data: subscription } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
+  // An Évaluateur reads the offer; changing it is for those who hire.
+  const hire = canHire(useMember().role);
   const noOfferLeft = !!subscription && offersFull(subscription.entitlements);
   const needsDate = !offer.data || isDatedMission(offer.data.employmentType);
   const [confirmFinish, setConfirmFinish] = useState(false);
@@ -208,7 +212,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                 {business?.publicSlug && business.verificationStatus === "VERIFIED" && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
                   <ShareOfferMenu offerId={o.id} slug={business.publicSlug} reference={o.reference} title={o.title} />
                 )}
-                {o.status === "ACTIVE" && (
+                {hire && o.status === "ACTIVE" && (
                   <Link
                     href={`/espace/offres/${o.id}/modifier`}
                     className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white hover:bg-ink/90"
@@ -217,7 +221,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                     Modifier
                   </Link>
                 )}
-                {(o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
+                {hire && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
                   <button
                     type="button"
                     onClick={() => setConfirmClose(true)}
@@ -227,7 +231,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                     Fermer l&apos;offre
                   </button>
                 )}
-                {o.status === "FILLED" && !isDatedMission(o.employmentType) && (
+                {hire && o.status === "FILLED" && !isDatedMission(o.employmentType) && (
                   <button
                     type="button"
                     onClick={() => setConfirmFinish(true)}
@@ -237,7 +241,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                     Clôturer l&apos;offre
                   </button>
                 )}
-                {o.status === "EXPIRED" && (
+                {hire && o.status === "EXPIRED" && (
                   <button
                     type="button"
                     onClick={() => setRepublishing(true)}
@@ -247,7 +251,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                     Republier
                   </button>
                 )}
-                {(o.status === "ACTIVE" || o.status === "EXPIRED") && (
+                {hire && (o.status === "ACTIVE" || o.status === "EXPIRED") && (
                   <button
                     type="button"
                     onClick={() => setConfirmDelete(true)}
