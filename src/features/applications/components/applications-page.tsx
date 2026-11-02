@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { debounce, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { IconCalendarEvent, IconCalendarPlus, IconClock, IconInbox, IconSearch, IconShieldCheck } from "@tabler/icons-react";
@@ -68,10 +68,15 @@ export function ApplicationsPage() {
   // candidature it opens picks its own tab until one is chosen by hand.
   const [picked, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS.map((t) => t.key)));
   const tab = picked ?? (focused ? applicationStage(focused.status) : "new");
+  // A candidature opened from a notification belongs on its offer's page,
+  // with the offer's other candidates: go there once it is known.
+  const router = useRouter();
+  const focusedOffer = focused?.offer.id ?? external.data?.find((a) => a.id === focusId)?.offer.id;
   useEffect(() => {
-    if (!focused) return;
-    document.getElementById(`candidature-${focused.applicationId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [focused]);
+    if (focusId && focusedOffer) {
+      router.replace(`/espace/offres/${encodeURIComponent(focusedOffer)}?candidature=${encodeURIComponent(focusId)}`);
+    }
+  }, [focusId, focusedOffer, router]);
   // The filters live in the URL too (?offre=, ?q=), so a reload keeps them.
   const [offerId, setOfferId] = useQueryState("offre", parseAsString.withDefault("all"));
   const [q, setQ] = useQueryState("q", parseAsString.withDefault("").withOptions({ limitUrlUpdates: debounce(300) }));
