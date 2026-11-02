@@ -296,6 +296,7 @@ function Editor({ business, slug }: Readonly<{ business: MyBusiness; slug: strin
               logoUrl: business.logoUrl,
               categoryLabel: business.categoryLabel,
               city: business.city,
+              website: business.website,
               description: business.description,
               coverUrl: data.coverUrl,
               photos: data.photos,

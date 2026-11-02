@@ -1,18 +1,18 @@
 "use client";
 
-import { IconChevronRight, IconPhoto } from "@tabler/icons-react";
+import { IconBriefcase, IconChevronRight, IconExternalLink } from "@tabler/icons-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { offerPlace } from "#/features/careers/components/careers-shell";
+import { CompanyHero, websiteHref } from "#/features/careers/components/company-hero";
 import { EMPLOYMENT_LABEL } from "#/features/offers/offer-labels";
 import type { CareersOfferSummary } from "#/lib/api/careers-controller";
-import { getInitials } from "#/lib/utils";
 
 export type PreviewCompany = {
   name: string;
   logoUrl: string | null;
   categoryLabel: string;
   city: string | null;
+  website: string | null;
   description: string | null;
   coverUrl: string | null;
   photos: string[];
@@ -48,37 +48,38 @@ export function CareersPreview({
       </div>
 
       <div className="max-h-[calc(100svh-14rem)] space-y-3 overflow-y-auto rounded-2xl bg-page p-3">
-        <section className="overflow-hidden rounded-2xl bg-card">
-          {company.coverUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- the business's own upload
-            <img src={company.coverUrl} alt="" className="aspect-[3/1] w-full object-cover" />
-          ) : (
-            <div className="flex aspect-[3/1] w-full items-center justify-center gap-1.5 bg-foreground/[0.04] text-muted-foreground/70 text-xs">
-              <IconPhoto className="size-4" />
-              Photo de couverture
-            </div>
-          )}
-          <div className="space-y-3 p-4">
-            <div className="flex items-center gap-3">
-              <Avatar className="size-12 shrink-0 rounded-xl">
-                {company.logoUrl && <AvatarImage src={company.logoUrl} alt="" className="object-cover" />}
-                <AvatarFallback className="rounded-xl bg-brand-lime font-semibold text-[#0f2414] text-sm">
-                  {getInitials(company.name)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0">
-                <p className="truncate font-semibold text-lg tracking-tight">{company.name}</p>
-                <p className="truncate text-muted-foreground text-xs">
-                  {[company.categoryLabel, company.city].filter(Boolean).join(" · ")}
-                </p>
-              </div>
-            </div>
+        <CompanyHero
+          compact
+          heading="p"
+          company={company}
+          actions={
+            <>
+              <span className="inline-flex h-8 items-center gap-1.5 rounded-full bg-ink px-3.5 font-medium text-white text-xs">
+                <IconBriefcase className="size-3.5" />
+                {offers && offers.length > 1 ? `Voir les ${offers.length} offres` : offers?.length === 1 ? "Voir l'offre" : "Offres"}
+              </span>
+              {websiteHref(company.website) && (
+                <span className="inline-flex h-8 items-center gap-1.5 rounded-full bg-page px-3.5 font-medium text-xs">
+                  <IconExternalLink className="size-3.5" />
+                  Site web
+                </span>
+              )}
+            </>
+          }
+        />
+
+        <section className="space-y-3 rounded-2xl bg-card p-4">
+          <div className="space-y-1">
+            <p className="font-semibold text-sm">À propos</p>
             {company.description ? (
               <p className="line-clamp-6 whitespace-pre-line text-foreground/85 text-sm leading-relaxed">{company.description}</p>
             ) : (
               <p className="text-muted-foreground/70 text-sm italic">Votre présentation apparaîtra ici.</p>
             )}
-            {company.benefits.length > 0 && (
+          </div>
+          {company.benefits.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="font-semibold text-sm">Avantages</p>
               <ul className="flex flex-wrap gap-1.5">
                 {company.benefits.map((b) => (
                   <li key={b} className="rounded-full bg-page px-2.5 py-1 font-medium text-xs">
@@ -86,8 +87,8 @@ export function CareersPreview({
                   </li>
                 ))}
               </ul>
-            )}
-          </div>
+            </div>
+          )}
         </section>
 
         <section className="space-y-2">
@@ -115,11 +116,14 @@ export function CareersPreview({
         </section>
 
         {company.photos.length > 0 && (
-          <section aria-label="Photos" className="grid grid-cols-3 gap-1.5">
-            {company.photos.map((src) => (
-              // eslint-disable-next-line @next/next/no-img-element -- the business's own upload
-              <img key={src} src={src} alt="" className="aspect-[4/3] w-full rounded-xl object-cover" />
-            ))}
+          <section className="space-y-2 rounded-2xl bg-card p-4">
+            <p className="font-semibold text-sm">La vie chez {company.name}</p>
+            <div className="grid grid-cols-3 gap-1.5">
+              {company.photos.map((src) => (
+                // eslint-disable-next-line @next/next/no-img-element -- the business's own upload
+                <img key={src} src={src} alt="" className="aspect-[4/3] w-full rounded-xl object-cover" />
+              ))}
+            </div>
           </section>
         )}
       </div>
