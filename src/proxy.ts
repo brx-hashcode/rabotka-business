@@ -2,15 +2,35 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { ACCESS_COOKIE, REFRESH_COOKIE } from "#/lib/auth/cookies";
 import { safeRedirectPath } from "#/lib/safe-redirect";
+import { appConfig } from "#/config";
+
+const HOME = appConfig.homePath;
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (pathname.startsWith("/api/")) return forwardApi(request);
+  // Socket.IO's long-polling transport is plain HTTP: it goes the same way,
+  // so the socket is authenticated by the same cookie-to-bearer swap. Next
+  // redirects away a trailing slash, so it arrives without the one the
+  // server's path has (see use-notifications-socket).
+  if (pathname === "/socket.io") return forwardApi(request, "/socket.io/");
   if (pathname.startsWith("/auth/")) return redirectSignedIn(request);
+  if (pathname === "/") return landing(request);
+  // A candidate's interview invitation: answered from the e-mail, signed out.
+  if (pathname.startsWith("/entretien/")) return NextResponse.next();
+  // A business's public careers page: for candidates who are not on Rabotka.
+  if (pathname === "/carrieres" || pathname.startsWith("/carrieres/")) return NextResponse.next();
   return requireSession(request);
 }
 
-function forwardApi(request: NextRequest) {
+function forwardApi(request: NextRequest, path = request.nextUrl.pathname) {
+  // The session cookie becomes a bearer token below, so a write from another
+  // site must not ride on it. SameSite=Lax already keeps the cookie off
+  // cross-site writes; this refuses them outright (a browser always sends
+  // Origin on one). Same-origin calls and calls with no Origin pass.
+  if (isCrossSiteWrite(request)) {
+    return NextResponse.json({ message: "Requête refusée." }, { status: 403 });
+  }
   const backend = process.env.BACKEND_URL;
   if (!backend) {
     return NextResponse.json(
@@ -21,23 +41,51 @@ function forwardApi(request: NextRequest) {
 
   // The session lives in httpOnly cookies on this origin; the backend only
   // understands a bearer token, and never needs to see our cookies.
+  //
+  // Origin and Referer go too. The backend refuses a cookie-less POST whose
+  // Origin is not in its ALLOW_ORIGINS — a CSRF check on ITS session cookie,
+  // which never travels from here. Without this the anonymous sign-up calls
+  // (send-otp, uploads) would need this site listed there; with it, the
+  // request is what it is, a server-to-server call.
   const headers = new Headers(request.headers);
   headers.delete("cookie");
+  headers.delete("origin");
+  headers.delete("referer");
   const token = request.cookies.get(ACCESS_COOKIE)?.value;
   if (token) headers.set("authorization", `Bearer ${token}`);
 
-  const target = new URL(request.nextUrl.pathname + request.nextUrl.search, backend);
+  const target = new URL(path + request.nextUrl.search, backend);
   return NextResponse.rewrite(target, { request: { headers } });
+}
+
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
+export function isCrossSiteWrite(request: Pick<NextRequest, "method" | "headers">): boolean {
+  if (SAFE_METHODS.has(request.method)) return false;
+  const origin = request.headers.get("origin");
+  if (!origin) return false;
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  try {
+    return new URL(origin).host !== host;
+  } catch {
+    return true;
+  }
 }
 
 function redirectSignedIn(request: NextRequest) {
   if (!request.cookies.has(REFRESH_COOKIE)) return NextResponse.next();
-  const next = safeRedirectPath(request.nextUrl.searchParams.get("next")) ?? "/";
+  const next = safeRedirectPath(request.nextUrl.searchParams.get("next")) ?? HOME;
   return NextResponse.redirect(new URL(next, request.url));
 }
 
+/** The public landing page; a signed-in business goes straight to its space. */
+function landing(request: NextRequest) {
+  if (!request.cookies.has(REFRESH_COOKIE)) return NextResponse.next();
+  return NextResponse.redirect(new URL(HOME, request.url));
+}
+
 /**
- * Every page is for a signed-in business. Without a session the visitor goes
+ * Every page but the landing is for a signed-in business. Without a session the visitor goes
  * to sign-in, and `next` brings them back. Whether the account really is a
  * business is the backend's answer (BusinessProfileGuard), not this cookie's.
  */
@@ -45,13 +93,13 @@ function requireSession(request: NextRequest) {
   if (request.cookies.has(REFRESH_COOKIE)) return NextResponse.next();
   const { pathname, search } = request.nextUrl;
   const url = new URL("/auth/sign-in", request.url);
-  if (pathname !== "/") url.searchParams.set("next", `${pathname}${search}`);
+  if (pathname !== HOME) url.searchParams.set("next", `${pathname}${search}`);
   return NextResponse.redirect(url);
 }
 
 export const config = {
   // Pages and the API; never Next's assets, the session routes or files in public/.
   matcher: [
-    "/((?!_next/|session/|favicon.ico|icon|apple-icon|opengraph-image|twitter-image|manifest.json|robots.txt|fonts/|hero/|sign-in/|rabotka-).*)",
+    "/((?!_next/|session/|favicon.ico|icon|apple-icon|opengraph-image|twitter-image|manifest.json|robots.txt|sitemap.xml|fonts/|media/|rabotka-).*)",
   ],
 };

@@ -13,7 +13,7 @@ import { cn } from "#/lib/utils";
 export function BrandLogo({
   tone = "light",
   className,
-}: Readonly<{ tone?: "light" | "dark"; className?: string }>) {
+}: Readonly<{ tone?: "light" | "dark" | "inverse"; className?: string }>) {
   return (
     <span className={cn("flex items-center gap-1.5", className)}>
       <Image
@@ -26,11 +26,20 @@ export function BrandLogo({
         className="size-9 object-contain"
       />
       <span className="flex flex-col leading-none">
-        <span className="font-bold font-display text-lg leading-[1.05]">Rabotka</span>
+        <span
+          className={cn(
+            "font-bold font-display text-lg leading-[1.05]",
+            tone === "inverse" && "text-white",
+          )}
+        >
+          Rabotka
+        </span>
         <span
           className={cn(
             "text-[10px] leading-none",
-            tone === "dark" ? "text-header-muted" : "text-muted-foreground",
+            tone === "dark" && "text-header-muted",
+            tone === "light" && "text-muted-foreground",
+            tone === "inverse" && "text-white/60",
           )}
         >
           Job Matching

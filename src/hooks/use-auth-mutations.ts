@@ -40,7 +40,7 @@ export function useLogoutMutation() {
     mutationFn: logoutSession,
     onSettled: () => {
       queryClient.clear();
-      router.replace("/auth/sign-in");
+      router.replace("/");
       router.refresh();
     },
   });

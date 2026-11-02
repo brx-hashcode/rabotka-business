@@ -1,0 +1,32 @@
+import type { Icon } from "@tabler/icons-react";
+
+/** One figure of the dashboard's summary: icon, label, value, then a hint or a trend. */
+export function StatTile({
+  icon: IconCmp,
+  label,
+  value,
+  hint,
+  footer,
+}: Readonly<{
+  icon: Icon;
+  label: string;
+  value: string;
+  hint?: string;
+  footer?: React.ReactNode;
+}>) {
+  return (
+    <div className="flex flex-col gap-4 rounded-2xl bg-page p-5">
+      <div className="flex items-center gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-card">
+          <IconCmp className="size-5" />
+        </span>
+        <span className="font-medium text-base leading-tight">{label}</span>
+      </div>
+      <div className="min-w-0 space-y-1">
+        <p className="font-semibold text-3xl tracking-tight">{value}</p>
+        {hint && <p className="line-clamp-2 text-muted-foreground text-sm">{hint}</p>}
+        {footer}
+      </div>
+    </div>
+  );
+}

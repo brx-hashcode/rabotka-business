@@ -1,5 +1,5 @@
 import { httpStatusOf } from "#/lib/api/friendly-error";
-import type { SessionUser } from "#/lib/api/types";
+import type { BusinessSignUpBody, SessionUser } from "#/lib/api/types";
 
 /** An error shaped like mvc-front-sdk's ApiError, so friendlyError reads it. */
 export class SessionError extends Error {
@@ -35,7 +35,7 @@ async function postSession<T>(
 /**
  * Set by a deliberate sign-out. The screens still mounted then refetch, get
  * 401s, fail to refresh — and without this the "session expired" handler
- * opened the sign-in dialog right after the person chose to leave. A new
+ * opened sign-in right after the person chose to leave. A new
  * sign-in clears it.
  */
 let signedOut = false;
@@ -45,6 +45,16 @@ export function verifySession(input: {
   otp: string;
 }): Promise<{ user: SessionUser }> {
   return postSession<{ user: SessionUser }>("/session/verify", input).then((result) => {
+    signedOut = false;
+    return result;
+  });
+}
+
+/** Create the business profile and sign in with it (src/app/session/sign-up). */
+export function signUpSession(
+  body: BusinessSignUpBody,
+): Promise<{ user: SessionUser | null; signInRequired: boolean }> {
+  return postSession<{ user: SessionUser | null; signInRequired: boolean }>("/session/sign-up", body).then((result) => {
     signedOut = false;
     return result;
   });

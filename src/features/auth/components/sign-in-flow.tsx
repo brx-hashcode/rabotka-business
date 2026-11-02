@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 import { friendlyError } from "#/lib/api/friendly-error";
+import { appConfig } from "#/config";
 import { safeRedirectPath } from "#/lib/safe-redirect";
 import { cn } from "#/lib/utils";
 import {
@@ -17,8 +18,7 @@ import { Step1EmailForm } from "./step1-email-form";
 import { Step2OtpForm } from "./step2-otp-form";
 
 /**
- * Email, then the 6-digit code. The same component fills the full
- * /auth/sign-in page and the intercepted dialog, so both behave identically.
+ * Email, then the 6-digit code, on the /auth/sign-in page.
  *
  * The backend answers send-otp with a 404 for an address that has no account,
  * shown as it comes ("Aucun compte trouvé…").
@@ -34,7 +34,7 @@ export function SignInFlow({
 }>) {
   const split = layout === "split";
   const searchParams = useSearchParams();
-  const redirectTo = safeRedirectPath(searchParams.get("next")) ?? "/";
+  const redirectTo = safeRedirectPath(searchParams.get("next")) ?? appConfig.homePath;
 
   const [email, setEmail] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -107,8 +107,8 @@ export function SignInFlow({
           </h2>
           <p className="text-muted-foreground text-sm">
             {email
-              ? "Nous vous avons envoyé un code à 6 chiffres par email."
-              : "Recevez un code de connexion sur l'adresse email de votre compte."}
+              ? "Nous vous avons envoyé un code à 6 chiffres par e-mail."
+              : "Recevez un code de connexion sur l'adresse e-mail de votre compte."}
           </p>
         </div>
       </div>
