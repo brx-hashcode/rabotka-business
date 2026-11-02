@@ -336,8 +336,14 @@ function MailCvSheet({
             ) : list.length === 0 ? (
               <div className="flex flex-col items-center gap-2 rounded-2xl bg-page px-6 py-10 text-center">
                 <IconMail className="size-6 text-muted-foreground" />
-                <p className="font-medium">{search ? "Aucun e-mail ne correspond" : "Aucun CV reçu ces 4 derniers mois"}</p>
-                <p className="text-muted-foreground text-sm">Seuls les e-mails avec un PDF, un fichier Word ou une photo en pièce jointe apparaissent.</p>
+                <p className="font-medium">
+                  {search ? "Aucun e-mail ne correspond" : mailbox.provider === "forward" ? "Aucun CV transféré pour le moment" : "Aucun CV reçu ces 4 derniers mois"}
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  {mailbox.provider === "forward" && !search
+                    ? `Transférez les candidatures reçues à ${mailbox.email} : leurs CV apparaissent ici en une minute.`
+                    : "Seuls les e-mails avec un PDF, un fichier Word ou une photo en pièce jointe apparaissent."}
+                </p>
               </div>
             ) : (
               <>

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { ProviderTile } from "#/components/mail-provider-logos";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
 import { useConnectMailbox } from "#/features/cv-screening/components/mail-import";
+import { ForwardAddress } from "./forward-address";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { disconnectMailbox, listMailboxes, mailboxesKey, PROVIDER_LABEL, type Mailbox, type MailProviderSlug } from "#/lib/api/mailbox-controller";
 
@@ -34,20 +35,24 @@ export function OrganisationMailboxes() {
   if (!data) return null;
   const providers = (Object.keys(data.available) as MailProviderSlug[]).filter((p) => data.available[p]);
   if (providers.length === 0) return null;
-  const missing = providers.filter((p) => !data.mailboxes.some((b) => b.provider === p && !b.expired));
+  const forward = data.mailboxes.find((b) => b.provider === "forward");
+  const connected = data.mailboxes.filter((b) => b.provider !== "forward");
+  const missing = providers.filter((p) => p !== "forward" && !connected.some((b) => b.provider === p && !b.expired));
 
   return (
     <section className="space-y-4 rounded-3xl bg-card p-6">
       <div className="space-y-1">
-        <h2 className="font-semibold text-lg">Messageries connectées</h2>
+        <h2 className="font-semibold text-lg">CV reçus par e-mail</h2>
         <p className="text-muted-foreground text-sm">
           Pour choisir des CV reçus par e-mail dans « Analyse de CV ». Rabotka ne lit que les pièces jointes que vous choisissez.
         </p>
       </div>
 
-      {data.mailboxes.length > 0 && (
+      {forward && <ForwardAddress email={forward.email} />}
+
+      {connected.length > 0 && (
         <ul className="space-y-2">
-          {data.mailboxes.map((box) => {
+          {connected.map((box) => {
             return (
               <li key={box.id} className="flex items-center gap-3 rounded-2xl bg-page p-3">
                 <ProviderTile provider={box.provider} />
