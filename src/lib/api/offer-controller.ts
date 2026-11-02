@@ -18,6 +18,8 @@ export type OfferListItem = {
   id: string;
   title: string;
   status: OfferStatus;
+  /** The employer closed it; null when it ended any other way. */
+  closedAt?: string | null;
   scheduledAt: string | null;
   employmentType: EmploymentType;
   amount: number | null;
@@ -124,6 +126,7 @@ function toListItem(o: Raw): OfferListItem {
     countryName: str(o.country_name),
     quantity: Number(o.quantity ?? 1),
     acceptedCount: Number(o.acceptedCount ?? 0),
+    closedAt: o.closedAt == null ? null : String(o.closedAt),
     createdAt: String(o.created_at ?? ""),
     description: String(o.description ?? ""),
     address: str(o.address),

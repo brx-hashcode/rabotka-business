@@ -69,10 +69,10 @@ import {
   EMPLOYMENT_LABEL,
   fcfa,
   isDatedMission,
+  offerChip,
   offerDate,
   PAYMENT_SUFFIX,
   statusClass,
-  STATUS,
   type ApplicationStage,
 } from "../offer-labels";
 import { failedLabel, KIND_LABEL } from "../offer-questions";
@@ -311,7 +311,7 @@ function OfferHeader({
   outsiders,
   actions,
 }: Readonly<{ offer: Offer; category?: string; applicants?: OfferApplicant[]; outsiders: ExternalApplication[]; actions: React.ReactNode }>) {
-  const status = STATUS[o.status];
+  const status = offerChip(o);
   const list = applicants ?? [];
   const toReview = list.filter((a) => applicationStage(a.status) === "new").length + outsiders.filter((a) => externalStage(a) === "new").length;
   // `acceptedCount` counts ACCEPTED only; a hire that has started or ended still fills its seat.
@@ -355,7 +355,7 @@ function OfferHeader({
         <Tile
           icon={IconCalendarEvent}
           label={isDatedMission(o.employmentType) ? "Mission" : "Clôture"}
-          value={left === null ? "—" : left > 0 ? `J-${left}` : left === 0 ? "Aujourd'hui" : "Passée"}
+          value={o.closedAt ? "Fermée" : left === null ? "—" : left > 0 ? `J-${left}` : left === 0 ? "Aujourd'hui" : "Passée"}
           hint={o.scheduledAt ? (offerDate(o.scheduledAt, o.employmentType) ?? undefined) : undefined}
           muted={!open}
         />
@@ -567,6 +567,7 @@ function ApplicantsCard({
                       assessment={scores.get(a.applicationId)}
                       waiting={pending > 0}
                       asked={asked}
+                      recruiting={open}
                       selected={selected.has(a.applicationId)}
                       onToggle={a.status === "PENDING" || a.status === "VIEWED" ? () => toggle(a.applicationId) : undefined}
                     />
@@ -717,6 +718,7 @@ function ApplicantRow({
   assessment,
   waiting,
   asked,
+  recruiting,
   selected,
   onToggle,
 }: Readonly<{
@@ -726,6 +728,7 @@ function ApplicantRow({
   waiting: boolean;
   /** The offer asks questions: say when this application has no answers. */
   asked: boolean;
+  recruiting: boolean;
   selected: boolean;
   /** Present only for an application still waiting: it can be refused in bulk. */
   onToggle?: () => void;
@@ -798,7 +801,7 @@ function ApplicantRow({
           </button>
         )}
         <ResumeButton workerId={a.worker.id} name={name} />
-        <ApplicationActions applicant={a} name={name} />
+        <ApplicationActions applicant={a} name={name} recruiting={recruiting} />
       </div>
       {open && answers.length > 0 && <Answers answers={answers} />}
       {open && assessment && (

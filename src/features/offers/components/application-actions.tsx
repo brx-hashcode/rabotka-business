@@ -86,7 +86,14 @@ export function ApplicationActions({
   applicant,
   name,
   variant = "inline",
-}: Readonly<{ applicant: OfferApplicant; name: string; variant?: "inline" | "card" | "compact" }>) {
+  recruiting = true,
+}: Readonly<{
+  applicant: OfferApplicant;
+  name: string;
+  variant?: "inline" | "card" | "compact";
+  /** False once the offer stopped hiring: refusing is all that is left. */
+  recruiting?: boolean;
+}>) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const openChat = useOpenDiscussion();
@@ -137,7 +144,9 @@ export function ApplicationActions({
   // What this stage allows, most useful first; the layout decides how they show.
   const actions: Action[] = [];
   if (status === "PENDING" || status === "VIEWED") {
-    actions.push({ key: "accept", label: "Retenir", icon: IconCheck, tone: "primary", onClick: () => setDialog("accept") });
+    if (recruiting) {
+      actions.push({ key: "accept", label: "Retenir", icon: IconCheck, tone: "primary", onClick: () => setDialog("accept") });
+    }
     actions.push({ key: "reject", label: "Refuser", icon: IconX, tone: "danger", onClick: () => setDialog("reject") });
   }
   if (status === "WAITING_PAYMENT") {

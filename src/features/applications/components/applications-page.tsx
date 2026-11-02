@@ -18,7 +18,7 @@ import { InterviewLine, latestInterview } from "#/features/interviews/components
 import { ScheduleInterviewDialog } from "#/features/interviews/components/schedule-interview-dialog";
 import { interviewsKey, listInterviews } from "#/lib/api/interview-controller";
 import type { Interview } from "#/lib/api/types";
-import { APPLICATION_STATUS, applicationStage, statusClass, type ApplicationStage } from "#/features/offers/offer-labels";
+import { APPLICATION_STATUS, applicationStage, isRecruiting, statusClass, type ApplicationStage } from "#/features/offers/offer-labels";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { externalApplicationsKey, listExternalApplications } from "#/lib/api/careers-controller";
 import { listReceivedApplications, offersKey, type ReceivedApplication } from "#/lib/api/offer-controller";
@@ -305,7 +305,7 @@ function ApplicationCard({
       )}
 
       <div className="mt-auto">
-        <ApplicationActions applicant={a} name={name} variant="card" />
+        <ApplicationActions applicant={a} name={name} variant="card" recruiting={isRecruiting(a.offer.status)} />
       </div>
       {planning && (
         <ScheduleInterviewDialog
