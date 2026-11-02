@@ -42,6 +42,16 @@ export const STATUS: Record<OfferStatus, { label: string; className: string }> =
   CANCELLED: { label: "Annulée", className: "bg-page text-muted-foreground" },
 };
 
+/** An offer's chip: the status, or « Fermée » when the employer ended it. */
+export function offerChip(o: { status: OfferStatus; closedAt?: string | null }) {
+  return o.status === "EXPIRED" && o.closedAt ? { ...STATUS.EXPIRED, label: "Fermée" } : STATUS[o.status];
+}
+
+/** Still taking decisions on candidates. */
+export function isRecruiting(status: OfferStatus) {
+  return status === "ACTIVE" || status === "PARTIALLY_FILLED";
+}
+
 export const APPLICATION_STATUS: Record<string, string> = {
   PENDING: "Nouvelle",
   VIEWED: "Vue",

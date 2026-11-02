@@ -10,7 +10,7 @@ import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-control
 import { friendlyError } from "#/lib/api/friendly-error";
 import { listOffers, offersKey, type OfferListItem, type OfferStatus } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
-import { EMPLOYMENT_LABEL, fcfa, offerDate, PAYMENT_SUFFIX, STATUS } from "../offer-labels";
+import { EMPLOYMENT_LABEL, fcfa, offerChip, offerDate, PAYMENT_SUFFIX } from "../offer-labels";
 import { offersFull, offersUsed } from "#/features/subscription/offers-quota";
 
 const TABS: { key: string; label: string; statuses?: OfferStatus[] }[] = [
@@ -118,7 +118,7 @@ export function OffersPage() {
 }
 
 function OfferCard({ offer: o }: Readonly<{ offer: OfferListItem }>) {
-  const status = STATUS[o.status];
+  const status = offerChip(o);
   const when = offerDate(o.scheduledAt, o.employmentType);
   const place = o.isRemote ? "À distance" : [o.city, o.countryName].filter(Boolean).join(", ");
   return (
