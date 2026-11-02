@@ -207,6 +207,7 @@ class OfferController extends BusinessBaseController {
         return {
           applicationId: String(a.id),
           status: String(a.status),
+          ratedByEmployer: Boolean(a.ratedByEmployer),
           createdAt: String(a.created_at ?? ""),
           worker: {
             id: String(w.id ?? ""),
