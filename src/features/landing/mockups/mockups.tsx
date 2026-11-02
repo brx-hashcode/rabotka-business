@@ -143,7 +143,7 @@ function CvMockup() {
         {(
           [
             ["gmail", "CV_Grace_Loubaki.pdf"],
-            ["outlook", "CV Kiminou.docx"],
+            ["gmail", "CV Kiminou.docx"],
           ] as const
         ).map(([p, f]) => (
           <div key={f} className="flex items-center gap-2 rounded-xl bg-page p-2">
