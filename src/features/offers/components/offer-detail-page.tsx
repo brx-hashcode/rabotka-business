@@ -89,6 +89,8 @@ import { CriterionBar, Points, ScoreRing, VerdictChip } from "#/features/cv-scre
 import { scheduledIso } from "./offer-form";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
+import { TeamOpinionButton } from "#/features/team/components/team-opinion";
+import { getOfferOpinions, offerOpinionsKey, type Verdict } from "#/lib/api/candidate-notes-controller";
 
 /**
  * One offer: where it stands (applications, positions filled, time left), its
@@ -464,6 +466,8 @@ function ApplicantsCard({
       : list.filter((a) => applicationStage(a.status) === k).length + outsiders.filter((a) => externalStage(a) === k).length;
   const shown = tab === "all" ? list : list.filter((a) => applicationStage(a.status) === tab);
   const shownOutsiders = tab === "all" ? outsiders : outsiders.filter((a) => externalStage(a) === tab);
+  // The team's Oui / Peut-être / Non on each candidate, for the « Avis » buttons.
+  const opinions = useQuery({ queryKey: offerOpinionsKey(o.id), queryFn: () => getOfferOpinions(o.id) });
   // Compared as in Analyse de CV: the CVs of one screening, a few at a time.
   const [picked, setPicked] = useState<string[]>([]);
   const [comparing, setComparing] = useState(false);
@@ -628,6 +632,7 @@ function ApplicantsCard({
                       recruiting={open}
                       selected={selected.has(a.applicationId)}
                       onToggle={a.status === "PENDING" || a.status === "VIEWED" ? () => toggle(a.applicationId) : undefined}
+                      opinions={opinions.data?.rabotka[a.applicationId]}
                     />
                   ))}
                 </ul>
@@ -673,6 +678,7 @@ function ApplicantsCard({
                       <ExternalApplicationCard
                         key={a.id}
                         application={a}
+                        opinions={opinions.data?.external[a.id]}
                         compare={
                           a.analysis
                             ? {
@@ -792,6 +798,7 @@ function ApplicantRow({
   recruiting,
   selected,
   onToggle,
+  opinions,
 }: Readonly<{
   applicant: OfferApplicant;
   rank: number;
@@ -803,6 +810,8 @@ function ApplicantRow({
   selected: boolean;
   /** Present only for an application still waiting: it can be refused in bulk. */
   onToggle?: () => void;
+  /** The team's opinions on it, counted. */
+  opinions?: Record<Verdict, number>;
 }>) {
   const [open, setOpen] = useState(false);
   const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
@@ -872,6 +881,7 @@ function ApplicantRow({
           </button>
         )}
         <ResumeButton workerId={a.worker.id} name={name} />
+        <TeamOpinionButton kind="rabotka" id={a.applicationId} name={name} summary={opinions} />
         <ApplicationActions applicant={a} name={name} recruiting={recruiting} />
       </div>
       {open && answers.length > 0 && <Answers answers={answers} />}

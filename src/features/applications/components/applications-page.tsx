@@ -23,6 +23,7 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import { externalApplicationsKey, listExternalApplications } from "#/lib/api/careers-controller";
 import { listReceivedApplications, offersKey, type ReceivedApplication } from "#/lib/api/offer-controller";
 import { cn, getInitials } from "#/lib/utils";
+import { TeamOpinionButton } from "#/features/team/components/team-opinion";
 
 const PAGE = 100;
 const fold = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
@@ -304,7 +305,8 @@ function ApplicationCard({
         )
       )}
 
-      <div className="mt-auto">
+      <div className="mt-auto space-y-2">
+        <TeamOpinionButton kind="rabotka" id={a.applicationId} name={name} className="bg-card" />
         <ApplicationActions applicant={a} name={name} variant="card" recruiting={isRecruiting(a.offer.status)} />
       </div>
       {planning && (

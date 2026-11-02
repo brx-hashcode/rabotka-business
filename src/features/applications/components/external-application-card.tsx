@@ -28,6 +28,8 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import { getInitials } from "#/lib/utils";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
+import { TeamOpinionButton } from "#/features/team/components/team-opinion";
+import type { Verdict } from "#/lib/api/candidate-notes-controller";
 
 const YES_NO: Record<string, string> = { yes: "Oui", no: "Non" };
 
@@ -47,10 +49,13 @@ export function externalStage(a: Pick<ExternalApplication, "status" | "viewedAt"
 export function ExternalApplicationCard({
   application: a,
   compare,
+  opinions,
 }: Readonly<{
   application: ExternalApplication;
   /** On an offer's page: the checkbox of Analyse de CV. */
   compare?: { selected: boolean; disabled: boolean; onToggle: () => void };
+  /** On an offer's page: the team's opinions, counted. */
+  opinions?: Record<Verdict, number>;
 }>) {
   const queryClient = useQueryClient();
   const name = `${a.firstName} ${a.lastName}`;
@@ -254,6 +259,7 @@ export function ExternalApplicationCard({
         ) : (
           <span />
         )}
+        <TeamOpinionButton kind="external" id={a.id} name={name} summary={opinions} className="mr-auto" />
         {hire && a.status === "PENDING" && (
           <div className="flex items-center gap-2">
             <button
