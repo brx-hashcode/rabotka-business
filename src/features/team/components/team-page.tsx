@@ -197,7 +197,7 @@ function InviteButton() {
         type="button"
         onClick={() => setOpen(true)}
         disabled={!anyPlace}
-        title={seats && !anyPlace ? "Plus de place dans votre formule" : undefined}
+        title={seats && !anyPlace ? "Plus de place avant le renouvellement" : undefined}
         className="inline-flex h-11 items-center gap-2 rounded-full bg-ink px-5 font-medium text-sm text-white disabled:opacity-40"
       >
         <IconUserPlus className="size-4" />
@@ -215,13 +215,13 @@ function InviteButton() {
   );
 }
 
-/** The plan's places per role, in one line, with the way to more when none is left. */
+/** The places per role added this period (a new period frees them), with the way to more when none is left. */
 function Places({ seats }: Readonly<{ seats: Team["seats"] }>) {
   const anyPlace = INVITED.some((r) => hasPlace(seats[r]));
   const none = INVITED.every((r) => seats[r].limit === 0);
   return (
     <section className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-3xl bg-card px-5 py-4">
-      <p className="font-medium text-sm">Places de votre formule</p>
+      <p className="font-medium text-sm">Places jusqu&apos;au renouvellement</p>
       <div className="flex flex-wrap gap-2">
         {INVITED.map((r) => (
           <SeatPill key={r} role={r} used={seats[r].used} limit={seats[r].limit} />
@@ -229,7 +229,7 @@ function Places({ seats }: Readonly<{ seats: Team["seats"] }>) {
       </div>
       {!anyPlace && (
         <p className="flex flex-wrap items-center gap-x-2 text-muted-foreground text-sm sm:ml-auto">
-          {none ? "Votre formule n'inclut pas de membres d'équipe." : "Toutes les places sont prises."}
+          {none ? "Votre formule n'inclut pas de membres d'équipe." : "Toutes les places sont utilisées : elles reviennent au renouvellement de votre formule."}
           <Link href="/espace/abonnement" className="font-medium text-foreground underline underline-offset-2">
             Changer de formule
           </Link>
@@ -324,7 +324,7 @@ function MemberRow({
                   className="cursor-pointer flex-col items-start gap-0 rounded-xl px-3 py-2"
                 >
                   <span className="font-medium text-sm">Passer {ROLE_LABEL[r].toLowerCase()}</span>
-                  <span className="text-muted-foreground text-xs">{full ? "Plus de place dans votre formule" : ROLE_HINT[r]}</span>
+                  <span className="text-muted-foreground text-xs">{full ? "Plus de place avant le renouvellement" : ROLE_HINT[r]}</span>
                 </DropdownMenuItem>
               );
             })}
@@ -418,7 +418,7 @@ function InviteDialog({
             >
               <span className="block font-medium text-sm">{ROLE_LABEL[r]}</span>
               <span className={cn("block text-xs", role === r ? "opacity-80" : "text-muted-foreground")}>
-                {free(r) ? ROLE_HINT[r] : "Plus de place dans votre formule"}
+                {free(r) ? ROLE_HINT[r] : "Plus de place avant le renouvellement"}
               </span>
             </button>
           ))}
