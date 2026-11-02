@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
 import { ScheduleInterviewDialog } from "#/features/interviews/components/schedule-interview-dialog";
-import { PreviewSheet } from "#/components/preview-sheet";
+import { PreviewSheet, previewKindOf } from "#/components/preview-sheet";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Textarea } from "#/components/ui/textarea";
@@ -81,7 +81,9 @@ export function ExternalApplicationCard({
   const [reading, setReading] = useState(false);
   const cvUrl = `/api/v1/business/me/external-applications/${encodeURIComponent(a.id)}/cv`;
   // The sheet shows a PDF; a Word file can only be saved.
-  const canShow = a.cvMimeType === "application/pdf";
+  // PDF, Word and photos open in the panel; anything else downloads.
+  const previewKind = previewKindOf(a.cvMimeType);
+  const canShow = previewKind !== null;
 
   const refuse = useMutation({
     mutationFn: () => refuseExternalApplication(a.id, message.trim() || undefined),
@@ -301,7 +303,7 @@ export function ExternalApplicationCard({
         title={name}
         subtitle={a.offer.title}
         src={cvUrl}
-        kind="pdf"
+        kind={previewKind ?? "pdf"}
         fileName={a.cvFileName}
         unavailable="Ce CV n'est plus disponible."
       />

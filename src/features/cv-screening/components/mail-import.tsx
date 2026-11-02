@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
 import { ProviderTile } from "#/components/mail-provider-logos";
-import { PreviewSheet } from "#/components/preview-sheet";
+import { PreviewSheet, type PreviewKind } from "#/components/preview-sheet";
 import { Input } from "#/components/ui/input";
 import { friendlyError } from "#/lib/api/friendly-error";
 import {
@@ -234,7 +234,7 @@ function MailCvSheet({
   const [q, setQ] = useState("");
   const search = useDebounced(q.trim());
   const [chosen, setChosen] = useState<MailPick[]>(picks);
-  const [preview, setPreview] = useState<{ pick: MailPick; kind: "pdf" | "image"; from: string } | null>(null);
+  const [preview, setPreview] = useState<{ pick: MailPick; kind: PreviewKind; from: string } | null>(null);
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   // For the picks of every mailbox together.
   const total = room;
@@ -418,10 +418,9 @@ function MailCvSheet({
                             </button>
                             <button
                               type="button"
-                              disabled={kind === "docx"}
-                              onClick={() => setPreview({ pick, kind: kind === "image" ? "image" : "pdf", from: mail.fromName })}
+                              onClick={() => setPreview({ pick, kind, from: mail.fromName })}
                               aria-label={`Aperçu de ${a.name}`}
-                              title={kind === "docx" ? "Aperçu disponible pour les PDF et les photos" : "Aperçu"}
+                              title="Aperçu"
                               className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-card text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
                             >
                               <IconEye className="size-4" />
