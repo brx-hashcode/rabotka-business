@@ -348,7 +348,8 @@ function MailCvSheet({
               <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-destructive text-sm">
                 {friendlyError(mails.error, "Vos e-mails n'ont pas pu être lus. Réessayez dans un instant.")}
               </p>
-            ) : list.length === 0 ? (
+            ) : list.length === 0 && !mails.hasNextPage ? (
+            // Empty only when nothing is left: a page with no CV but more after it shows « Charger plus ».
               <div className="flex flex-col items-center gap-2 rounded-2xl bg-page px-6 py-10 text-center">
                 <IconMail className="size-6 text-muted-foreground" />
                 <p className="font-medium">{search ? "Aucun e-mail ne correspond" : "Aucun CV reçu ces 4 derniers mois"}</p>
