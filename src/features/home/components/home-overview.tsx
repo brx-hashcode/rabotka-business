@@ -114,12 +114,14 @@ export function HomeOverview() {
                 icon={IconInbox}
                 label="Candidatures reçues"
                 value={nf(st.applications.received)}
+                href="/espace/candidatures?onglet=all"
                 footer={<TrendLine trend={trend(st.applications.received, st.applications.receivedPrevious)} days={days} />}
               />
               <StatTile
                 icon={IconUsers}
                 label="À examiner"
                 value={nf(st.applications.toReview)}
+                href="/espace/candidatures?onglet=new"
                 hint={
                   st.applications.overdue > 0
                     ? `dont ${st.applications.overdue} en attente depuis plus de 48 h`
@@ -132,12 +134,14 @@ export function HomeOverview() {
                 icon={IconUserCheck}
                 label="Candidats retenus"
                 value={nf(st.hires.count)}
+                href="/espace/candidatures?onglet=hired"
                 footer={<TrendLine trend={trend(st.hires.count, st.hires.previous)} days={days} />}
               />
               <StatTile
                 icon={IconFileText}
                 label="Postes ouverts"
                 value={nf(st.offers.openPositions)}
+                href="/espace/offres"
                 hint={`sur ${st.offers.open} offre${st.offers.open > 1 ? "s" : ""} en ligne`}
               />
             </>
@@ -153,6 +157,7 @@ export function HomeOverview() {
             <Card
               className="lg:col-span-2"
               title="Candidatures par jour"
+              href="/espace/candidatures?onglet=all"
               action={
                 <span className="text-muted-foreground text-sm">
                   {st.applications.perOffer === null ? "" : `${nf(st.applications.perOffer)} par offre en moyenne`}
@@ -234,16 +239,27 @@ function Unavailable({ className }: Readonly<{ className?: string }>) {
   );
 }
 
+/** A dashboard card; with `href`, its title opens the page behind it. */
 function Card({
   title,
   action,
+  href,
   className,
   children,
-}: Readonly<{ title: string; action?: React.ReactNode; className?: string; children: React.ReactNode }>) {
+}: Readonly<{ title: string; action?: React.ReactNode; href?: string; className?: string; children: React.ReactNode }>) {
   return (
     <section className={cn("flex flex-col gap-5 rounded-3xl bg-card p-6", className)}>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-semibold text-xl">{title}</h2>
+        <h2 className="font-semibold text-xl">
+          {href ? (
+            <Link href={href} className="group inline-flex items-center gap-1.5 hover:underline hover:underline-offset-4">
+              {title}
+              <IconArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          ) : (
+            title
+          )}
+        </h2>
         {action}
       </div>
       {children}
@@ -279,7 +295,7 @@ function FunnelCard({ funnel }: Readonly<{ funnel: BusinessStats["funnel"] }>) {
     { label: "Mission terminée", value: funnel.completed, color: "bg-teal-500" },
   ];
   return (
-    <Card title="Où en sont vos candidatures">
+    <Card title="Où en sont vos candidatures" href="/espace/candidatures?onglet=all">
       {funnel.received === 0 ? (
         <p className="text-muted-foreground text-sm">Aucune candidature reçue sur la période.</p>
       ) : (
@@ -340,7 +356,7 @@ function Figure({
 function DelaysCard({ timing, days }: Readonly<{ timing: BusinessStats["timing"]; days: number }>) {
   const hire = (d: number | null) => (d === null ? null : d * 24);
   return (
-    <Card title="Délais">
+    <Card title="Délais" href="/espace/candidatures?onglet=new">
       <div className="space-y-2">
         <Figure
           label="Premier candidat"
@@ -381,7 +397,7 @@ function Stars({ value }: Readonly<{ value: number | null }>) {
 
 function ResultsCard({ quality: q }: Readonly<{ quality: BusinessStats["quality"] }>) {
   return (
-    <Card title="Résultats">
+    <Card title="Résultats" href="/espace/missions">
       <div className="space-y-2 rounded-2xl bg-page p-4">
         <div className="flex items-baseline justify-between gap-3">
           <div>
@@ -418,7 +434,7 @@ function SubscriptionCard({
 }: Readonly<{ subscription?: MySubscription; loading: boolean; unlocked: number; days: number }>) {
   if (loading || !subscription) {
     return (
-      <Card title="Abonnement">
+      <Card title="Abonnement" href="/espace/abonnement">
         {loading ? <Skeleton className="h-52 rounded-2xl" /> : <Unavailable />}
       </Card>
     );
@@ -426,7 +442,7 @@ function SubscriptionCard({
   const e = subscription.entitlements;
   if (!e.plan) {
     return (
-      <Card title="Abonnement">
+      <Card title="Abonnement" href="/espace/abonnement">
         <p className="text-muted-foreground text-sm">
           Aucune formule en cours : vos contacts sont payés à l&apos;unité et vous ne pouvez pas publier d&apos;offres.
         </p>
@@ -619,7 +635,7 @@ function OffersCard({ offers }: Readonly<{ offers: BusinessStats["topOffers"] }>
 function CategoriesCard({ categories }: Readonly<{ categories: BusinessStats["categories"] }>) {
   const max = Math.max(0, ...categories.map((c) => c.applications));
   return (
-    <Card title="Métiers les plus demandés">
+    <Card title="Métiers les plus demandés" href="/espace/offres">
       {categories.length === 0 ? (
         <p className="text-muted-foreground text-sm">Aucune candidature reçue sur la période.</p>
       ) : (
@@ -643,7 +659,7 @@ function CategoriesCard({ categories }: Readonly<{ categories: BusinessStats["ca
 function SourcesCard({ sources }: Readonly<{ sources: NonNullable<BusinessStats["sources"]> }>) {
   const max = Math.max(0, ...sources.map((s) => s.received));
   return (
-    <Card title="Provenance">
+    <Card title="Provenance" href="/espace/candidatures?onglet=all">
       {sources.length === 0 ? (
         <p className="text-muted-foreground text-sm">Aucune candidature reçue sur la période.</p>
       ) : (

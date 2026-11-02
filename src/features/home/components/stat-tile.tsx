@@ -1,21 +1,27 @@
-import type { Icon } from "@tabler/icons-react";
+import Link from "next/link";
+import { IconArrowUpRight, type Icon } from "@tabler/icons-react";
 
-/** One figure of the dashboard's summary: icon, label, value, then a hint or a trend. */
+/**
+ * One figure of the dashboard's summary: icon, label, value, then a hint or a
+ * trend. With `href`, the whole tile opens the page behind the figure.
+ */
 export function StatTile({
   icon: IconCmp,
   label,
   value,
   hint,
   footer,
+  href,
 }: Readonly<{
   icon: Icon;
   label: string;
   value: string;
   hint?: string;
   footer?: React.ReactNode;
+  href?: string;
 }>) {
-  return (
-    <div className="flex flex-col gap-4 rounded-2xl bg-page p-5">
+  const body = (
+    <>
       <div className="flex items-center gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-card">
           <IconCmp className="size-5" />
@@ -27,6 +33,17 @@ export function StatTile({
         {hint && <p className="line-clamp-2 text-muted-foreground text-sm">{hint}</p>}
         {footer}
       </div>
-    </div>
+    </>
+  );
+  return href ? (
+    <Link
+      href={href}
+      className="group relative flex flex-col gap-4 rounded-2xl bg-page p-5 transition-colors hover:bg-page/70 focus-visible:outline-2 focus-visible:outline-whatsapp-dark"
+    >
+      <IconArrowUpRight className="absolute top-5 right-5 size-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+      {body}
+    </Link>
+  ) : (
+    <div className="flex flex-col gap-4 rounded-2xl bg-page p-5">{body}</div>
   );
 }

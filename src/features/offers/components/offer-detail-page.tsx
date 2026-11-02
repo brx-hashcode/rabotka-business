@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IconArrowLeft,
@@ -466,6 +466,20 @@ function ApplicantsCard({
       : list.filter((a) => applicationStage(a.status) === k).length + outsiders.filter((a) => externalStage(a) === k).length;
   const shown = tab === "all" ? list : list.filter((a) => applicationStage(a.status) === tab);
   const shownOutsiders = tab === "all" ? outsiders : outsiders.filter((a) => externalStage(a) === tab);
+  // Opened from a notification on one candidature: show every stage, and
+  // bring that candidate into view once the lists are in.
+  const focusId = useSearchParams().get("candidature");
+  const loaded = !loading;
+  useEffect(() => {
+    if (!focusId || !loaded) return;
+    if (tab !== "all") void setTab("all");
+    const t = setTimeout(
+      () => document.getElementById(`candidature-${focusId}`)?.scrollIntoView({ behavior: "smooth", block: "center" }),
+      150,
+    );
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per opened candidature
+  }, [focusId, loaded]);
   // The team's Oui / Peut-être / Non on each candidate, for the « Avis » buttons.
   const opinions = useQuery({ queryKey: offerOpinionsKey(o.id), queryFn: () => getOfferOpinions(o.id) });
   // Compared as in Analyse de CV: the CVs of one screening, a few at a time.
@@ -633,6 +647,7 @@ function ApplicantsCard({
                       selected={selected.has(a.applicationId)}
                       onToggle={a.status === "PENDING" || a.status === "VIEWED" ? () => toggle(a.applicationId) : undefined}
                       opinions={opinions.data?.rabotka[a.applicationId]}
+                      focused={focusId === a.applicationId}
                     />
                   ))}
                 </ul>
@@ -679,6 +694,7 @@ function ApplicantsCard({
                         key={a.id}
                         application={a}
                         opinions={opinions.data?.external[a.id]}
+                        focused={focusId === a.id}
                         compare={
                           a.analysis
                             ? {
@@ -799,6 +815,7 @@ function ApplicantRow({
   selected,
   onToggle,
   opinions,
+  focused,
 }: Readonly<{
   applicant: OfferApplicant;
   rank: number;
@@ -812,6 +829,8 @@ function ApplicantRow({
   onToggle?: () => void;
   /** The team's opinions on it, counted. */
   opinions?: Record<Verdict, number>;
+  /** Opened from a notification about it. */
+  focused?: boolean;
 }>) {
   const [open, setOpen] = useState(false);
   const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
@@ -819,7 +838,10 @@ function ApplicantRow({
   const answers = a.answers ?? [];
   const failed = failedLabel(answers);
   return (
-    <li className="rounded-2xl bg-page p-3 pr-4">
+    <li
+      id={`candidature-${a.applicationId}`}
+      className={cn("scroll-mt-24 rounded-2xl bg-page p-3 pr-4", focused && "ring-2 ring-whatsapp-dark")}
+    >
       <div className="flex items-center gap-3">
         <span className="flex w-5 shrink-0 flex-col items-center gap-1">
           {onToggle && <Checkbox checked={selected} onCheckedChange={onToggle} aria-label={`Sélectionner ${name}`} className="size-4 rounded" />}

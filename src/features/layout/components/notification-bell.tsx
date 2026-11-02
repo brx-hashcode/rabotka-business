@@ -147,20 +147,32 @@ export function NotificationList({
  * Where a notification opens in the space. Business notifications already
  * point into `/espace`; the employer ones carry the client app's paths
  * (`/candidatures/:applicationId`, `/missions/:offerId`, `/discussions/:id`,
- * `/claims/:id`…), each sent to the same page here. A mission notice that
- * names its candidature (`?candidature=`) opens that candidature instead of
- * the offer. Anything else has no page in the space.
+ * `/claims/:id`…), each sent to the same page here. A notice about one
+ * candidature opens its offer on it (`/espace/offres/:id?candidature=`) when
+ * the link names the offer (`?offre=` on a new application, or a mission
+ * path); otherwise Candidatures, which forwards to the offer once it finds
+ * it. Anything else has no page in the space.
  */
 export function espaceLink(link: string | null | undefined): string | null {
   if (!link) return null;
   if (link.startsWith("/espace")) return link;
   const [path, query] = link.split("?");
   const [, root, id] = path.split("/");
-  const candidature = new URLSearchParams(query).get("candidature");
-  if (candidature) return `/espace/candidatures?candidature=${encodeURIComponent(candidature)}`;
+  const params = new URLSearchParams(query);
+  const offerOn = (offerId: string, applicationId: string) =>
+    `/espace/offres/${encodeURIComponent(offerId)}?candidature=${encodeURIComponent(applicationId)}`;
+  const candidature = params.get("candidature");
+  if (candidature) {
+    return id && ["missions", "job-offers", "offres"].includes(root)
+      ? offerOn(id, candidature)
+      : `/espace/candidatures?candidature=${encodeURIComponent(candidature)}`;
+  }
   switch (root) {
-    case "candidatures":
+    case "candidatures": {
+      const offre = params.get("offre");
+      if (id && offre) return offerOn(offre, id);
       return id ? `/espace/candidatures?candidature=${encodeURIComponent(id)}` : "/espace/candidatures";
+    }
     case "missions":
     case "job-offers":
     case "offres":
