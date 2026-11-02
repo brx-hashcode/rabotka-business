@@ -301,6 +301,8 @@ export type BusinessStats = {
     createdAt: string;
   }[];
   categories: { name: string; applications: number }[];
+  /** This period's candidates and hires per source; absent from an older backend. */
+  sources?: { source: string; received: number; hired: number }[];
 };
 
 /** `GET business/me/contacts`: a worker whose contact the business unlocked. */

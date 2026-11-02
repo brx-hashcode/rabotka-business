@@ -31,6 +31,7 @@ import {
   myStatsKey,
   mySubscriptionKey,
 } from "#/lib/api/business-controller";
+import { sourceLabel } from "#/features/careers/candidate-source";
 import type { BusinessStats, MyBusiness, MySubscription, StatsPeriod } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { formatDelay, trend, type Trend } from "../stats-format";
@@ -171,7 +172,10 @@ export function HomeOverview() {
 
           <div className="grid gap-6 lg:grid-cols-3">
             <OffersCard offers={st.topOffers} />
-            <CategoriesCard categories={st.categories} />
+            <div className="flex flex-col gap-6">
+              <CategoriesCard categories={st.categories} />
+              <SourcesCard sources={st.sources ?? []} />
+            </div>
           </div>
         </>
       )}
@@ -632,6 +636,33 @@ function CategoriesCard({ categories }: Readonly<{ categories: BusinessStats["ca
         </ul>
       )}
       <p className="mt-auto text-muted-foreground text-xs">Candidatures reçues sur la période, par métier de l&apos;offre.</p>
+    </Card>
+  );
+}
+
+function SourcesCard({ sources }: Readonly<{ sources: NonNullable<BusinessStats["sources"]> }>) {
+  const max = Math.max(0, ...sources.map((s) => s.received));
+  return (
+    <Card title="Provenance">
+      {sources.length === 0 ? (
+        <p className="text-muted-foreground text-sm">Aucune candidature reçue sur la période.</p>
+      ) : (
+        <ul className="space-y-4">
+          {sources.slice(0, 6).map((s) => (
+            <li key={s.source} className="space-y-1.5">
+              <div className="flex items-baseline justify-between gap-3 text-sm">
+                <span className="truncate font-medium">{sourceLabel(s.source)}</span>
+                <span className="shrink-0 tabular-nums">
+                  {s.received}
+                  {s.hired > 0 && <span className="text-muted-foreground"> · {s.hired} retenu{s.hired > 1 ? "s" : ""}</span>}
+                </span>
+              </div>
+              <Bar value={s.received} max={max} />
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="mt-auto text-muted-foreground text-xs">D&apos;où viennent les candidatures de la période.</p>
     </Card>
   );
 }

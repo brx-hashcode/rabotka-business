@@ -48,6 +48,7 @@ export type ApplyInput = {
   phone: string;
   cv: File;
   website: string;
+  source: string;
   answers: { questionId: string; value: string }[];
 };
 
@@ -61,6 +62,8 @@ export type ExternalApplication = {
   status: "PENDING" | "RETAINED" | "REFUSED";
   answers: { label: string; kind: CareersQuestion["kind"]; value: string; passed: boolean | null }[];
   knockedOut: boolean;
+  /** Where they came from: google, jooble, qr… Null before it was tracked. */
+  source: string | null;
   hasCv: boolean;
   cvFileName: string;
   cvMimeType: string;

@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
   IconArrowLeft,
@@ -15,6 +17,7 @@ import {
 import { Bone } from "#/components/page-skeletons";
 import { parseDescription } from "#/features/careers/description";
 import { EMPLOYMENT_LABEL, PAYMENT_SUFFIX } from "#/features/offers/offer-labels";
+import { candidateSource, SOURCE_KEY } from "#/features/careers/candidate-source";
 import { getCareersOffer } from "#/lib/api/careers-controller";
 import { CareersShell, CompanyLogo, offerPlace } from "./careers-shell";
 
@@ -30,6 +33,15 @@ export function OfferPage({ slug, reference }: Readonly<{ slug: string; referenc
   });
   const page = query.data;
   const o = page?.offer;
+  // Where the visitor came from, noted for the form: the referrer is lost there.
+  const sourceParam = useSearchParams().get("source");
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(SOURCE_KEY, candidateSource(sourceParam, document.referrer, window.location.hostname));
+    } catch {
+      // Private browsing: the application simply says « direct ».
+    }
+  }, [sourceParam]);
   const rows: { icon: TablerIcon; label: string; text: string }[] = o
     ? [
         { icon: IconMapPin, label: "Lieu", text: offerPlace(o) },
