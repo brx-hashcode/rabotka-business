@@ -39,6 +39,7 @@ import {
   setMemberRole,
   teamKey,
   type InvitedRole,
+  type Seats,
   type Team,
   type TeamMember,
 } from "#/lib/api/team-controller";
@@ -82,6 +83,7 @@ export function TeamPage() {
         </div>
       ) : (
         <>
+          <div className="flex flex-wrap items-center justify-between gap-3">
           <div role="tablist" aria-label="Équipe" className="inline-flex rounded-full bg-card p-1">
             {(
               [
@@ -104,6 +106,8 @@ export function TeamPage() {
               </button>
             ))}
           </div>
+          {tab === "members" && <InviteButton />}
+          </div>
           {tab === "members" ? <Members /> : <Activity />}
         </>
       )}
@@ -116,7 +120,6 @@ export function TeamPage() {
 function Members() {
   const queryClient = useQueryClient();
   const team = useQuery({ queryKey: teamKey, queryFn: getTeam });
-  const [inviting, setInviting] = useState(false);
   const [removing, setRemoving] = useState<TeamMember | null>(null);
   const refresh = () => void queryClient.invalidateQueries({ queryKey: teamKey });
 
@@ -135,51 +138,35 @@ function Members() {
     return <p className="rounded-3xl bg-card p-6 text-muted-foreground">{friendlyError(team.error, "L'équipe n'a pas pu être chargée.")}</p>;
   }
   const { members, seats } = team.data;
-  const anySeat = INVITED.some((r) => seats[r].limit === null || seats[r].used < seats[r].limit!);
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
-        {INVITED.map((r) => (
-          <SeatTile key={r} role={r} used={seats[r].used} limit={seats[r].limit} />
-        ))}
-        <button
-          type="button"
-          onClick={() => setInviting(true)}
-          disabled={!anySeat}
-          className="inline-flex h-full min-h-14 items-center justify-center gap-2 rounded-3xl bg-ink px-6 font-medium text-white disabled:opacity-50"
-        >
-          <IconUserPlus className="size-5" />
-          Inviter
-        </button>
-      </div>
-      {!anySeat && (
-        <p className="text-muted-foreground text-sm">
-          Votre formule n&apos;a plus de place dans l&apos;équipe.{" "}
-          <Link href="/espace/abonnement" className="font-medium text-foreground underline underline-offset-2">
-            Changer de formule
-          </Link>
+    <div className="space-y-4">
+      <Places seats={seats} />
+
+      <section className="overflow-hidden rounded-3xl bg-card">
+        <p className="px-5 pt-4 pb-1 font-semibold">
+          Membres <span className="font-normal text-muted-foreground">({members.length})</span>
         </p>
-      )}
-
-      <ul className="space-y-2.5">
-        {members.map((m) => (
-          <MemberRow key={m.id} member={m} seats={seats} onRemove={() => setRemoving(m)} onChanged={refresh} />
-        ))}
+        <ul className="divide-y divide-page">
+          {members.map((m) => (
+            <MemberRow key={m.id} member={m} seats={seats} onRemove={() => setRemoving(m)} onChanged={refresh} />
+          ))}
+        </ul>
         {members.length === 1 && (
-          <li className="flex flex-col items-center gap-2 rounded-3xl bg-card px-6 py-10 text-center">
-            <span className="flex size-12 items-center justify-center rounded-2xl bg-page">
-              <IconUserPlus className="size-6" />
+          <div className="flex items-center gap-4 bg-page/40 px-5 py-5">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-card">
+              <IconUserPlus className="size-5" />
             </span>
-            <p className="font-medium">Vous êtes seul dans l&apos;espace</p>
-            <p className="max-w-sm text-muted-foreground text-sm">
-              Un recruteur publie et trie avec vous ; un évaluateur donne son avis sur les candidats.
-            </p>
-          </li>
+            <div className="min-w-0">
+              <p className="font-medium text-sm">Vous êtes seul dans l&apos;espace</p>
+              <p className="text-muted-foreground text-sm">
+                Un recruteur publie et trie avec vous ; un évaluateur donne son avis sur les candidats.
+              </p>
+            </div>
+          </div>
         )}
-      </ul>
+      </section>
 
-      <InviteDialog open={inviting} onOpenChange={setInviting} seats={seats} onInvited={refresh} />
       <ActionDialog
         open={removing !== null}
         onOpenChange={(open) => !open && setRemoving(null)}
@@ -195,21 +182,75 @@ function Members() {
   );
 }
 
-function SeatTile({ role, used, limit }: Readonly<{ role: InvitedRole; used: number; limit: number | null }>) {
+const hasPlace = (s: Seats) => s.limit === null || s.used < s.limit;
+
+/** « Inviter », beside the tabs: off when the plan has no place left. */
+function InviteButton() {
+  const queryClient = useQueryClient();
+  const team = useQuery({ queryKey: teamKey, queryFn: getTeam });
+  const [open, setOpen] = useState(false);
+  const seats = team.data?.seats;
+  const anyPlace = !!seats && INVITED.some((r) => hasPlace(seats[r]));
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        disabled={!anyPlace}
+        title={seats && !anyPlace ? "Plus de place dans votre formule" : undefined}
+        className="inline-flex h-11 items-center gap-2 rounded-full bg-ink px-5 font-medium text-sm text-white disabled:opacity-40"
+      >
+        <IconUserPlus className="size-4" />
+        Inviter un collègue
+      </button>
+      {seats && (
+        <InviteDialog
+          open={open}
+          onOpenChange={setOpen}
+          seats={seats}
+          onInvited={() => void queryClient.invalidateQueries({ queryKey: teamKey })}
+        />
+      )}
+    </>
+  );
+}
+
+/** The plan's places per role, in one line, with the way to more when none is left. */
+function Places({ seats }: Readonly<{ seats: Team["seats"] }>) {
+  const anyPlace = INVITED.some((r) => hasPlace(seats[r]));
+  const none = INVITED.every((r) => seats[r].limit === 0);
+  return (
+    <section className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-3xl bg-card px-5 py-4">
+      <p className="font-medium text-sm">Places de votre formule</p>
+      <div className="flex flex-wrap gap-2">
+        {INVITED.map((r) => (
+          <SeatPill key={r} role={r} used={seats[r].used} limit={seats[r].limit} />
+        ))}
+      </div>
+      {!anyPlace && (
+        <p className="flex flex-wrap items-center gap-x-2 text-muted-foreground text-sm sm:ml-auto">
+          {none ? "Votre formule n'inclut pas de membres d'équipe." : "Toutes les places sont prises."}
+          <Link href="/espace/abonnement" className="font-medium text-foreground underline underline-offset-2">
+            Changer de formule
+          </Link>
+        </p>
+      )}
+    </section>
+  );
+}
+
+function SeatPill({ role, used, limit }: Readonly<{ role: InvitedRole; used: number; limit: number | null }>) {
   const full = limit !== null && used >= limit;
   return (
-    <div className="space-y-1 rounded-3xl bg-card px-5 py-4">
-      <p className="text-muted-foreground text-sm">{PLURAL[role]}</p>
-      <p className="font-semibold text-2xl tabular-nums">
-        {used}
-        <span className="font-normal text-base text-muted-foreground">{limit === null ? " · illimité" : ` / ${limit}`}</span>
-      </p>
-      {limit === 0 ? (
-        <p className="text-muted-foreground text-xs">Pas inclus dans votre formule</p>
-      ) : full ? (
-        <p className="text-chip-amber-foreground text-xs">Toutes les places sont prises</p>
-      ) : null}
-    </div>
+    <span
+      className={cn(
+        "inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm",
+        full ? "bg-page text-muted-foreground" : "bg-selected text-selected-foreground",
+      )}
+    >
+      {PLURAL[role]}
+      <span className="font-semibold tabular-nums">{limit === null ? `${used} · illimité` : `${used} / ${limit}`}</span>
+    </span>
   );
 }
 
@@ -235,7 +276,7 @@ function MemberRow({
   const invited = member.status === "INVITED";
 
   return (
-    <li className="flex items-center gap-3 rounded-3xl bg-card px-4 py-3.5 sm:px-5">
+    <li className="flex items-center gap-3 px-4 py-3.5 sm:px-5">
       <Avatar className="size-11 shrink-0 rounded-2xl">
         <AvatarFallback className={cn("rounded-2xl font-medium", invited ? "bg-page text-muted-foreground" : "bg-brand-lime text-[#0f2414]")}>
           {getInitials(member.name)}
@@ -259,7 +300,7 @@ function MemberRow({
       <span
         className={cn(
           "hidden shrink-0 rounded-full px-2.5 py-1 font-medium text-xs sm:inline",
-          invited ? "bg-chip-amber text-chip-amber-foreground" : "bg-page",
+          invited ? "bg-chip-amber text-chip-amber-foreground" : "bg-page text-muted-foreground",
         )}
       >
         {invited ? "Invitation envoyée" : member.isOwner ? "Responsable du compte" : ROLE_LABEL[member.role]}
@@ -477,15 +518,18 @@ function Activity() {
 
 function MembersBones() {
   return (
-    <div className="space-y-6">
-      <div className="grid gap-3 sm:grid-cols-3">
+    <div className="space-y-4">
+      <Bone onPage className="h-16 rounded-3xl" />
+      <div className="space-y-3 rounded-3xl bg-card p-5">
+        <Bone className="h-5 w-28" />
         {[0, 1, 2].map((i) => (
-          <Bone key={i} onPage className="h-24 rounded-3xl" />
-        ))}
-      </div>
-      <div className="space-y-2.5">
-        {[0, 1, 2].map((i) => (
-          <Bone key={i} onPage className="h-[4.5rem] rounded-3xl" />
+          <div key={i} className="flex items-center gap-3">
+            <Bone className="size-11 rounded-2xl" />
+            <div className="flex-1 space-y-2">
+              <Bone className="h-4 w-40" />
+              <Bone className="h-3 w-56 max-w-full" />
+            </div>
+          </div>
         ))}
       </div>
     </div>
