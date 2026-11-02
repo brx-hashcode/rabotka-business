@@ -46,19 +46,24 @@ export function CompanyHero({
           <div aria-hidden className="absolute inset-0 bg-linear-to-br from-brand-lime/80 via-whatsapp/25 to-whatsapp-dark/40" />
         )}
       </div>
-      <div className={compact ? "px-4 pb-4" : "px-5 pb-6 sm:px-8 sm:pb-8"}>
-        <div className={cn("relative inline-flex bg-card", compact ? "-mt-8 rounded-2xl p-1" : "-mt-12 rounded-3xl p-1.5 sm:-mt-16")}>
-          <Avatar className={cn("shrink-0", compact ? "size-16 rounded-xl" : "size-24 rounded-[1.1rem] sm:size-32 sm:rounded-[1.4rem]")}>
-            {company.logoUrl && <AvatarImage src={company.logoUrl} alt="" className="bg-card object-contain" />}
-            <AvatarFallback
-              className={cn(
-                "bg-brand-lime font-semibold text-[#0f2414]",
-                compact ? "rounded-xl text-lg" : "rounded-[1.1rem] text-3xl sm:rounded-[1.4rem] sm:text-4xl",
-              )}
-            >
-              {getInitials(company.name)}
-            </AvatarFallback>
-          </Avatar>
+      <div className={compact ? "px-4 pb-4" : "px-5 pb-6 sm:px-8 sm:pb-7"}>
+        {/* The logo on the left, the actions on its right (under the cover), as on LinkedIn;
+            on a narrow screen the actions wrap under the logo when they do not fit beside it. */}
+        <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+          <div className={cn("relative inline-flex shrink-0 bg-card", compact ? "-mt-8 rounded-2xl p-1" : "-mt-12 rounded-3xl p-1.5 sm:-mt-14")}>
+            <Avatar className={cn("shrink-0", compact ? "size-16 rounded-xl" : "size-24 rounded-[1.1rem] sm:size-28 sm:rounded-[1.3rem]")}>
+              {company.logoUrl && <AvatarImage src={company.logoUrl} alt="" className="bg-card object-contain" />}
+              <AvatarFallback
+                className={cn(
+                  "bg-brand-lime font-semibold text-[#0f2414]",
+                  compact ? "rounded-xl text-lg" : "rounded-[1.1rem] text-3xl sm:rounded-[1.3rem] sm:text-4xl",
+                )}
+              >
+                {getInitials(company.name)}
+              </AvatarFallback>
+            </Avatar>
+          </div>
+          {actions && <div className={cn("flex flex-wrap justify-end gap-2", !compact && "sm:pb-1")}>{actions}</div>}
         </div>
         <div className={compact ? "mt-2 space-y-0.5" : "mt-3 space-y-1"}>
           <Heading className={cn("font-semibold tracking-tight", compact ? "text-lg" : "text-2xl sm:text-3xl")}>
@@ -68,7 +73,6 @@ export function CompanyHero({
             {[company.categoryLabel, company.city].filter(Boolean).join(" · ")}
           </p>
         </div>
-        {actions && <div className={cn("flex flex-wrap gap-2", compact ? "mt-3" : "mt-5")}>{actions}</div>}
       </div>
     </section>
   );
