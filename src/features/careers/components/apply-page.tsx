@@ -2,6 +2,7 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { IconArrowLeft, IconCheck, IconFileText, IconUpload, IconX } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
@@ -11,6 +12,7 @@ import { Checkbox } from "#/components/ui/checkbox";
 import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
+import { SOURCE_KEY } from "#/features/careers/candidate-source";
 import { applyToOffer, getCareersOffer, type CareersQuestion } from "#/lib/api/careers-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { cn } from "#/lib/utils";
@@ -22,6 +24,16 @@ const field = "h-12 rounded-xl border-0 bg-page px-4 text-base shadow-none md:te
 const label = "font-medium text-sm";
 
 /** Step 2: who they are, their CV, and the offer's own questions. No account. */
+/** The form's own `?source=`, else what the offer page noted, else « direct ». */
+function sentFrom(param: string | null): string {
+  if (param && /^[a-z0-9-]{1,30}$/.test(param)) return param;
+  try {
+    return sessionStorage.getItem(SOURCE_KEY) ?? "direct";
+  } catch {
+    return "direct";
+  }
+}
+
 export function ApplyPage({ slug, reference }: Readonly<{ slug: string; reference: string }>) {
   const query = useQuery({
     queryKey: ["careers", slug, reference],
@@ -36,6 +48,7 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
   const [consent, setConsent] = useState(false);
   const [trap, setTrap] = useState("");
   const input = useRef<HTMLInputElement>(null);
+  const sourceParam = useSearchParams().get("source");
 
   const questions = page?.offer.questions ?? [];
   const missing = questions.some((q) => q.required && !answers[q.id]?.trim());
@@ -47,6 +60,7 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
         ...details,
         cv: cv as File,
         website: trap,
+        source: sentFrom(sourceParam),
         answers: questions.flatMap((q) => (answers[q.id]?.trim() ? [{ questionId: q.id, value: answers[q.id].trim() }] : [])),
       }),
   });

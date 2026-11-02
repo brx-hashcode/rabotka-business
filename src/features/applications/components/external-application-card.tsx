@@ -22,6 +22,7 @@ import {
   type ExternalApplication,
 } from "#/lib/api/careers-controller";
 import { cvScreeningsKey, getCvScreening } from "#/lib/api/cv-screening-controller";
+import { sourceLabel } from "#/features/careers/candidate-source";
 import { downloadFile } from "#/lib/api/download";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { getInitials } from "#/lib/utils";
@@ -136,6 +137,9 @@ export function ExternalApplicationCard({
           <p className="mt-1 flex flex-wrap gap-1.5">
             {score !== null && <VerdictChip score={score} />}
             <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px]">Hors Rabotka</span>
+            {a.source && a.source !== "direct" && (
+              <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px] text-muted-foreground">via {sourceLabel(a.source)}</span>
+            )}
             {a.status === "REFUSED" && <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px]">Refusée</span>}
             {a.status === "RETAINED" && <span className="rounded-full bg-brand-lime px-2 py-0.5 font-medium text-[#0f2414] text-[11px]">Retenue</span>}
           </p>
