@@ -72,6 +72,8 @@ export function ApplicationsPage() {
   // with the offer's other candidates: go there once it is known.
   const router = useRouter();
   const focusedOffer = focused?.offer.id ?? external.data?.find((a) => a.id === focusId)?.offer.id;
+  // On the way to the offer: keep the list hidden rather than flash it.
+  const forwarding = !!focusId && (query.isLoading || external.isLoading || !!focusedOffer);
   useEffect(() => {
     if (focusId && focusedOffer) {
       router.replace(`/espace/offres/${encodeURIComponent(focusedOffer)}?candidature=${encodeURIComponent(focusId)}`);
@@ -168,7 +170,7 @@ export function ApplicationsPage() {
           ))}
         </div>
 
-        {query.isLoading ? (
+        {query.isLoading || forwarding ? (
           <CardGridSkeleton kind="application" />
         ) : !query.data ? (
           <p className="text-muted-foreground">{friendlyError(query.error, "Vos candidatures sont indisponibles pour le moment.")}</p>
