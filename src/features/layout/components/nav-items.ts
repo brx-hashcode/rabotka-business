@@ -12,6 +12,7 @@ import {
   IconMessageCircle,
   IconSearch,
   IconUsers,
+  IconWorldWww,
   type Icon,
 } from "@tabler/icons-react";
 
@@ -43,6 +44,7 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Recrutement",
     items: [
       { label: "Offres", href: "/espace/offres", icon: IconBriefcase },
+      { label: "Page carrières", href: "/espace/page-carrieres", icon: IconWorldWww },
       { label: "Candidatures", href: "/espace/candidatures", icon: IconUsers },
       { label: "Entretiens", href: "/espace/entretiens", icon: IconCalendarTime },
       { label: "Missions", href: "/espace/missions", icon: IconCalendarCheck },
