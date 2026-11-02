@@ -34,7 +34,7 @@ export type OfferListItem = {
   address: string | null;
 };
 
-export type QuestionKind = "YES_NO" | "CHOICE" | "SHORT_TEXT";
+export type QuestionKind = "YES_NO" | "CHOICE" | "SHORT_TEXT" | "LONG_TEXT" | "NUMBER" | "DATE";
 
 /** A question the candidates answer when they apply (« Questions aux candidats »). */
 export type OfferQuestion = {

@@ -224,7 +224,7 @@ export function ExternalApplicationCard({
               {a.answers.map((answer) => (
                 <div key={answer.label}>
                   <dt className="text-muted-foreground text-xs">{answer.label}</dt>
-                  <dd className="font-medium">{YES_NO[answer.value] ?? answer.value}</dd>
+                  <dd className="whitespace-pre-line break-words font-medium">{YES_NO[answer.value] ?? answer.value}</dd>
                 </div>
               ))}
             </dl>

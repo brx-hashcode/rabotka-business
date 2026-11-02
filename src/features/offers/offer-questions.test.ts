@@ -36,3 +36,21 @@ describe("offer questions", () => {
     expect(failedLabel([])).toBeNull();
   });
 });
+
+describe("numbers, dates and long answers", () => {
+  const base = { label: "Années d'expérience", options: [], required: true, knockout: true, accepted: [] as string[] };
+
+  it("asks for the minimum of an « éliminatoire » number", () => {
+    expect(questionProblem({ ...base, kind: "NUMBER" })).toBe("Indiquez le minimum accepté.");
+    expect(questionProblem({ ...base, kind: "NUMBER", accepted: ["2,5"] })).toBeNull();
+  });
+
+  it("asks for the latest date of an « éliminatoire » date", () => {
+    expect(questionProblem({ ...base, kind: "DATE" })).toBe("Indiquez la date limite acceptée.");
+    expect(questionProblem({ ...base, kind: "DATE", accepted: ["2026-12-01"] })).toBeNull();
+  });
+
+  it("drops « éliminatoire » when a question becomes a free answer", () => {
+    expect(withKind({ ...base, kind: "NUMBER", accepted: ["3"] }, "LONG_TEXT")).toMatchObject({ knockout: false, accepted: [] });
+  });
+});

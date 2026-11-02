@@ -9,6 +9,7 @@ import { Loader } from "lucide-react";
 import { Bone } from "#/components/page-skeletons";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Input } from "#/components/ui/input";
+import { Textarea } from "#/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { applyToOffer, getCareersOffer, type CareersQuestion } from "#/lib/api/careers-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
@@ -269,10 +270,35 @@ function QuestionField({
       </div>
     );
   }
+  if (q.kind === "LONG_TEXT") {
+    return (
+      <div className="space-y-1.5">
+        {title}
+        <Textarea
+          value={value}
+          maxLength={3000}
+          rows={7}
+          onChange={(e) => onChange(e.target.value)}
+          aria-label={q.label}
+          className="min-h-40 rounded-2xl border-0 bg-page px-4 py-3 text-base shadow-none md:text-[15px]"
+        />
+        <p className="text-right text-muted-foreground text-xs tabular-nums">{value.length} / 3 000</p>
+      </div>
+    );
+  }
   return (
     <div className="space-y-1.5">
       {title}
-      <Input value={value} maxLength={300} onChange={(e) => onChange(e.target.value)} aria-label={q.label} className={field} />
+      <Input
+        value={value}
+        type={q.kind === "NUMBER" ? "number" : q.kind === "DATE" ? "date" : "text"}
+        inputMode={q.kind === "NUMBER" ? "decimal" : undefined}
+        min={q.kind === "NUMBER" ? 0 : undefined}
+        maxLength={300}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={q.label}
+        className={cn(field, (q.kind === "NUMBER" || q.kind === "DATE") && "sm:w-56")}
+      />
     </div>
   );
 }

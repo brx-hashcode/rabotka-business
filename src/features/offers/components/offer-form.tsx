@@ -48,7 +48,7 @@ const schema = z
     note: z.string().trim().max(500, "500 caractères au plus"),
     questions: z.array(
       z.object({
-        kind: z.enum(["YES_NO", "CHOICE", "SHORT_TEXT"]),
+        kind: z.enum(["YES_NO", "CHOICE", "SHORT_TEXT", "LONG_TEXT", "NUMBER", "DATE"]),
         label: z.string(),
         options: z.array(z.string()),
         required: z.boolean(),
