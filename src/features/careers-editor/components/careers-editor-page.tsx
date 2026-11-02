@@ -438,11 +438,11 @@ function CoverSection({
   const picker = usePicker(onUpload);
   const working = busy === "cover";
   return (
-    <Section id="couverture" title="Photo de couverture" hint="En haut de la page : vos locaux, votre équipe, votre chantier.">
+    <Section id="couverture" title="Photo de couverture" hint="En haut de la page, au format large : vos locaux, votre équipe, votre chantier.">
       {coverUrl ? (
         <div className="relative overflow-hidden rounded-2xl">
           {/* eslint-disable-next-line @next/next/no-img-element -- the business's own upload */}
-          <img src={coverUrl} alt="" className="aspect-[3/1] w-full object-cover" />
+          <img src={coverUrl} alt="" className="aspect-[4/1] w-full object-cover" />
           {working && <Working />}
           <div className="absolute right-3 bottom-3 flex gap-2">
             <button
@@ -470,7 +470,7 @@ function CoverSection({
           type="button"
           onClick={picker.open}
           disabled={!!busy}
-          className="relative flex aspect-[3/1] w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl bg-page text-muted-foreground transition-colors hover:text-foreground"
+          className="relative flex aspect-[4/1] w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl bg-page text-muted-foreground transition-colors hover:text-foreground"
         >
           {working ? (
             <Spinner className="size-6" />
@@ -699,11 +699,39 @@ export function EditorBones() {
           </div>
         ))}
       </div>
-      <div className="hidden space-y-3 rounded-3xl bg-card p-3 lg:block">
-        <Bone className="h-6 rounded-full" />
-        <Bone className="aspect-[3/1] rounded-2xl" />
-        <Bone className="h-24 rounded-2xl" />
-        <Bone className="h-14 rounded-2xl" />
+      <div className="hidden space-y-3 lg:block">
+        <div className="space-y-1.5 px-1">
+          <Bone onPage className="h-5 w-20" />
+          <Bone onPage className="h-4 w-44" />
+        </div>
+        <div className="space-y-3 rounded-3xl bg-card p-3">
+          <Bone className="mx-2 h-6 rounded-full" />
+          <div className="space-y-3 rounded-2xl bg-page p-3">
+            <div className="overflow-hidden rounded-2xl bg-card">
+              <Bone className="aspect-[4/1] w-full rounded-none" />
+              <div className="px-4 pb-4">
+                <div className="flex items-end justify-between gap-3">
+                  <div className="relative -mt-8 rounded-2xl bg-card p-1">
+                    <Bone className="size-16 rounded-xl" />
+                  </div>
+                  <Bone className="h-8 w-28 rounded-full" />
+                </div>
+                <div className="mt-2.5 space-y-2">
+                  <Bone className="h-5 w-32" />
+                  <Bone className="h-3 w-24" />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2 rounded-2xl bg-card p-4">
+              <Bone className="h-4 w-20" />
+              <Bone className="h-3 w-full" />
+              <Bone className="h-3 w-4/5" />
+            </div>
+            {[0, 1].map((i) => (
+              <Bone key={i} className="h-14 rounded-2xl bg-card" />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

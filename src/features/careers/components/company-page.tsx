@@ -4,24 +4,31 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { IconBriefcase, IconChevronRight, IconExternalLink } from "@tabler/icons-react";
 
-import { Bone } from "#/components/page-skeletons";
 import { EMPLOYMENT_LABEL } from "#/features/offers/offer-labels";
-import { getCareersCompany } from "#/lib/api/careers-controller";
+import { getCareersCompany, type CareersCompany, type CareersOfferSummary } from "#/lib/api/careers-controller";
 import { CareersShell, offerPlace } from "./careers-shell";
 import { CompanyHero, websiteHref } from "./company-hero";
+import { CompanyPageSkeleton } from "./company-page-skeleton";
 
 /** A business and its open offers, for someone who is not on Rabotka. */
-export function CompanyPage({ slug }: Readonly<{ slug: string }>) {
-  const query = useQuery({ queryKey: ["careers", slug], queryFn: () => getCareersCompany(slug), retry: false });
+export function CompanyPage({
+  slug,
+  initial,
+}: Readonly<{ slug: string; initial?: { company: CareersCompany; offers: CareersOfferSummary[] } }>) {
+  const query = useQuery({
+    queryKey: ["careers", slug],
+    queryFn: () => getCareersCompany(slug),
+    retry: false,
+    // What the server read: shown at once, read again in the background a minute later.
+    initialData: initial,
+    staleTime: 60_000,
+  });
   const page = query.data;
 
   return (
     <CareersShell>
       {query.isLoading ? (
-        <section className="space-y-4 rounded-3xl bg-card p-6 sm:p-8">
-          <Bone className="h-14 w-2/3" />
-          <Bone className="h-16 w-full" />
-        </section>
+        <CompanyPageSkeleton />
       ) : !page ? (
         <section className="space-y-2 rounded-3xl bg-card p-6 text-center sm:p-8">
           <h1 className="font-semibold text-lg">Page introuvable</h1>

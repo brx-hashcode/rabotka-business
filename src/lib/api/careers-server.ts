@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { headers } from "next/headers";
 
-import type { CareersCompany, CareersOffer } from "./careers-controller";
+import type { CareersCompany, CareersOffer, CareersOfferSummary } from "./careers-controller";
 
 /** The careers API read from the server, for what search engines get in the HTML. */
 async function getPublic<T>(path: string): Promise<T | null | undefined> {
@@ -31,7 +31,7 @@ export const careersOfferServer = cache((slug: string, reference: string) =>
 );
 
 export const careersCompanyServer = cache((slug: string) =>
-  getPublic<{ company: CareersCompany }>(`/${encodeURIComponent(slug)}`),
+  getPublic<{ company: CareersCompany; offers: CareersOfferSummary[] }>(`/${encodeURIComponent(slug)}`),
 );
 
 export type CareersSitemap = {
