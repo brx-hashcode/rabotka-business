@@ -150,12 +150,12 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
             hint={renews}
           />
         )}
-        {/* Places, not a quota per period: who is in the team now. */}
+        {/* Added this period, like the offers: a new period frees them, the team stays. */}
         {e.recruitersLimit !== undefined && e.recruitersLimit !== 0 && (
-          <Meter icon={IconUserCheck} label="Recruteurs" used={e.recruiters ?? 0} limit={e.recruitersLimit} hint={TEAM_HINT} />
+          <Meter icon={IconUserCheck} label="Recruteurs" used={e.recruiters ?? 0} limit={e.recruitersLimit} hint={<TeamHint endsAt={e.endsAt} />} />
         )}
         {e.reviewersLimit !== undefined && e.reviewersLimit !== 0 && (
-          <Meter icon={IconUserSearch} label="Évaluateurs" used={e.reviewers ?? 0} limit={e.reviewersLimit} hint={TEAM_HINT} />
+          <Meter icon={IconUserSearch} label="Évaluateurs" used={e.reviewers ?? 0} limit={e.reviewersLimit} hint={<TeamHint endsAt={e.endsAt} />} />
         )}
       </div>
 
@@ -297,14 +297,17 @@ export function cvLine(plan: BusinessPlan): string | null {
   return plan.cvScreeningsPerPeriod === null ? "Analyse de CV illimitée" : `Analyse de CV : ${plan.cvScreeningsPerPeriod} CV inclus`;
 }
 
-const TEAM_HINT = (
-  <>
-    Places de votre équipe, invitations comprises.{" "}
-    <Link href="/espace/equipe" className="font-medium text-foreground underline underline-offset-2">
-      Gérer l&apos;équipe
-    </Link>
-  </>
-);
+/** Team places count per period, like the offers: a new period frees them, the people stay. */
+function TeamHint({ endsAt }: Readonly<{ endsAt: string | null }>) {
+  return (
+    <>
+      Ajouts à l&apos;équipe{endsAt ? ` jusqu'au ${date(endsAt)}` : ""}, puis à nouveau au renouvellement.{" "}
+      <Link href="/espace/equipe" className="font-medium text-foreground underline underline-offset-2">
+        Gérer l&apos;équipe
+      </Link>
+    </>
+  );
+}
 
 function Meter({
   icon: Icon,
