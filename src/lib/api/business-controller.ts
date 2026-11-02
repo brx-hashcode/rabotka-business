@@ -30,6 +30,34 @@ class BusinessController extends BusinessBaseController {
     return this.post("/profile/avatar", form);
   }
 
+  getCareersPage(): Promise<CareersPage> {
+    return this.get("/business/me/careers-page");
+  }
+
+  setBenefits(benefits: string[]): Promise<CareersPage> {
+    return this.patch("/business/me/careers-page", { benefits });
+  }
+
+  uploadCover(file: File): Promise<CareersPage> {
+    const form = new FormData();
+    form.append("image", file);
+    return this.post("/business/me/careers-page/cover", form);
+  }
+
+  removeCover(): Promise<CareersPage> {
+    return this.delete("/business/me/careers-page/cover");
+  }
+
+  addPhoto(file: File): Promise<CareersPage> {
+    const form = new FormData();
+    form.append("image", file);
+    return this.post("/business/me/careers-page/photos", form);
+  }
+
+  removePhoto(index: number): Promise<CareersPage> {
+    return this.delete(`/business/me/careers-page/photos/${index}`);
+  }
+
   /** « Rédiger avec l'IA »: an offer written from a few words (one of the plan's drafts). */
   draftOffer(body: OfferDraftInput): Promise<OfferDraft> {
     return this.post("/business/me/offer-drafts", body);
@@ -83,6 +111,16 @@ export const getMyBusiness = controller.getMe.bind(controller);
 export const updateMyBusiness = controller.updateMe.bind(controller);
 export const uploadMyBusinessDocument = controller.uploadDocument.bind(controller);
 export const uploadMyBusinessLogo = controller.uploadLogo.bind(controller);
+export const getCareersPage = controller.getCareersPage.bind(controller);
+export const setCareersBenefits = controller.setBenefits.bind(controller);
+export const uploadCareersCover = controller.uploadCover.bind(controller);
+export const removeCareersCover = controller.removeCover.bind(controller);
+export const addCareersPhoto = controller.addPhoto.bind(controller);
+export const removeCareersPhoto = controller.removePhoto.bind(controller);
+export const careersPageKey = ["business", "me", "careers-page"] as const;
+
+/** What a business shows of itself on its careers page. */
+export type CareersPage = { coverUrl: string | null; photos: string[]; benefits: string[] };
 export const getMyContacts = controller.getContacts.bind(controller);
 export const unlockWorkerContact = controller.unlockContact.bind(controller);
 export const myContactsKey = ["business", "me", "contacts"] as const;

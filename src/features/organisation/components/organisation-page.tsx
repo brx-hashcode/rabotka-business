@@ -15,6 +15,7 @@ import { cn } from "#/lib/utils";
 import { sessionUserKey } from "#/hooks/use-session-user";
 import type { SessionUser } from "#/lib/api/types";
 import { OrganisationCareersLink } from "./organisation-careers-link";
+import { OrganisationCareersPage } from "./organisation-careers-page";
 import { OrganisationDocuments } from "./organisation-documents";
 import { OrganisationMailboxes } from "./organisation-mailboxes";
 import { OrganisationLogo } from "./organisation-logo";
@@ -132,6 +133,8 @@ export function OrganisationPage() {
                     pending={save.isPending}
                     onDistributeChange={(distributeOffers) => save.mutate({ distributeOffers })}
                   />
+                  <div aria-hidden className="h-px bg-page" />
+                  <OrganisationCareersPage />
                   <div aria-hidden className="h-px bg-page" />
                 </>
               )}
