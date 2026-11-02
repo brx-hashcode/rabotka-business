@@ -58,14 +58,8 @@ const schema = z
     ),
   })
   .superRefine((d, ctx) => {
-    if (!d.scheduledDate) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["scheduledDate"],
-        message: isDatedMission(d.employmentType as EmploymentType)
-          ? "La date de la mission est requise"
-          : "La date de clôture des candidatures est requise",
-      });
+    if (!d.scheduledDate && isDatedMission(d.employmentType as EmploymentType)) {
+      ctx.addIssue({ code: "custom", path: ["scheduledDate"], message: "La date de la mission est requise" });
     }
     if (d.address && d.address.length < 10) {
       ctx.addIssue({ code: "custom", path: ["address"], message: "L'adresse doit contenir au moins 10 caractères" });
@@ -130,7 +124,8 @@ export function toOfferInput(v: OfferFormValues, countryName: string | undefined
   return {
     title: v.title.trim(),
     description: v.description.trim(),
-    scheduled_at: scheduledIso(v.scheduledDate, v.scheduledTime),
+    // Only a mission has a day: the business closes the others itself.
+    scheduled_at: isDatedMission(v.employmentType as EmploymentType) ? scheduledIso(v.scheduledDate, v.scheduledTime) : null,
     employment_type: v.employmentType as EmploymentType,
     isRemote: v.isRemote,
     ...(v.isRemote ? {} : { countryCode: v.countryCode, countryName, city: v.city }),
@@ -189,12 +184,14 @@ export function OfferForm({
   }, [cities, city, form]);
 
   function submit(values: OfferFormValues) {
-    const iso = scheduledIso(values.scheduledDate, values.scheduledTime);
-    if (iso !== keepSchedule && isTooSoon(iso)) {
-      form.setError(values.scheduledTime ? "scheduledTime" : "scheduledDate", {
-        message: "La date doit être au moins 4 heures dans le futur",
-      });
-      return;
+    if (isDatedMission(values.employmentType as EmploymentType)) {
+      const iso = scheduledIso(values.scheduledDate, values.scheduledTime);
+      if (iso !== keepSchedule && isTooSoon(iso)) {
+        form.setError(values.scheduledTime ? "scheduledTime" : "scheduledDate", {
+          message: "La date doit être au moins 4 heures dans le futur",
+        });
+        return;
+      }
     }
     onSubmit(values, countries?.find((c) => c.code === values.countryCode)?.name);
   }
@@ -296,7 +293,7 @@ export function OfferForm({
             />
           </Section>
 
-          <Section title="Type et date">
+          <Section title={dated ? "Type et date" : "Type"}>
             <Choice
               control={form.control}
               name="employmentType"
@@ -309,34 +306,38 @@ export function OfferForm({
                 disabled: !AVAILABLE_EMPLOYMENT_TYPES.includes(t.value) && t.value !== defaultValues.employmentType,
               }))}
             />
-            <div className="grid gap-5 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="scheduledDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FieldLabel>{dated ? "Date de la mission" : "Clôture des candidatures"}</FieldLabel>
-                    <FormControl>
-                      <Input {...field} type="date" min={toDate(new Date())} className={FIELD_CLASS} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="scheduledTime"
-                render={({ field }) => (
-                  <FormItem>
-                    <FieldLabel optional>Heure</FieldLabel>
-                    <FormControl>
-                      <Input {...field} type="time" className={FIELD_CLASS} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {dated ? (
+              <div className="grid gap-5 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="scheduledDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FieldLabel>Date de la mission</FieldLabel>
+                      <FormControl>
+                        <Input {...field} type="date" min={toDate(new Date())} className={FIELD_CLASS} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="scheduledTime"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FieldLabel optional>Heure</FieldLabel>
+                      <FormControl>
+                        <Input {...field} type="time" className={FIELD_CLASS} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">L&apos;offre reste en ligne jusqu&apos;à ce que vous la clôturiez.</p>
+            )}
           </Section>
 
           <Section title="Lieu">

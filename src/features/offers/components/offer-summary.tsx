@@ -48,7 +48,7 @@ export function OfferSummary({
     { label: "Intitulé", done: v.title.trim().length >= 5 },
     { label: "Description (20 caractères au moins)", done: v.description.trim().length >= 20 },
     { label: "Métier", done: !!v.categoryId },
-    { label: isDatedMission(type) ? "Date de la mission" : "Date de clôture", done: !!v.scheduledDate },
+    ...(isDatedMission(type) ? [{ label: "Date de la mission", done: !!v.scheduledDate }] : []),
     { label: "Lieu", done: v.isRemote || (!!v.countryCode && !!v.city) },
   ];
   const done = checks.filter((c) => c.done).length;
@@ -67,7 +67,7 @@ export function OfferSummary({
       </div>
 
       <dl className="space-y-3 text-sm">
-        <Row icon={IconCalendarEvent} label={isDatedMission(type) ? "Date" : "Clôture"} value={when} />
+        {isDatedMission(type) && <Row icon={IconCalendarEvent} label="Date" value={when} />}
         <Row icon={IconMapPin} label="Lieu" value={where || null} hint={v.isRemote ? undefined : v.address.trim() || undefined} />
         <Row
           icon={IconUsers}
