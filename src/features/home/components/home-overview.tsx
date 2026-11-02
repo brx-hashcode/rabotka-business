@@ -36,6 +36,7 @@ import type { BusinessStats, MyBusiness, MySubscription, StatsPeriod } from "#/l
 import { cn } from "#/lib/utils";
 import { formatDelay, trend, type Trend } from "../stats-format";
 import { ApplicationsChart } from "./applications-chart";
+import { ReportExportMenu } from "./report-export-menu";
 import { StatTile } from "./stat-tile";
 import { offersUsed } from "#/features/subscription/offers-quota";
 
@@ -77,14 +78,7 @@ export function HomeOverview() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <PeriodPicker value={days} onChange={setDays} />
-            <button
-              type="button"
-              onClick={() => setReportOpen(true)}
-              className="inline-flex h-11 items-center gap-2 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70"
-            >
-              <IconFileText className="size-4" />
-              Rapport PDF
-            </button>
+            <ReportExportMenu days={days} onOpenPdf={() => setReportOpen(true)} />
           </div>
         </div>
         {/* The same period as a document to keep or send: read, downloaded and printed from the drawer. */}
