@@ -18,6 +18,8 @@ import {
 import { searchCandidates } from "#/lib/api/candidate-controller";
 import { friendlyError, httpStatusOf } from "#/lib/api/friendly-error";
 import { getInitials } from "#/lib/utils";
+import { pageAllowed } from "#/features/team/member-access";
+import { useMember } from "#/features/team/use-member";
 import { NAV_ITEMS } from "./nav-items";
 
 /** Accents and case aside: « ecole » finds « École ». */
@@ -61,7 +63,10 @@ export function CommandSearch() {
     staleTime: 60_000,
   });
   const forbidden = httpStatusOf(results.error) === 403;
-  const pages = NAV_ITEMS.filter((i) => !i.soon && (!query.trim() || plain(i.label).includes(plain(query.trim()))));
+  const { role } = useMember();
+  const pages = NAV_ITEMS.filter(
+    (i) => !i.soon && pageAllowed(role, i.href) && (!query.trim() || plain(i.label).includes(plain(query.trim()))),
+  );
 
   function close() {
     setOpen(false);

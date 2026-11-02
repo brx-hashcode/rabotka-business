@@ -20,18 +20,21 @@ import { emailSchema } from "#/lib/validations/auth";
 
 type Step1EmailFormProps = {
   onSubmit: (data: { email: string }) => Promise<void>;
+  /** Filled in from a team invitation's link (`?email=`). */
+  defaultEmail?: string;
   isLoading: boolean;
   serverError: string | null;
 };
 
 export function Step1EmailForm({
   onSubmit,
+  defaultEmail,
   isLoading,
   serverError,
 }: Readonly<Step1EmailFormProps>) {
   const form = useForm<{ email: string }>({
     resolver: zodResolver(z.object({ email: emailSchema })),
-    defaultValues: { email: "" },
+    defaultValues: { email: defaultEmail ?? "" },
     mode: "onSubmit",
   });
 

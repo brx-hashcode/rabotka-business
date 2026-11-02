@@ -26,6 +26,8 @@ import { sourceLabel } from "#/features/careers/candidate-source";
 import { downloadFile } from "#/lib/api/download";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { getInitials } from "#/lib/utils";
+import { canHire } from "#/features/team/member-access";
+import { useMember } from "#/features/team/use-member";
 
 const YES_NO: Record<string, string> = { yes: "Oui", no: "Non" };
 
@@ -52,6 +54,8 @@ export function ExternalApplicationCard({
 }>) {
   const queryClient = useQueryClient();
   const name = `${a.firstName} ${a.lastName}`;
+  // Deciding is for those who hire; an Évaluateur reads and gives its opinion.
+  const hire = canHire(useMember().role);
   const [refusing, setRefusing] = useState(false);
   const [retaining, setRetaining] = useState(false);
   const [showAnswers, setShowAnswers] = useState(false);
@@ -250,7 +254,7 @@ export function ExternalApplicationCard({
         ) : (
           <span />
         )}
-        {a.status === "PENDING" && (
+        {hire && a.status === "PENDING" && (
           <div className="flex items-center gap-2">
             <button
               type="button"
