@@ -126,7 +126,12 @@ export function OrganisationPage() {
               <div aria-hidden className="h-px bg-page" />
               {verified && business.publicSlug && (
                 <>
-                  <OrganisationCareersLink slug={business.publicSlug} />
+                  <OrganisationCareersLink
+                    slug={business.publicSlug}
+                    distribute={business.distributeOffers ?? true}
+                    pending={save.isPending}
+                    onDistributeChange={(distributeOffers) => save.mutate({ distributeOffers })}
+                  />
                   <div aria-hidden className="h-px bg-page" />
                 </>
               )}
