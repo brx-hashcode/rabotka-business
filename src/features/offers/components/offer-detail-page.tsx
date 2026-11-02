@@ -12,6 +12,7 @@ import {
   IconCash,
   IconCheck,
   IconChevronDown,
+  IconCircleCheck,
   IconCircleX,
   IconInbox,
   IconMapPin,
@@ -59,6 +60,7 @@ import {
   getOfferAssessments,
   refuseApplications,
   offersKey,
+  confirmOfferHire,
   republishOffer,
   type ApplicantAssessment,
   type Offer,
@@ -100,6 +102,8 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const { data: business } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
   const { data: subscription } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   const noOfferLeft = !!subscription && offersFull(subscription.entitlements);
+  const needsDate = !offer.data || isDatedMission(offer.data.employmentType);
+  const [confirmFinish, setConfirmFinish] = useState(false);
   // Those who applied from the public careers page.
   const external = useQuery({
     queryKey: externalApplicationsKey,
@@ -134,6 +138,15 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
     },
     onError: (err) => toast.error(friendlyError(err, "L'offre n'a pas pu être fermée.")),
   });
+  const finish = useMutation({
+    mutationFn: () => confirmOfferHire(id),
+    onSuccess: () => {
+      refresh();
+      setConfirmFinish(false);
+      toast.success("Offre clôturée. Vous pouvez noter votre recrutement.");
+    },
+    onError: (err) => toast.error(friendlyError(err, "L'offre n'a pas pu être clôturée.")),
+  });
   const remove = useMutation({
     mutationFn: () => deleteOffer(id),
     onSuccess: () => {
@@ -146,7 +159,10 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const republish = useMutation({
     // The same hour: a mission keeps its start, a closing date its end of day.
     mutationFn: () =>
-      republishOffer(id, scheduledIso(newDate, offer.data?.scheduledAt ? new Date(offer.data.scheduledAt).toTimeString().slice(0, 5) : "")),
+      republishOffer(
+        id,
+        needsDate ? scheduledIso(newDate, offer.data?.scheduledAt ? new Date(offer.data.scheduledAt).toTimeString().slice(0, 5) : "") : null,
+      ),
     onSuccess: () => {
       refresh();
       setRepublishing(false);
@@ -209,6 +225,16 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                   >
                     <IconCircleX className="size-4" />
                     Fermer l&apos;offre
+                  </button>
+                )}
+                {o.status === "FILLED" && !isDatedMission(o.employmentType) && (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmFinish(true)}
+                    className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white hover:bg-ink/90"
+                  >
+                    <IconCircleCheck className="size-4" />
+                    Clôturer l&apos;offre
                   </button>
                 )}
                 {o.status === "EXPIRED" && (
@@ -280,6 +306,17 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
       />
 
       <ActionDialog
+        open={confirmFinish}
+        onOpenChange={setConfirmFinish}
+        icon={<IconCircleCheck className="size-5" />}
+        title="Clôturer cette offre ?"
+        description="Vous confirmez votre recrutement. L'offre est terminée, et vous pouvez noter les personnes recrutées."
+        confirmLabel="Clôturer l'offre"
+        pending={finish.isPending}
+        onConfirm={() => finish.mutate()}
+      />
+
+      <ActionDialog
         open={republishing}
         onOpenChange={setRepublishing}
         icon={<IconRefresh className="size-5" />}
@@ -287,19 +324,21 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
         description={
           noOfferLeft
             ? "Votre formule n'a plus d'offre à publier sur cette période."
-            : "Choisissez la nouvelle date (au moins 4 heures à l'avance). Elle compte comme une offre publiée sur votre formule."
+            : `${needsDate ? "Choisissez la nouvelle date (au moins 4 heures à l'avance). " : ""}Elle compte comme une offre publiée sur votre formule.`
         }
         confirmLabel="Republier"
-        confirmDisabled={!newDate || noOfferLeft}
+        confirmDisabled={(needsDate && !newDate) || noOfferLeft}
         pending={republish.isPending}
         onConfirm={() => republish.mutate()}
       >
-        <Input
-          type="date"
-          value={newDate}
-          onChange={(e) => setNewDate(e.target.value)}
-          className="h-12 rounded-xl border-0 bg-page px-4 shadow-none"
-        />
+        {needsDate && (
+          <Input
+            type="date"
+            value={newDate}
+            onChange={(e) => setNewDate(e.target.value)}
+            className="h-12 rounded-xl border-0 bg-page px-4 shadow-none"
+          />
+        )}
       </ActionDialog>
     </div>
   );
@@ -365,7 +404,7 @@ function OfferHeader({
         <Tile
           icon={IconCalendarEvent}
           label={isDatedMission(o.employmentType) ? "Mission" : "Clôture"}
-          value={o.closedAt ? "Fermée" : left === null ? "—" : left > 0 ? `J-${left}` : left === 0 ? "Aujourd'hui" : "Passée"}
+          value={o.closedAt ? "Fermée" : left === null ? (isDatedMission(o.employmentType) ? "—" : "Par vous") : left > 0 ? `J-${left}` : left === 0 ? "Aujourd'hui" : "Passée"}
           hint={o.scheduledAt ? (offerDate(o.scheduledAt, o.employmentType) ?? undefined) : undefined}
           muted={!open}
         />
@@ -1003,11 +1042,15 @@ function SuggestedCard({
 function DetailsCard({ offer: o, category }: Readonly<{ offer: Offer; category?: string }>) {
   const place = o.isRemote ? "À distance" : [o.city, o.countryName].filter(Boolean).join(", ");
   const rows: { icon: TablerIcon; label: string; value: string; hint?: string }[] = [
-    {
-      icon: IconCalendarEvent,
-      label: isDatedMission(o.employmentType) ? "Date de la mission" : "Clôture des candidatures",
-      value: offerDate(o.scheduledAt, o.employmentType)?.replace(/^Candidatures jusqu'au /, "") ?? "Non renseignée",
-    },
+    ...(isDatedMission(o.employmentType) || o.scheduledAt
+      ? [
+          {
+            icon: IconCalendarEvent,
+            label: isDatedMission(o.employmentType) ? "Date de la mission" : "Clôture des candidatures",
+            value: offerDate(o.scheduledAt, o.employmentType)?.replace(/^Candidatures jusqu'au /, "") ?? "Non renseignée",
+          },
+        ]
+      : []),
     { icon: IconMapPin, label: "Lieu", value: place || "Non renseigné", hint: o.isRemote ? undefined : (o.address ?? undefined) },
     { icon: IconUsers, label: "Postes", value: `${o.quantity} personne${o.quantity > 1 ? "s" : ""}` },
     {

@@ -90,8 +90,8 @@ export type ReceivedApplication = OfferApplicant & {
 export type OfferInput = {
   title: string;
   description: string;
-  /** ISO instant: the day of the work (MISSION) or the closing date. */
-  scheduled_at: string;
+  /** ISO instant: the day of the work. Null on a CDD, CDI or stage. */
+  scheduled_at: string | null;
   employment_type: EmploymentType;
   isRemote: boolean;
   countryCode?: string;
@@ -244,7 +244,12 @@ class OfferController extends BusinessBaseController {
     return this.post(`/job-offers/${encodeURIComponent(id)}/close`);
   }
 
-  republish(id: string, scheduledAt: string): Promise<unknown> {
+  /** Ends a CDD, CDI or stage once its posts are taken, and opens the rating. */
+  confirmHire(id: string): Promise<unknown> {
+    return this.post(`/profile/job-offers/${encodeURIComponent(id)}/confirm-hire`, {});
+  }
+
+  republish(id: string, scheduledAt: string | null): Promise<unknown> {
     return this.post(`/job-offers/${encodeURIComponent(id)}/republish`, { scheduledAt });
   }
 
@@ -264,6 +269,7 @@ export const updateOffer = controller.update.bind(controller);
 export const deleteOffer = controller.remove.bind(controller);
 export const closeOffer = controller.close.bind(controller);
 export const republishOffer = controller.republish.bind(controller);
+export const confirmOfferHire = controller.confirmHire.bind(controller);
 export const getJobCategories = controller.categories.bind(controller);
 
 export const offersKey = ["offers"] as const;
