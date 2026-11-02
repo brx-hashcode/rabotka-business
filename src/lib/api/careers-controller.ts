@@ -1,5 +1,5 @@
 import { BusinessBaseController } from "./base-controller";
-import type { EmploymentType, PaymentFlow } from "./offer-controller";
+import type { EmploymentType, PaymentFlow, QuestionKind } from "./offer-controller";
 
 export type CareersCompany = {
   slug: string;
@@ -24,7 +24,7 @@ export type CareersOfferSummary = {
 
 export type CareersQuestion = {
   id: string;
-  kind: "YES_NO" | "CHOICE" | "SHORT_TEXT";
+  kind: QuestionKind;
   label: string;
   options: string[];
   required: boolean;

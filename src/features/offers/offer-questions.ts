@@ -6,11 +6,29 @@ export const KIND_LABEL: Record<QuestionKind, string> = {
   YES_NO: "Oui / Non",
   CHOICE: "Choix",
   SHORT_TEXT: "Réponse courte",
+  LONG_TEXT: "Réponse longue",
+  NUMBER: "Nombre",
+  DATE: "Date",
 };
+
+/** What the candidate is asked to give, under the type picker. */
+export const KIND_HINT: Record<QuestionKind, string> = {
+  YES_NO: "Le candidat répond par oui ou par non.",
+  CHOICE: "Le candidat choisit une des réponses que vous proposez.",
+  SHORT_TEXT: "Le candidat répond en quelques mots (300 caractères).",
+  LONG_TEXT: "Le candidat écrit un texte, comme une lettre de motivation (3 000 caractères).",
+  NUMBER: "Le candidat répond par un nombre, comme ses années d'expérience.",
+  DATE: "Le candidat choisit une date, comme sa disponibilité.",
+};
+
+/** Kinds whose answer can set an application aside. */
+export const CAN_KNOCK_OUT: QuestionKind[] = ["YES_NO", "CHOICE", "NUMBER", "DATE"];
 
 /** Ready-made questions, offered while the offer has none. */
 export const SUGGESTIONS: OfferQuestion[] = [
   { kind: "YES_NO", label: "Avez-vous le permis B ?", options: [], required: true, knockout: true, accepted: ["yes"] },
+  { kind: "LONG_TEXT", label: "Lettre de motivation", options: [], required: false, knockout: false, accepted: [] },
+  { kind: "NUMBER", label: "Combien d'années d'expérience avez-vous ?", options: [], required: true, knockout: false, accepted: [] },
   {
     kind: "CHOICE",
     label: "Quand pouvez-vous commencer ?",
@@ -41,7 +59,7 @@ export function withKind(q: OfferQuestion, kind: QuestionKind): OfferQuestion {
     ...q,
     kind,
     options: kind === "CHOICE" ? (q.options.length >= 2 ? q.options : ["", ""]) : [],
-    knockout: kind === "SHORT_TEXT" ? false : q.knockout,
+    knockout: CAN_KNOCK_OUT.includes(kind) ? q.knockout : false,
     accepted: [],
   };
 }
@@ -72,6 +90,8 @@ export function questionProblem(q: OfferQuestion): string | null {
     }
   }
   if (q.kind === "YES_NO" && q.knockout && q.accepted.length === 0) return "Indiquez la réponse attendue.";
+  if (q.kind === "NUMBER" && q.knockout && !/^\d+([.,]\d{1,2})?$/.test(q.accepted[0] ?? "")) return "Indiquez le minimum accepté.";
+  if (q.kind === "DATE" && q.knockout && !q.accepted[0]) return "Indiquez la date limite acceptée.";
   return null;
 }
 
