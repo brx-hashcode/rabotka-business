@@ -1,7 +1,7 @@
 import { appConfig } from "#/config";
 import { BusinessBaseController } from "./base-controller";
 
-export type MailProviderSlug = "gmail" | "outlook";
+export type MailProviderSlug = "gmail";
 
 export type Mailbox = {
   id: string;
@@ -32,7 +32,7 @@ export type CvMail = {
 /** One CV ticked in a mail, sent with the analysis. */
 export type MailAttachmentRef = { mailboxId: string; messageId: string; attachmentId: string };
 
-/** The mailboxes « Analyse de CV » picks CVs from (Gmail, Outlook). */
+/** The mailboxes « Analyse de CV » picks CVs from (Gmail). */
 class MailboxController extends BusinessBaseController {
   list(): Promise<Mailboxes> {
     return this.get("/business/me/mailboxes");
@@ -67,4 +67,4 @@ export function mailAttachmentUrl(ref: MailAttachmentRef): string {
   return `${appConfig.apiUrl}/business/me/mailboxes/${encodeURIComponent(mailboxId)}/mails/${encodeURIComponent(messageId)}/attachments/${encodeURIComponent(attachmentId)}`;
 }
 
-export const PROVIDER_LABEL: Record<MailProviderSlug, string> = { gmail: "Gmail", outlook: "Outlook" };
+export const PROVIDER_LABEL: Record<MailProviderSlug, string> = { gmail: "Gmail" };

@@ -66,7 +66,7 @@ export const FEATURES: Feature[] = [
     icon: IconFileSearch,
     tone: "bg-chip-green text-chip-green-foreground",
     title: "Des dizaines de CV, classés en quelques minutes",
-    text: "Déposez les CV reçus pour un poste, ou choisissez-les directement dans votre messagerie Gmail ou Outlook. Rabotka lit chacun, même scanné ou pris en photo, et le note par rapport au poste.",
+    text: "Déposez les CV reçus pour un poste, ou choisissez-les directement dans votre messagerie Gmail. Rabotka lit chacun, même scanné ou pris en photo, et le note par rapport au poste.",
     points: [
       "Une note sur 100, les points forts et les points d'attention",
       "Le parcours relu : années en lien avec le poste, temps plein ou partiel",
@@ -258,7 +258,7 @@ export const FAQ = [
   },
   {
     q: "Quels CV puis-je envoyer ?",
-    a: "Des PDF, des fichiers Word (.docx) et des photos ou scans (JPG, PNG, WEBP), déposés depuis votre appareil ou choisis directement dans votre messagerie Gmail ou Outlook. Un fichier illisible, ou qui n'est pas un CV, n'est pas décompté.",
+    a: "Des PDF, des fichiers Word (.docx) et des photos ou scans (JPG, PNG, WEBP), déposés depuis votre appareil ou choisis directement dans votre messagerie Gmail. Un fichier illisible, ou qui n'est pas un CV, n'est pas décompté.",
   },
   {
     q: "Que fait Rabotka dans ma messagerie ?",
