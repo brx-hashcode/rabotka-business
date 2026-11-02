@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -11,6 +12,8 @@ import {
   IconFileText,
   IconLockOpen,
   IconPlayerPlay,
+  IconUserCheck,
+  IconUserSearch,
   IconWand,
 } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
@@ -23,6 +26,7 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import type { BusinessPlan, MySubscription, SubscriptionPeriod, SubscriptionStatus } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { offersPerPeriodLabel, offersUsed } from "../offers-quota";
+import { teamLine } from "../team-places";
 
 type Period = "MONTHLY" | "ANNUAL";
 
@@ -145,6 +149,13 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
             limit={e.offerDraftsQuota}
             hint={renews}
           />
+        )}
+        {/* Places, not a quota per period: who is in the team now. */}
+        {e.recruitersLimit !== undefined && e.recruitersLimit !== 0 && (
+          <Meter icon={IconUserCheck} label="Recruteurs" used={e.recruiters ?? 0} limit={e.recruitersLimit} hint={TEAM_HINT} />
+        )}
+        {e.reviewersLimit !== undefined && e.reviewersLimit !== 0 && (
+          <Meter icon={IconUserSearch} label="Évaluateurs" used={e.reviewers ?? 0} limit={e.reviewersLimit} hint={TEAM_HINT} />
         )}
       </div>
 
@@ -286,13 +297,22 @@ export function cvLine(plan: BusinessPlan): string | null {
   return plan.cvScreeningsPerPeriod === null ? "Analyse de CV illimitée" : `Analyse de CV : ${plan.cvScreeningsPerPeriod} CV inclus`;
 }
 
+const TEAM_HINT = (
+  <>
+    Places de votre équipe, invitations comprises.{" "}
+    <Link href="/espace/equipe" className="font-medium text-foreground underline underline-offset-2">
+      Gérer l&apos;équipe
+    </Link>
+  </>
+);
+
 function Meter({
   icon: Icon,
   label,
   used,
   limit,
   hint,
-}: Readonly<{ icon: typeof IconLockOpen; label: string; used: number; limit: number | null; hint?: string }>) {
+}: Readonly<{ icon: typeof IconLockOpen; label: string; used: number; limit: number | null; hint?: React.ReactNode }>) {
   const pct = limit === null || limit === 0 ? 0 : Math.min(100, Math.round((used / limit) * 100));
   return (
     <div className="space-y-3 rounded-2xl bg-page p-4">
@@ -421,6 +441,7 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
                   {offersPerPeriodLabel(plan.activeOffersLimit)}
                 </PlanLine>
                 {cvLine(plan) && <PlanLine>{cvLine(plan)}</PlanLine>}
+                {teamLine(plan) && <PlanLine>{teamLine(plan)}</PlanLine>}
                 {plan.includesPreselection && <PlanLine>Recherche de profils</PlanLine>}
                 {plan.priorityVisibility && <PlanLine>Offres affichées en premier</PlanLine>}
               </ul>
