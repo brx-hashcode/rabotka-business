@@ -11,6 +11,9 @@ export type CareersCompany = {
   description: string | null;
   /** Search engines may list its pages: it kept distribution on. */
   indexable: boolean;
+  coverUrl?: string | null;
+  photos?: string[];
+  benefits?: string[];
 };
 
 export type CareersOfferSummary = {

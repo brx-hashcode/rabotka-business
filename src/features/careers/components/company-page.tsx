@@ -28,20 +28,36 @@ export function CompanyPage({ slug }: Readonly<{ slug: string }>) {
         </section>
       ) : (
         <>
-          <section className="space-y-4 rounded-3xl bg-card p-6 sm:p-8">
-            <div className="flex items-center gap-3">
-              <CompanyLogo company={page.company} />
-              <div className="min-w-0">
-                <h1 className="truncate font-semibold text-2xl tracking-tight">{page.company.name}</h1>
-                <p className="truncate text-muted-foreground text-sm">
-                  {[page.company.categoryLabel, page.company.city].filter(Boolean).join(" · ")}
-                </p>
-              </div>
-            </div>
-            {page.company.description && (
-              <p className="line-clamp-3 text-[15px] text-foreground/85 leading-relaxed">{page.company.description}</p>
+          <section className="overflow-hidden rounded-3xl bg-card">
+            {page.company.coverUrl && (
+              // eslint-disable-next-line @next/next/no-img-element -- the business's own upload, any host
+              <img src={page.company.coverUrl} alt="" className="aspect-[3/1] w-full object-cover" />
             )}
+            <div className="space-y-4 p-6 sm:p-8">
+              <div className="flex items-center gap-3">
+                <CompanyLogo company={page.company} />
+                <div className="min-w-0">
+                  <h1 className="truncate font-semibold text-2xl tracking-tight">{page.company.name}</h1>
+                  <p className="truncate text-muted-foreground text-sm">
+                    {[page.company.categoryLabel, page.company.city].filter(Boolean).join(" · ")}
+                  </p>
+                </div>
+              </div>
+              {page.company.description && (
+                <p className="whitespace-pre-line text-[15px] text-foreground/85 leading-relaxed">{page.company.description}</p>
+              )}
+              {!!page.company.benefits?.length && (
+                <ul aria-label="Avantages" className="flex flex-wrap gap-2">
+                  {page.company.benefits.map((b) => (
+                    <li key={b} className="rounded-full bg-page px-3 py-1.5 font-medium text-sm">
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </section>
+
 
           <section className="space-y-3">
             <h2 className="px-2 font-semibold text-lg">
@@ -72,6 +88,15 @@ export function CompanyPage({ slug }: Readonly<{ slug: string }>) {
               </ul>
             )}
           </section>
+
+          {!!page.company.photos?.length && (
+            <section aria-label="Photos" className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {page.company.photos.map((src) => (
+                // eslint-disable-next-line @next/next/no-img-element -- the business's own upload, any host
+                <img key={src} src={src} alt="" className="aspect-[4/3] w-full rounded-2xl object-cover" />
+              ))}
+            </section>
+          )}
         </>
       )}
     </CareersShell>

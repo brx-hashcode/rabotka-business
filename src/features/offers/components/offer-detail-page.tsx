@@ -206,7 +206,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
             actions={
               <div className="flex flex-wrap gap-2 empty:hidden">
                 {business?.publicSlug && business.verificationStatus === "VERIFIED" && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
-                  <ShareOfferMenu slug={business.publicSlug} reference={o.reference} title={o.title} />
+                  <ShareOfferMenu offerId={o.id} slug={business.publicSlug} reference={o.reference} title={o.title} />
                 )}
                 {o.status === "ACTIVE" && (
                   <Link
