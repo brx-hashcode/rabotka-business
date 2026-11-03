@@ -8,8 +8,8 @@ import { z } from "zod";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "#/components/ui/form";
 import { Textarea } from "#/components/ui/textarea";
-import { useCities, useCountries } from "#/hooks/use-geo";
-import type { BusinessCatalog } from "#/lib/api/types";
+import { useBusinessCatalog } from "#/hooks/use-business-catalog";
+import { useCities } from "#/hooks/use-geo";
 import { cn } from "#/lib/utils";
 import { Combobox, type ComboboxOption } from "./combobox";
 import { FieldLabel, StepActions, StepHeading, TextField } from "./form-bits";
@@ -24,9 +24,11 @@ const schema = z.object({
   registrationNumber: optional(100),
   taxId: optional(100),
   statisticalId: optional(100),
-  address: z.string().trim().min(3, "Indiquez l'adresse").max(500),
+  // An organisation that works online has no address, and may have no city;
+  // it still has a country.
+  address: optional(500),
   country: z.string().length(2, "Choisissez le pays"),
-  city: z.string().min(1, "Choisissez la ville"),
+  city: optional(120),
   website: z
     .string()
     .trim()
@@ -47,7 +49,7 @@ const EMPTY: OrganisationValues = {
   taxId: "",
   statisticalId: "",
   address: "",
-  // Congo-Brazzaville first: the catalog's types and papers are Congo's.
+  // Congo-Brazzaville first: the first of the countries Business is open in.
   country: "CG",
   city: "",
   website: "",
@@ -84,13 +86,13 @@ const CATEGORY_GROUPS: Record<string, string> = {
 /**
  * The organisation itself. Types and the legal forms each takes come from
  * the catalog the server checks against; choosing a type narrows the legal
- * forms, and clears one that no longer fits.
+ * forms, and clears one that no longer fits. The country (one of the CEMAC
+ * and the RDC) is required, and names the official identifiers.
  *
  * Also the dashboard's edit form (/espace/organisation): no heading, no
  * back button, its own submit label.
  */
 export function OrganisationStep({
-  catalog,
   defaultValues,
   onBack,
   onDone,
@@ -99,7 +101,6 @@ export function OrganisationStep({
   pending,
   lockIdentity,
 }: Readonly<{
-  catalog: BusinessCatalog | undefined;
   defaultValues?: OrganisationValues;
   onBack?: () => void;
   onDone: (values: OrganisationValues) => void;
@@ -116,8 +117,9 @@ export function OrganisationStep({
   const category = useWatch({ control: form.control, name: "category" });
   const legalForm = useWatch({ control: form.control, name: "legalForm" });
   const country = useWatch({ control: form.control, name: "country" });
-  // Both lists from the backend's public geo API (as the agent app's picker).
-  const { data: countries } = useCountries();
+  // The countries and their papers from the catalog; the cities from the
+  // backend's public geo API (as the agent app's picker).
+  const catalog = useBusinessCatalog(country);
   const { data: cities } = useCities(country);
   const city = useWatch({ control: form.control, name: "city" });
   useEffect(() => {
@@ -133,6 +135,13 @@ export function OrganisationStep({
     // Only once the catalog is here: before, every form looks disallowed.
     if (catalog && legalForm && !allowedForms.includes(legalForm)) form.setValue("legalForm", "");
   }, [catalog, allowedForms, legalForm, form]);
+
+  const identifiers = catalog?.country === country ? catalog.identifiers : undefined;
+  const statisticalId = useWatch({ control: form.control, name: "statisticalId" });
+  useEffect(() => {
+    // A country without the identifier: a number typed for another stays out.
+    if (!lockIdentity && identifiers && !identifiers.statisticalId && statisticalId) form.setValue("statisticalId", "");
+  }, [identifiers, statisticalId, lockIdentity, form]);
 
   if (!catalog) {
     return (
@@ -197,33 +206,34 @@ export function OrganisationStep({
           text={lockIdentity ? undefined : "Ils facilitent la vérification de votre organisation."}
         >
           <div className="grid gap-5 sm:grid-cols-2">
-            <TextField
-              control={form.control}
-              name="registrationNumber"
-              label="N° RCCM"
-              placeholder={lockIdentity ? "Non renseigné" : "CG-BZV-01-2024-B12-00123"}
-              disabled={lockIdentity}
-            />
-            <TextField
-              control={form.control}
-              name="taxId"
-              label="NIU"
-              placeholder={lockIdentity ? "Non renseigné" : "M2024000123456A"}
-              disabled={lockIdentity}
-            />
-            <TextField
-              control={form.control}
-              name="statisticalId"
-              label="SCIEN / SCIET"
-              className="sm:col-span-2"
-              placeholder={lockIdentity ? "Non renseigné" : undefined}
-              disabled={lockIdentity}
-            />
+            {(["registrationNumber", "taxId", "statisticalId"] as const).map((name) => {
+              const field = (identifiers ?? catalog.identifiers)[name];
+              // Shown while filled, even where the country has none: it stays visible until cleared.
+              if (!field && !(lockIdentity && form.getValues(name))) return null;
+              return (
+                <TextField
+                  key={name}
+                  control={form.control}
+                  name={name}
+                  label={field?.label ?? "Identifiant statistique"}
+                  className={name === "statisticalId" ? "sm:col-span-2" : undefined}
+                  placeholder={lockIdentity ? "Non renseigné" : field?.placeholder}
+                  disabled={lockIdentity}
+                />
+              );
+            })}
           </div>
         </Section>
 
-        <Section title="Siège">
-          <TextField control={form.control} name="address" label="Adresse" autoComplete="street-address" placeholder="Rue, quartier, arrondissement" />
+        <Section title="Siège" text="Seul le pays est demandé : une organisation qui exerce en ligne laisse l'adresse vide.">
+          <TextField
+            control={form.control}
+            name="address"
+            label="Adresse"
+            optional
+            autoComplete="street-address"
+            placeholder="Rue, quartier, arrondissement"
+          />
           <div className="grid gap-5 sm:grid-cols-2">
             <ComboboxField
               control={form.control}
@@ -231,12 +241,13 @@ export function OrganisationStep({
               label="Pays"
               placeholder="Choisir le pays"
               searchPlaceholder="Rechercher un pays"
-              options={(countries ?? []).map((c) => ({ value: c.code, label: c.name }))}
+              options={catalog.countries.map((c) => ({ value: c.code, label: c.name }))}
             />
             <ComboboxField
               control={form.control}
               name="city"
               label="Ville"
+              optional
               placeholder={country ? "Choisir la ville" : "Choisissez d'abord le pays"}
               searchPlaceholder="Rechercher une ville"
               disabled={!country}
@@ -320,7 +331,13 @@ function ComboboxField({
       render={({ field, fieldState }) => (
         <FormItem>
           <FieldLabel optional={isOptional}>{label}</FieldLabel>
-          <Combobox value={field.value ?? ""} onChange={field.onChange} invalid={!!fieldState.error} {...combobox} />
+          <Combobox
+            value={field.value ?? ""}
+            onChange={field.onChange}
+            invalid={!!fieldState.error}
+            clearable={isOptional}
+            {...combobox}
+          />
           <FormMessage />
         </FormItem>
       )}

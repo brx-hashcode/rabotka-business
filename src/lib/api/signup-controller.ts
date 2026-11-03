@@ -11,8 +11,9 @@ const SIGNUP_TOKEN_HEADER = "X-Signup-Token";
  * httpOnly cookies.
  */
 class SignUpController extends BusinessBaseController {
-  getCatalog(): Promise<BusinessCatalog> {
-    return this.get("/public/business/catalog");
+  /** One country's catalog; the backend's default (Congo-Brazzaville) without one. */
+  getCatalog(country?: string): Promise<BusinessCatalog> {
+    return this.get(`/public/business/catalog${country ? `?country=${encodeURIComponent(country)}` : ""}`);
   }
 
   /** A code to the email; the account holder's name feeds drop-off tracking. */

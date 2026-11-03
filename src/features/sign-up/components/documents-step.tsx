@@ -26,10 +26,11 @@ const ACCEPT = "image/jpeg,image/png,image/webp,application/pdf";
 const MAX_BYTES = 10 * 1024 * 1024;
 
 /**
- * The organisation's papers. What is required comes from the catalog for the
- * chosen category: each « one of » group is one row (pick which paper you
- * have), the optional ones sit below. Files go to the private KYC store as
- * soon as they are picked, with the signup token.
+ * The organisation's papers. None is required: the catalog for the chosen
+ * country and type lists the usual ones first (« recommandés »), the others
+ * below; an organisation sends what it has, and the review asks for the rest.
+ * Files go to the private KYC store as soon as they are picked, with the
+ * signup token.
  */
 export function DocumentsStep({
   catalog,
@@ -53,17 +54,17 @@ export function DocumentsStep({
   onBack: () => void;
   onDone: () => void;
 }>) {
-  const requirement = catalog.categories.find((c) => c.value === category)?.documents ?? {
-    required: [],
+  const documents = catalog.categories.find((c) => c.value === category)?.documents ?? {
+    recommended: [],
     optional: [],
   };
   const label = new Map(catalog.documentTypes.map((d) => [d.value, d.label]));
   const [error, setError] = useState<string | null>(null);
+  // A type with nothing usual (« Autre organisation ») shows the whole list.
   const [showOptional, setShowOptional] = useState(
-    requirement.optional.some((t) => value[t]),
+    documents.recommended.length === 0 || documents.optional.some((t) => value[t]),
   );
-
-  const missing = requirement.required.filter((group) => !group.some((t) => value[t]));
+  const sent = Object.keys(value).length;
   const [viewing, setViewing] = useState<string | null>(null);
   const viewed = viewing ? value[viewing] : undefined;
   const rowProps = { signupToken, onError: setError, onPreview, onView: setViewing };
@@ -79,33 +80,28 @@ export function DocumentsStep({
     <div className="space-y-8">
       <StepHeading
         title="Pièces justificatives"
-        text="Formats acceptés : PDF, JPG, PNG ou WEBP, 10 Mo maximum par fichier. Vos documents restent confidentiels."
+        text="Envoyez ceux dont vous disposez : ils accélèrent la vérification de votre organisation. Vous pourrez en ajouter depuis votre espace. PDF, JPG, PNG ou WEBP, 10 Mo maximum par fichier ; vos documents restent confidentiels."
       />
 
-      {requirement.required.length > 0 && (
+      {documents.recommended.length > 0 && (
         <section className="space-y-3">
-          <p className="font-semibold text-sm">Documents requis</p>
-          {requirement.required.map((group) => (
-            <RequiredGroup
-              key={group.join("|")}
-              group={group}
-              label={label}
-              value={value}
-              onSet={set}
-              {...rowProps}
-            />
+          <p className="font-semibold text-sm">
+            Documents recommandés <span className="font-normal text-muted-foreground">(facultatif)</span>
+          </p>
+          {documents.recommended.map((type) => (
+            <DocumentRow key={type} type={type} title={label.get(type) ?? type} doc={value[type]} onSet={set} {...rowProps} />
           ))}
         </section>
       )}
 
-      {requirement.optional.length > 0 && (
+      {documents.optional.length > 0 && (
         <section className="space-y-3">
           {showOptional ? (
             <>
               <p className="font-semibold text-sm">
                 Documents complémentaires <span className="font-normal text-muted-foreground">(facultatif)</span>
               </p>
-              {requirement.optional.map((type) => (
+              {documents.optional.map((type) => (
                 <DocumentRow
                   key={type}
                   type={type}
@@ -142,57 +138,7 @@ export function DocumentsStep({
         type="button"
         onBack={onBack}
         onContinue={onDone}
-        disabled={missing.length > 0}
-        continueLabel={missing.length > 0 ? `${missing.length} document${missing.length > 1 ? "s" : ""} manquant${missing.length > 1 ? "s" : ""}` : "Continuer"}
-      />
-    </div>
-  );
-}
-
-/** A required « one of » group: chips to say which paper, then its upload. */
-function RequiredGroup({
-  group,
-  label,
-  value,
-  onSet,
-  ...rowProps
-}: Readonly<{
-  group: string[];
-  label: Map<string, string>;
-  value: DocumentsValue;
-  onSet: (type: string, doc: UploadedDocument | null) => void;
-} & RowCallbacks>) {
-  const uploaded = group.find((t) => value[t]);
-  const [chosen, setChosen] = useState(uploaded ?? group[0]);
-
-  return (
-    <div className="space-y-3">
-      {group.length > 1 && !uploaded && (
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="text-muted-foreground">Vous disposez de :</span>
-          {group.map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setChosen(t)}
-              aria-pressed={chosen === t}
-              className={cn(
-                "rounded-full px-3 py-1.5 font-medium transition-colors",
-                chosen === t ? "bg-ink text-white" : "bg-page hover:bg-page/70",
-              )}
-            >
-              {label.get(t) ?? t}
-            </button>
-          ))}
-        </div>
-      )}
-      <DocumentRow
-        type={uploaded ?? chosen}
-        title={label.get(uploaded ?? chosen) ?? chosen}
-        required
-        doc={value[uploaded ?? chosen]}
-        onSet={onSet}
-        {...rowProps}
+        continueLabel={sent === 0 ? "Continuer sans document" : "Continuer"}
       />
     </div>
   );
@@ -209,7 +155,6 @@ type RowCallbacks = {
 function DocumentRow({
   type,
   title,
-  required,
   doc,
   signupToken,
   onSet,
@@ -219,7 +164,6 @@ function DocumentRow({
 }: Readonly<{
   type: string;
   title: string;
-  required?: boolean;
   doc: UploadedDocument | undefined;
   onSet: (type: string, doc: UploadedDocument | null) => void;
 } & RowCallbacks>) {
@@ -258,10 +202,7 @@ function DocumentRow({
           {doc ? <IconCircleCheckFilled className="size-5" /> : <IconFileText className="size-5 text-muted-foreground" />}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block font-medium text-sm">
-            {title}
-            {required && !doc && <span className="text-destructive"> *</span>}
-          </span>
+          <span className="block font-medium text-sm">{title}</span>
           <span className="block truncate text-muted-foreground text-xs group-enabled:group-hover:text-foreground group-enabled:group-hover:underline">
             {doc ? `${doc.fileName} · Aperçu` : "Aucun fichier"}
           </span>

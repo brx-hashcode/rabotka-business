@@ -2,19 +2,16 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { toast } from "sonner";
 
 import { BusinessLockup } from "#/components/business-lockup";
 import { Skeleton } from "#/components/ui/skeleton";
+import { useBusinessCatalog } from "#/hooks/use-business-catalog";
 import { sessionUserKey } from "#/hooks/use-session-user";
 import { friendlyError, httpStatusOf } from "#/lib/api/friendly-error";
-import {
-  getBusinessCatalog,
-  reportSignUpProgress,
-  sendSignUpCode,
-} from "#/lib/api/signup-controller";
+import { reportSignUpProgress, sendSignUpCode } from "#/lib/api/signup-controller";
 import { signUpSession } from "#/lib/auth/session-client";
 import { toInternational } from "#/lib/phone";
 import { useSignUpStore } from "#/stores/sign-up-store";
@@ -42,15 +39,11 @@ const stepParser = parseAsStringLiteral(STEP_IDS).withDefault("account");
  */
 export function SignUpWizard() {
   const queryClient = useQueryClient();
-  const { data: catalog } = useQuery({
-    queryKey: ["business-catalog"],
-    queryFn: getBusinessCatalog,
-    staleTime: Infinity,
-  });
-
   const [etape, setEtape] = useQueryState("etape", stepParser.withOptions({ history: "push" }));
   const store = useSignUpStore();
   const { account, token, organisation, documents, previews, done } = store;
+  // The papers and identifiers in the organisation's country's words.
+  const catalog = useBusinessCatalog(organisation?.country);
   const [hydrated, setHydrated] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -114,15 +107,19 @@ export function SignUpWizard() {
     setSubmitting(true);
     setSubmitError(null);
     const phone = toInternational(account.phone, "CG");
+    const countryName = catalog?.countries.find((c) => c.code === organisation.country)?.name ?? organisation.country;
+    // The street, then the city: both optional for an organisation online.
+    const street = [organisation.address?.trim(), organisation.city].filter(Boolean).join(", ");
     try {
       const { user, signInRequired } = await signUpSession({
         firstName: account.firstName,
         lastName: account.lastName,
         email: account.email,
         phone,
-        address: organisation.address,
+        // The profile needs a place: the street, else the city, else the country.
+        address: street || countryName,
         countryCode: organisation.country,
-        city: organisation.city,
+        city: organisation.city || undefined,
         profileType: "EMPLOYER",
         readAndApprovedPolicies: true,
         signupToken: token,
@@ -134,7 +131,7 @@ export function SignUpWizard() {
           registrationNumber: organisation.registrationNumber || undefined,
           taxId: organisation.taxId || undefined,
           statisticalId: organisation.statisticalId || undefined,
-          address: `${organisation.address}, ${organisation.city}`,
+          address: organisation.address?.trim() ? street : undefined,
           email: account.email,
           phone,
           website: organisation.website || undefined,
@@ -233,12 +230,13 @@ export function SignUpWizard() {
       case 2:
         return (
           <OrganisationStep
-            catalog={catalog}
             defaultValues={organisation}
             onBack={() => go(0)}
             onDone={(values) => {
-              // Another type asks for other papers.
-              if (values.category !== organisation?.category) store.setDocuments({});
+              // Another type, or another country, asks for other papers.
+              if (values.category !== organisation?.category || values.country !== organisation?.country) {
+                store.setDocuments({});
+              }
               store.setOrganisation(values);
               go(3);
             }}
