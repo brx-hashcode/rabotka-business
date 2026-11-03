@@ -9,6 +9,18 @@ import { cn } from "#/lib/utils";
 import { DocumentPageSkeleton } from "./page-skeletons";
 
 const PdfPages = dynamic(() => import("./pdf-pages"), { ssr: false });
+const DocxPages = dynamic(() => import("./docx-pages"), { ssr: false });
+
+export type PreviewKind = "pdf" | "docx" | "image";
+
+/** What the panel can show of a file, by its type; null: download only. */
+export function previewKindOf(mime: string | null | undefined): PreviewKind | null {
+  if (!mime) return null;
+  if (mime === "application/pdf") return "pdf";
+  if (mime.includes("wordprocessingml")) return "docx";
+  if (mime.startsWith("image/")) return "image";
+  return null;
+}
 
 const ZOOMS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -29,7 +41,7 @@ export function PreviewSheet({
   subtitle?: string;
   /** Same-origin API path, signed URL or `blob:`; none: nothing to show. */
   src: string | undefined;
-  kind: "pdf" | "image";
+  kind: PreviewKind;
   /** The name a download is saved under. */
   fileName?: string;
   unavailable?: string;
@@ -156,15 +168,18 @@ export function PreviewSheet({
                   <IconDownload className="size-4" />
                   <span className="hidden sm:inline">Télécharger</span>
                 </button>
-                <button
-                  type="button"
-                  onClick={print}
-                  aria-label="Imprimer"
-                  title="Imprimer"
-                  className="flex size-10 items-center justify-center rounded-full bg-page hover:bg-page/70"
-                >
-                  <IconPrinter className="size-4" />
-                </button>
+                {/* A Word file prints from Word: the browser cannot print it as is. */}
+                {kind !== "docx" && (
+                  <button
+                    type="button"
+                    onClick={print}
+                    aria-label="Imprimer"
+                    title="Imprimer"
+                    className="flex size-10 items-center justify-center rounded-full bg-page hover:bg-page/70"
+                  >
+                    <IconPrinter className="size-4" />
+                  </button>
+                )}
               </div>
             )}
             <SheetPrimitive.Close aria-label="Fermer" className="flex size-10 items-center justify-center rounded-full hover:bg-page">
@@ -185,6 +200,10 @@ export function PreviewSheet({
               <div className="px-4 py-6 sm:px-8">
                 <PdfPages file={file.url} zoom={zoom} onPages={setPages} onError={() => setDrawFailed(true)} />
                 {pages > 1 && <p className="mt-4 text-center text-muted-foreground text-xs">{pages} pages</p>}
+              </div>
+            ) : kind === "docx" ? (
+              <div className="px-4 py-6 sm:px-8">
+                <DocxPages file={file.url} zoom={zoom} onError={() => setDrawFailed(true)} />
               </div>
             ) : (
               // At 100 % the photo fits the panel; zoomed in, it scrolls.
@@ -207,7 +226,7 @@ export function PreviewSheet({
 }
 
 /** The file as a URL the panel can draw and save: API routes become a local copy. */
-function useBlobUrl(src: string | undefined, kind: "pdf" | "image") {
+function useBlobUrl(src: string | undefined, kind: PreviewKind) {
   const sameOrigin = !!src?.startsWith("/");
   const [state, setState] = useState<{ for?: string; url: string | null; failed: boolean }>({ url: null, failed: false });
 

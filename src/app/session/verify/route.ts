@@ -17,8 +17,9 @@ export async function POST(req: NextRequest) {
     email?: string;
     otp?: string;
   };
-  const upstream = await backendPost(req, "/auth/mobile/verify-otp", {
-    emailOrPhone: email,
+  // The holder or a team member: a member's tokens are the business's, with it in them.
+  const upstream = await backendPost(req, "/auth/business/verify-otp", {
+    email,
     otp,
   });
   const data = await readJson(upstream);

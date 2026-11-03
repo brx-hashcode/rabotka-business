@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IconArrowLeft,
@@ -87,6 +87,10 @@ import { ShareOfferMenu } from "./share-offer-menu";
 import { Checkbox } from "#/components/ui/checkbox";
 import { CriterionBar, Points, ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
 import { scheduledIso } from "./offer-form";
+import { canHire } from "#/features/team/member-access";
+import { useMember } from "#/features/team/use-member";
+import { TeamOpinionButton } from "#/features/team/components/team-opinion";
+import { getOfferOpinions, offerOpinionsKey, type Verdict } from "#/lib/api/candidate-notes-controller";
 
 /**
  * One offer: where it stands (applications, positions filled, time left), its
@@ -101,6 +105,8 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const offer = useQuery({ queryKey: [...offersKey, id], queryFn: () => getOffer(id) });
   const { data: business } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
   const { data: subscription } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
+  // An Évaluateur reads the offer; changing it is for those who hire.
+  const hire = canHire(useMember().role);
   const noOfferLeft = !!subscription && offersFull(subscription.entitlements);
   const needsDate = !offer.data || isDatedMission(offer.data.employmentType);
   const [confirmFinish, setConfirmFinish] = useState(false);
@@ -208,7 +214,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                 {business?.publicSlug && business.verificationStatus === "VERIFIED" && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
                   <ShareOfferMenu offerId={o.id} slug={business.publicSlug} reference={o.reference} title={o.title} />
                 )}
-                {o.status === "ACTIVE" && (
+                {hire && o.status === "ACTIVE" && (
                   <Link
                     href={`/espace/offres/${o.id}/modifier`}
                     className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white hover:bg-ink/90"
@@ -217,7 +223,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                     Modifier
                   </Link>
                 )}
-                {(o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
+                {hire && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
                   <button
                     type="button"
                     onClick={() => setConfirmClose(true)}
@@ -227,7 +233,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                     Fermer l&apos;offre
                   </button>
                 )}
-                {o.status === "FILLED" && !isDatedMission(o.employmentType) && (
+                {hire && o.status === "FILLED" && !isDatedMission(o.employmentType) && (
                   <button
                     type="button"
                     onClick={() => setConfirmFinish(true)}
@@ -237,7 +243,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                     Clôturer l&apos;offre
                   </button>
                 )}
-                {o.status === "EXPIRED" && (
+                {hire && o.status === "EXPIRED" && (
                   <button
                     type="button"
                     onClick={() => setRepublishing(true)}
@@ -247,7 +253,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                     Republier
                   </button>
                 )}
-                {(o.status === "ACTIVE" || o.status === "EXPIRED") && (
+                {hire && (o.status === "ACTIVE" || o.status === "EXPIRED") && (
                   <button
                     type="button"
                     onClick={() => setConfirmDelete(true)}
@@ -460,6 +466,22 @@ function ApplicantsCard({
       : list.filter((a) => applicationStage(a.status) === k).length + outsiders.filter((a) => externalStage(a) === k).length;
   const shown = tab === "all" ? list : list.filter((a) => applicationStage(a.status) === tab);
   const shownOutsiders = tab === "all" ? outsiders : outsiders.filter((a) => externalStage(a) === tab);
+  // Opened from a notification on one candidature: show every stage, and
+  // bring that candidate into view once the lists are in.
+  const focusId = useSearchParams().get("candidature");
+  const loaded = !loading;
+  useEffect(() => {
+    if (!focusId || !loaded) return;
+    if (tab !== "all") void setTab("all");
+    const t = setTimeout(
+      () => document.getElementById(`candidature-${focusId}`)?.scrollIntoView({ behavior: "smooth", block: "center" }),
+      150,
+    );
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per opened candidature
+  }, [focusId, loaded]);
+  // The team's Oui / Peut-être / Non on each candidate, for the « Avis » buttons.
+  const opinions = useQuery({ queryKey: offerOpinionsKey(o.id), queryFn: () => getOfferOpinions(o.id) });
   // Compared as in Analyse de CV: the CVs of one screening, a few at a time.
   const [picked, setPicked] = useState<string[]>([]);
   const [comparing, setComparing] = useState(false);
@@ -624,6 +646,8 @@ function ApplicantsCard({
                       recruiting={open}
                       selected={selected.has(a.applicationId)}
                       onToggle={a.status === "PENDING" || a.status === "VIEWED" ? () => toggle(a.applicationId) : undefined}
+                      opinions={opinions.data?.rabotka[a.applicationId]}
+                      focused={focusId === a.applicationId}
                     />
                   ))}
                 </ul>
@@ -669,6 +693,8 @@ function ApplicantsCard({
                       <ExternalApplicationCard
                         key={a.id}
                         application={a}
+                        opinions={opinions.data?.external[a.id]}
+                        focused={focusId === a.id}
                         compare={
                           a.analysis
                             ? {
@@ -788,6 +814,8 @@ function ApplicantRow({
   recruiting,
   selected,
   onToggle,
+  opinions,
+  focused,
 }: Readonly<{
   applicant: OfferApplicant;
   rank: number;
@@ -799,6 +827,10 @@ function ApplicantRow({
   selected: boolean;
   /** Present only for an application still waiting: it can be refused in bulk. */
   onToggle?: () => void;
+  /** The team's opinions on it, counted. */
+  opinions?: Record<Verdict, number>;
+  /** Opened from a notification about it. */
+  focused?: boolean;
 }>) {
   const [open, setOpen] = useState(false);
   const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
@@ -806,7 +838,10 @@ function ApplicantRow({
   const answers = a.answers ?? [];
   const failed = failedLabel(answers);
   return (
-    <li className="rounded-2xl bg-page p-3 pr-4">
+    <li
+      id={`candidature-${a.applicationId}`}
+      className={cn("scroll-mt-24 rounded-2xl bg-page p-3 pr-4", focused && "ring-2 ring-whatsapp-dark")}
+    >
       <div className="flex items-center gap-3">
         <span className="flex w-5 shrink-0 flex-col items-center gap-1">
           {onToggle && <Checkbox checked={selected} onCheckedChange={onToggle} aria-label={`Sélectionner ${name}`} className="size-4 rounded" />}
@@ -868,6 +903,7 @@ function ApplicantRow({
           </button>
         )}
         <ResumeButton workerId={a.worker.id} name={name} />
+        <TeamOpinionButton kind="rabotka" id={a.applicationId} name={name} summary={opinions} />
         <ApplicationActions applicant={a} name={name} recruiting={recruiting} />
       </div>
       {open && answers.length > 0 && <Answers answers={answers} />}

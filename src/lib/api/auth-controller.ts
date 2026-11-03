@@ -5,17 +5,17 @@ import { BusinessBaseController } from "./base-controller";
  * (verify, refresh, logout) go through src/app/session instead, so the tokens
  * land in httpOnly cookies — see lib/auth/session-client.ts.
  *
- * The `mobile/` routes are the backend's bearer-token login: the same email
- * code as the web login, with the tokens returned in the body rather than set
- * as a cookie on the API's domain.
+ * The `business/` routes are the backend's bearer-token login for this space:
+ * the account holder or one of its team members, by email code, with the
+ * tokens returned in the body rather than set as a cookie on the API's domain.
  */
 class AuthController extends BusinessBaseController {
   sendOtp(email: string): Promise<{ success: true }> {
-    return this.post("/auth/mobile/send-otp", { emailOrPhone: email });
+    return this.post("/auth/business/send-otp", { email });
   }
 
   resendOtp(email: string): Promise<{ success: true }> {
-    return this.post("/auth/mobile/resend-otp", { emailOrPhone: email });
+    return this.post("/auth/business/resend-otp", { email });
   }
 }
 

@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
 import { ScheduleInterviewDialog } from "#/features/interviews/components/schedule-interview-dialog";
-import { PreviewSheet } from "#/components/preview-sheet";
+import { PreviewSheet, previewKindOf } from "#/components/preview-sheet";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Textarea } from "#/components/ui/textarea";
@@ -25,7 +25,11 @@ import { cvScreeningsKey, getCvScreening } from "#/lib/api/cv-screening-controll
 import { sourceLabel } from "#/features/careers/candidate-source";
 import { downloadFile } from "#/lib/api/download";
 import { friendlyError } from "#/lib/api/friendly-error";
-import { getInitials } from "#/lib/utils";
+import { cn, getInitials } from "#/lib/utils";
+import { canHire } from "#/features/team/member-access";
+import { useMember } from "#/features/team/use-member";
+import { TeamOpinionButton } from "#/features/team/components/team-opinion";
+import type { Verdict } from "#/lib/api/candidate-notes-controller";
 
 const YES_NO: Record<string, string> = { yes: "Oui", no: "Non" };
 
@@ -45,13 +49,21 @@ export function externalStage(a: Pick<ExternalApplication, "status" | "viewedAt"
 export function ExternalApplicationCard({
   application: a,
   compare,
+  opinions,
+  focused,
 }: Readonly<{
   application: ExternalApplication;
   /** On an offer's page: the checkbox of Analyse de CV. */
   compare?: { selected: boolean; disabled: boolean; onToggle: () => void };
+  /** On an offer's page: the team's opinions, counted. */
+  opinions?: Record<Verdict, number>;
+  /** Opened from a notification about it. */
+  focused?: boolean;
 }>) {
   const queryClient = useQueryClient();
   const name = `${a.firstName} ${a.lastName}`;
+  // Deciding is for those who hire; an Évaluateur reads and gives its opinion.
+  const hire = canHire(useMember().role);
   const [refusing, setRefusing] = useState(false);
   const [retaining, setRetaining] = useState(false);
   const [showAnswers, setShowAnswers] = useState(false);
@@ -69,7 +81,9 @@ export function ExternalApplicationCard({
   const [reading, setReading] = useState(false);
   const cvUrl = `/api/v1/business/me/external-applications/${encodeURIComponent(a.id)}/cv`;
   // The sheet shows a PDF; a Word file can only be saved.
-  const canShow = a.cvMimeType === "application/pdf";
+  // PDF, Word and photos open in the panel; anything else downloads.
+  const previewKind = previewKindOf(a.cvMimeType);
+  const canShow = previewKind !== null;
 
   const refuse = useMutation({
     mutationFn: () => refuseExternalApplication(a.id, message.trim() || undefined),
@@ -112,7 +126,10 @@ export function ExternalApplicationCard({
   }
 
   return (
-    <li className="flex flex-col gap-3 rounded-3xl bg-page p-5">
+    <li
+      id={`candidature-${a.id}`}
+      className={cn("flex scroll-mt-24 flex-col gap-3 rounded-3xl bg-page p-5", focused && "ring-2 ring-whatsapp-dark")}
+    >
       <div className="flex items-start gap-3.5">
         {compare && score !== null && (
           <label className="flex w-6 shrink-0 cursor-pointer flex-col items-center pt-4">
@@ -136,7 +153,7 @@ export function ExternalApplicationCard({
           <p className="truncate font-semibold">{name}</p>
           <p className="mt-1 flex flex-wrap gap-1.5">
             {score !== null && <VerdictChip score={score} />}
-            <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px]">Hors Rabotka</span>
+            <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px]">Page carrières</span>
             {a.source && a.source !== "direct" && (
               <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px] text-muted-foreground">via {sourceLabel(a.source)}</span>
             )}
@@ -250,7 +267,8 @@ export function ExternalApplicationCard({
         ) : (
           <span />
         )}
-        {a.status === "PENDING" && (
+        <TeamOpinionButton kind="external" id={a.id} name={name} summary={opinions} className="mr-auto" />
+        {hire && a.status === "PENDING" && (
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -285,7 +303,7 @@ export function ExternalApplicationCard({
         title={name}
         subtitle={a.offer.title}
         src={cvUrl}
-        kind="pdf"
+        kind={previewKind ?? "pdf"}
         fileName={a.cvFileName}
         unavailable="Ce CV n'est plus disponible."
       />

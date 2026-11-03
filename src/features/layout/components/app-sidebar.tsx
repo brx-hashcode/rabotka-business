@@ -8,6 +8,8 @@ import { IconLogout } from "@tabler/icons-react";
 
 import { BusinessLockup } from "#/components/business-lockup";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
+import { pageAllowed } from "#/features/team/member-access";
+import { useMember } from "#/features/team/use-member";
 import { getMyBusiness, myBusinessKey } from "#/lib/api/business-controller";
 import { cn, getInitials } from "#/lib/utils";
 import { LogoutDialog } from "./logout-dialog";
@@ -22,6 +24,11 @@ export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>
   const pathname = usePathname();
   const { data: business } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
   const [confirmLogout, setConfirmLogout] = useState(false);
+  // Each person sees the pages its role uses (the API refuses the rest anyway).
+  const { role } = useMember();
+  const groups = NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => pageAllowed(role, i.href)) })).filter(
+    (g) => g.items.length > 0,
+  );
 
   return (
     <div className="flex h-full flex-col rounded-3xl bg-card p-5">
@@ -59,7 +66,7 @@ export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>
       </Link>
 
       <nav className="mt-6 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto">
-        {NAV_GROUPS.map((group, i) => (
+        {groups.map((group, i) => (
           <div key={group.title ?? `group-${i}`} className="flex flex-col gap-0.5">
             {group.title && (
               <p className="mb-1 px-3 font-medium text-[11px] text-muted-foreground uppercase tracking-wider">{group.title}</p>

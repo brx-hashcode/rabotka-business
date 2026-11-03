@@ -30,7 +30,7 @@ import { toast } from "sonner";
 import { ActionDialog } from "#/components/action-dialog";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Bone, ClaimDetailSkeleton } from "#/components/page-skeletons";
-import { PreviewSheet } from "#/components/preview-sheet";
+import { PreviewSheet, previewKindOf } from "#/components/preview-sheet";
 import { cvFileUrl, cvScreeningsKey, deleteCvScreening, getCvScreening } from "#/lib/api/cv-screening-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import type { CvResume, CvScreening, Interview } from "#/lib/api/types";
@@ -209,7 +209,7 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
         title={preview?.candidate?.name ?? preview?.fileName ?? "CV"}
         subtitle={preview?.fileName}
         src={preview?.hasFile ? cvFileUrl(s.id, preview.id) : undefined}
-        kind={preview?.mimeType.startsWith("image/") ? "image" : "pdf"}
+        kind={previewKindOf(preview?.mimeType) ?? "pdf"}
         fileName={preview?.fileName}
         unavailable="Ce CV a été supprimé à la fin de sa durée de conservation."
       />
@@ -456,7 +456,6 @@ function ResumeCard({
         ? `${c.yearsExperience} an${c.yearsExperience > 1 ? "s" : ""} d'expérience`
         : null,
   ].filter(Boolean);
-  const isDocx = r.mimeType.includes("wordprocessingml");
 
   return (
     <article className="rounded-3xl bg-card p-5 sm:p-6">
@@ -561,7 +560,7 @@ function ResumeCard({
           <IconChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
         </button>
         {r.hasFile &&
-          (isDocx ? (
+          (previewKindOf(r.mimeType) === null ? (
             <a
               href={cvFileUrl(screeningId, r.id)}
               download={r.fileName}

@@ -26,6 +26,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 export default async function Page({ params }: Params) {
   const { slug } = await params;
-  if ((await careersCompanyServer(slug)) === null) notFound();
-  return <CompanyPage slug={slug} />;
+  const page = await careersCompanyServer(slug);
+  if (page === null) notFound();
+  // Already read for the metadata (cached): the page starts from it instead of loading it again.
+  return <CompanyPage slug={slug} initial={page} />;
 }

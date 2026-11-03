@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog as SheetPrimitive } from "radix-ui";
-import { IconCheck, IconChevronRight, IconEye, IconMail, IconPlugOff, IconPlus, IconSearch, IconShieldLock, IconX } from "@tabler/icons-react";
+import { IconCheck, IconChevronRight, IconEye, IconMail, IconPlugOff, IconPlus, IconRefresh, IconSearch, IconShieldLock, IconX } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
+import { ActionDialog } from "#/components/action-dialog";
 import { ProviderTile } from "#/components/mail-provider-logos";
-import { PreviewSheet } from "#/components/preview-sheet";
+import { PreviewSheet, type PreviewKind } from "#/components/preview-sheet";
 import { Input } from "#/components/ui/input";
 import { friendlyError } from "#/lib/api/friendly-error";
 import {
@@ -233,7 +234,8 @@ function MailCvSheet({
   const [q, setQ] = useState("");
   const search = useDebounced(q.trim());
   const [chosen, setChosen] = useState<MailPick[]>(picks);
-  const [preview, setPreview] = useState<{ pick: MailPick; kind: "pdf" | "image"; from: string } | null>(null);
+  const [preview, setPreview] = useState<{ pick: MailPick; kind: PreviewKind; from: string } | null>(null);
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   // For the picks of every mailbox together.
   const total = room;
 
@@ -247,6 +249,8 @@ function MailCvSheet({
     staleTime: 60_000,
   });
   const expired = (mails.error as { statusCode?: number } | null)?.statusCode === 409;
+  // A refresh reads the mailbox again (new mails come in at the top); « Charger plus » has its own spinner.
+  const refreshing = mails.isRefetching && !mails.isFetchingNextPage;
   const list = mails.data?.pages.flatMap((p) => p.mails) ?? [];
   const picked = new Set(chosen.map(pickKey));
   const added = chosen.filter((p) => !picks.some((o) => pickKey(o) === pickKey(p))).length;
@@ -254,6 +258,7 @@ function MailCvSheet({
   const disconnect = useMutation({
     mutationFn: () => disconnectMailbox(mailbox.id),
     onSuccess: () => {
+      setConfirmDisconnect(false);
       void queryClient.invalidateQueries({ queryKey: mailboxesKey });
       onDone(picks.filter((p) => p.mailboxId !== mailbox.id));
       toast.success(`${PROVIDER_LABEL[mailbox.provider]} déconnecté.`);
@@ -280,8 +285,18 @@ function MailCvSheet({
             </div>
             <button
               type="button"
+              aria-label="Actualiser les e-mails"
+              title="Actualiser"
+              disabled={refreshing || mails.isLoading || expired}
+              onClick={() => void mails.refetch()}
+              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-page text-muted-foreground hover:text-foreground disabled:opacity-60"
+            >
+              <IconRefresh className={cn("size-4", refreshing && "animate-spin")} />
+            </button>
+            <button
+              type="button"
               disabled={disconnect.isPending}
-              onClick={() => disconnect.mutate()}
+              onClick={() => setConfirmDisconnect(true)}
               className="hidden h-9 shrink-0 items-center gap-1.5 rounded-full bg-page px-3.5 font-medium text-muted-foreground text-sm hover:text-foreground disabled:opacity-50 sm:inline-flex"
             >
               <IconPlugOff className="size-4" />
@@ -306,7 +321,7 @@ function MailCvSheet({
             <button
               type="button"
               disabled={disconnect.isPending}
-              onClick={() => disconnect.mutate()}
+              onClick={() => setConfirmDisconnect(true)}
               className="inline-flex items-center gap-1.5 font-medium text-muted-foreground text-xs hover:text-foreground disabled:opacity-50 sm:hidden"
             >
               <IconPlugOff className="size-3.5" />
@@ -333,7 +348,8 @@ function MailCvSheet({
               <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-destructive text-sm">
                 {friendlyError(mails.error, "Vos e-mails n'ont pas pu être lus. Réessayez dans un instant.")}
               </p>
-            ) : list.length === 0 ? (
+            ) : list.length === 0 && !mails.hasNextPage ? (
+            // Empty only when nothing is left: a page with no CV but more after it shows « Charger plus ».
               <div className="flex flex-col items-center gap-2 rounded-2xl bg-page px-6 py-10 text-center">
                 <IconMail className="size-6 text-muted-foreground" />
                 <p className="font-medium">{search ? "Aucun e-mail ne correspond" : "Aucun CV reçu ces 4 derniers mois"}</p>
@@ -402,10 +418,9 @@ function MailCvSheet({
                             </button>
                             <button
                               type="button"
-                              disabled={kind === "docx"}
-                              onClick={() => setPreview({ pick, kind: kind === "image" ? "image" : "pdf", from: mail.fromName })}
+                              onClick={() => setPreview({ pick, kind, from: mail.fromName })}
                               aria-label={`Aperçu de ${a.name}`}
-                              title={kind === "docx" ? "Aperçu disponible pour les PDF et les photos" : "Aperçu"}
+                              title="Aperçu"
                               className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-card text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
                             >
                               <IconEye className="size-4" />
@@ -469,6 +484,25 @@ function MailCvSheet({
             fileName={preview?.pick.name}
             unavailable="Cette pièce jointe n'a pas pu être affichée."
           />
+          <ActionDialog
+            open={confirmDisconnect}
+            onOpenChange={setConfirmDisconnect}
+            tone="warning"
+            icon={<IconPlugOff className="size-5" />}
+            title="Déconnecter cette messagerie ?"
+            description="Vous ne pourrez plus y choisir de CV. Les analyses déjà faites sont conservées, et vous pourrez la reconnecter à tout moment."
+            confirmLabel="Déconnecter"
+            pending={disconnect.isPending}
+            onConfirm={() => disconnect.mutate()}
+          >
+            <div className="flex items-center gap-3 rounded-2xl bg-page p-3">
+              <ProviderTile provider={mailbox.provider} className="size-10" />
+              <span className="min-w-0">
+                <span className="block truncate font-medium text-sm">{mailbox.email}</span>
+                <span className="block text-muted-foreground text-xs">{PROVIDER_LABEL[mailbox.provider]}</span>
+              </span>
+            </div>
+          </ActionDialog>
         </SheetPrimitive.Content>
       </SheetPrimitive.Portal>
     </SheetPrimitive.Root>

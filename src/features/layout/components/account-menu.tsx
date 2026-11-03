@@ -8,7 +8,9 @@ import {
   IconCreditCard,
   IconDiscountCheckFilled,
   IconLogout,
+  IconMail,
   IconMapPin,
+  IconUsersGroup,
 } from "@tabler/icons-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
@@ -18,9 +20,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
+import { isAdmin } from "#/features/team/member-access";
+import { useMember } from "#/features/team/use-member";
 import { useSessionUser } from "#/hooks/use-session-user";
+import { friendlyError } from "#/lib/api/friendly-error";
+import { meKey, ROLE_LABEL, updateMe } from "#/lib/api/team-controller";
 import { getMyBusiness, getMySubscription, myBusinessKey, mySubscriptionKey } from "#/lib/api/business-controller";
 import type { SubscriptionStatus } from "#/lib/api/types";
 import { cn, getInitials } from "#/lib/utils";
@@ -41,11 +48,24 @@ export function AccountMenu() {
   const picture = user?.avatar_url ?? business?.logoUrl ?? null;
   const [confirmLogout, setConfirmLogout] = useState(false);
   const { data: subscription } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
-  const name = user ? `${user.first_name} ${user.last_name}`.trim() : "";
+  const { member, role } = useMember();
+  const queryClient = useQueryClient();
+  const emails = useMutation({
+    mutationFn: (emailsOn: boolean) => updateMe({ emailsOn }),
+    onSuccess: (me) => {
+      queryClient.setQueryData(meKey, me);
+      toast.success(me.emailsOn ? "Vous recevrez les e-mails de l'espace." : "Vous ne recevrez plus les e-mails de l'espace.");
+    },
+    onError: (err) => toast.error(friendlyError(err, "Le réglage n'a pas pu être enregistré.")),
+  });
+  // A team member is not the account's profile: its own name and address.
+  const asMember = member && !member.isOwner;
+  const name = asMember ? member.name : user ? `${user.first_name} ${user.last_name}`.trim() : "";
   // After a reload the session cache is empty: the owner comes with the organisation.
   const owner = business?.owner;
   const person = name || (owner ? `${owner.firstName} ${owner.lastName}`.trim() : "");
-  const personEmail = user?.email ?? owner?.email ?? null;
+  const personEmail = asMember ? member.email : (user?.email ?? owner?.email ?? null);
+  const admin = isAdmin(role);
   const place = [business?.categoryLabel, business?.city ?? business?.countryName].filter(Boolean).join(" · ");
   const plan = subscription?.entitlements;
   const planStatus = plan?.status ? PLAN_STATUS[plan.status] : undefined;
@@ -69,7 +89,9 @@ export function AccountMenu() {
           {avatar("size-9 rounded-xl")}
           <span className="hidden min-w-0 flex-col text-left leading-tight md:flex">
             <span className="max-w-44 truncate font-medium text-sm">{name || business?.name || "Mon compte"}</span>
-            <span className="max-w-44 truncate text-muted-foreground text-xs">{user?.email ?? "Compte entreprise"}</span>
+            <span className="max-w-44 truncate text-muted-foreground text-xs">
+              {asMember ? `${ROLE_LABEL[member.role]} · ${business?.name ?? ""}` : (user?.email ?? "Compte entreprise")}
+            </span>
           </span>
           <IconChevronDown className="hidden size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180 sm:block" />
         </DropdownMenuTrigger>
@@ -105,13 +127,18 @@ export function AccountMenu() {
             </div>
 
             {(person || personEmail) && (
-              <div className="min-w-0 rounded-xl bg-card px-3 py-2">
-                {person && <p className="truncate font-medium text-sm">{person}</p>}
-                {personEmail && <p className="truncate text-muted-foreground text-xs">{personEmail}</p>}
+              <div className="flex min-w-0 items-center gap-2 rounded-xl bg-card px-3 py-2">
+                <div className="min-w-0 flex-1">
+                  {person && <p className="truncate font-medium text-sm">{person}</p>}
+                  {personEmail && <p className="truncate text-muted-foreground text-xs">{personEmail}</p>}
+                </div>
+                {role && (
+                  <span className="shrink-0 rounded-full bg-page px-2.5 py-0.5 font-medium text-xs">{ROLE_LABEL[role]}</span>
+                )}
               </div>
             )}
 
-            {plan && (
+            {admin && plan && (
               <Link
                 href="/espace/abonnement"
                 className="flex items-center justify-between gap-2 rounded-xl bg-card px-3 py-2 text-sm hover:bg-card/70"
@@ -135,6 +162,42 @@ export function AccountMenu() {
 
           <div aria-hidden className="mx-3 my-1 h-px bg-border/70" />
 
+          {member && (
+            <DropdownMenuItem
+              onSelect={(e) => {
+                // A switch: the menu stays open to show the new state.
+                e.preventDefault();
+                if (!emails.isPending) emails.mutate(!member.emailsOn);
+              }}
+              role="menuitemcheckbox"
+              aria-checked={member.emailsOn}
+              className="cursor-pointer gap-3 rounded-2xl px-3 py-2.5 text-sm focus:bg-page"
+            >
+              <span className="flex size-8 items-center justify-center rounded-full bg-page">
+                <IconMail className="size-4" />
+              </span>
+              <span className="flex-1">Recevoir les e-mails</span>
+              <span className={cn("relative h-5 w-9 shrink-0 rounded-full transition-colors", member.emailsOn ? "bg-whatsapp-dark" : "bg-foreground/15")}>
+                <span
+                  className={cn(
+                    "absolute top-0.5 left-0 size-4 rounded-full bg-white transition-transform",
+                    member.emailsOn ? "translate-x-4.5" : "translate-x-0.5",
+                  )}
+                />
+              </span>
+            </DropdownMenuItem>
+          )}
+          {admin && (
+            <DropdownMenuItem asChild className="cursor-pointer gap-3 rounded-2xl px-3 py-2.5 text-sm focus:bg-page">
+              <Link href="/espace/equipe">
+                <span className="flex size-8 items-center justify-center rounded-full bg-page">
+                  <IconUsersGroup className="size-4" />
+                </span>
+                Équipe
+              </Link>
+            </DropdownMenuItem>
+          )}
+          {admin && (
           <DropdownMenuItem asChild className="cursor-pointer gap-3 rounded-2xl px-3 py-2.5 text-sm focus:bg-page">
             <Link href="/espace/organisation">
               <span className="flex size-8 items-center justify-center rounded-full bg-page">
@@ -143,6 +206,8 @@ export function AccountMenu() {
               Organisation
             </Link>
           </DropdownMenuItem>
+          )}
+          {admin && (
           <DropdownMenuItem asChild className="cursor-pointer gap-3 rounded-2xl px-3 py-2.5 text-sm focus:bg-page">
             <Link href="/espace/abonnement">
               <span className="flex size-8 items-center justify-center rounded-full bg-page">
@@ -151,6 +216,7 @@ export function AccountMenu() {
               Abonnement
             </Link>
           </DropdownMenuItem>
+          )}
 
           <DropdownMenuItem
             onSelect={() => setConfirmLogout(true)}

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { debounce, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { IconCalendarEvent, IconCalendarPlus, IconClock, IconInbox, IconSearch, IconShieldCheck } from "@tabler/icons-react";
@@ -23,6 +23,7 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import { externalApplicationsKey, listExternalApplications } from "#/lib/api/careers-controller";
 import { listReceivedApplications, offersKey, type ReceivedApplication } from "#/lib/api/offer-controller";
 import { cn, getInitials } from "#/lib/utils";
+import { TeamOpinionButton } from "#/features/team/components/team-opinion";
 
 const PAGE = 100;
 const fold = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
@@ -67,10 +68,17 @@ export function ApplicationsPage() {
   // candidature it opens picks its own tab until one is chosen by hand.
   const [picked, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS.map((t) => t.key)));
   const tab = picked ?? (focused ? applicationStage(focused.status) : "new");
+  // A candidature opened from a notification belongs on its offer's page,
+  // with the offer's other candidates: go there once it is known.
+  const router = useRouter();
+  const focusedOffer = focused?.offer.id ?? external.data?.find((a) => a.id === focusId)?.offer.id;
+  // On the way to the offer: keep the list hidden rather than flash it.
+  const forwarding = !!focusId && (query.isLoading || external.isLoading || !!focusedOffer);
   useEffect(() => {
-    if (!focused) return;
-    document.getElementById(`candidature-${focused.applicationId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [focused]);
+    if (focusId && focusedOffer) {
+      router.replace(`/espace/offres/${encodeURIComponent(focusedOffer)}?candidature=${encodeURIComponent(focusId)}`);
+    }
+  }, [focusId, focusedOffer, router]);
   // The filters live in the URL too (?offre=, ?q=), so a reload keeps them.
   const [offerId, setOfferId] = useQueryState("offre", parseAsString.withDefault("all"));
   const [q, setQ] = useQueryState("q", parseAsString.withDefault("").withOptions({ limitUrlUpdates: debounce(300) }));
@@ -162,7 +170,7 @@ export function ApplicationsPage() {
           ))}
         </div>
 
-        {query.isLoading ? (
+        {query.isLoading || forwarding ? (
           <CardGridSkeleton kind="application" />
         ) : !query.data ? (
           <p className="text-muted-foreground">{friendlyError(query.error, "Vos candidatures sont indisponibles pour le moment.")}</p>
@@ -304,7 +312,8 @@ function ApplicationCard({
         )
       )}
 
-      <div className="mt-auto">
+      <div className="mt-auto space-y-2">
+        <TeamOpinionButton kind="rabotka" id={a.applicationId} name={name} className="bg-card" />
         <ApplicationActions applicant={a} name={name} variant="card" recruiting={isRecruiting(a.offer.status)} />
       </div>
       {planning && (

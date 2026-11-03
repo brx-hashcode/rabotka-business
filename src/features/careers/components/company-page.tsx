@@ -2,25 +2,33 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { IconChevronRight } from "@tabler/icons-react";
+import { IconBriefcase, IconChevronRight, IconExternalLink } from "@tabler/icons-react";
 
-import { Bone } from "#/components/page-skeletons";
 import { EMPLOYMENT_LABEL } from "#/features/offers/offer-labels";
-import { getCareersCompany } from "#/lib/api/careers-controller";
-import { CareersShell, CompanyLogo, offerPlace } from "./careers-shell";
+import { getCareersCompany, type CareersCompany, type CareersOfferSummary } from "#/lib/api/careers-controller";
+import { CareersShell, offerPlace } from "./careers-shell";
+import { CompanyHero, websiteHref } from "./company-hero";
+import { CompanyPageSkeleton } from "./company-page-skeleton";
 
 /** A business and its open offers, for someone who is not on Rabotka. */
-export function CompanyPage({ slug }: Readonly<{ slug: string }>) {
-  const query = useQuery({ queryKey: ["careers", slug], queryFn: () => getCareersCompany(slug), retry: false });
+export function CompanyPage({
+  slug,
+  initial,
+}: Readonly<{ slug: string; initial?: { company: CareersCompany; offers: CareersOfferSummary[] } }>) {
+  const query = useQuery({
+    queryKey: ["careers", slug],
+    queryFn: () => getCareersCompany(slug),
+    retry: false,
+    // What the server read: shown at once, read again in the background a minute later.
+    initialData: initial,
+    staleTime: 60_000,
+  });
   const page = query.data;
 
   return (
     <CareersShell>
       {query.isLoading ? (
-        <section className="space-y-4 rounded-3xl bg-card p-6 sm:p-8">
-          <Bone className="h-14 w-2/3" />
-          <Bone className="h-16 w-full" />
-        </section>
+        <CompanyPageSkeleton />
       ) : !page ? (
         <section className="space-y-2 rounded-3xl bg-card p-6 text-center sm:p-8">
           <h1 className="font-semibold text-lg">Page introuvable</h1>
@@ -28,38 +36,58 @@ export function CompanyPage({ slug }: Readonly<{ slug: string }>) {
         </section>
       ) : (
         <>
-          <section className="overflow-hidden rounded-3xl bg-card">
-            {page.company.coverUrl && (
-              // eslint-disable-next-line @next/next/no-img-element -- the business's own upload, any host
-              <img src={page.company.coverUrl} alt="" className="aspect-[3/1] w-full object-cover" />
-            )}
-            <div className="space-y-4 p-6 sm:p-8">
-              <div className="flex items-center gap-3">
-                <CompanyLogo company={page.company} />
-                <div className="min-w-0">
-                  <h1 className="truncate font-semibold text-2xl tracking-tight">{page.company.name}</h1>
-                  <p className="truncate text-muted-foreground text-sm">
-                    {[page.company.categoryLabel, page.company.city].filter(Boolean).join(" · ")}
-                  </p>
-                </div>
-              </div>
+          <CompanyHero
+            company={page.company}
+            actions={
+              <>
+                <a
+                  href="#offres"
+                  className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-5 font-medium text-sm text-white"
+                >
+                  <IconBriefcase className="size-4" />
+                  {page.offers.length > 0
+                    ? `Voir ${page.offers.length > 1 ? `les ${page.offers.length} offres` : "l'offre"}`
+                    : "Offres"}
+                </a>
+                {websiteHref(page.company.website) && (
+                  <a
+                    href={websiteHref(page.company.website)!}
+                    target="_blank"
+                    rel="noreferrer nofollow"
+                    className="inline-flex h-10 items-center gap-2 rounded-full bg-page px-5 font-medium text-sm"
+                  >
+                    <IconExternalLink className="size-4" />
+                    Site web
+                  </a>
+                )}
+              </>
+            }
+          />
+
+          {(page.company.description || !!page.company.benefits?.length) && (
+            <section className="space-y-5 rounded-3xl bg-card p-6 sm:p-8">
               {page.company.description && (
-                <p className="whitespace-pre-line text-[15px] text-foreground/85 leading-relaxed">{page.company.description}</p>
+                <div className="space-y-2">
+                  <h2 className="font-semibold text-lg">À propos</h2>
+                  <p className="whitespace-pre-line text-[15px] text-foreground/85 leading-relaxed">{page.company.description}</p>
+                </div>
               )}
               {!!page.company.benefits?.length && (
-                <ul aria-label="Avantages" className="flex flex-wrap gap-2">
-                  {page.company.benefits.map((b) => (
-                    <li key={b} className="rounded-full bg-page px-3 py-1.5 font-medium text-sm">
-                      {b}
-                    </li>
-                  ))}
-                </ul>
+                <div className="space-y-2.5">
+                  <h2 className="font-semibold text-lg">Avantages</h2>
+                  <ul className="flex flex-wrap gap-2">
+                    {page.company.benefits.map((b) => (
+                      <li key={b} className="rounded-full bg-page px-3 py-1.5 font-medium text-sm">
+                        {b}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
-            </div>
-          </section>
+            </section>
+          )}
 
-
-          <section className="space-y-3">
+          <section id="offres" className="scroll-mt-6 space-y-3">
             <h2 className="px-2 font-semibold text-lg">
               {page.offers.length === 0
                 ? "Aucune offre ouverte pour le moment."
@@ -90,11 +118,14 @@ export function CompanyPage({ slug }: Readonly<{ slug: string }>) {
           </section>
 
           {!!page.company.photos?.length && (
-            <section aria-label="Photos" className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {page.company.photos.map((src) => (
-                // eslint-disable-next-line @next/next/no-img-element -- the business's own upload, any host
-                <img key={src} src={src} alt="" className="aspect-[4/3] w-full rounded-2xl object-cover" />
-              ))}
+            <section className="space-y-3 rounded-3xl bg-card p-6 sm:p-8">
+              <h2 className="font-semibold text-lg">La vie chez {page.company.name}</h2>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {page.company.photos.map((src) => (
+                  // eslint-disable-next-line @next/next/no-img-element -- the business's own upload, any host
+                  <img key={src} src={src} alt="" className="aspect-[4/3] w-full rounded-2xl object-cover" />
+                ))}
+              </div>
             </section>
           )}
         </>
