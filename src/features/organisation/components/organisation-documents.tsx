@@ -51,6 +51,8 @@ export function OrganisationDocuments({
   const optional = (catalog?.categories.find((c) => c.value === business.category)?.documents.optional ?? []).filter(
     (t) => !provided.has(t),
   );
+  // Absent from a backend before the countries.
+  const recommended = business.missingRecommended ?? [];
   const refused = business.documents.filter((d) => d.verificationStatus === "REJECTED").length;
   // Verified: the papers are settled; another one goes through the team.
   const locked = business.verificationStatus === "VERIFIED";
@@ -115,14 +117,14 @@ export function OrganisationDocuments({
         ))}
       </ul>
 
-      {!locked && business.missingRecommended.length > 0 && (
+      {!locked && recommended.length > 0 && (
         <div className="space-y-3 rounded-2xl bg-page p-4">
           <p className="font-medium text-sm">
             Documents recommandés{" "}
             <span className="font-normal text-muted-foreground">: ils accélèrent la vérification</span>
           </p>
           <div className="flex flex-wrap gap-2">
-            {business.missingRecommended.map((d) => (
+            {recommended.map((d) => (
               <UploadButton key={d.type} documentType={d.type} label={d.label} icon="add" onUploaded={onChange} />
             ))}
           </div>

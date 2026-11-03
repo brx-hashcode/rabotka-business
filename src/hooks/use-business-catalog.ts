@@ -13,7 +13,7 @@ export function useBusinessCatalog(country?: string | null) {
     queryFn: () => getBusinessCatalog(),
     staleTime: Infinity,
   });
-  const known = !!country && !!fallback.data?.countries.some((c) => c.code === country);
+  const known = !!country && !!fallback.data?.countries?.some((c) => c.code === country);
   const own = useQuery({
     queryKey: ["business-catalog", country ?? ""],
     queryFn: () => getBusinessCatalog(country ?? undefined),
