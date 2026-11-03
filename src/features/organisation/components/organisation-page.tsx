@@ -6,10 +6,10 @@ import { IconAlertTriangle, IconClock, IconLock } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { Bone } from "#/components/page-skeletons";
+import { useBusinessCatalog } from "#/hooks/use-business-catalog";
 import { OrganisationStep, type OrganisationValues } from "#/features/sign-up/components/organisation-step";
 import { getMyBusiness, myBusinessKey, updateMyBusiness } from "#/lib/api/business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
-import { getBusinessCatalog } from "#/lib/api/signup-controller";
 import type { MyBusiness, UpdateMyBusiness } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { sessionUserKey } from "#/hooks/use-session-user";
@@ -28,7 +28,7 @@ function toValues(b: MyBusiness): OrganisationValues {
     registrationNumber: b.registrationNumber ?? "",
     taxId: b.taxId ?? "",
     statisticalId: b.statisticalId ?? "",
-    address: b.address,
+    address: b.address ?? "",
     country: b.countryCode ?? "",
     city: b.city ?? "",
     website: b.website ?? "",
@@ -56,7 +56,8 @@ function changes(before: OrganisationValues, after: OrganisationValues): UpdateM
 export function OrganisationPage() {
   const queryClient = useQueryClient();
   const { data: business, isLoading, error } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
-  const { data: catalog } = useQuery({ queryKey: ["business", "catalog"], queryFn: getBusinessCatalog, staleTime: Infinity });
+  // The papers' names in the organisation's country's words.
+  const catalog = useBusinessCatalog(business?.countryCode);
 
   const verified = business?.verificationStatus === "VERIFIED";
   const setBusiness = (next: MyBusiness) => queryClient.setQueryData(myBusinessKey, next);
@@ -141,8 +142,7 @@ export function OrganisationPage() {
               </div>
               <OrganisationStep
                 // Re-mounted on each saved version, so the form starts from it.
-                key={`${business.id}:${business.name}:${business.category}:${business.address}:${business.city}`}
-                catalog={catalog}
+                key={`${business.id}:${business.name}:${business.category}:${business.address}:${business.countryCode}:${business.city}`}
                 defaultValues={toValues(business)}
                 heading={false}
                 submitLabel="Enregistrer"

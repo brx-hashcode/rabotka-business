@@ -5,7 +5,6 @@ import { IconArrowRight, IconCircleCheckFilled, IconPencil } from "@tabler/icons
 
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
-import { useCountries } from "#/hooks/use-geo";
 import type { BusinessCatalog } from "#/lib/api/types";
 import { PUBLIC_SITE } from "#/features/landing/content";
 import type { AccountValues } from "./account-step";
@@ -42,8 +41,8 @@ export function ReviewStep({
   const [accepted, setAccepted] = useState(false);
   const [viewing, setViewing] = useState<string | null>(null);
   const viewed = viewing ? documents[viewing] : undefined;
-  const { data: countries } = useCountries();
-  const countryName = countries?.find((c) => c.code === organisation.country)?.name ?? organisation.country;
+  const countryName = catalog.countries.find((c) => c.code === organisation.country)?.name ?? organisation.country;
+  const ids = catalog.identifiers;
   const categoryLabel = catalog.categories.find((c) => c.value === organisation.category)?.label;
   const legalFormLabel = catalog.legalForms.find((f) => f.value === organisation.legalForm)?.label;
   const docLabel = new Map(catalog.documentTypes.map((d) => [d.value, d.label]));
@@ -73,13 +72,23 @@ export function ReviewStep({
         <Row label="Type">{categoryLabel}</Row>
         {legalFormLabel && <Row label="Forme juridique">{legalFormLabel}</Row>}
         {organisation.size && <Row label="Effectif">{`${organisation.size} salariés`}</Row>}
-        {organisation.registrationNumber && <Row label="RCCM">{organisation.registrationNumber}</Row>}
-        {organisation.taxId && <Row label="NIU">{organisation.taxId}</Row>}
-        <Row label="Adresse">{`${organisation.address}, ${organisation.city}, ${countryName}`}</Row>
+        {organisation.registrationNumber && (
+          <Row label={ids.registrationNumber?.label ?? "N° RCCM"}>{organisation.registrationNumber}</Row>
+        )}
+        {organisation.taxId && <Row label={ids.taxId?.label ?? "NIF"}>{organisation.taxId}</Row>}
+        {organisation.statisticalId && ids.statisticalId && (
+          <Row label={ids.statisticalId.label}>{organisation.statisticalId}</Row>
+        )}
+        <Row label={organisation.address ? "Adresse" : "Pays"}>
+          {[organisation.address, organisation.city, countryName].filter(Boolean).join(", ")}
+        </Row>
         {organisation.website && <Row label="Site web">{organisation.website}</Row>}
       </Summary>
 
       <Summary title="Documents" onEdit={() => onEdit(3)}>
+        {Object.keys(documents).length === 0 && (
+          <p className="text-muted-foreground">Aucun pour l&apos;instant : vous pourrez les ajouter depuis votre espace.</p>
+        )}
         {Object.entries(documents).map(([type, doc]) => (
           <Row key={type} label={docLabel.get(type) ?? type}>
             <button

@@ -46,6 +46,7 @@ export function Combobox({
   emptyText = "Aucun résultat.",
   disabled,
   invalid,
+  clearable,
   id,
 }: Readonly<{
   value: string;
@@ -56,6 +57,8 @@ export function Combobox({
   emptyText?: string;
   disabled?: boolean;
   invalid?: boolean;
+  /** An optional field: choosing the selected option again empties it. */
+  clearable?: boolean;
   id?: string;
 }>) {
   const [open, setOpen] = useState(false);
@@ -102,7 +105,7 @@ export function Combobox({
                     value={`${option.label} ${option.value}`}
                     className={ITEM_STYLE}
                     onSelect={() => {
-                      onChange(option.value);
+                      onChange(clearable && option.value === value ? "" : option.value);
                       setOpen(false);
                     }}
                   >

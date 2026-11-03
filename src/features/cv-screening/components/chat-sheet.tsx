@@ -144,7 +144,7 @@ export function ChatSheet({
         <SheetPrimitive.Overlay className="data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/40" />
         <SheetPrimitive.Content
           aria-describedby={undefined}
-          className="data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-card shadow-soft outline-none data-[state=closed]:duration-300 data-[state=open]:duration-500 sm:w-[min(36rem,92vw)]"
+          className="data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-card shadow-soft outline-none data-[state=closed]:duration-300 data-[state=open]:duration-500 sm:w-[min(48rem,92vw)]"
         >
           <header className="flex items-start gap-3.5 px-5 pt-5 pb-4 sm:px-6">
             {lead}
@@ -333,7 +333,7 @@ function Bubble({ role, text, writing, note }: Readonly<{ role: "user" | "assist
   }
   return (
     <div className="flex">
-      <div className="min-w-0 max-w-[90%] rounded-3xl rounded-tl-lg bg-card px-4 py-3 text-[15px] leading-relaxed">
+      <div className="min-w-0 max-w-[90%] overflow-hidden rounded-3xl rounded-tl-lg bg-card px-4 py-3 text-[15px] leading-relaxed [overflow-wrap:anywhere]">
         <Answer text={text} />
         {writing && <span aria-hidden className="ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 animate-pulse rounded-sm bg-foreground/40" />}
       </div>
