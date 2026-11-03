@@ -24,22 +24,36 @@ export type Paginated<T> = {
   limit: number;
 };
 
-/** `GET public/business/catalog` (businessCatalog in rabotka-backend). */
-export type DocumentRequirement = {
-  /** « One of » groups: any one type of a group satisfies it. */
-  required: string[][];
+/** The papers shown to a category: none is required, the usual ones first. */
+export type DocumentList = {
+  recommended: string[];
   optional: string[];
 };
 
+/** One official identifier field, in the country's words; null: none there. */
+export type IdentifierField = { label: string; placeholder?: string } | null;
+
+/**
+ * `GET public/business/catalog?country=` (businessCatalog in rabotka-backend):
+ * one country's papers and identifiers, and the countries to choose from.
+ */
 export type BusinessCatalog = {
+  country: string;
+  countries: { code: string; name: string }[];
   categories: {
     value: string;
     label: string;
     legalForms: string[];
-    documents: DocumentRequirement;
+    documents: DocumentList;
   }[];
   legalForms: { value: string; label: string }[];
+  /** Labelled in the country's words (NIU, NIF…). */
   documentTypes: { value: string; label: string }[];
+  identifiers: {
+    registrationNumber: IdentifierField;
+    taxId: IdentifierField;
+    statisticalId: IdentifierField;
+  };
   sizes: string[];
 };
 
@@ -65,7 +79,8 @@ export type BusinessSignUpBody = {
     registrationNumber?: string;
     taxId?: string;
     statisticalId?: string;
-    address: string;
+    /** Absent for an organisation that works online only. */
+    address?: string;
     email?: string;
     phone?: string;
     website?: string;
@@ -109,7 +124,8 @@ export type MyBusiness = {
   registrationNumber: string | null;
   taxId: string | null;
   statisticalId: string | null;
-  address: string;
+  /** Null for an organisation that works online only. */
+  address: string | null;
   countryCode: string | null;
   countryName: string | null;
   city: string | null;
@@ -137,8 +153,9 @@ export type MyBusiness = {
     resubmitted: boolean;
     previousVersions: BusinessDocumentVersion[];
   })[];
-  requiredDocuments: { type: string; label: string }[][];
-  missingDocuments: { type: string; label: string }[][];
+  /** The papers recommended for its country and type, and those not sent. */
+  recommendedDocuments: { type: string; label: string }[];
+  missingRecommended: { type: string; label: string }[];
 };
 
 /** `PATCH business/me`: only what changed; null empties an optional field. */

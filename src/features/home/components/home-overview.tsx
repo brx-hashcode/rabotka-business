@@ -683,10 +683,10 @@ function NextSteps({ business, subscription }: Readonly<{ business: MyBusiness; 
     { label: "Ajouter le logo de votre organisation", done: !!business.logoUrl, href: "/espace/organisation" },
     {
       label: "Faire accepter vos documents",
+      // No paper is required: verified, or every paper sent accepted.
       done:
-        business.documents.length > 0 &&
-        business.documents.every((d) => d.verificationStatus === "VERIFIED") &&
-        business.missingDocuments.length === 0,
+        business.verificationStatus === "VERIFIED" ||
+        (business.documents.length > 0 && business.documents.every((d) => d.verificationStatus === "VERIFIED")),
       href: "/espace/organisation",
     },
     { label: "Obtenir la vérification de l'organisation", done: business.verificationStatus === "VERIFIED", href: "/espace/organisation" },

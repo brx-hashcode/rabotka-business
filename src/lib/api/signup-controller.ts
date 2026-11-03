@@ -1,6 +1,39 @@
 import { BusinessBaseController } from "./base-controller";
 import type { BusinessCatalog, UploadedFile } from "./types";
 
+/** The catalog as a backend from before the countries may still send it. */
+type RawCatalog = Omit<BusinessCatalog, "country" | "countries" | "identifiers" | "categories"> &
+  Partial<Pick<BusinessCatalog, "country" | "countries" | "identifiers">> & {
+    categories: (Omit<BusinessCatalog["categories"][number], "documents"> & {
+      documents: { required?: string[][]; recommended?: string[]; optional: string[] };
+    })[];
+  };
+
+/**
+ * Fills what an older backend leaves out (a deploy in progress, a dev server
+ * not restarted): Congo-Brazzaville only, its identifiers, and the papers it
+ * required as the recommended ones. The form never breaks on a missing field.
+ */
+function withCatalogDefaults(raw: RawCatalog): BusinessCatalog {
+  return {
+    ...raw,
+    country: raw.country ?? "CG",
+    countries: raw.countries ?? [{ code: "CG", name: "Congo-Brazzaville" }],
+    identifiers: raw.identifiers ?? {
+      registrationNumber: { label: "N° RCCM", placeholder: "CG-BZV-01-2024-B12-00123" },
+      taxId: { label: "NIU", placeholder: "M2024000123456A" },
+      statisticalId: { label: "SCIEN / SCIET" },
+    },
+    categories: raw.categories.map((c) => ({
+      ...c,
+      documents: {
+        recommended: c.documents.recommended ?? (c.documents.required ?? []).flat(),
+        optional: c.documents.optional,
+      },
+    })),
+  };
+}
+
 /** Header carrying the token from signup/verify-otp (SignupUploadGuard). */
 const SIGNUP_TOKEN_HEADER = "X-Signup-Token";
 
@@ -11,8 +44,12 @@ const SIGNUP_TOKEN_HEADER = "X-Signup-Token";
  * httpOnly cookies.
  */
 class SignUpController extends BusinessBaseController {
-  getCatalog(): Promise<BusinessCatalog> {
-    return this.get("/public/business/catalog");
+  /** One country's catalog; the backend's default (Congo-Brazzaville) without one. */
+  async getCatalog(country?: string): Promise<BusinessCatalog> {
+    const raw = await this.get<RawCatalog>(
+      `/public/business/catalog${country ? `?country=${encodeURIComponent(country)}` : ""}`,
+    );
+    return withCatalogDefaults(raw);
   }
 
   /** A code to the email; the account holder's name feeds drop-off tracking. */

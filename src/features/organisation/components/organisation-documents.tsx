@@ -32,8 +32,8 @@ export function StatusPill({ status }: Readonly<{ status: VerificationStatus }>)
 /**
  * The organisation's papers as the review sees them. A refused one shows why
  * and is replaced in one click; the new version goes straight back to review
- * (the refused one stays on file for the team). Missing required papers, and
- * the optional ones, can be added.
+ * (the refused one stays on file for the team). None is required: the ones
+ * recommended for its country and type, then the others, can be added.
  */
 export function OrganisationDocuments({
   business,
@@ -51,6 +51,8 @@ export function OrganisationDocuments({
   const optional = (catalog?.categories.find((c) => c.value === business.category)?.documents.optional ?? []).filter(
     (t) => !provided.has(t),
   );
+  // Absent from a backend before the countries.
+  const recommended = business.missingRecommended ?? [];
   const refused = business.documents.filter((d) => d.verificationStatus === "REJECTED").length;
   // Verified: the papers are settled; another one goes through the team.
   const locked = business.verificationStatus === "VERIFIED";
@@ -115,25 +117,19 @@ export function OrganisationDocuments({
         ))}
       </ul>
 
-      {!locked && business.missingDocuments.map((group) => (
-        <div key={group.map((d) => d.type).join("|")} className="space-y-3 rounded-2xl bg-chip-amber/60 p-4">
+      {!locked && recommended.length > 0 && (
+        <div className="space-y-3 rounded-2xl bg-page p-4">
           <p className="font-medium text-sm">
-            À fournir : {group.map((d) => d.label).join(" ou ")}
+            Documents recommandés{" "}
+            <span className="font-normal text-muted-foreground">: ils accélèrent la vérification</span>
           </p>
           <div className="flex flex-wrap gap-2">
-            {group.map((d) => (
-              <UploadButton
-                key={d.type}
-                documentType={d.type}
-                label={group.length > 1 ? d.label : "Ajouter"}
-                icon="add"
-                primary
-                onUploaded={onChange}
-              />
+            {recommended.map((d) => (
+              <UploadButton key={d.type} documentType={d.type} label={d.label} icon="add" onUploaded={onChange} />
             ))}
           </div>
         </div>
-      ))}
+      )}
 
       {!locked && optional.length > 0 &&
         (showOptional ? (
