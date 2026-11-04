@@ -20,6 +20,7 @@ import {
   IconMinus,
   IconPencil,
   IconRefresh,
+  IconFileSearch,
   IconSparkles,
   IconTrash,
   IconUserCheck,
@@ -1050,7 +1051,7 @@ function ApplicantCvAnalysis({
       <ActionDialog
         open={confirm}
         onOpenChange={setConfirm}
-        icon={<IconSparkles className="size-5" />}
+        icon={<IconFileSearch className="size-5" />}
         title={`Analyser le CV de ${name} ?`}
         description="Son profil Rabotka et le CV qu'il a joint sont lus et notés pour cette offre, sans ses coordonnées. Cela utilise 1 CV inclus de votre formule."
         confirmLabel="Analyser"
@@ -1175,7 +1176,7 @@ function AnalyseAllBar({
       <ActionDialog
         open={confirm}
         onOpenChange={setConfirm}
-        icon={<IconSparkles className="size-5" />}
+        icon={<IconFileSearch className="size-5" />}
         title="Analyser ces CV ?"
         description="Chaque CV lu utilise 1 CV inclus de votre formule."
         confirmLabel="Analyser"
