@@ -1,12 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { toast } from "sonner";
 
-import { BusinessLockup } from "#/components/business-lockup";
 import { Skeleton } from "#/components/ui/skeleton";
 import { useBusinessCatalog } from "#/hooks/use-business-catalog";
 import { sessionUserKey } from "#/hooks/use-session-user";
@@ -20,7 +18,8 @@ import { AccountStep } from "./account-step";
 import { DocumentsStep } from "./documents-step";
 import { OrganisationStep } from "./organisation-step";
 import { ReviewStep, SignUpDone } from "./review-step";
-import { ProgressHeader, StepPhotoPanel } from "./sign-up-chrome";
+import { AuthShell, AuthTabs } from "#/features/auth/components/auth-shell";
+import { DONE_STEP, ProgressHeader } from "./sign-up-chrome";
 import { VerifyStep } from "./verify-step";
 
 const STEP_IDS = STEPS.map((s) => s.id) as StepId[];
@@ -276,45 +275,39 @@ export function SignUpWizard() {
     }
   }
 
+  const current = done ? DONE_STEP : STEPS[step];
+
   return (
-    <div className="grid min-h-svh bg-card lg:grid-cols-2">
-      <div className="hidden p-3 lg:sticky lg:top-0 lg:block lg:h-svh">
-        <StepPhotoPanel index={step} done={done} />
+    // The same frame as sign-in: the form on the left, the card wall on the
+    // right, whose ink card speaks of the step being filled in.
+    <AuthShell wide spotlight={{ label: current.kicker, title: current.title, text: current.text }}>
+      {/* Pinned while the form scrolls under it: where you are stays in view.
+          Frosted rather than opaque, with a short fade below, so the fields
+          blur away under it instead of being cut off; a little wider than the
+          column so focus rings vanish too. */}
+      <div className="sticky top-0 z-20 -mx-3 mt-6 bg-card/70 px-3 pt-4 pb-4 backdrop-blur-xl backdrop-saturate-150 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-8 after:bg-linear-to-b after:from-card/80 after:to-transparent">
+        {/* Sign in instead, while nothing has been filled in yet. */}
+        {step === 0 && !done && (
+          <div className="mb-5">
+            <AuthTabs active="sign-up" />
+          </div>
+        )}
+        <ProgressHeader
+          index={step}
+          done={done}
+          onBack={hydrated && step > 0 ? () => go(step - 1) : undefined}
+          showSignIn={step !== 0}
+        />
       </div>
 
-      <section className="flex min-h-svh min-w-0 flex-col px-5 pb-6 sm:px-10">
-        <div className="mx-auto flex w-full max-w-136 flex-1 flex-col">
-          {/* Below lg there is no photo panel, and so no brand: it goes here. */}
-          <Link href="/" aria-label="Rabotka Business — accueil" className="mt-6 mb-2 self-start lg:hidden">
-            <BusinessLockup compact />
-          </Link>
-
-          {/* Pinned while the form scrolls under it: where you are stays in
-              view. Frosted rather than opaque, with a short fade below, so
-              the fields blur away under it instead of being cut off; a
-              little wider than the column so focus rings vanish too. */}
-          <div className="sticky top-0 z-20 -mx-3 bg-card/70 px-3 pt-6 pb-4 backdrop-blur-xl backdrop-saturate-150 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-8 after:bg-linear-to-b after:from-card/80 after:to-transparent">
-            <ProgressHeader index={step} done={done} onBack={hydrated && step > 0 ? () => go(step - 1) : undefined} />
-          </div>
-
-          <div className="flex-1 pt-8 pb-10 lg:pt-[7vh]">
-            <div
-              key={done ? "done" : step}
-              className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-right-4 motion-safe:duration-300"
-            >
-              {renderStep()}
-            </div>
-          </div>
-
-          <p className="text-muted-foreground text-xs">
-            © {new Date().getFullYear()} Rabotka · Vos données sont traitées conformément à notre{" "}
-            <a href="https://www.rabotka.work/privacy" target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-foreground">
-              politique de confidentialité
-            </a>
-            .
-          </p>
+      <div className="flex-1 pt-8 pb-10 lg:pt-[5vh]">
+        <div
+          key={done ? "done" : step}
+          className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-right-4 motion-safe:duration-300"
+        >
+          {renderStep()}
         </div>
-      </section>
-    </div>
+      </div>
+    </AuthShell>
   );
 }
