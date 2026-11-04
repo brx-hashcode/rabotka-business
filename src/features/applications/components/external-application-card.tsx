@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconAlertTriangle, IconCalendarPlus, IconCheck, IconChevronDown, IconChevronUp, IconDownload, IconSparkles, IconFileText, IconMail, IconPhone, IconX } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCalendarPlus, IconCheck, IconChevronDown, IconDownload, IconFileText, IconMail, IconPhone, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Textarea } from "#/components/ui/textarea";
 import { CRITERIA, ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
-import { CandidateInsight } from "#/features/offers/components/candidate-insight";
+import { CandidateInsight, detailsLabel } from "#/features/offers/components/candidate-insight";
 import type { CvAnalysis } from "#/lib/api/offer-controller";
 import { CvChatSheet } from "#/features/cv-screening/components/cv-chat-sheet";
 import {
@@ -75,12 +75,13 @@ export function ExternalApplicationCard({
   const hire = canHire(useMember().role);
   const [refusing, setRefusing] = useState(false);
   const [retaining, setRetaining] = useState(false);
-  const [showAnswers, setShowAnswers] = useState(false);
-  const [showInsight, setShowInsight] = useState(false);
+  // One toggle for its analysis and its answers, as on a Rabotka applicant's card.
+  const [showDetails, setShowDetails] = useState(false);
   const [analysing, setAnalysing] = useState(false);
   const [scheduling, setScheduling] = useState(false);
   const [chatting, setChatting] = useState(false);
   const score = a.analysis?.status === "SCORED" ? a.analysis.score : null;
+  const insight = score !== null && !!a.analysis && hasInsight(a.analysis);
   // Chat reads the resume as Analyse de CV holds it.
   const resume = useQuery({
     queryKey: [...cvScreeningsKey, a.analysis?.screeningId, "resume", a.analysis?.resumeId],
@@ -195,67 +196,6 @@ export function ExternalApplicationCard({
 
       {a.analysis?.summary && <p className="line-clamp-3 text-sm leading-relaxed">{a.analysis.summary}</p>}
 
-      {score !== null ? (
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={!resume.data}
-            onClick={() => setChatting(true)}
-            className="inline-flex h-10 items-center rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm disabled:opacity-60"
-          >
-            Interroger le CV
-          </button>
-          {canSchedule(a) && (
-            <button
-              type="button"
-              onClick={() => setScheduling(true)}
-              className="inline-flex h-10 items-center gap-2 rounded-full bg-card px-4 font-medium text-sm"
-            >
-              <IconCalendarPlus className="size-4" />
-              Entretien
-            </button>
-          )}
-        </div>
-      ) : (
-        !a.analysis &&
-        a.status === "PENDING" &&
-        recruiting(a) &&
-        a.hasCv && (
-          <button
-            type="button"
-            onClick={() => setAnalysing(true)}
-            className="inline-flex w-fit items-center gap-1.5 font-medium text-sm hover:underline"
-          >
-            <IconSparkles className="size-4" />
-            Analyser le CV
-          </button>
-        )
-      )}
-
-      {score !== null && a.analysis && hasInsight(a.analysis) && (
-        <div>
-          <button
-            type="button"
-            aria-expanded={showInsight}
-            onClick={() => setShowInsight(!showInsight)}
-            className="inline-flex items-center gap-1 font-medium text-sm hover:underline"
-          >
-            {showInsight ? "Masquer l'analyse" : "Voir l'analyse détaillée"}
-            {showInsight ? <IconChevronUp className="size-4" /> : <IconChevronDown className="size-4" />}
-          </button>
-          {showInsight && (
-            <CandidateInsight
-              strengths={a.analysis.strengths ?? []}
-              gaps={a.analysis.gaps ?? []}
-              criteria={CRITERIA.filter((k) => typeof a.analysis?.criteria?.[k.key] === "number").map((k) => ({
-                label: k.label,
-                value: a.analysis?.criteria?.[k.key] ?? 0,
-              }))}
-            />
-          )}
-        </div>
-      )}
-
       {a.knockedOut && (
         <p className="flex items-center gap-1.5 text-chip-amber-foreground text-xs">
           <IconAlertTriangle className="size-3.5 shrink-0" />
@@ -263,53 +203,65 @@ export function ExternalApplicationCard({
         </p>
       )}
 
-      {a.answers.length > 0 && (
-        <div className="space-y-2">
+      {/* The same row, in the same order, as a Rabotka applicant's: read, then decide. */}
+      <div className="mt-auto flex flex-wrap items-center justify-end gap-2 pt-1">
+        {(insight || a.answers.length > 0) && (
           <button
             type="button"
-            aria-expanded={showAnswers}
-            onClick={() => setShowAnswers(!showAnswers)}
-            className="inline-flex items-center gap-1 font-medium text-sm hover:underline"
+            aria-expanded={showDetails}
+            onClick={() => setShowDetails(!showDetails)}
+            className="mr-auto inline-flex h-10 shrink-0 items-center gap-1 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70"
           >
-            {showAnswers ? "Masquer" : "Voir"} {a.answers.length > 1 ? `les ${a.answers.length} réponses` : "la réponse"}
-            {showAnswers ? <IconChevronUp className="size-4" /> : <IconChevronDown className="size-4" />}
+            {detailsLabel(insight, a.answers.length > 0)}
+            <IconChevronDown className={cn("size-4 transition-transform", showDetails && "rotate-180")} />
           </button>
-          {showAnswers && (
-            <dl className="space-y-2 rounded-2xl bg-card p-3 text-sm">
-              {a.answers.map((answer) => (
-                <div key={answer.label}>
-                  <dt className="text-muted-foreground text-xs">{answer.label}</dt>
-                  <dd className="font-medium">
-                    <DescriptionText text={YES_NO[answer.value] ?? answer.value} />
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          )}
-        </div>
-      )}
-
-      {/* The decision reads left to right: look, say no, say yes. */}
-      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-1">
-        {a.hasCv ? (
+        )}
+        {!a.analysis && a.status === "PENDING" && recruiting(a) && a.hasCv && (
+          <button
+            type="button"
+            onClick={() => setAnalysing(true)}
+            className="inline-flex h-10 shrink-0 items-center rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70"
+          >
+            Analyser le CV
+          </button>
+        )}
+        {score !== null && (
+          <button
+            type="button"
+            disabled={!resume.data}
+            onClick={() => setChatting(true)}
+            className="inline-flex h-10 shrink-0 items-center rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm disabled:opacity-60"
+          >
+            Interroger le CV
+          </button>
+        )}
+        {a.hasCv && (
           <button
             type="button"
             onClick={() => (canShow ? setReading(true) : void saveCv())}
-            className="inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-full px-1 font-medium text-sm underline-offset-4 hover:underline"
+            className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70"
           >
             {canShow ? <IconFileText className="size-4" /> : <IconDownload className="size-4" />}
-            {canShow ? "Voir le CV" : "Télécharger le CV"}
+            CV du candidat
           </button>
-        ) : (
-          <span />
         )}
-        <TeamOpinionButton kind="external" id={a.id} name={name} summary={opinions} className="mr-auto" />
+        <TeamOpinionButton kind="external" id={a.id} name={name} summary={opinions} />
+        {score !== null && canSchedule(a) && (
+          <button
+            type="button"
+            onClick={() => setScheduling(true)}
+            className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70"
+          >
+            <IconCalendarPlus className="size-4" />
+            Entretien
+          </button>
+        )}
         {hire && a.status === "PENDING" && (
-          <div className="flex items-center gap-2">
+          <>
             <button
               type="button"
               onClick={() => setRefusing(true)}
-              className="inline-flex h-10 items-center gap-2 rounded-full bg-card px-4 font-medium text-sm"
+              className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70"
             >
               <IconX className="size-4" />
               Refuser
@@ -318,15 +270,39 @@ export function ExternalApplicationCard({
               <button
                 type="button"
                 onClick={() => setRetaining(true)}
-                className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white"
+                className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-ink px-4 font-medium text-sm text-white"
               >
                 <IconCheck className="size-4" />
                 Retenir
               </button>
             )}
-          </div>
+          </>
         )}
       </div>
+
+      {showDetails && a.answers.length > 0 && (
+        <dl className="space-y-2 rounded-2xl bg-card p-4 text-sm">
+          <p className="font-medium text-sm">Réponses aux questions</p>
+          {a.answers.map((answer) => (
+            <div key={answer.label}>
+              <dt className="text-muted-foreground">{answer.label}</dt>
+              <dd className="font-medium">
+                <DescriptionText text={YES_NO[answer.value] ?? answer.value} />
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {showDetails && insight && a.analysis && (
+        <CandidateInsight
+          strengths={a.analysis.strengths ?? []}
+          gaps={a.analysis.gaps ?? []}
+          criteria={CRITERIA.filter((k) => typeof a.analysis?.criteria?.[k.key] === "number").map((k) => ({
+            label: k.label,
+            value: a.analysis?.criteria?.[k.key] ?? 0,
+          }))}
+        />
+      )}
 
       <PreviewSheet
         open={reading}

@@ -180,10 +180,10 @@ function Actions({
         })
       }
       aria-label={`Écrire à ${name}`}
-      title="Écrire"
-      className={cn(button, "shrink-0 bg-card px-2.5 hover:bg-card/70")}
+      className={cn(button, "shrink-0 bg-card hover:bg-card/70")}
     >
       <IconMessageCircle className="size-4" />
+      Message
     </button>
   );
 

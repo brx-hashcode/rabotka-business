@@ -21,7 +21,7 @@ export function ResumeButton({ workerId, name, className }: Readonly<{ workerId:
         className={cn("inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70", className)}
       >
         <IconFileCv className="size-4" />
-        CV
+        CV Rabotka
       </button>
       <PreviewSheet
         open={open}

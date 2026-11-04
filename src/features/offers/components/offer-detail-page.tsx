@@ -40,7 +40,7 @@ import { offersFull } from "#/features/subscription/offers-quota";
 import { CandidateCard } from "#/features/candidates/components/candidate-card";
 import { CvCompareSheet } from "#/features/cv-screening/components/cv-compare-sheet";
 import { CvChatSheet } from "#/features/cv-screening/components/cv-chat-sheet";
-import { CandidateInsight } from "./candidate-insight";
+import { CandidateInsight, detailsLabel } from "./candidate-insight";
 import { byFit } from "../rank-candidates";
 import { MAX_COMPARED } from "#/features/cv-screening/components/cv-screening-page";
 import { ResumeButton } from "#/features/candidates/components/resume-button";
@@ -926,7 +926,7 @@ function ApplicantRow({
             aria-expanded={open}
             className="mr-auto inline-flex h-10 shrink-0 items-center gap-1 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70"
           >
-            {assessment ? (answers.length > 0 ? "Score et réponses" : "Pourquoi ce score ?") : "Voir les réponses"}
+            {detailsLabel(!!assessment, answers.length > 0)}
             <IconChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
           </button>
         )}

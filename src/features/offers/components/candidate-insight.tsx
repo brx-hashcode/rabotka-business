@@ -34,3 +34,9 @@ export function CandidateInsight({
     </div>
   );
 }
+
+/** The one toggle that opens a candidate's analysis and answers, on both cards. */
+export function detailsLabel(analysis: boolean, answers: boolean): string {
+  if (analysis && answers) return "Analyse et réponses";
+  return analysis ? "Voir l'analyse" : "Voir les réponses";
+}

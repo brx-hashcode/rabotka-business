@@ -73,7 +73,7 @@ export function TeamOpinionButton({
         className={cn("inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70", className)}
       >
         <IconUsers className="size-4" />
-        Avis
+        Avis de l&apos;équipe
         {total > 0 && summary && (
           <span className="flex items-center gap-1 text-xs tabular-nums">
             {summary.YES > 0 && <span className="rounded-full bg-chip-green px-1.5 text-chip-green-foreground">{summary.YES}</span>}
