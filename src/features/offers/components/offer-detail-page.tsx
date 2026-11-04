@@ -1168,9 +1168,8 @@ function AnalyseAllBar({
       <button
         type="button"
         onClick={() => setConfirm(true)}
-        className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white"
+        className="inline-flex h-10 items-center rounded-full bg-ink px-4 font-medium text-sm text-white"
       >
-        <IconSparkles className="size-4" />
         Analyser tout
       </button>
       <ActionDialog
