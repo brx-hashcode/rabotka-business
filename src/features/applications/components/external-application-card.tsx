@@ -23,6 +23,7 @@ import {
 } from "#/lib/api/careers-controller";
 import { cvScreeningsKey, getCvScreening } from "#/lib/api/cv-screening-controller";
 import { sourceLabel } from "#/features/careers/candidate-source";
+import { canSchedule } from "#/features/applications/can-schedule";
 import { downloadFile } from "#/lib/api/download";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { cn, getInitials } from "#/lib/utils";
@@ -195,7 +196,7 @@ export function ExternalApplicationCard({
           >
             Interroger le CV
           </button>
-          {a.status !== "REFUSED" && recruiting(a) && (
+          {canSchedule(a) && (
             <button
               type="button"
               onClick={() => setScheduling(true)}
