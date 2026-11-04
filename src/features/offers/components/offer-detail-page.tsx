@@ -21,7 +21,6 @@ import {
   IconPencil,
   IconRefresh,
   IconFileSearch,
-  IconSparkles,
   IconTrash,
   IconUserCheck,
   IconUsers,
@@ -64,7 +63,6 @@ import {
   getJobCategories,
   getOfferApplicants,
   getOfferAssessments,
-  analyseApplicants,
   refuseApplications,
   offersKey,
   confirmOfferHire,
@@ -705,7 +703,7 @@ function ApplicantsCard({
             />
           )}
 
-          <AnalyseAllBar offerId={o.id} outsiders={outsiders} applicants={list} recruiting={open} />
+          <AnalyseAllBar offerId={o.id} outsiders={outsiders} />
 
           {ranked.length === 0 ? (
             <p className="rounded-2xl bg-page p-4 text-muted-foreground text-sm">Aucun candidat à cette étape.</p>
@@ -716,7 +714,6 @@ function ApplicantsCard({
                 return e.kind === "rabotka" ? (
                   <ApplicantRow
                     key={e.key}
-                    offerId={o.id}
                     jobTitle={o.title}
                     applicant={e.a}
                     rank={i + 1}
@@ -835,7 +832,6 @@ const APPLICANT_CRITERIA = [
 
 /** One applicant: rank, score and verdict as in CV analysis, and why on demand. */
 function ApplicantRow({
-  offerId,
   jobTitle,
   applicant: a,
   rank,
@@ -848,7 +844,6 @@ function ApplicantRow({
   opinions,
   focused,
 }: Readonly<{
-  offerId: string;
   jobTitle: string;
   applicant: OfferApplicant;
   rank: number;
@@ -935,15 +930,7 @@ function ApplicantRow({
             <IconChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
           </button>
         )}
-        <ApplicantCvAnalysis
-          offerId={offerId}
-          jobTitle={jobTitle}
-          applicationId={a.applicationId}
-          name={name}
-          status={a.status}
-          analysis={a.analysis ?? null}
-          recruiting={recruiting}
-        />
+        <ApplicantCvAnalysis jobTitle={jobTitle} analysis={a.analysis ?? null} />
         {a.cv?.kind === "UPLOADED" && <OwnCvButton applicationId={a.applicationId} name={name} cv={a.cv} />}
         <ResumeButton workerId={a.worker.id} name={name} />
         <TeamOpinionButton kind="rabotka" id={a.applicationId} name={name} summary={opinions} />
@@ -966,44 +953,24 @@ function ApplicantRow({
 }
 
 /**
- * A Rabotka applicant's CV analysis: « Analyser le CV » (1 « CV inclus »), then
- * « Interroger le CV ». It joins the offer's screening, so it can be compared
- * with the careers-page CVs. What is read never carries their contacts.
+ * A Rabotka applicant's CV analysis, made as they apply (1 « CV inclus »):
+ * « Interroger le CV » once it is in. It sits in the offer's screening, so it
+ * can be compared with the careers-page CVs. What is read never carries their
+ * contacts.
  */
 function ApplicantCvAnalysis({
-  offerId,
   jobTitle,
-  applicationId,
-  name,
-  status,
   analysis,
-  recruiting,
 }: Readonly<{
-  offerId: string;
   jobTitle: string;
-  applicationId: string;
-  name: string;
-  status: string;
   analysis: CvAnalysis | null;
-  recruiting: boolean;
 }>) {
-  const queryClient = useQueryClient();
-  const [confirm, setConfirm] = useState(false);
   const [chatting, setChatting] = useState(false);
   const scored = analysis?.status === "SCORED";
   const resume = useQuery({
     queryKey: [...cvScreeningsKey, analysis?.screeningId, "resume", analysis?.resumeId],
     queryFn: async () => (await getCvScreening(analysis?.screeningId as string)).resumes.find((r) => r.id === analysis?.resumeId) ?? null,
     enabled: scored,
-  });
-  const analyse = useMutation({
-    mutationFn: () => analyseApplicants(offerId, applicationId),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: [...offersKey, offerId, "applicants"] });
-      void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
-      setConfirm(false);
-    },
-    onError: (err) => toast.error(friendlyError(err, "Ce CV n'a pas pu être analysé.")),
   });
 
   if (analysis?.status === "QUEUED") {
@@ -1037,29 +1004,9 @@ function ApplicantCvAnalysis({
       </>
     );
   }
-  if (analysis || !recruiting || status === "REJECTED" || status === "CANCELLED") return null;
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => setConfirm(true)}
-        className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70"
-      >
-        <IconSparkles className="size-4" />
-        Analyser le CV
-      </button>
-      <ActionDialog
-        open={confirm}
-        onOpenChange={setConfirm}
-        icon={<IconFileSearch className="size-5" />}
-        title={`Analyser le CV de ${name} ?`}
-        description="Son profil Rabotka et le CV qu'il a joint sont lus et notés pour cette offre, sans ses coordonnées. Cela utilise 1 CV inclus de votre formule."
-        confirmLabel="Analyser"
-        pending={analyse.isPending}
-        onConfirm={() => analyse.mutate()}
-      />
-    </>
-  );
+  // Not analysed yet: it is done on its own as the application arrives, or by
+  // the catch-up once the plan has « CV inclus » again. Nothing to press.
+  return null;
 }
 
 /** What a candidate answered to the offer's questions; ✓ / ✕ on the « éliminatoires ». */
@@ -1127,37 +1074,23 @@ function QuestionsCard({ offer: o }: Readonly<{ offer: Offer }>) {
  * who have not applied: the business may reach them directly. Hidden when
  * the plan has no search (403) or nobody fits.
  */
-/** Reads every waiting candidate's CV at once, from both sources: they can then be compared. */
-function AnalyseAllBar({
-  offerId,
-  outsiders,
-  applicants,
-  recruiting: open,
-}: Readonly<{ offerId: string; outsiders: ExternalApplication[]; applicants: OfferApplicant[]; recruiting: boolean }>) {
+/**
+ * Reads every waiting careers-page CV of the offer at once: they can then be
+ * compared. Rabotka applicants need none of it, analysed as they apply.
+ */
+function AnalyseAllBar({ offerId, outsiders }: Readonly<{ offerId: string; outsiders: ExternalApplication[] }>) {
   const queryClient = useQueryClient();
   const [confirm, setConfirm] = useState(false);
-  const careers = outsiders.filter((a) => a.status === "PENDING" && recruiting(a) && a.hasCv && !a.analysis).length;
-  const rabotka = open ? applicants.filter((a) => (a.status === "PENDING" || a.status === "VIEWED") && !a.analysis).length : 0;
-  const waiting = careers + rabotka;
+  const waiting = outsiders.filter((a) => a.status === "PENDING" && recruiting(a) && a.hasCv && !a.analysis).length;
   const analyse = useMutation({
-    mutationFn: async () => {
-      let left = 0;
-      if (careers > 0) left += (await analyseExternalApplications(offerId)).left;
-      if (rabotka > 0) left += (await analyseApplicants(offerId)).left;
-      return { left };
-    },
+    mutationFn: () => analyseExternalApplications(offerId),
     onSuccess: ({ left }) => {
       void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
-      void queryClient.invalidateQueries({ queryKey: [...offersKey, offerId, "applicants"] });
       void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
       setConfirm(false);
       if (left > 0) toast.info(`Encore ${left} CV à analyser : votre formule en lit un nombre limité à la fois.`);
     },
-    onError: (err) => {
-      void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
-      void queryClient.invalidateQueries({ queryKey: [...offersKey, offerId, "applicants"] });
-      toast.error(friendlyError(err, "Les CV n'ont pas pu être analysés."));
-    },
+    onError: (err) => toast.error(friendlyError(err, "Les CV n'ont pas pu être analysés.")),
   });
   if (waiting === 0) return null;
   return (
