@@ -39,6 +39,9 @@ import { ExternalApplicationCard, externalStage, recruiting } from "#/features/a
 import { offersFull } from "#/features/subscription/offers-quota";
 import { CandidateCard } from "#/features/candidates/components/candidate-card";
 import { CvCompareSheet } from "#/features/cv-screening/components/cv-compare-sheet";
+import { CvChatSheet } from "#/features/cv-screening/components/cv-chat-sheet";
+import { CandidateInsight } from "./candidate-insight";
+import { byFit } from "../rank-candidates";
 import { MAX_COMPARED } from "#/features/cv-screening/components/cv-screening-page";
 import { ResumeButton } from "#/features/candidates/components/resume-button";
 import { OwnCvButton } from "#/features/candidates/components/own-cv-button";
@@ -60,11 +63,13 @@ import {
   getJobCategories,
   getOfferApplicants,
   getOfferAssessments,
+  analyseApplicants,
   refuseApplications,
   offersKey,
   confirmOfferHire,
   republishOffer,
   type ApplicantAssessment,
+  type CvAnalysis,
   type Offer,
   type OfferApplicant,
 } from "#/lib/api/offer-controller";
@@ -87,7 +92,7 @@ import { OfferDescriptionCard } from "./offer-description-card";
 import { REFUSAL_TEMPLATES, RefusalMessageField } from "./refusal-message";
 import { ShareOfferMenu } from "./share-offer-menu";
 import { Checkbox } from "#/components/ui/checkbox";
-import { CriterionBar, Points, ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
+import { ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
 import { scheduledIso } from "./offer-form";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
@@ -124,7 +129,8 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const applicants = useQuery({
     queryKey: [...offersKey, id, "applicants"],
     queryFn: () => getOfferApplicants(id),
-    refetchInterval: 30_000,
+    // A CV being read gets its score in a few seconds.
+    refetchInterval: (q) => (q.state.data?.some((a) => a.analysis?.status === "QUEUED") ? 4000 : 30_000),
   });
   const categories = useQuery({ queryKey: ["job-categories"], queryFn: getJobCategories, staleTime: Infinity });
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -452,6 +458,16 @@ const TABS: { key: "all" | ApplicationStage; label: string }[] = [
   { key: "closed", label: "Refusées ou annulées" },
 ];
 
+/** A candidate of the offer, wherever they applied from: one list, one ranking. */
+type Entry = {
+  key: string;
+  score: number | null;
+  analysis: CvAnalysis | null;
+  /** Still waiting: it can be refused with the selection. */
+  refusable: boolean;
+  stage: ApplicationStage;
+} & ({ kind: "rabotka"; a: OfferApplicant } | { kind: "careers"; a: ExternalApplication });
+
 /** The applicants by stage. A candidate opens in the profile dialog — public profile only. */
 function ApplicantsCard({
   offer: o,
@@ -466,8 +482,6 @@ function ApplicantsCard({
     k === "all"
       ? list.length + outsiders.length
       : list.filter((a) => applicationStage(a.status) === k).length + outsiders.filter((a) => externalStage(a) === k).length;
-  const shown = tab === "all" ? list : list.filter((a) => applicationStage(a.status) === tab);
-  const shownOutsiders = tab === "all" ? outsiders : outsiders.filter((a) => externalStage(a) === tab);
   // Opened from a notification on one candidature: show every stage, and
   // bring that candidate into view once the lists are in.
   const focusId = useSearchParams().get("candidature");
@@ -484,16 +498,6 @@ function ApplicantsCard({
   }, [focusId, loaded]);
   // The team's Oui / Peut-être / Non on each candidate, for the « Avis » buttons.
   const opinions = useQuery({ queryKey: offerOpinionsKey(o.id), queryFn: () => getOfferOpinions(o.id) });
-  // Compared as in Analyse de CV: the CVs of one screening, a few at a time.
-  const [picked, setPicked] = useState<string[]>([]);
-  const [comparing, setComparing] = useState(false);
-  const pickedRows = outsiders.filter((a) => a.analysis && picked.includes(a.analysis.resumeId));
-  const comparedScreening = pickedRows[0]?.analysis?.screeningId;
-  const comparedResumes = useQuery({
-    queryKey: [...cvScreeningsKey, comparedScreening, "compare-rows", [...picked].sort().join(",")],
-    queryFn: async () => (await getCvScreening(comparedScreening as string)).resumes.filter((r) => picked.includes(r.id)),
-    enabled: !!comparedScreening && picked.length >= 2,
-  });
   // Ranked like CV analysis: best fit first; not scored yet, after, newest first.
   const assessed = useQuery({
     queryKey: [...offersKey, o.id, "assessments"],
@@ -502,33 +506,80 @@ function ApplicantsCard({
   });
   const scores = new Map((assessed.data?.assessments ?? []).map((x) => [x.applicationId, x]));
   const pending = assessed.data?.pending ?? 0;
-  // Refusals in bulk: those picked, or every one still waiting once the posts are filled.
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [bulk, setBulk] = useState<"selected" | "remaining" | null>(null);
   const waiting = list.filter((a) => a.status === "PENDING" || a.status === "VIEWED");
   const waitingOutsiders = outsiders.filter((a) => a.status === "PENDING");
   const stillWaiting = waiting.length + waitingOutsiders.length;
   const hiredCount =
     list.filter((a) => applicationStage(a.status) === "hired").length + outsiders.filter((a) => a.status === "RETAINED").length;
   const filled = o.status === "FILLED" || hiredCount >= o.quantity;
-  const toggle = (id: string) =>
-    setSelected((s) => {
-      const next = new Set(s);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+
+  // Every candidate in one list, wherever they applied from, ranked by score.
+  const all: Entry[] = [
+    ...list.map(
+      (a): Entry => ({
+        kind: "rabotka",
+        key: `r:${a.applicationId}`,
+        a,
+        score: scores.get(a.applicationId)?.score ?? null,
+        analysis: a.analysis ?? null,
+        refusable: a.status === "PENDING" || a.status === "VIEWED",
+        stage: applicationStage(a.status),
+      }),
+    ),
+    ...outsiders.map(
+      (a): Entry => ({
+        kind: "careers",
+        key: `e:${a.id}`,
+        a,
+        score: a.analysis?.status === "SCORED" ? a.analysis.score : null,
+        analysis: a.analysis,
+        refusable: a.status === "PENDING",
+        stage: externalStage(a),
+      }),
+    ),
+  ];
   // Those who do not meet an « éliminatoire » question come last, and can be hidden.
   const [hideOut, setHideOut] = useState(false);
-  const outCount = shown.filter((a) => a.knockedOut).length;
-  const ranked = [...shown]
-    .filter((a) => !(hideOut && a.knockedOut))
-    .sort((x, y) => {
-      if (!!x.knockedOut !== !!y.knockedOut) return x.knockedOut ? 1 : -1;
-      const sx = scores.get(x.applicationId)?.score ?? -1;
-      const sy = scores.get(y.applicationId)?.score ?? -1;
-      return sy - sx || y.createdAt.localeCompare(x.createdAt);
+  const inTab = all.filter((e) => tab === "all" || e.stage === tab);
+  const outCount = inTab.filter((e) => e.a.knockedOut).length;
+  const ranked = inTab
+    .filter((e) => !(hideOut && e.a.knockedOut))
+    .sort(byFit);
+
+  // One selection for the page: compare those with a CV analysis, refuse those waiting.
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulk, setBulk] = useState<"selected" | "remaining" | null>(null);
+  const [comparing, setComparing] = useState(false);
+  const toggle = (key: string) =>
+    setSelected((s) => {
+      const next = new Set(s);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
     });
+  const picked = all.filter((e) => selected.has(e.key));
+  const comparable = picked.filter((e) => e.analysis?.status === "SCORED");
+  const compareIds = comparable.map((e) => e.analysis?.resumeId as string);
+  const comparedScreening = comparable[0]?.analysis?.screeningId;
+  const oneScreening = comparable.every((e) => e.analysis?.screeningId === comparedScreening);
+  const compareBlocked =
+    picked.length < 2
+      ? "Choisissez au moins 2 candidats"
+      : comparable.length < picked.length
+        ? "Analysez d'abord le CV de chaque candidat choisi"
+        : picked.length > MAX_COMPARED
+          ? `${MAX_COMPARED} candidats au plus`
+          : !oneScreening
+            ? "Ces analyses ne peuvent pas être comparées ensemble"
+            : null;
+  const comparedResumes = useQuery({
+    queryKey: [...cvScreeningsKey, comparedScreening, "compare-rows", [...compareIds].sort().join(",")],
+    queryFn: async () => (await getCvScreening(comparedScreening as string)).resumes.filter((r) => compareIds.includes(r.id)),
+    enabled: !!comparedScreening && !compareBlocked,
+  });
+  const refuseRabotka = picked.filter((e) => e.kind === "rabotka" && e.refusable).map((e) => (e.a as OfferApplicant).applicationId);
+  const refuseCareers = picked.filter((e) => e.kind === "careers" && e.refusable).map((e) => (e.a as ExternalApplication).id);
+  const refuseCount = refuseRabotka.length + refuseCareers.length;
   const asked = o.questions.length > 0;
   const open = o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED";
 
@@ -536,7 +587,7 @@ function ApplicantsCard({
     <section className="space-y-5 rounded-3xl bg-card p-6">
       <div className="space-y-1">
         <h2 className="font-semibold text-xl">Candidats</h2>
-        <p className="text-muted-foreground text-sm">Classés par adéquation avec l&apos;offre, d&apos;après leur profil Rabotka.</p>
+        <p className="text-muted-foreground text-sm">Classés par adéquation avec l&apos;offre, qu&apos;ils aient postulé sur Rabotka ou sur votre page carrières.</p>
       </div>
 
       {loading ? (
@@ -609,13 +660,24 @@ function ApplicantsCard({
           {selected.size > 0 && (
             <div className="sticky top-20 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-ink px-4 py-3 text-sm text-white">
               <span>{selected.size === 1 ? "1 candidature sélectionnée" : `${selected.size} candidatures sélectionnées`}</span>
-              <span className="flex gap-2">
+              <span className="flex flex-wrap gap-2">
                 <button type="button" onClick={() => setSelected(new Set())} className="h-9 rounded-full px-3 hover:bg-white/10">
                   Annuler
                 </button>
-                <button type="button" onClick={() => setBulk("selected")} className="h-9 rounded-full bg-white px-4 font-medium text-ink hover:bg-white/90">
-                  Refuser la sélection
+                <button
+                  type="button"
+                  onClick={() => setComparing(true)}
+                  disabled={!!compareBlocked || !comparedResumes.data}
+                  title={compareBlocked ?? undefined}
+                  className="h-9 rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] disabled:opacity-50"
+                >
+                  Comparer{picked.length > 1 ? ` (${picked.length})` : ""}
                 </button>
+                {refuseCount > 0 && (
+                  <button type="button" onClick={() => setBulk("selected")} className="h-9 rounded-full bg-white px-4 font-medium text-ink hover:bg-white/90">
+                    Refuser la sélection{refuseCount < selected.size ? ` (${refuseCount})` : ""}
+                  </button>
+                )}
               </span>
             </div>
           )}
@@ -623,100 +685,60 @@ function ApplicantsCard({
           <BulkRefuseDialog
             offerId={o.id}
             mode={bulk}
-            ids={[...selected]}
-            count={bulk === "remaining" ? stillWaiting : selected.size}
+            ids={refuseRabotka}
+            selectedOutsiderIds={refuseCareers}
+            count={bulk === "remaining" ? stillWaiting : refuseCount}
             rabotkaWaiting={waiting.length}
             outsiderIds={waitingOutsiders.map((a) => a.id)}
             onClose={() => setBulk(null)}
             onDone={() => setSelected(new Set())}
           />
 
-          {shown.length + shownOutsiders.length === 0 ? (
+          {comparing && comparedScreening && comparedResumes.data && (
+            <CvCompareSheet
+              open={comparing}
+              onOpenChange={setComparing}
+              screeningId={comparedScreening}
+              jobTitle={o.title}
+              resumes={[...comparedResumes.data].sort((x, y) => (y.score ?? 0) - (x.score ?? 0))}
+            />
+          )}
+
+          <AnalyseAllBar offerId={o.id} outsiders={outsiders} applicants={list} recruiting={open} />
+
+          {ranked.length === 0 ? (
             <p className="rounded-2xl bg-page p-4 text-muted-foreground text-sm">Aucun candidat à cette étape.</p>
           ) : (
-            <div className="space-y-4">
-              {ranked.length > 0 && (
-                <ul className="flex flex-col gap-2">
-                  {ranked.map((a, i) => (
-                    <ApplicantRow
-                      key={a.applicationId}
-                      applicant={a}
-                      rank={i + 1}
-                      assessment={scores.get(a.applicationId)}
-                      waiting={pending > 0}
-                      asked={asked}
-                      recruiting={open}
-                      selected={selected.has(a.applicationId)}
-                      onToggle={a.status === "PENDING" || a.status === "VIEWED" ? () => toggle(a.applicationId) : undefined}
-                      opinions={opinions.data?.rabotka[a.applicationId]}
-                      focused={focusId === a.applicationId}
-                    />
-                  ))}
-                </ul>
-              )}
-              {shownOutsiders.length > 0 && (
-                <>
-                  <AnalyseAllBar offerId={o.id} outsiders={outsiders} />
-                  {picked.length > 0 && (
-                    <div className="ml-auto flex w-fit items-center gap-1 rounded-full bg-page p-1 pl-4">
-                      <span className="text-muted-foreground text-sm tabular-nums">
-                        {picked.length} sélectionné{picked.length > 1 ? "s" : ""}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setPicked([])}
-                        aria-label="Effacer la sélection"
-                        className="flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-card hover:text-foreground"
-                      >
-                        <IconX className="size-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setComparing(true)}
-                        disabled={picked.length < 2 || !comparedResumes.data}
-                        title={picked.length < 2 ? "Choisissez au moins 2 CV" : undefined}
-                        className="inline-flex h-9 items-center rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm disabled:opacity-50"
-                      >
-                        Comparer{picked.length > 1 ? ` (${picked.length})` : ""}
-                      </button>
-                    </div>
-                  )}
-                  {comparing && comparedScreening && comparedResumes.data && (
-                    <CvCompareSheet
-                      open={comparing}
-                      onOpenChange={setComparing}
-                      screeningId={comparedScreening}
-                      jobTitle={o.title}
-                      resumes={[...comparedResumes.data].sort((x, y) => (y.score ?? 0) - (x.score ?? 0))}
-                    />
-                  )}
-                  <ul className="flex flex-col gap-4">
-                    {shownOutsiders.map((a) => (
-                      <ExternalApplicationCard
-                        key={a.id}
-                        application={a}
-                        opinions={opinions.data?.external[a.id]}
-                        focused={focusId === a.id}
-                        compare={
-                          a.analysis
-                            ? {
-                                selected: picked.includes(a.analysis.resumeId),
-                                disabled:
-                                  !picked.includes(a.analysis.resumeId) &&
-                                  (picked.length >= MAX_COMPARED || (!!comparedScreening && a.analysis.screeningId !== comparedScreening)),
-                                onToggle: () => {
-                                  const id = a.analysis?.resumeId as string;
-                                  setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
-                                },
-                              }
-                            : undefined
-                        }
-                      />
-                    ))}
-                  </ul>
-                </>
-              )}
-            </div>
+            <ul className="flex flex-col gap-3">
+              {ranked.map((e, i) => {
+                const pickable = e.analysis?.status === "SCORED" || e.refusable;
+                return e.kind === "rabotka" ? (
+                  <ApplicantRow
+                    key={e.key}
+                    offerId={o.id}
+                    jobTitle={o.title}
+                    applicant={e.a}
+                    rank={i + 1}
+                    assessment={scores.get(e.a.applicationId)}
+                    waiting={pending > 0}
+                    asked={asked}
+                    recruiting={open}
+                    selected={selected.has(e.key)}
+                    onToggle={pickable ? () => toggle(e.key) : undefined}
+                    opinions={opinions.data?.rabotka[e.a.applicationId]}
+                    focused={focusId === e.a.applicationId}
+                  />
+                ) : (
+                  <ExternalApplicationCard
+                    key={e.key}
+                    application={e.a}
+                    opinions={opinions.data?.external[e.a.id]}
+                    focused={focusId === e.a.id}
+                    compare={pickable ? { selected: selected.has(e.key), disabled: false, onToggle: () => toggle(e.key) } : undefined}
+                  />
+                );
+              })}
+            </ul>
           )}
         </>
       )}
@@ -729,6 +751,7 @@ function BulkRefuseDialog({
   offerId,
   mode,
   ids,
+  selectedOutsiderIds,
   count,
   rabotkaWaiting,
   outsiderIds,
@@ -737,7 +760,10 @@ function BulkRefuseDialog({
 }: Readonly<{
   offerId: string;
   mode: "selected" | "remaining" | null;
+  /** Rabotka applications picked. */
   ids: string[];
+  /** Careers-page applications picked. */
+  selectedOutsiderIds: string[];
   count: number;
   rabotkaWaiting: number;
   outsiderIds: string[];
@@ -749,9 +775,9 @@ function BulkRefuseDialog({
   const refuse = useMutation({
     mutationFn: async () => {
       const text = message.trim() || undefined;
-      const outside = mode === "remaining" ? outsiderIds : [];
+      const outside = mode === "remaining" ? outsiderIds : selectedOutsiderIds;
       const rabotka =
-        mode === "remaining" && rabotkaWaiting === 0
+        (mode === "remaining" && rabotkaWaiting === 0) || (mode === "selected" && ids.length === 0)
           ? { refused: 0, skipped: 0 }
           : await refuseApplications(offerId, {
               ...(mode === "remaining" ? { remaining: true } : { applicationIds: ids }),
@@ -808,6 +834,8 @@ const APPLICANT_CRITERIA = [
 
 /** One applicant: rank, score and verdict as in CV analysis, and why on demand. */
 function ApplicantRow({
+  offerId,
+  jobTitle,
   applicant: a,
   rank,
   assessment,
@@ -819,6 +847,8 @@ function ApplicantRow({
   opinions,
   focused,
 }: Readonly<{
+  offerId: string;
+  jobTitle: string;
   applicant: OfferApplicant;
   rank: number;
   assessment?: ApplicantAssessment;
@@ -827,7 +857,7 @@ function ApplicantRow({
   asked: boolean;
   recruiting: boolean;
   selected: boolean;
-  /** Present only for an application still waiting: it can be refused in bulk. */
+  /** Present when it can be picked: to compare (analysed) or refuse (waiting). */
   onToggle?: () => void;
   /** The team's opinions on it, counted. */
   opinions?: Record<Verdict, number>;
@@ -904,6 +934,15 @@ function ApplicantRow({
             <IconChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
           </button>
         )}
+        <ApplicantCvAnalysis
+          offerId={offerId}
+          jobTitle={jobTitle}
+          applicationId={a.applicationId}
+          name={name}
+          status={a.status}
+          analysis={a.analysis ?? null}
+          recruiting={recruiting}
+        />
         {a.cv?.kind === "UPLOADED" && <OwnCvButton applicationId={a.applicationId} name={name} cv={a.cv} />}
         <ResumeButton workerId={a.worker.id} name={name} />
         <TeamOpinionButton kind="rabotka" id={a.applicationId} name={name} summary={opinions} />
@@ -911,20 +950,114 @@ function ApplicantRow({
       </div>
       {open && answers.length > 0 && <Answers answers={answers} />}
       {open && assessment && (
-        <div className="mt-4 space-y-4">
-          {assessment.summary && <p className="text-sm leading-relaxed">{assessment.summary}</p>}
-          <div className="grid gap-5 md:grid-cols-[1fr_1fr_14rem]">
-            <Points title="Points forts" items={assessment.strengths} tone="good" />
-            <Points title="Points à vérifier" items={assessment.gaps} tone="gap" />
-            <div className="space-y-2.5 rounded-2xl bg-card p-4">
-              {APPLICANT_CRITERIA.filter((k) => typeof assessment.criteria?.[k.key] === "number").map((k) => (
-                <CriterionBar key={k.key} label={k.label} value={assessment.criteria?.[k.key] ?? 0} />
-              ))}
-            </div>
-          </div>
-        </div>
+        <CandidateInsight
+          summary={assessment.summary}
+          strengths={assessment.strengths}
+          gaps={assessment.gaps}
+          criteria={APPLICANT_CRITERIA.filter((k) => typeof assessment.criteria?.[k.key] === "number").map((k) => ({
+            label: k.label,
+            value: assessment.criteria?.[k.key] ?? 0,
+          }))}
+        />
       )}
     </li>
+  );
+}
+
+/**
+ * A Rabotka applicant's CV analysis: « Analyser le CV » (1 « CV inclus »), then
+ * « Interroger le CV ». It joins the offer's screening, so it can be compared
+ * with the careers-page CVs. What is read never carries their contacts.
+ */
+function ApplicantCvAnalysis({
+  offerId,
+  jobTitle,
+  applicationId,
+  name,
+  status,
+  analysis,
+  recruiting,
+}: Readonly<{
+  offerId: string;
+  jobTitle: string;
+  applicationId: string;
+  name: string;
+  status: string;
+  analysis: CvAnalysis | null;
+  recruiting: boolean;
+}>) {
+  const queryClient = useQueryClient();
+  const [confirm, setConfirm] = useState(false);
+  const [chatting, setChatting] = useState(false);
+  const scored = analysis?.status === "SCORED";
+  const resume = useQuery({
+    queryKey: [...cvScreeningsKey, analysis?.screeningId, "resume", analysis?.resumeId],
+    queryFn: async () => (await getCvScreening(analysis?.screeningId as string)).resumes.find((r) => r.id === analysis?.resumeId) ?? null,
+    enabled: scored,
+  });
+  const analyse = useMutation({
+    mutationFn: () => analyseApplicants(offerId, applicationId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: [...offersKey, offerId, "applicants"] });
+      void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
+      setConfirm(false);
+    },
+    onError: (err) => toast.error(friendlyError(err, "Ce CV n'a pas pu être analysé.")),
+  });
+
+  if (analysis?.status === "QUEUED") {
+    return (
+      <span className="inline-flex h-10 items-center gap-2 px-1 text-muted-foreground text-sm">
+        <Loader className="size-4 animate-spin" />
+        Analyse du CV…
+      </span>
+    );
+  }
+  if (scored) {
+    return (
+      <>
+        <button
+          type="button"
+          disabled={!resume.data}
+          onClick={() => setChatting(true)}
+          className="inline-flex h-10 shrink-0 items-center rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm disabled:opacity-60"
+        >
+          Interroger le CV
+        </button>
+        {chatting && resume.data && (
+          <CvChatSheet
+            open={chatting}
+            onOpenChange={setChatting}
+            screeningId={analysis.screeningId}
+            jobTitle={jobTitle}
+            resume={{ ...resume.data, score: analysis.score }}
+          />
+        )}
+      </>
+    );
+  }
+  if (analysis || !recruiting || status === "REJECTED" || status === "CANCELLED") return null;
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setConfirm(true)}
+        className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70"
+      >
+        <IconSparkles className="size-4" />
+        Analyser le CV
+      </button>
+      <ActionDialog
+        open={confirm}
+        onOpenChange={setConfirm}
+        icon={<IconSparkles className="size-5" />}
+        title={`Analyser le CV de ${name} ?`}
+        description="Son profil Rabotka et le CV qu'il a joint sont lus et notés pour cette offre, sans ses coordonnées. Cela utilise 1 CV inclus de votre formule."
+        confirmLabel="Analyser"
+        pending={analyse.isPending}
+        onConfirm={() => analyse.mutate()}
+      />
+    </>
   );
 }
 
@@ -993,25 +1126,44 @@ function QuestionsCard({ offer: o }: Readonly<{ offer: Offer }>) {
  * who have not applied: the business may reach them directly. Hidden when
  * the plan has no search (403) or nobody fits.
  */
-/** Reads every waiting CV of the offer at once: they can then be compared. */
-function AnalyseAllBar({ offerId, outsiders }: Readonly<{ offerId: string; outsiders: ExternalApplication[] }>) {
+/** Reads every waiting candidate's CV at once, from both sources: they can then be compared. */
+function AnalyseAllBar({
+  offerId,
+  outsiders,
+  applicants,
+  recruiting: open,
+}: Readonly<{ offerId: string; outsiders: ExternalApplication[]; applicants: OfferApplicant[]; recruiting: boolean }>) {
   const queryClient = useQueryClient();
   const [confirm, setConfirm] = useState(false);
-  const waiting = outsiders.filter((a) => a.status === "PENDING" && recruiting(a) && a.hasCv && !a.analysis).length;
+  const careers = outsiders.filter((a) => a.status === "PENDING" && recruiting(a) && a.hasCv && !a.analysis).length;
+  const rabotka = open ? applicants.filter((a) => (a.status === "PENDING" || a.status === "VIEWED") && !a.analysis).length : 0;
+  const waiting = careers + rabotka;
   const analyse = useMutation({
-    mutationFn: () => analyseExternalApplications(offerId),
+    mutationFn: async () => {
+      let left = 0;
+      if (careers > 0) left += (await analyseExternalApplications(offerId)).left;
+      if (rabotka > 0) left += (await analyseApplicants(offerId)).left;
+      return { left };
+    },
     onSuccess: ({ left }) => {
       void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
+      void queryClient.invalidateQueries({ queryKey: [...offersKey, offerId, "applicants"] });
+      void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
       setConfirm(false);
       if (left > 0) toast.info(`Encore ${left} CV à analyser : votre formule en lit un nombre limité à la fois.`);
     },
-    onError: (err) => toast.error(friendlyError(err, "Les CV n'ont pas pu être analysés.")),
+    onError: (err) => {
+      void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
+      void queryClient.invalidateQueries({ queryKey: [...offersKey, offerId, "applicants"] });
+      toast.error(friendlyError(err, "Les CV n'ont pas pu être analysés."));
+    },
   });
   if (waiting === 0) return null;
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-page p-4">
       <p className="text-sm">
-        {waiting} CV sans score : analysez-les pour les comparer.
+        {waiting === 1 ? "1 candidat sans analyse de CV" : `${waiting} candidats sans analyse de CV`} : analysez-les pour les
+        interroger et les comparer.
       </p>
       <button
         type="button"

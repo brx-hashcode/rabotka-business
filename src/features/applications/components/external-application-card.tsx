@@ -12,7 +12,9 @@ import { PreviewSheet, previewKindOf } from "#/components/preview-sheet";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Textarea } from "#/components/ui/textarea";
-import { ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
+import { CRITERIA, ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
+import { CandidateInsight } from "#/features/offers/components/candidate-insight";
+import type { CvAnalysis } from "#/lib/api/offer-controller";
 import { CvChatSheet } from "#/features/cv-screening/components/cv-chat-sheet";
 import {
   analyseExternalApplications,
@@ -35,6 +37,11 @@ import type { Verdict } from "#/lib/api/candidate-notes-controller";
 
 const YES_NO: Record<string, string> = { yes: "Oui", no: "Non" };
 
+/** The analysis has more to show than its score and summary. */
+export function hasInsight(a: CvAnalysis) {
+  return (a.strengths?.length ?? 0) + (a.gaps?.length ?? 0) > 0 || Object.keys(a.criteria ?? {}).length > 0;
+}
+
 /** The offer still takes decisions; once it ended, only reading is left. */
 export function recruiting(a: Pick<ExternalApplication, "offer">) {
   return a.offer.status === "ACTIVE" || a.offer.status === "PARTIALLY_FILLED";
@@ -55,7 +62,7 @@ export function ExternalApplicationCard({
   focused,
 }: Readonly<{
   application: ExternalApplication;
-  /** On an offer's page: the checkbox of Analyse de CV. */
+  /** On an offer's page: its box in the page's one selection (compare, refuse). */
   compare?: { selected: boolean; disabled: boolean; onToggle: () => void };
   /** On an offer's page: the team's opinions, counted. */
   opinions?: Record<Verdict, number>;
@@ -69,6 +76,7 @@ export function ExternalApplicationCard({
   const [refusing, setRefusing] = useState(false);
   const [retaining, setRetaining] = useState(false);
   const [showAnswers, setShowAnswers] = useState(false);
+  const [showInsight, setShowInsight] = useState(false);
   const [analysing, setAnalysing] = useState(false);
   const [scheduling, setScheduling] = useState(false);
   const [chatting, setChatting] = useState(false);
@@ -133,7 +141,7 @@ export function ExternalApplicationCard({
       className={cn("flex scroll-mt-24 flex-col gap-3 rounded-3xl bg-page p-5", focused && "ring-2 ring-whatsapp-dark")}
     >
       <div className="flex items-start gap-3.5">
-        {compare && score !== null && (
+        {compare && (
           <label className="flex w-6 shrink-0 cursor-pointer flex-col items-center pt-4">
             <Checkbox
               checked={compare.selected}
@@ -222,6 +230,30 @@ export function ExternalApplicationCard({
             Analyser le CV
           </button>
         )
+      )}
+
+      {score !== null && a.analysis && hasInsight(a.analysis) && (
+        <div>
+          <button
+            type="button"
+            aria-expanded={showInsight}
+            onClick={() => setShowInsight(!showInsight)}
+            className="inline-flex items-center gap-1 font-medium text-sm hover:underline"
+          >
+            {showInsight ? "Masquer l'analyse" : "Voir l'analyse détaillée"}
+            {showInsight ? <IconChevronUp className="size-4" /> : <IconChevronDown className="size-4" />}
+          </button>
+          {showInsight && (
+            <CandidateInsight
+              strengths={a.analysis.strengths ?? []}
+              gaps={a.analysis.gaps ?? []}
+              criteria={CRITERIA.filter((k) => typeof a.analysis?.criteria?.[k.key] === "number").map((k) => ({
+                label: k.label,
+                value: a.analysis?.criteria?.[k.key] ?? 0,
+              }))}
+            />
+          )}
+        </div>
       )}
 
       {a.knockedOut && (
