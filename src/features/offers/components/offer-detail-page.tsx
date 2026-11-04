@@ -1,5 +1,6 @@
 "use client";
 
+import { DescriptionText } from "#/features/careers/components/description-text";
 import { useEffect, useState } from "react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
@@ -945,7 +946,9 @@ function Answers({ answers }: Readonly<{ answers: NonNullable<OfferApplicant["an
             </span>
             <div className="min-w-0">
               <dt className="text-muted-foreground">{x.label}</dt>
-              <dd className="whitespace-pre-line break-words font-medium">{x.value}</dd>
+              <dd className="font-medium">
+                <DescriptionText text={x.value} />
+              </dd>
             </div>
           </div>
         ))}
