@@ -1,5 +1,6 @@
 "use client";
 
+import { offersKey } from "#/lib/api/offer-controller";
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -38,6 +39,8 @@ export function ReachButton({ workerId, name, className }: Readonly<{ workerId: 
     onSuccess: ({ spent }) => {
       void queryClient.invalidateQueries({ queryKey: myContactsKey });
       void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
+      // An unlocked contact opens the « CV joint » on its applications.
+      void queryClient.invalidateQueries({ queryKey: offersKey });
       setConfirm(false);
       setShow(true);
       if (spent) toast.success(`Contact de ${name} obtenu.`);
