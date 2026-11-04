@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { IconChevronDown, IconChevronUp, IconInfoCircle } from "@tabler/icons-react";
 
+import { DescriptionText } from "#/features/careers/components/description-text";
 import { cn } from "#/lib/utils";
 
 /**
@@ -13,7 +14,7 @@ import { cn } from "#/lib/utils";
 export function OfferDescriptionCard({ description, note }: Readonly<{ description: string; note: string | null }>) {
   const [open, setOpen] = useState(false);
   const [clipped, setClipped] = useState(false);
-  const text = useRef<HTMLParagraphElement>(null);
+  const text = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = text.current;
@@ -30,9 +31,10 @@ export function OfferDescriptionCard({ description, note }: Readonly<{ descripti
   return (
     <section className="space-y-3 rounded-3xl bg-card p-6">
       <h2 className="font-semibold text-lg">Description</h2>
-      <p ref={text} className={cn("whitespace-pre-line text-muted-foreground leading-relaxed", !open && "line-clamp-6")}>
-        {description}
-      </p>
+      {/* Six lines high when closed: line-clamp only cuts a single block. */}
+      <div ref={text} className={cn(!open && "max-h-[9.75rem] overflow-hidden")}>
+        <DescriptionText text={description} className="text-muted-foreground" />
+      </div>
       {open && note && (
         <div className="space-y-2 rounded-2xl bg-page p-4">
           <h3 className="flex items-center gap-1.5 font-medium text-sm">

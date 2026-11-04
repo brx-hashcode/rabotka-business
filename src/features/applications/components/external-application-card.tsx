@@ -23,6 +23,7 @@ import {
 } from "#/lib/api/careers-controller";
 import { cvScreeningsKey, getCvScreening } from "#/lib/api/cv-screening-controller";
 import { sourceLabel } from "#/features/careers/candidate-source";
+import { DescriptionText } from "#/features/careers/components/description-text";
 import { canSchedule } from "#/features/applications/can-schedule";
 import { downloadFile } from "#/lib/api/download";
 import { friendlyError } from "#/lib/api/friendly-error";
@@ -246,7 +247,9 @@ export function ExternalApplicationCard({
               {a.answers.map((answer) => (
                 <div key={answer.label}>
                   <dt className="text-muted-foreground text-xs">{answer.label}</dt>
-                  <dd className="whitespace-pre-line break-words font-medium">{YES_NO[answer.value] ?? answer.value}</dd>
+                  <dd className="font-medium">
+                    <DescriptionText text={YES_NO[answer.value] ?? answer.value} />
+                  </dd>
                 </div>
               ))}
             </dl>
