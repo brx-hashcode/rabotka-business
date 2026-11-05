@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  IconCalendarPlus,
   IconArrowLeft,
   IconBriefcase,
   IconCalendarEvent,
@@ -44,6 +45,7 @@ import { offersFull } from "#/features/subscription/offers-quota";
 import { CandidateCard } from "#/features/candidates/components/candidate-card";
 import { CvCompareSheet } from "#/features/cv-screening/components/cv-compare-sheet";
 import { CvChatSheet } from "#/features/cv-screening/components/cv-chat-sheet";
+import { ScheduleInterviewDialog } from "#/features/interviews/components/schedule-interview-dialog";
 import { CandidateInsight, detailsLabel } from "./candidate-insight";
 import { byFit } from "../rank-candidates";
 import { MAX_COMPARED } from "#/features/cv-screening/components/cv-screening-page";
@@ -874,7 +876,7 @@ function ApplicantRow({
   const [open, setOpen] = useState(false);
   const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
   // What « ⋯ » opens: the CVs, the team's opinions; « Message » goes straight there.
-  const [panel, setPanel] = useState<"own-cv" | "rabotka-cv" | "opinion" | null>(null);
+  const [panel, setPanel] = useState<"own-cv" | "rabotka-cv" | "opinion" | "interview" | null>(null);
   const chat = useApplicationChat(a);
   const hire = canHire(useMember().role);
   const more: MoreAction[] = [
@@ -896,6 +898,10 @@ function ApplicantRow({
     { key: "opinion", label: opinionLabel(opinions), icon: IconUsers, onSelect: () => setPanel("opinion") },
     ...(hire && chat.available
       ? [{ key: "message", label: "Message", icon: IconMessageCircle, onSelect: chat.open, disabled: chat.pending }]
+      : []),
+    // Invited by e-mail and in the app, as from « Candidatures ».
+    ...(recruiting && applicationStage(a.status) !== "closed"
+      ? [{ key: "interview", label: "Planifier un entretien", icon: IconCalendarPlus, onSelect: () => setPanel("interview") }]
       : []),
   ];
   // The CV analysis, once in, speaks for the candidate as it does for a
@@ -1012,6 +1018,14 @@ function ApplicantRow({
         open={panel === "opinion"}
         onOpenChange={(o) => setPanel(o ? "opinion" : null)}
       />
+      {panel === "interview" && (
+        <ScheduleInterviewDialog
+          open
+          onOpenChange={(o) => setPanel(o ? "interview" : null)}
+          candidate={{ name, applicationId: a.applicationId }}
+          jobTitle={jobTitle}
+        />
+      )}
       {open && answers.length > 0 && <Answers answers={answers} />}
       {open && insight && <CandidateInsight {...insight} />}
     </li>
