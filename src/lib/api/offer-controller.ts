@@ -162,9 +162,10 @@ function toListItem(o: Raw): OfferListItem {
  * server answers 403 with the upgrade message past it).
  */
 class OfferController extends BusinessBaseController {
-  async list(params: { page?: number; pageSize?: number; statuses?: OfferStatus[] } = {}) {
+  async list(params: { page?: number; pageSize?: number; statuses?: OfferStatus[]; q?: string } = {}) {
     const qs = new URLSearchParams({ page: String(params.page ?? 0), pageSize: String(params.pageSize ?? 50) });
     if (params.statuses?.length) qs.set("status", params.statuses.join(","));
+    if (params.q?.trim()) qs.set("q", params.q.trim());
     const res = await this.get<{ items: Raw[]; total: number }>(`/profile/job-offers?${qs}`);
     return { items: res.items.map(toListItem), total: res.total };
   }

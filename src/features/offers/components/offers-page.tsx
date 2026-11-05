@@ -1,11 +1,13 @@
 "use client";
 
-import { parseAsStringLiteral, useQueryState } from "nuqs";
+import { useEffect, useState } from "react";
+import { debounce, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { IconBriefcase, IconCalendar, IconMapPin, IconPlus, IconUsers } from "@tabler/icons-react";
+import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { IconBriefcase, IconCalendar, IconMapPin, IconPlus, IconSearch, IconUsers } from "@tabler/icons-react";
 
 import { CardGridSkeleton } from "#/components/page-skeletons";
+import { Input } from "#/components/ui/input";
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { listOffers, offersKey, type OfferListItem, type OfferStatus } from "#/lib/api/offer-controller";
@@ -17,10 +19,13 @@ import { useMember } from "#/features/team/use-member";
 
 const PAGE = 50;
 
+// The same words as the cards' chips: « En ligne » is every offer still taking
+// candidates, « en partie pourvue » included; « Pourvues » those filled.
 const TABS: { key: string; label: string; statuses?: OfferStatus[] }[] = [
   { key: "all", label: "Toutes" },
-  { key: "active", label: "En ligne", statuses: ["ACTIVE"] },
-  { key: "running", label: "En cours", statuses: ["PARTIALLY_FILLED", "FILLED", "IN_PROGRESS"] },
+  { key: "active", label: "En ligne", statuses: ["ACTIVE", "PARTIALLY_FILLED"] },
+  { key: "filled", label: "Pourvues", statuses: ["FILLED"] },
+  { key: "running", label: "En cours", statuses: ["IN_PROGRESS"] },
   { key: "done", label: "Terminées", statuses: ["COMPLETED"] },
   { key: "expired", label: "Expirées", statuses: ["EXPIRED", "CANCELLED"] },
 ];
@@ -31,9 +36,18 @@ export function OffersPage() {
   // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
   const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS.map((t) => t.key)).withDefault("all"));
   const statuses = TABS.find((t) => t.key === tab)?.statuses;
+  // In the URL too (?q=); asked of the server a beat after the last keystroke.
+  const [q, setQ] = useQueryState("q", parseAsString.withDefault("").withOptions({ limitUrlUpdates: debounce(300) }));
+  const [term, setTerm] = useState(q.trim());
+  useEffect(() => {
+    const t = setTimeout(() => setTerm(q.trim()), 300);
+    return () => clearTimeout(t);
+  }, [q]);
   const { data, isLoading, error, hasNextPage, fetchNextPage, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: [...offersKey, "list", tab],
-    queryFn: ({ pageParam }) => listOffers({ statuses, page: pageParam, pageSize: PAGE }),
+    queryKey: [...offersKey, "list", tab, term],
+    queryFn: ({ pageParam }) => listOffers({ statuses, q: term, page: pageParam, pageSize: PAGE }),
+    // The cards stay while a new search runs, rather than flashing a skeleton.
+    placeholderData: keepPreviousData,
     initialPageParam: 0,
     getNextPageParam: (last, all) => (all.length * PAGE < last.total ? all.length : undefined),
   });
@@ -80,22 +94,34 @@ export function OffersPage() {
         )}
       </div>
 
-      <div role="tablist" aria-label="État des offres" className="flex flex-wrap gap-2">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            role="tab"
-            aria-selected={tab === t.key}
-            onClick={() => void setTab(t.key)}
-            className={cn(
-              "h-10 rounded-full px-4 font-medium text-sm transition-colors",
-              tab === t.key ? "bg-selected text-selected-foreground" : "bg-card text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center gap-3">
+        <div role="tablist" aria-label="État des offres" className="flex flex-1 flex-wrap gap-2">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.key}
+              onClick={() => void setTab(t.key)}
+              className={cn(
+                "h-10 rounded-full px-4 font-medium text-sm transition-colors",
+                tab === t.key ? "bg-selected text-selected-foreground" : "bg-card text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <div className="relative w-full sm:w-80">
+          <IconSearch className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={q}
+            onChange={(e) => void setQ(e.target.value)}
+            placeholder="Rechercher une offre, une référence…"
+            aria-label="Rechercher une offre"
+            className="h-10 rounded-full border-0 bg-card pl-10 shadow-none focus-visible:ring-2 focus-visible:ring-ink/10"
+          />
+        </div>
       </div>
 
       {isLoading ? (
@@ -107,8 +133,10 @@ export function OffersPage() {
           <span className="flex size-14 items-center justify-center rounded-full bg-page">
             <IconBriefcase className="size-7 text-muted-foreground" />
           </span>
-          <p className="font-medium">{tab === "all" ? "Aucune offre pour le moment" : "Aucune offre dans cet état"}</p>
-          {tab === "all" && !atLimit && (
+          <p className="font-medium">
+            {term ? `Aucune offre ne correspond à « ${term} »` : tab === "all" ? "Aucune offre pour le moment" : "Aucune offre dans cet état"}
+          </p>
+          {tab === "all" && !term && !atLimit && (
             <Link href="/espace/offres/nouvelle" className="font-medium text-sm text-whatsapp-dark hover:underline">
               Publier votre première offre
             </Link>
