@@ -237,16 +237,6 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                     Modifier
                   </Link>
                 )}
-                {hire && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
-                  <button
-                    type="button"
-                    onClick={() => setConfirmClose(true)}
-                    className="inline-flex h-10 items-center gap-2 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70"
-                  >
-                    <IconCircleX className="size-4" />
-                    Fermer l&apos;offre
-                  </button>
-                )}
                 {hire && o.status === "FILLED" && !isDatedMission(o.employmentType) && (
                   <button
                     type="button"
@@ -267,16 +257,19 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                     Republier
                   </button>
                 )}
-                {hire && (o.status === "ACTIVE" || o.status === "EXPIRED") && (
-                  <button
-                    type="button"
-                    onClick={() => setConfirmDelete(true)}
-                    className="inline-flex h-10 items-center gap-2 rounded-full bg-page px-4 font-medium text-destructive text-sm hover:bg-destructive/10"
-                  >
-                    <IconTrash className="size-4" />
-                    Supprimer
-                  </button>
-                )}
+                {/* Closing and deleting end the offer: one step away, not beside « Modifier ». */}
+                <MoreActionsMenu
+                  name={o.title}
+                  className="bg-page hover:bg-page/70"
+                  actions={[
+                    ...(hire && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED")
+                      ? [{ key: "close", label: "Fermer l'offre", icon: IconCircleX, onSelect: () => setConfirmClose(true), hint: "Plus de candidatures, les candidats en attente sont prévenus" }]
+                      : []),
+                    ...(hire && (o.status === "ACTIVE" || o.status === "EXPIRED")
+                      ? [{ key: "delete", label: "Supprimer l'offre", icon: IconTrash, onSelect: () => setConfirmDelete(true), tone: "danger" as const }]
+                      : []),
+                  ]}
+                />
               </div>
             }
           />
