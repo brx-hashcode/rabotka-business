@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 
 import { CompanyPage } from "#/features/careers/components/company-page";
 import { careersCompanyServer } from "#/lib/api/careers-server";
@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title,
     description,
     robots: indexed && page.company.indexable ? { index: true, follow: true } : NOINDEX,
-    alternates: { canonical: `/carrieres/${slug}` },
+    alternates: { canonical: `/carrieres/${page.company.slug}` },
     openGraph: { type: "website", title, description, ...(page.company.logoUrl ? { images: [page.company.logoUrl] } : {}) },
   };
 }
@@ -28,6 +28,9 @@ export default async function Page({ params }: Params) {
   const { slug } = await params;
   const page = await careersCompanyServer(slug);
   if (page === null) notFound();
+  // An address from before the business was renamed: on to the current one
+  // (a refresh tag once the page streams, which browsers and Google follow).
+  if (page && page.company.slug !== slug) permanentRedirect(`/carrieres/${page.company.slug}`);
   // Already read for the metadata (cached): the page starts from it instead of loading it again.
   return <CompanyPage slug={slug} initial={page} />;
 }

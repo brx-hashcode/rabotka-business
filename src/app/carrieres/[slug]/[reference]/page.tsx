@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 
 import { OfferPage } from "#/features/careers/components/offer-page";
 import { jobPostingLd, ldScript } from "#/features/careers/job-posting-ld";
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title,
     description,
     robots: indexed && page.company.indexable ? { index: true, follow: true } : NOINDEX,
-    alternates: { canonical: `/carrieres/${slug}/${reference}` },
+    alternates: { canonical: `/carrieres/${page.company.slug}/${reference}` },
     openGraph: { type: "website", title, description },
   };
 }
@@ -39,6 +39,9 @@ export default async function Page({ params }: Params) {
   const { slug, reference } = await params;
   const page = await careersOfferServer(slug, reference);
   if (page === null) notFound();
+  // An address from before the business was renamed: on to the current one
+  // (a refresh tag once the page streams, which browsers and Google follow).
+  if (page && page.company.slug !== slug) permanentRedirect(`/carrieres/${page.company.slug}/${reference}`);
   const { origin, indexed } = await siteOrigin();
   const ld =
     page && indexed && page.company.indexable
