@@ -15,6 +15,7 @@ import { Combobox, type ComboboxOption } from "#/features/sign-up/components/com
 import { FIELD_CLASS, FieldLabel, StepActions, TextField } from "#/features/sign-up/components/form-bits";
 import { useCities, useCountries } from "#/hooks/use-geo";
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
+import { trialLocks } from "#/features/subscription/trial-lock";
 import { getJobCategories, type EmploymentType, type Offer, type OfferInput, type PaymentFlow } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
 import { AVAILABLE_EMPLOYMENT_TYPES, EMPLOYMENT_TYPES, isDatedMission, PAYMENT_FLOWS } from "../offer-labels";
@@ -225,7 +226,9 @@ export function OfferForm({
                 className="flex items-center gap-3 rounded-2xl bg-page px-4 py-3 text-muted-foreground text-sm hover:text-foreground"
               >
                 <IconWand className="size-5 shrink-0" />
-                La rédaction d&apos;offres par l&apos;IA est incluse dans les formules supérieures.
+                {trialLocks(subscription?.entitlements, "offerWriter")
+                  ? "La rédaction d'offres par l'IA arrive avec une formule payante, après votre essai gratuit."
+                  : "La rédaction d'offres par l'IA est incluse dans les formules supérieures."}
               </Link>
             )}
             <OfferAiDialog

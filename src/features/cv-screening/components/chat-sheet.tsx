@@ -7,7 +7,11 @@ import { Loader } from "lucide-react";
 import { Dialog as SheetPrimitive } from "radix-ui";
 import { toast } from "sonner";
 
+import Link from "next/link";
+
 import { Bone } from "#/components/page-skeletons";
+import { trialLocks } from "#/features/subscription/trial-lock";
+import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
 import type { AskResult } from "#/lib/api/cv-screening-controller";
 import { downloadFile } from "#/lib/api/download";
 import { friendlyError } from "#/lib/api/friendly-error";
@@ -66,6 +70,9 @@ export function ChatSheet({
   const queryClient = useQueryClient();
   const key = queryKey;
   const chat = useQuery({ queryKey: key, queryFn: load, enabled: open });
+  // No question at all on this plan: why, and where to change it.
+  const subscription = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription, enabled: open });
+  const chatTrialLocked = trialLocks(subscription.data?.entitlements, "cvChat");
 
   const [draft, setDraft] = useState("");
   // The question being answered and the answer so far, until the saved
@@ -212,6 +219,15 @@ export function ChatSheet({
             {data && !data.available ? (
               <p className="rounded-2xl bg-page px-4 py-3 text-muted-foreground text-sm">
                 {unavailable}
+              </p>
+            ) : data && data.limit === 0 ? (
+              <p className="rounded-2xl bg-page px-4 py-3 text-muted-foreground text-sm">
+                {chatTrialLocked
+                  ? "Les questions aux CV arrivent avec une formule payante, après votre essai gratuit."
+                  : "Les questions aux CV ne sont pas incluses dans votre formule."}{" "}
+                <Link href="/espace/abonnement" className="font-medium text-foreground underline underline-offset-2">
+                  Voir les formules
+                </Link>
               </p>
             ) : data && data.remaining === 0 ? (
               <p className="rounded-2xl bg-page px-4 py-3 text-muted-foreground text-sm">

@@ -417,7 +417,14 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
             <article key={plan.id} className={cn("flex flex-col gap-5 rounded-3xl bg-card p-6", isCurrent && "ring-2 ring-ink")}>
               <div className="space-y-1">
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="font-semibold text-lg">{plan.name}</h3>
+                  <h3 className="flex items-center gap-2 font-semibold text-lg">
+                    {plan.name}
+                    {plan.custom && (
+                      <span className="rounded-full bg-chip-violet px-2.5 py-1 font-medium text-chip-violet-foreground text-xs">
+                        Sur mesure
+                      </span>
+                    )}
+                  </h3>
                   {isCurrent ? (
                     <span className="rounded-full bg-chip-green px-2.5 py-1 font-medium text-chip-green-foreground text-xs">
                       Votre formule
