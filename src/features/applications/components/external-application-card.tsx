@@ -26,6 +26,7 @@ import {
 } from "#/lib/api/careers-controller";
 import { cvScreeningsKey, getCvScreening } from "#/lib/api/cv-screening-controller";
 import { sourceLabel } from "#/features/careers/candidate-source";
+import { APPLICATION_STATUS, statusClass } from "#/features/offers/offer-labels";
 import { DescriptionText } from "#/features/careers/components/description-text";
 import { canSchedule } from "#/features/applications/can-schedule";
 import { downloadFile } from "#/lib/api/download";
@@ -47,6 +48,9 @@ export function hasInsight(a: CvAnalysis) {
 export function recruiting(a: Pick<ExternalApplication, "offer">) {
   return a.offer.status === "ACTIVE" || a.offer.status === "PARTIALLY_FILLED";
 }
+
+/** A careers-page stage, as the Rabotka status that reads the same. */
+const STAGE_STATUS = { new: "PENDING", viewed: "VIEWED", hired: "ACCEPTED", closed: "REJECTED" } as const;
 
 /** Where an application from the public careers page sits among the tabs. */
 export function externalStage(a: Pick<ExternalApplication, "status" | "viewedAt">) {
@@ -187,14 +191,16 @@ export function ExternalApplicationCard({
             {a.source && a.source !== "direct" && (
               <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px] text-muted-foreground">via {sourceLabel(a.source)}</span>
             )}
-            {a.status === "REFUSED" && <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px]">Refusée</span>}
-            {a.status === "RETAINED" && <span className="rounded-full bg-brand-lime px-2 py-0.5 font-medium text-[#0f2414] text-[11px]">Retenue</span>}
           </p>
           {a.analysis?.status === "QUEUED" && <p className="mt-1 text-muted-foreground text-xs">Analyse du CV en cours…</p>}
           {a.analysis && a.analysis.status !== "QUEUED" && score === null && (
             <p className="mt-1 text-muted-foreground text-xs">Ce CV n&apos;a pas pu être lu.</p>
           )}
         </div>
+        {/* Where it stands, in the words and colours of a Rabotka applicant's card. */}
+        <span className={cn("shrink-0 rounded-full px-2.5 py-1 font-medium text-xs", statusClass(STAGE_STATUS[externalStage(a)]))}>
+          {APPLICATION_STATUS[STAGE_STATUS[externalStage(a)]]}
+        </span>
       </div>
 
       <Link href={`/espace/offres/${a.offer.id}`} className="group space-y-0.5 rounded-2xl bg-card p-3">
