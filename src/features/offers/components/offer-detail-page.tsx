@@ -91,7 +91,7 @@ import { OfferDescriptionCard } from "./offer-description-card";
 import { REFUSAL_TEMPLATES, RefusalMessageField } from "./refusal-message";
 import { ShareOfferMenu } from "./share-offer-menu";
 import { Checkbox } from "#/components/ui/checkbox";
-import { ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
+import { CRITERIA, ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
 import { scheduledIso } from "./offer-form";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
@@ -457,6 +457,11 @@ const TABS: { key: "all" | ApplicationStage; label: string }[] = [
   { key: "closed", label: "Refusées ou annulées" },
 ];
 
+/** A CV analysis's score, once it is in. */
+function cvScore(analysis: CvAnalysis | null | undefined): number | null {
+  return analysis?.status === "SCORED" ? analysis.score : null;
+}
+
 /** A candidate of the offer, wherever they applied from: one list, one ranking. */
 type Entry = {
   key: string;
@@ -519,7 +524,8 @@ function ApplicantsCard({
         kind: "rabotka",
         key: `r:${a.applicationId}`,
         a,
-        score: scores.get(a.applicationId)?.score ?? null,
+        // Its CV analysis once in: the same measure as a careers-page CV.
+        score: cvScore(a.analysis) ?? scores.get(a.applicationId)?.score ?? null,
         analysis: a.analysis ?? null,
         refusable: a.status === "PENDING" || a.status === "VIEWED",
         stage: applicationStage(a.status),
@@ -862,7 +868,31 @@ function ApplicantRow({
 }>) {
   const [open, setOpen] = useState(false);
   const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
-  const score = assessment?.score ?? null;
+  // The CV analysis, once in, speaks for the candidate as it does for a
+  // careers-page CV; the profile score only until then.
+  const analysed = cvScore(a.analysis) !== null ? (a.analysis as CvAnalysis) : null;
+  const score = analysed ? analysed.score : (assessment?.score ?? null);
+  const insight = analysed
+    ? {
+        summary: analysed.summary,
+        strengths: analysed.strengths ?? [],
+        gaps: analysed.gaps ?? [],
+        criteria: CRITERIA.filter((k) => typeof analysed.criteria?.[k.key] === "number").map((k) => ({
+          label: k.label,
+          value: analysed.criteria?.[k.key] ?? 0,
+        })),
+      }
+    : assessment
+      ? {
+          summary: assessment.summary,
+          strengths: assessment.strengths,
+          gaps: assessment.gaps,
+          criteria: APPLICANT_CRITERIA.filter((k) => typeof assessment.criteria?.[k.key] === "number").map((k) => ({
+            label: k.label,
+            value: assessment.criteria?.[k.key] ?? 0,
+          })),
+        }
+      : null;
   const answers = a.answers ?? [];
   const failed = failedLabel(answers);
   return (
@@ -919,14 +949,14 @@ function ApplicantRow({
         </span>
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-        {(assessment || answers.length > 0) && (
+        {(insight || answers.length > 0) && (
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
             className="mr-auto inline-flex h-10 shrink-0 items-center gap-1 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70"
           >
-            {detailsLabel(!!assessment, answers.length > 0)}
+            {detailsLabel(!!insight, answers.length > 0)}
             <IconChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
           </button>
         )}
@@ -937,17 +967,7 @@ function ApplicantRow({
         <ApplicationActions applicant={a} name={name} recruiting={recruiting} />
       </div>
       {open && answers.length > 0 && <Answers answers={answers} />}
-      {open && assessment && (
-        <CandidateInsight
-          summary={assessment.summary}
-          strengths={assessment.strengths}
-          gaps={assessment.gaps}
-          criteria={APPLICANT_CRITERIA.filter((k) => typeof assessment.criteria?.[k.key] === "number").map((k) => ({
-            label: k.label,
-            value: assessment.criteria?.[k.key] ?? 0,
-          }))}
-        />
-      )}
+      {open && insight && <CandidateInsight {...insight} />}
     </li>
   );
 }
