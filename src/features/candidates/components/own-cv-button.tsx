@@ -17,15 +17,23 @@ export function OwnCvButton({
   name,
   cv,
   className,
+  open: controlled,
+  onOpenChange,
 }: Readonly<{
   applicationId: string;
   name: string;
   cv: { fileName: string; mimeType: string; available: boolean };
   className?: string;
+  /** Opened from elsewhere (a « ⋯ » menu): no button of its own then. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }>) {
-  const [open, setOpen] = useState(false);
+  const [own, setOwn] = useState(false);
+  const open = controlled ?? own;
+  const setOpen = onOpenChange ?? setOwn;
 
   if (!cv.available) {
+    if (controlled !== undefined) return null;
     return (
       <span
         title="Le CV que le candidat a joint s'ouvre une fois son contact débloqué ou sa candidature retenue."
@@ -42,6 +50,7 @@ export function OwnCvButton({
 
   return (
     <>
+      {controlled === undefined && (
       <button
         type="button"
         onClick={() => setOpen(true)}
@@ -53,6 +62,7 @@ export function OwnCvButton({
         <IconFileText className="size-4" />
         CV du candidat
       </button>
+      )}
       <PreviewSheet
         open={open}
         onOpenChange={setOpen}

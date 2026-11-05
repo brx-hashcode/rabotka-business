@@ -15,12 +15,16 @@ import {
   IconChevronDown,
   IconCircleCheck,
   IconCircleX,
+  IconFileCv,
+  IconFileSearch,
+  IconFileText,
   IconInbox,
+  IconLock,
   IconMapPin,
+  IconMessageCircle,
   IconMinus,
   IconPencil,
   IconRefresh,
-  IconFileSearch,
   IconTrash,
   IconUserCheck,
   IconUsers,
@@ -86,7 +90,8 @@ import {
   type ApplicationStage,
 } from "../offer-labels";
 import { failedLabel, KIND_LABEL } from "../offer-questions";
-import { ApplicationActions } from "./application-actions";
+import { ApplicationActions, useApplicationChat } from "./application-actions";
+import { MoreActionsMenu, opinionLabel, type MoreAction } from "./more-actions-menu";
 import { OfferDescriptionCard } from "./offer-description-card";
 import { REFUSAL_TEMPLATES, RefusalMessageField } from "./refusal-message";
 import { ShareOfferMenu } from "./share-offer-menu";
@@ -868,6 +873,31 @@ function ApplicantRow({
 }>) {
   const [open, setOpen] = useState(false);
   const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
+  // What « ⋯ » opens: the CVs, the team's opinions; « Message » goes straight there.
+  const [panel, setPanel] = useState<"own-cv" | "rabotka-cv" | "opinion" | null>(null);
+  const chat = useApplicationChat(a);
+  const hire = canHire(useMember().role);
+  const more: MoreAction[] = [
+    ...(a.cv?.kind === "UPLOADED"
+      ? [
+          a.cv.available
+            ? { key: "own-cv", label: "CV du candidat", icon: IconFileText, onSelect: () => setPanel("own-cv") }
+            : {
+                key: "own-cv",
+                label: "CV du candidat",
+                icon: IconLock,
+                onSelect: () => undefined,
+                disabled: true,
+                hint: "S'ouvre une fois son contact débloqué",
+              },
+        ]
+      : []),
+    { key: "rabotka-cv", label: "CV Rabotka", icon: IconFileCv, onSelect: () => setPanel("rabotka-cv") },
+    { key: "opinion", label: opinionLabel(opinions), icon: IconUsers, onSelect: () => setPanel("opinion") },
+    ...(hire && chat.available
+      ? [{ key: "message", label: "Message", icon: IconMessageCircle, onSelect: chat.open, disabled: chat.pending }]
+      : []),
+  ];
   // The CV analysis, once in, speaks for the candidate as it does for a
   // careers-page CV; the profile score only until then.
   const analysed = cvScore(a.analysis) !== null ? (a.analysis as CvAnalysis) : null;
@@ -961,11 +991,27 @@ function ApplicantRow({
           </button>
         )}
         <ApplicantCvAnalysis jobTitle={jobTitle} analysis={a.analysis ?? null} />
-        {a.cv?.kind === "UPLOADED" && <OwnCvButton applicationId={a.applicationId} name={name} cv={a.cv} />}
-        <ResumeButton workerId={a.worker.id} name={name} />
-        <TeamOpinionButton kind="rabotka" id={a.applicationId} name={name} summary={opinions} />
-        <ApplicationActions applicant={a} name={name} recruiting={recruiting} />
+        <ApplicationActions applicant={a} name={name} recruiting={recruiting} hideChat />
+        <MoreActionsMenu name={name} actions={more} />
       </div>
+      {a.cv?.kind === "UPLOADED" && (
+        <OwnCvButton
+          applicationId={a.applicationId}
+          name={name}
+          cv={a.cv}
+          open={panel === "own-cv"}
+          onOpenChange={(o) => setPanel(o ? "own-cv" : null)}
+        />
+      )}
+      <ResumeButton workerId={a.worker.id} name={name} open={panel === "rabotka-cv"} onOpenChange={(o) => setPanel(o ? "rabotka-cv" : null)} />
+      <TeamOpinionButton
+        kind="rabotka"
+        id={a.applicationId}
+        name={name}
+        summary={opinions}
+        open={panel === "opinion"}
+        onOpenChange={(o) => setPanel(o ? "opinion" : null)}
+      />
       {open && answers.length > 0 && <Answers answers={answers} />}
       {open && insight && <CandidateInsight {...insight} />}
     </li>

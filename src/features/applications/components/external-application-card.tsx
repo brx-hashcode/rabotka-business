@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconAlertTriangle, IconCalendarPlus, IconCheck, IconChevronDown, IconDownload, IconFileText, IconMail, IconPhone, IconX } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCalendarPlus, IconCheck, IconChevronDown, IconDownload, IconFileText, IconMail, IconPhone, IconUsers, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
@@ -14,6 +14,7 @@ import { Checkbox } from "#/components/ui/checkbox";
 import { Textarea } from "#/components/ui/textarea";
 import { CRITERIA, ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
 import { CandidateInsight, detailsLabel } from "#/features/offers/components/candidate-insight";
+import { MoreActionsMenu, opinionLabel, type MoreAction } from "#/features/offers/components/more-actions-menu";
 import type { CvAnalysis } from "#/lib/api/offer-controller";
 import { CvChatSheet } from "#/features/cv-screening/components/cv-chat-sheet";
 import {
@@ -77,6 +78,7 @@ export function ExternalApplicationCard({
   const [retaining, setRetaining] = useState(false);
   // One toggle for its analysis and its answers, as on a Rabotka applicant's card.
   const [showDetails, setShowDetails] = useState(false);
+  const [opinionOpen, setOpinionOpen] = useState(false);
   const [analysing, setAnalysing] = useState(false);
   const [scheduling, setScheduling] = useState(false);
   const [chatting, setChatting] = useState(false);
@@ -95,6 +97,23 @@ export function ExternalApplicationCard({
   // PDF, Word and photos open in the panel; anything else downloads.
   const previewKind = previewKindOf(a.cvMimeType);
   const canShow = previewKind !== null;
+  // What « ⋯ » offers, as on a Rabotka applicant's card.
+  const more: MoreAction[] = [
+    ...(a.hasCv
+      ? [
+          {
+            key: "cv",
+            label: canShow ? "CV du candidat" : "Télécharger le CV du candidat",
+            icon: canShow ? IconFileText : IconDownload,
+            onSelect: () => (canShow ? setReading(true) : void saveCv()),
+          },
+        ]
+      : []),
+    { key: "opinion", label: opinionLabel(opinions), icon: IconUsers, onSelect: () => setOpinionOpen(true) },
+    ...(score !== null && canSchedule(a)
+      ? [{ key: "interview", label: "Planifier un entretien", icon: IconCalendarPlus, onSelect: () => setScheduling(true) }]
+      : []),
+  ];
 
   const refuse = useMutation({
     mutationFn: () => refuseExternalApplication(a.id, message.trim() || undefined),
@@ -235,27 +254,6 @@ export function ExternalApplicationCard({
             Interroger le CV
           </button>
         )}
-        {a.hasCv && (
-          <button
-            type="button"
-            onClick={() => (canShow ? setReading(true) : void saveCv())}
-            className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70"
-          >
-            {canShow ? <IconFileText className="size-4" /> : <IconDownload className="size-4" />}
-            CV du candidat
-          </button>
-        )}
-        <TeamOpinionButton kind="external" id={a.id} name={name} summary={opinions} />
-        {score !== null && canSchedule(a) && (
-          <button
-            type="button"
-            onClick={() => setScheduling(true)}
-            className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70"
-          >
-            <IconCalendarPlus className="size-4" />
-            Entretien
-          </button>
-        )}
         {hire && a.status === "PENDING" && (
           <>
             <button
@@ -278,7 +276,17 @@ export function ExternalApplicationCard({
             )}
           </>
         )}
+        <MoreActionsMenu name={name} actions={more} />
       </div>
+
+      <TeamOpinionButton
+        kind="external"
+        id={a.id}
+        name={name}
+        summary={opinions}
+        open={opinionOpen}
+        onOpenChange={setOpinionOpen}
+      />
 
       {showDetails && a.answers.length > 0 && (
         <dl className="space-y-2 rounded-2xl bg-card p-4 text-sm">

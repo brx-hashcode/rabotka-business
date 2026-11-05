@@ -11,10 +11,26 @@ import { cn } from "#/lib/utils";
  * « CV » : the candidate's Rabotka CV — trades, missions done, ratings — as
  * they download it themselves, without their contact details.
  */
-export function ResumeButton({ workerId, name, className }: Readonly<{ workerId: string; name: string; className?: string }>) {
-  const [open, setOpen] = useState(false);
+export function ResumeButton({
+  workerId,
+  name,
+  className,
+  open: controlled,
+  onOpenChange,
+}: Readonly<{
+  workerId: string;
+  name: string;
+  className?: string;
+  /** Opened from elsewhere (a « ⋯ » menu): no button of its own then. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}>) {
+  const [own, setOwn] = useState(false);
+  const open = controlled ?? own;
+  const setOpen = onOpenChange ?? setOwn;
   return (
     <>
+      {controlled === undefined && (
       <button
         type="button"
         onClick={() => setOpen(true)}
@@ -23,6 +39,7 @@ export function ResumeButton({ workerId, name, className }: Readonly<{ workerId:
         <IconFileCv className="size-4" />
         CV Rabotka
       </button>
+      )}
       <PreviewSheet
         open={open}
         onOpenChange={setOpen}
