@@ -4,16 +4,12 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { io } from "socket.io-client";
 
-import { myBusinessKey } from "#/lib/api/business-controller";
-import { cvScreeningsKey } from "#/lib/api/cv-screening-controller";
-import { interviewsKey } from "#/lib/api/interview-controller";
-import { notificationsKey } from "#/lib/api/notification-controller";
-import { offersKey } from "#/lib/api/offer-controller";
+import { refreshFor, SCREENING_PROGRESS_KEYS, type PushedNotification } from "./notification-refresh";
 
 /**
- * Refreshes the bell the moment the backend pushes a notification
- * (`/notifications` namespace, `notification:new`), and an « Analyse de CV »
- * as its CVs are read (`cv-screening:progress`).
+ * Refreshes, the moment the backend pushes a notification (`/notifications`
+ * namespace, `notification:new`), the bell and whatever it is about; and an
+ * analysis's CVs as they are read (`cv-screening:progress`).
  *
  * Long-polling only: each request goes through `src/proxy.ts`, which swaps the
  * httpOnly session cookie for the bearer header — a WebSocket upgrade could not
@@ -26,19 +22,14 @@ export function useNotificationsSocket() {
   useEffect(() => {
     // `/socket.io`, not `/socket.io/`: Next would redirect that one first.
     const socket = io("/notifications", { transports: ["polling"], upgrade: false, addTrailingSlash: false });
-    socket.on("notification:new", () => {
-      void queryClient.invalidateQueries({ queryKey: notificationsKey });
-      // Most of them are about an application: the inbox and offers follow.
-      void queryClient.invalidateQueries({ queryKey: offersKey });
-      // Others change the business itself (plan paid or ended, organisation
-      // verified): its subscription, quotas and figures, all under one prefix.
-      void queryClient.invalidateQueries({ queryKey: myBusinessKey });
-      // A candidate answered an interview: the agenda shows it at once.
-      void queryClient.invalidateQueries({ queryKey: interviewsKey });
+    // Each notification refreshes what it is about (notification-refresh.ts).
+    socket.on("notification:new", (notification?: PushedNotification) => {
+      refreshFor(queryClient, notification ?? {});
     });
-    // A CV of an « Analyse de CV » was read: the ranking fills in as it goes.
+    // A CV was read (an « Analyse de CV », or a candidate analysed as they
+    // applied): its screening and the offer's cards fill in as it goes.
     socket.on("cv-screening:progress", () => {
-      void queryClient.invalidateQueries({ queryKey: cvScreeningsKey });
+      for (const queryKey of SCREENING_PROGRESS_KEYS) void queryClient.invalidateQueries({ queryKey });
     });
     return () => {
       socket.disconnect();
