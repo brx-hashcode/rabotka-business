@@ -1078,6 +1078,14 @@ function ApplicantCvAnalysis({
       </>
     );
   }
+  // The model gave nothing usable: the backend tries again on its own.
+  if (analysis?.status === "FAILED") {
+    return (
+      <span className="inline-flex h-10 items-center px-1 text-muted-foreground text-sm" title="L'analyse de son CV a échoué ; elle sera relancée automatiquement.">
+        Analyse du CV à refaire
+      </span>
+    );
+  }
   // Not analysed yet: it is done on its own as the application arrives, or by
   // the catch-up once the plan has « CV inclus » again. Nothing to press.
   return null;
