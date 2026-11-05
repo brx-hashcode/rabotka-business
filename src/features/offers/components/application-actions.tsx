@@ -60,8 +60,8 @@ const button = "inline-flex h-9 items-center justify-center gap-1.5 whitespace-n
 /** Beside other buttons, on a row or a card: the long labels stay for the menu and the dialogs. */
 const SHORT: Record<string, string> = { cancel: "Annuler", unlock: "Suivi", contact: "Contact" };
 
-function ActionButton({ action: a, stretch, label }: Readonly<{ action: Action; stretch?: boolean; label?: string }>) {
-  const className = cn(button, TONE[a.tone], stretch && "min-w-0 flex-1");
+function ActionButton({ action: a, label }: Readonly<{ action: Action; label?: string }>) {
+  const className = cn(button, TONE[a.tone]);
   const body = (
     <>
       <a.icon className="size-4 shrink-0" />
@@ -212,7 +212,8 @@ function Actions({
   );
 
   // Rows: everything as buttons, the danger one first (it was so before).
-  // Cards: the same, stretched to the card's width.
+  // Cards: the same, at their own width, to the card's right: stretched,
+  // they turned into long bars once the cards went two to a row.
   // Compact: the main action, the contact as an icon, the rest in a menu.
   const main = variant === "compact" ? actions.find((a) => a.tone !== "danger" && a.key !== "contact") : undefined;
   const contact = actions.find((a) => a.key === "contact");
@@ -273,12 +274,12 @@ function Actions({
           )}
         </div>
       ) : (
-        <div className={cn("flex gap-2", variant === "card" && "w-full")}>
+        <div className={cn("flex flex-wrap gap-2", variant === "card" && "w-full justify-end")}>
           {chat}
           {[...actions]
             .sort((a, b) => Number(b.tone === "danger") - Number(a.tone === "danger"))
             .map((a) => (
-              <ActionButton key={a.key} action={a} stretch={variant === "card"} label={SHORT[a.key]} />
+              <ActionButton key={a.key} action={a} label={SHORT[a.key]} />
             ))}
         </div>
       )}
