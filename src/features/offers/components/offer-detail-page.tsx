@@ -23,7 +23,6 @@ import {
   IconLock,
   IconMapPin,
   IconMessageCircle,
-  IconMinus,
   IconPencil,
   IconRefresh,
   IconTrash,
@@ -1090,16 +1089,22 @@ function Answers({ answers }: Readonly<{ answers: NonNullable<OfferApplicant["an
       <dl className="space-y-2">
         {answers.map((x) => (
           <div key={x.label} className="flex items-start gap-2.5 text-sm">
-            <span
-              className={cn(
-                "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full",
-                x.passed === true && "bg-chip-green text-chip-green-foreground",
-                x.passed === false && "bg-chip-amber text-chip-amber-foreground",
-                x.passed === null && "bg-page text-muted-foreground",
-              )}
-            >
-              {x.passed === false ? <IconX className="size-3" /> : x.passed === true ? <IconCheck className="size-3" /> : <IconMinus className="size-3" />}
-            </span>
+            {x.passed === null ? (
+              // No criterion on this question: a plain list dot, as in the
+              // offer's description. The ✓ / ✕ are kept for « éliminatoires ».
+              <span aria-hidden className="mt-0.5 flex size-5 shrink-0 items-center justify-center">
+                <span className="size-1.5 rounded-full bg-whatsapp-dark" />
+              </span>
+            ) : (
+              <span
+                className={cn(
+                  "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full",
+                  x.passed ? "bg-chip-green text-chip-green-foreground" : "bg-chip-amber text-chip-amber-foreground",
+                )}
+              >
+                {x.passed ? <IconCheck className="size-3" /> : <IconX className="size-3" />}
+              </span>
+            )}
             <div className="min-w-0">
               <dt className="text-muted-foreground">{x.label}</dt>
               <dd className="font-medium">
