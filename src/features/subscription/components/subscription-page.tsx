@@ -1,5 +1,6 @@
 "use client";
 
+import { de } from "#/features/subscription/french";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -404,13 +405,14 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
           const price = period === "ANNUAL" ? plan.annualPriceFcfa : plan.monthlyPriceFcfa;
           const isCurrent = plan.id === current;
           const change = !currentPlan || isCurrent ? null : plan.monthlyPriceFcfa > currentPlan.monthlyPriceFcfa ? "up" : "down";
+          // When a queued period starts: after the running one, or after those already paid.
+          const after = data.upcoming.length > 0 ? "après les périodes déjà payées" : "à la fin de la période en cours";
           const when = isCurrent
-            ? lastEnd && `S'ajoute à la suite, à partir du ${date(lastEnd)}.`
+            ? lastEnd && `La nouvelle période commence le ${date(lastEnd)}, ${after}.`
             : change === "up"
-              ? `Démarre aujourd'hui. Les jours restants de ${currentPlan?.name} sont convertis en jours de ${plan.name}.`
+              ? `Démarre aujourd'hui : les jours restants ${de(currentPlan?.name ?? "")} sont convertis en jours ${de(plan.name)}.`
               : change === "down"
-                ? lastEnd &&
-                  `Démarre le ${date(lastEnd)}, ${data.upcoming.length > 0 ? "après les périodes déjà payées" : "à la fin de votre formule actuelle"}.`
+                ? lastEnd && `Démarre le ${date(lastEnd)}, ${after}.`
                 : null;
           const pending = buy.isPending && buy.variables?.id === plan.id;
           return (

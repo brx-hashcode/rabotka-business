@@ -1,5 +1,6 @@
 "use client";
 
+import { de } from "#/features/subscription/french";
 import { useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
@@ -723,6 +724,6 @@ function NextSteps({ business, subscription }: Readonly<{ business: MyBusiness; 
 
 /** « Bonjour Awa, voici… », or « Voici… » when no first name is known (never a lowercase start). */
 function greeting(firstName: string | undefined, businessName: string | undefined, days: number): string {
-  const what = `${businessName ? `le recrutement de ${businessName}` : "votre recrutement"} sur les ${days} derniers jours.`;
+  const what = `${businessName ? `le recrutement ${de(businessName)}` : "votre recrutement"} sur les ${days} derniers jours.`;
   return firstName?.trim() ? `Bonjour ${firstName.trim()}, voici ${what}` : `Voici ${what}`;
 }
