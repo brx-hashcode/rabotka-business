@@ -65,6 +65,7 @@ export function ExternalApplicationCard({
   compare,
   opinions,
   focused,
+  onOfferPage = false,
 }: Readonly<{
   application: ExternalApplication;
   /** On an offer's page: its box in the page's one selection (compare, refuse). */
@@ -73,6 +74,8 @@ export function ExternalApplicationCard({
   opinions?: Record<Verdict, number>;
   /** Opened from a notification about it. */
   focused?: boolean;
+  /** On the offer's own page: « Pour l'offre » would only repeat it. */
+  onOfferPage?: boolean;
 }>) {
   const queryClient = useQueryClient();
   const name = `${a.firstName} ${a.lastName}`;
@@ -203,10 +206,12 @@ export function ExternalApplicationCard({
         </span>
       </div>
 
-      <Link href={`/espace/offres/${a.offer.id}`} className="group space-y-0.5 rounded-2xl bg-card p-3">
-        <span className="block text-muted-foreground text-[11px] uppercase tracking-wide">Pour l&apos;offre</span>
-        <span className="line-clamp-1 font-medium text-sm group-hover:underline">{a.offer.title}</span>
-      </Link>
+      {!onOfferPage && (
+        <Link href={`/espace/offres/${a.offer.id}`} className="group space-y-0.5 rounded-2xl bg-card p-3">
+          <span className="block text-muted-foreground text-[11px] uppercase tracking-wide">Pour l&apos;offre</span>
+          <span className="line-clamp-1 font-medium text-sm group-hover:underline">{a.offer.title}</span>
+        </Link>
+      )}
 
       <div className="space-y-1 text-sm">
         <a href={`mailto:${a.email}`} className="flex items-center gap-2 hover:underline">

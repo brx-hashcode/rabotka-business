@@ -30,21 +30,19 @@ const TABS = [
   { key: "past", label: "Passés" },
 ] as const;
 
-/** « Aujourd'hui », « Demain », or the date: how a day reads in an agenda. */
-function dayLabel(iso: string): string {
-  const d = new Date(iso);
+/** « aujourd'hui », « demain », or the weekday: the card already shows the date. */
+function dayWord(at: Date): string {
   const today = new Date();
   const tomorrow = new Date();
   tomorrow.setDate(today.getDate() + 1);
-  if (d.toDateString() === today.toDateString()) return "Aujourd'hui";
-  if (d.toDateString() === tomorrow.toDateString()) return "Demain";
-  const label = d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
-  return label.charAt(0).toUpperCase() + label.slice(1);
+  if (at.toDateString() === today.toDateString()) return "aujourd'hui";
+  if (at.toDateString() === tomorrow.toDateString()) return "demain";
+  return at.toLocaleDateString("fr-FR", { weekday: "long" });
 }
 
 const time = (iso: string) => new Date(iso).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 
-/** The business's interviews, by day, as cards: who, when, how, and what the candidate answered. */
+/** The business's interviews as cards, in date order: who, when, how, and what the candidate answered. */
 export function InterviewsPage() {
   const [calendarOpen, setCalendarOpen] = useState(false);
   // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
@@ -54,14 +52,6 @@ export function InterviewsPage() {
   const past = useQuery({ queryKey: [...interviewsKey, "past"], queryFn: () => listInterviews({ scope: "past" }), enabled: tab === "past" });
   const query = tab === "upcoming" ? upcoming : past;
   const items = query.data ?? [];
-
-  const days: { label: string; items: Interview[] }[] = [];
-  for (const i of items) {
-    const label = dayLabel(i.startsAt);
-    const last = days[days.length - 1];
-    if (last?.label === label) last.items.push(i);
-    else days.push({ label, items: [i] });
-  }
 
   const live = (upcoming.data ?? []).filter((i) => i.status !== "CANCELLED");
   const count = (status: Interview["status"]) => live.filter((i) => i.status === status).length;
@@ -148,23 +138,12 @@ export function InterviewsPage() {
             )}
           </div>
         ) : (
-          <div className="space-y-6">
-            {days.map((day) => (
-              <div key={day.label} className="space-y-3">
-                <h2 className="flex items-center gap-2 font-semibold text-sm">
-                  {day.label}
-                  <span className="font-normal text-muted-foreground tabular-nums">
-                    {day.items.length} entretien{day.items.length > 1 ? "s" : ""}
-                  </span>
-                </h2>
-                <ul className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {day.items.map((i) => (
-                    <InterviewCard key={i.id} interview={i} past={tab === "past"} />
-                  ))}
-                </ul>
-              </div>
+          // Each card carries its date: all of them, in date order, no day headings.
+          <ul className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {items.map((i) => (
+              <InterviewCard key={i.id} interview={i} past={tab === "past"} />
             ))}
-          </div>
+          </ul>
         )}
       </section>
     </div>
@@ -203,7 +182,7 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-xl tabular-nums leading-tight">{time(i.startsAt)}</p>
           <p className="text-muted-foreground text-xs">
-            {at.toLocaleDateString("fr-FR", { weekday: "long" })} · {i.durationMinutes} min
+            {dayWord(at)} · {i.durationMinutes} min
           </p>
         </div>
         <StatusChip status={i.status} />
@@ -216,8 +195,14 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
         <div className="min-w-0">
           <p className="truncate font-semibold">{i.candidateName}</p>
           <p className="truncate text-muted-foreground text-sm">
-            {i.applicationId ? (
-              <Link href={`/espace/candidatures?candidature=${i.applicationId}`} className="hover:underline">
+            {/* The offer, whichever way they applied; a Rabotka applicant's card is
+                brought into view there. Only a CV analysed against a job typed by
+                hand has no offer to open. */}
+            {i.offerId ? (
+              <Link
+                href={`/espace/offres/${i.offerId}${i.applicationId ? `?candidature=${i.applicationId}` : ""}`}
+                className="hover:underline"
+              >
                 {i.jobTitle}
               </Link>
             ) : (
