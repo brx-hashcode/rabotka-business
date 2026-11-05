@@ -1,5 +1,5 @@
 import { BusinessBaseController } from "./base-controller";
-import type { EmploymentType, PaymentFlow, QuestionKind } from "./offer-controller";
+import type { CvAnalysis, EmploymentType, PaymentFlow, QuestionKind } from "./offer-controller";
 
 export type CareersCompany = {
   slug: string;
@@ -74,13 +74,7 @@ export type ExternalApplication = {
   viewedAt: string | null;
   offer: { id: string; title: string; status: string };
   /** Once the business asked for it: the score lives in Analyse de CV. */
-  analysis: {
-    resumeId: string;
-    screeningId: string;
-    status: "QUEUED" | "SCORED" | "UNREADABLE" | "FAILED";
-    score: number | null;
-    summary: string | null;
-  } | null;
+  analysis: CvAnalysis | null;
 };
 
 export const externalApplicationsKey = ["external-applications"];

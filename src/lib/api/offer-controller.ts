@@ -1,5 +1,6 @@
 import { appConfig } from "#/config";
 import { BusinessBaseController } from "./base-controller";
+import type { CvCriterion } from "./types";
 
 export type OfferStatus =
   | "DRAFT"
@@ -62,6 +63,18 @@ export type Offer = OfferListItem & {
 /** A candidate's answer, as the business reads it (« Oui », « Non », the choice, the text). */
 export type ApplicantAnswer = { label: string; kind: QuestionKind; value: string; passed: boolean | null };
 
+/** A CV analysis, as both kinds of candidate carry it. */
+export type CvAnalysis = {
+  resumeId: string;
+  screeningId: string;
+  status: "QUEUED" | "SCORED" | "UNREADABLE" | "FAILED";
+  score: number | null;
+  summary: string | null;
+  strengths?: string[];
+  gaps?: string[];
+  criteria?: Partial<Record<CvCriterion, number>> | null;
+};
+
 /** One applicant on an offer — public fields only, never a phone. */
 export type OfferApplicant = {
   applicationId: string;
@@ -73,6 +86,16 @@ export type OfferApplicant = {
   answers?: ApplicantAnswer[];
   /** A wrong answer to an « éliminatoire » question. */
   knockedOut?: boolean;
+  /**
+   * The CV sent with it: the Rabotka one, or the candidate's own (« CV joint »),
+   * which opens once the contact is unlocked or the application retained.
+   */
+  cv?: { kind: "RABOTKA" } | { kind: "UPLOADED"; fileName: string; mimeType: string; available: boolean };
+  /**
+   * Its CV analysis (1 « CV inclus »), in the offer's screening with the
+   * careers-page CVs: what « Interroger le CV » and « Comparer » work on.
+   */
+  analysis?: CvAnalysis | null;
   worker: {
     id: string;
     firstName: string;
@@ -139,9 +162,10 @@ function toListItem(o: Raw): OfferListItem {
  * server answers 403 with the upgrade message past it).
  */
 class OfferController extends BusinessBaseController {
-  async list(params: { page?: number; pageSize?: number; statuses?: OfferStatus[] } = {}) {
+  async list(params: { page?: number; pageSize?: number; statuses?: OfferStatus[]; q?: string } = {}) {
     const qs = new URLSearchParams({ page: String(params.page ?? 0), pageSize: String(params.pageSize ?? 50) });
     if (params.statuses?.length) qs.set("status", params.statuses.join(","));
+    if (params.q?.trim()) qs.set("q", params.q.trim());
     const res = await this.get<{ items: Raw[]; total: number }>(`/profile/job-offers?${qs}`);
     return { items: res.items.map(toListItem), total: res.total };
   }
@@ -181,6 +205,8 @@ class OfferController extends BusinessBaseController {
         ratedByEmployer: Boolean(a.ratedByEmployer),
         knockedOut: Boolean(a.knockedOut),
         answers: Array.isArray(a.answers) ? (a.answers as ApplicantAnswer[]) : [],
+        cv: (a.cv as OfferApplicant["cv"]) ?? { kind: "RABOTKA" },
+        analysis: (a.analysis as CvAnalysis | null) ?? null,
         worker: {
           id: String(w.id ?? ""),
           firstName: String(w.first_name ?? ""),
@@ -301,8 +327,20 @@ class AssessmentController extends BusinessBaseController {
   ): Promise<{ refused: number; skipped: number }> {
     return this.post(`/business/me/offers/${encodeURIComponent(offerId)}/applications/refuse`, body);
   }
+
+  /** CV analysis of Rabotka applicants: one, or all those not read yet (1 « CV inclus » each). */
+  analyse(offerId: string, applicationId?: string): Promise<{ screeningId: string; analysed: number; left: number }> {
+    const base = `/business/me/offers/${encodeURIComponent(offerId)}/applications`;
+    return this.post(applicationId ? `${base}/${encodeURIComponent(applicationId)}/analyse` : `${base}/analyse`, {});
+  }
 }
 
 const assessments = new AssessmentController();
+export const analyseApplicants = assessments.analyse.bind(assessments);
 export const getOfferAssessments = assessments.forOffer.bind(assessments);
 export const refuseApplications = assessments.refuse.bind(assessments);
+
+/** The candidate's own CV sent with an application (« CV joint »). */
+export function applicationCvUrl(applicationId: string): string {
+  return `${appConfig.apiUrl}/business/me/applications/${encodeURIComponent(applicationId)}/cv`;
+}

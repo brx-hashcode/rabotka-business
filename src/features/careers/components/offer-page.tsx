@@ -15,7 +15,7 @@ import {
 } from "@tabler/icons-react";
 
 import { Bone } from "#/components/page-skeletons";
-import { parseDescription } from "#/features/careers/description";
+import { DescriptionText } from "#/features/careers/components/description-text";
 import { EMPLOYMENT_LABEL, PAYMENT_SUFFIX } from "#/features/offers/offer-labels";
 import { candidateSource, SOURCE_KEY } from "#/features/careers/candidate-source";
 import { getCareersOffer } from "#/lib/api/careers-controller";
@@ -103,25 +103,7 @@ export function OfferPage({ slug, reference }: Readonly<{ slug: string; referenc
 
             <div className="space-y-3">
               <h2 className="font-semibold text-lg">Description</h2>
-              {parseDescription(o.description).map((block, i) =>
-                block.kind === "text" ? (
-                  <p key={i} className="text-[15px] leading-relaxed">
-                    {block.text}
-                  </p>
-                ) : (
-                  <ul key={i} className="space-y-2.5">
-                    {block.items.map((item) => (
-                      <li key={item.text} className="flex gap-3 text-[15px] leading-relaxed">
-                        <span aria-hidden className="mt-2.5 size-1.5 shrink-0 rounded-full bg-whatsapp-dark" />
-                        <span>
-                          {item.label && <strong className="font-semibold">{item.label} : </strong>}
-                          {item.text}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                ),
-              )}
+              <DescriptionText text={o.description} className="text-[15px]" />
             </div>
 
             {/* Stays in sight on a long offer. */}

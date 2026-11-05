@@ -374,6 +374,11 @@ export type CvScreeningSummary = {
 
 export type CvResume = {
   id: string;
+  /**
+   * The Rabotka application this CV was analysed for: its interview goes on
+   * the application (profile e-mail, in-app notice), not on the CV.
+   */
+  applicationId?: string | null;
   /** 1 for the best scored CV; null until scored, or when it could not be read. */
   rank: number | null;
   fileName: string;

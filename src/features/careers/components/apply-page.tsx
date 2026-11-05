@@ -311,7 +311,7 @@ function QuestionField({
         maxLength={300}
         onChange={(e) => onChange(e.target.value)}
         aria-label={q.label}
-        className={cn(field, (q.kind === "NUMBER" || q.kind === "DATE") && "sm:w-56")}
+        className={field}
       />
     </div>
   );
