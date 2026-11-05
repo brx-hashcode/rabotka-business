@@ -199,7 +199,12 @@ export type BusinessPlan = {
   /** Team places (the holder is the one administrator). Null: unlimited; 0: none. Absent before the team. */
   recruitersLimit?: number | null;
   reviewersLimit?: number | null;
+  /** Made for this business alone (« sur mesure »). */
+  custom?: boolean;
 };
+
+/** The AI features a trial may leave out until a paid plan. */
+export type TrialAiFeature = "cvAnalysis" | "cvChat" | "offerWriter";
 
 export type SubscriptionPeriod = {
   id: string;
@@ -251,6 +256,8 @@ export type MySubscription = {
     reviewersLimit?: number | null;
     recruiters?: number;
     reviewers?: number;
+    /** AI features the plan has but the running trial leaves out (their quotas read 0). */
+    trialLocked?: TrialAiFeature[];
   };
   upcoming: SubscriptionPeriod[];
   history: SubscriptionPeriod[];

@@ -1,5 +1,6 @@
 "use client";
 
+import { trialLocks } from "#/features/subscription/trial-lock";
 import { useMemo } from "react";
 import { debounce, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
@@ -111,7 +112,7 @@ export function CvScreeningsPage() {
           ))}
         </div>
       ) : locked ? (
-        <CvLocked />
+        <CvLocked trial={trialLocks(e, "cvAnalysis")} />
       ) : (
         e && <Overview e={e} items={items} />
       )}

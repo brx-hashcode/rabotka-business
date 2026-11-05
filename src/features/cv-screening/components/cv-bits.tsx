@@ -73,14 +73,17 @@ export function CriterionBar({ label, value }: Readonly<{ label: string; value: 
   );
 }
 
-export function CvLocked() {
+export function CvLocked({ trial = false }: Readonly<{ trial?: boolean }>) {
   return (
     <section className="flex flex-col items-center gap-3 rounded-3xl bg-card px-6 py-12 text-center">
       <span className="flex size-12 items-center justify-center rounded-2xl bg-page">
         <IconLock className="size-6 text-muted-foreground" />
       </span>
-      <p className="font-medium">L&apos;analyse de CV n&apos;est pas incluse dans votre formule</p>
+      <p className="font-medium">
+        {trial ? "L'analyse de CV arrive avec une formule payante" : "L'analyse de CV n'est pas incluse dans votre formule"}
+      </p>
       <p className="max-w-md text-muted-foreground text-sm">
+        {trial && "Elle n'est pas comprise dans l'essai gratuit. "}
         Envoyez les CV reçus pour un poste : Rabotka les lit, même scannés ou pris en photo, et les classe du plus adapté au moins adapté.
       </p>
       <Link href="/espace/abonnement" className="mt-1 inline-flex h-11 items-center rounded-full bg-ink px-5 font-medium text-sm text-white hover:bg-ink/90">

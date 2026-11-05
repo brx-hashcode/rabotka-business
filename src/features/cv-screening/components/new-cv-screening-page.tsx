@@ -1,5 +1,6 @@
 "use client";
 
+import { trialLocks } from "#/features/subscription/trial-lock";
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -133,7 +134,7 @@ export function NewCvScreeningPage() {
       </div>
 
       {!e || e.cvQuota === 0 ? (
-        <CvLocked />
+        <CvLocked trial={trialLocks(e, "cvAnalysis")} />
       ) : (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_26rem]">
           <form
