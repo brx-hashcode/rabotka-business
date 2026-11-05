@@ -84,6 +84,27 @@ function ActionButton({ action: a, stretch, label }: Readonly<{ action: Action; 
  * turn down a new one; follow the contact unlock of a retained one; undo a
  * hire. The server decides — these only ask.
  */
+/**
+ * The conversation with an applicant, when its stage allows one: for a « ⋯ »
+ * menu that offers « Message » outside the action buttons.
+ */
+export function useApplicationChat(applicant: Pick<OfferApplicant, "applicationId" | "status">) {
+  const router = useRouter();
+  const openChat = useOpenDiscussion();
+  const chatId = chattableApplicationId(applicant.applicationId, applicant.status);
+  return {
+    available: !!chatId,
+    pending: openChat.isPending,
+    open: () => {
+      if (!chatId) return;
+      openChat.mutate(chatId, {
+        onSuccess: ({ conversation }) => router.push(`/espace/discussions/${conversation.id}`),
+        onError: (err) => toast.error(friendlyError(err, "La conversation n'a pas pu être ouverte.")),
+      });
+    },
+  };
+}
+
 /** Retenir / Refuser and the rest: for those who hire, not for an Évaluateur. */
 export function ApplicationActions(props: Parameters<typeof Actions>[0]) {
   const { role } = useMember();
@@ -95,12 +116,15 @@ function Actions({
   name,
   variant = "inline",
   recruiting = true,
+  hideChat = false,
 }: Readonly<{
   applicant: OfferApplicant;
   name: string;
   variant?: "inline" | "card" | "compact";
   /** False once the offer stopped hiring: refusing is all that is left. */
   recruiting?: boolean;
+  /** « Message » lives elsewhere (a « ⋯ » menu, `useApplicationChat`). */
+  hideChat?: boolean;
 }>) {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -169,7 +193,7 @@ function Actions({
     actions.push({ key: "cancel", label: "Annuler le recrutement", icon: IconX, tone: "danger", onClick: () => setDialog("cancel") });
   }
 
-  const chat = chatId && (
+  const chat = chatId && !hideChat && (
     <button
       type="button"
       disabled={openChat.isPending}
@@ -180,10 +204,10 @@ function Actions({
         })
       }
       aria-label={`Écrire à ${name}`}
-      title="Écrire"
-      className={cn(button, "shrink-0 bg-card px-2.5 hover:bg-card/70")}
+      className={cn(button, "shrink-0 bg-card hover:bg-card/70")}
     >
       <IconMessageCircle className="size-4" />
+      Message
     </button>
   );
 

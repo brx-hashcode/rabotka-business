@@ -56,24 +56,32 @@ export function TeamOpinionButton({
   name,
   summary,
   className,
+  open: controlled,
+  onOpenChange,
 }: Readonly<{
   kind: ApplicationKind;
   id: string;
   name: string;
   summary?: Record<Verdict, number>;
   className?: string;
+  /** Opened from elsewhere (a « ⋯ » menu): no button of its own then. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }>) {
-  const [open, setOpen] = useState(false);
+  const [own, setOwn] = useState(false);
+  const open = controlled ?? own;
+  const setOpen = onOpenChange ?? setOwn;
   const total = summary ? summary.YES + summary.MAYBE + summary.NO : 0;
   return (
     <>
+      {controlled === undefined && (
       <button
         type="button"
         onClick={() => setOpen(true)}
         className={cn("inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70", className)}
       >
         <IconUsers className="size-4" />
-        Avis
+        Avis de l&apos;équipe
         {total > 0 && summary && (
           <span className="flex items-center gap-1 text-xs tabular-nums">
             {summary.YES > 0 && <span className="rounded-full bg-chip-green px-1.5 text-chip-green-foreground">{summary.YES}</span>}
@@ -82,6 +90,7 @@ export function TeamOpinionButton({
           </span>
         )}
       </button>
+      )}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="right" className="w-full gap-0 overflow-y-auto border-0 bg-card p-0 sm:max-w-lg">
           <div className="space-y-1 px-6 pt-6 pb-4">
