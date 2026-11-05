@@ -505,7 +505,7 @@ function ResumeCard({
         <ScheduleInterviewDialog
           open={planning}
           onOpenChange={setPlanning}
-          candidate={{ name, cvResumeId: r.id, email: c?.email }}
+          candidate={r.applicationId ? { name, applicationId: r.applicationId } : { name, cvResumeId: r.id, email: c?.email }}
           jobTitle={jobTitle}
         />
       )}
