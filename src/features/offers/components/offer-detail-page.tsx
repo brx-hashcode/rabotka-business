@@ -735,6 +735,7 @@ function ApplicantsCard({
                 ) : (
                   <ExternalApplicationCard
                     key={e.key}
+                    onOfferPage
                     application={e.a}
                     opinions={opinions.data?.external[e.a.id]}
                     focused={focusId === e.a.id}
