@@ -40,6 +40,7 @@ import { CandidateCard } from "#/features/candidates/components/candidate-card";
 import { CvCompareSheet } from "#/features/cv-screening/components/cv-compare-sheet";
 import { MAX_COMPARED } from "#/features/cv-screening/components/cv-screening-page";
 import { ResumeButton } from "#/features/candidates/components/resume-button";
+import { OwnCvButton } from "#/features/candidates/components/own-cv-button";
 import { getMyBusiness, getMySubscription, myBusinessKey, mySubscriptionKey } from "#/lib/api/business-controller";
 import {
   analyseExternalApplications,
@@ -902,6 +903,7 @@ function ApplicantRow({
             <IconChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
           </button>
         )}
+        {a.cv?.kind === "UPLOADED" && <OwnCvButton applicationId={a.applicationId} name={name} cv={a.cv} />}
         <ResumeButton workerId={a.worker.id} name={name} />
         <TeamOpinionButton kind="rabotka" id={a.applicationId} name={name} summary={opinions} />
         <ApplicationActions applicant={a} name={name} recruiting={recruiting} />

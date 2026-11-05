@@ -73,6 +73,11 @@ export type OfferApplicant = {
   answers?: ApplicantAnswer[];
   /** A wrong answer to an « éliminatoire » question. */
   knockedOut?: boolean;
+  /**
+   * The CV sent with it: the Rabotka one, or the candidate's own (« CV joint »),
+   * which opens once the contact is unlocked or the application retained.
+   */
+  cv?: { kind: "RABOTKA" } | { kind: "UPLOADED"; fileName: string; mimeType: string; available: boolean };
   worker: {
     id: string;
     firstName: string;
@@ -306,3 +311,8 @@ class AssessmentController extends BusinessBaseController {
 const assessments = new AssessmentController();
 export const getOfferAssessments = assessments.forOffer.bind(assessments);
 export const refuseApplications = assessments.refuse.bind(assessments);
+
+/** The candidate's own CV sent with an application (« CV joint »). */
+export function applicationCvUrl(applicationId: string): string {
+  return `${appConfig.apiUrl}/business/me/applications/${encodeURIComponent(applicationId)}/cv`;
+}
