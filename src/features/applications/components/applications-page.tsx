@@ -312,8 +312,9 @@ function ApplicationCard({
         )
       )}
 
-      <div className="mt-auto space-y-2">
-        <TeamOpinionButton kind="rabotka" id={a.applicationId} name={name} className="bg-card" />
+      {/* One row: the team's opinions on the left, the decisions on the right. */}
+      <div className="mt-auto flex flex-wrap items-center gap-2">
+        <TeamOpinionButton kind="rabotka" id={a.applicationId} name={name} className="mr-auto bg-card" />
         <ApplicationActions applicant={a} name={name} variant="card" recruiting={isRecruiting(a.offer.status)} />
       </div>
       {planning && (

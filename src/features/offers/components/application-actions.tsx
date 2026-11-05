@@ -274,7 +274,8 @@ function Actions({
           )}
         </div>
       ) : (
-        <div className={cn("flex flex-wrap gap-2", variant === "card" && "w-full justify-end")}>
+        // On a card they share a row with « Avis de l'équipe », at its height.
+        <div className={cn("flex flex-wrap gap-2", variant === "card" && "justify-end [&>button]:h-10")}>
           {chat}
           {[...actions]
             .sort((a, b) => Number(b.tone === "danger") - Number(a.tone === "danger"))
