@@ -195,8 +195,14 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
         <div className="min-w-0">
           <p className="truncate font-semibold">{i.candidateName}</p>
           <p className="truncate text-muted-foreground text-sm">
-            {i.applicationId ? (
-              <Link href={`/espace/candidatures?candidature=${i.applicationId}`} className="hover:underline">
+            {/* The offer, whichever way they applied; a Rabotka applicant's card is
+                brought into view there. Only a CV analysed against a job typed by
+                hand has no offer to open. */}
+            {i.offerId ? (
+              <Link
+                href={`/espace/offres/${i.offerId}${i.applicationId ? `?candidature=${i.applicationId}` : ""}`}
+                className="hover:underline"
+              >
                 {i.jobTitle}
               </Link>
             ) : (
