@@ -18,8 +18,15 @@ function subscribe(onChange: () => void) {
  * its row. Real columns rather than CSS `columns`, so opening one card never
  * moves another to a different column. Children are `<li>`.
  */
-export function CardColumns({ children }: Readonly<{ children: ReactNode }>) {
-  const count = useSyncExternalStore(
+export function CardColumns({
+  children,
+  maxColumns = 3,
+}: Readonly<{
+  children: ReactNode;
+  /** Wide cards (a candidate's, with its actions) read better two by two. */
+  maxColumns?: 2 | 3;
+}>) {
+  const fits = useSyncExternalStore(
     subscribe,
     () => {
       if (globalThis.matchMedia(THREE_COLUMNS).matches) return 3;
@@ -27,6 +34,7 @@ export function CardColumns({ children }: Readonly<{ children: ReactNode }>) {
     },
     () => 1,
   );
+  const count = Math.min(fits, maxColumns);
 
   return (
     <div className="flex items-start gap-4">

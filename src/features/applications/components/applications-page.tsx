@@ -189,7 +189,7 @@ export function ApplicationsPage() {
             </p>
           </div>
         ) : (
-          <CardColumns>
+          <CardColumns maxColumns={2}>
             {shown.map((a) => (
               <ApplicationCard
                 key={a.applicationId}
