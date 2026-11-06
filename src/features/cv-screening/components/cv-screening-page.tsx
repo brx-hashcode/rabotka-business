@@ -54,6 +54,10 @@ const date = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "
  * One analysis: its CVs best first, filling in live while they are read
  * (the notifications socket refreshes it; a slow poll backs it up).
  */
+/** Scored CVs shown before « Afficher les N autres »; waiting cards drawn one by one. */
+const SCORED_SHOWN = 30;
+const WAITING_SHOWN = 6;
+
 export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -67,6 +71,8 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
   // CVs picked to compare (ids), and the comparison drawer.
   const [selected, setSelected] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
+  // A large analysis (up to 100 CVs): the best first, the rest on request.
+  const [showAll, setShowAll] = useState(false);
   // The interviews already proposed, to show each on its candidate's card.
   const interviews = useQuery({ queryKey: [...interviewsKey, "all"], queryFn: () => listInterviews() });
   const toggle = (rid: string) =>
@@ -157,7 +163,7 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
           )}
 
           <section className="space-y-3">
-            {scored.map((r) => (
+            {(showAll ? scored : scored.slice(0, SCORED_SHOWN)).map((r) => (
               <ResumeCard
                 key={r.id}
                 r={r}
@@ -170,9 +176,23 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
                 onToggle={() => toggle(r.id)}
               />
             ))}
-            {waiting.map((r, i) => (
+            {!showAll && scored.length > SCORED_SHOWN && (
+              <button
+                type="button"
+                onClick={() => setShowAll(true)}
+                className="h-11 w-full rounded-2xl bg-card font-medium text-sm hover:bg-card/70"
+              >
+                Afficher les {scored.length - SCORED_SHOWN} autres CV
+              </button>
+            )}
+            {waiting.slice(0, WAITING_SHOWN).map((r, i) => (
               <WaitingCard key={r.id} r={r} reading={i < READING_AT_ONCE} />
             ))}
+            {waiting.length > WAITING_SHOWN && (
+              <p className="rounded-2xl bg-card px-4 py-3 text-muted-foreground text-sm">
+                Et {waiting.length - WAITING_SHOWN} autres CV en attente : ils arrivent ici au fil de la lecture.
+              </p>
+            )}
           </section>
 
           {unread.length > 0 && (
