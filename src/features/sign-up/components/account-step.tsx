@@ -73,8 +73,8 @@ export function AccountStep({
             label="Téléphone"
             type="tel"
             autoComplete="tel"
-            prefix="+242"
-            placeholder="06 123 45 67"
+            // The organisation's country, chosen next, gives the prefix.
+            placeholder="06 123 45 67 (ou avec l'indicatif, +237…)"
             className="sm:col-span-2"
           />
         </div>
