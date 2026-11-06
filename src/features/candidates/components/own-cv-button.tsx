@@ -36,7 +36,7 @@ export function OwnCvButton({
     if (controlled !== undefined) return null;
     return (
       <span
-        title="Le CV que le candidat a joint s'ouvre une fois son contact débloqué ou sa candidature retenue."
+        title="Le CV que le candidat a joint s'ouvre une fois son contact obtenu ou sa candidature retenue."
         className={cn(
           "inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 font-medium text-muted-foreground text-sm",
           className,

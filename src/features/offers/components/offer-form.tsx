@@ -179,6 +179,9 @@ export function OfferForm({
   const [writing, setWriting] = useState(false);
   // No AI writing in the plan: the button says where to find it instead.
   const aiIncluded = subscription?.entitlements.offerDraftsQuota !== 0;
+  // Included, but none left this period: said before the dialog, not by a refusal after it.
+  const draftsOut = aiIncluded && subscription?.entitlements.offerDraftsRemaining === 0;
+  const draftsUntil = subscription?.entitlements.countersResetAt ?? subscription?.entitlements.endsAt;
 
   useEffect(() => {
     if (cities && city && !cities.includes(city)) form.setValue("city", "");
@@ -204,7 +207,15 @@ export function OfferForm({
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_26rem]">
         <form onSubmit={form.handleSubmit(submit)} noValidate className="space-y-10 rounded-3xl bg-card p-5 sm:p-8">
           <Section title="L'offre">
-            {aiIncluded ? (
+            {draftsOut ? (
+              <Link
+                href="/espace/abonnement"
+                className="flex items-center gap-3 rounded-2xl bg-page px-4 py-3 text-muted-foreground text-sm hover:text-foreground"
+              >
+                <IconWand className="size-5 shrink-0" />
+                {`Plus de rédactions par l'IA${draftsUntil ? ` jusqu'au ${new Date(draftsUntil).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}` : ""} : changez de formule pour en avoir davantage.`}
+              </Link>
+            ) : aiIncluded ? (
               <button
                 type="button"
                 onClick={() => setWriting(true)}

@@ -163,9 +163,9 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
     onSuccess: () => {
       refresh();
       setConfirmFinish(false);
-      toast.success("Offre clôturée. Vous pouvez noter votre recrutement.");
+      toast.success("Offre terminée. Vous pouvez noter votre recrutement.");
     },
-    onError: (err) => toast.error(friendlyError(err, "L'offre n'a pas pu être clôturée.")),
+    onError: (err) => toast.error(friendlyError(err, "L'offre n'a pas pu être terminée.")),
   });
   const remove = useMutation({
     mutationFn: () => deleteOffer(id),
@@ -244,7 +244,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                     className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white hover:bg-ink/90"
                   >
                     <IconCircleCheck className="size-4" />
-                    Clôturer l&apos;offre
+                    Terminer l&apos;offre
                   </button>
                 )}
                 {/* Expired, or closed by hand with posts still free: it can recruit again. */}
@@ -323,9 +323,9 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
         open={confirmFinish}
         onOpenChange={setConfirmFinish}
         icon={<IconCircleCheck className="size-5" />}
-        title="Clôturer cette offre ?"
+        title="Terminer cette offre ?"
         description="Vous confirmez votre recrutement. L'offre est terminée, et vous pouvez noter les personnes recrutées."
-        confirmLabel="Clôturer l'offre"
+        confirmLabel="Terminer l'offre"
         pending={finish.isPending}
         onConfirm={() => finish.mutate()}
       />
@@ -690,6 +690,8 @@ function ApplicantsCard({
           )}
 
           <BulkRefuseDialog
+            // Remounted for each mode: the message starts from its template.
+            key={bulk ?? "closed"}
             offerId={o.id}
             mode={bulk}
             ids={refuseRabotka}
@@ -790,10 +792,16 @@ function BulkRefuseDialog({
               ...(mode === "remaining" ? { remaining: true } : { applicationIds: ids }),
               ...(text ? { message: text } : {}),
             });
-      await Promise.all(outside.map((id) => refuseExternalApplication(id, text)));
-      return { refused: rabotka.refused + outside.length, skipped: rabotka.skipped };
+      // Each careers candidate on its own: one failure no longer reads as
+      // « none refused », and those already decided are not counted.
+      const results = await Promise.allSettled(outside.map((id) => refuseExternalApplication(id, text)));
+      const outsideRefused = results.filter(
+        (r) => r.status === "fulfilled" && (r.value as { refused?: boolean } | undefined)?.refused !== false,
+      ).length;
+      const failed = results.filter((r) => r.status === "rejected").length;
+      return { refused: rabotka.refused + outsideRefused, skipped: rabotka.skipped + (outside.length - outsideRefused - failed), failed };
     },
-    onSuccess: ({ refused, skipped }) => {
+    onSuccess: ({ refused, skipped, failed }) => {
       void queryClient.invalidateQueries({ queryKey: offersKey });
       void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
       void queryClient.invalidateQueries({ queryKey: ["business", "me", "stats"] });
@@ -801,6 +809,7 @@ function BulkRefuseDialog({
         `${refused === 1 ? "1 candidature refusée" : `${refused} candidatures refusées`}, les candidats en sont prévenus.` +
           (skipped ? ` ${skipped} n'étai${skipped > 1 ? "ent" : "t"} plus en attente.` : ""),
       );
+      if (failed) toast.error(`${failed} n'${failed > 1 ? "ont" : "a"} pas pu être refusée${failed > 1 ? "s" : ""} : réessayez.`);
       onDone();
       onClose();
     },
@@ -886,7 +895,7 @@ function ApplicantRow({
                 icon: IconLock,
                 onSelect: () => undefined,
                 disabled: true,
-                hint: "S'ouvre une fois son contact débloqué",
+                hint: "S'ouvre une fois son contact obtenu",
               },
         ]
       : []),
