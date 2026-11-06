@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconAlertTriangle, IconCalendarPlus, IconCheck, IconChevronDown, IconDownload, IconFileText, IconMail, IconPhone, IconUsers, IconX } from "@tabler/icons-react";
+import { IconAlertTriangle, IconArrowBackUp, IconCalendarPlus, IconCheck, IconChevronDown, IconDownload, IconFileText, IconMail, IconPhone, IconUsers, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
@@ -22,6 +22,7 @@ import {
   externalApplicationsKey,
   refuseExternalApplication,
   retainExternalApplication,
+  unretainExternalApplication,
   type ExternalApplication,
 } from "#/lib/api/careers-controller";
 import { cvScreeningsKey, getCvScreening } from "#/lib/api/cv-screening-controller";
@@ -83,6 +84,7 @@ export function ExternalApplicationCard({
   const hire = canHire(useMember().role);
   const [refusing, setRefusing] = useState(false);
   const [retaining, setRetaining] = useState(false);
+  const [unretaining, setUnretaining] = useState(false);
   // One toggle for its analysis and its answers, as on a Rabotka applicant's card.
   const [showDetails, setShowDetails] = useState(false);
   const [opinionOpen, setOpinionOpen] = useState(false);
@@ -120,6 +122,10 @@ export function ExternalApplicationCard({
     ...(score !== null && canSchedule(a)
       ? [{ key: "interview", label: "Planifier un entretien", icon: IconCalendarPlus, onSelect: () => setScheduling(true) }]
       : []),
+    // A mistaken « Retenir », or a candidate who fell through: the post is freed.
+    ...(hire && a.status === "RETAINED"
+      ? [{ key: "unretain", label: "Annuler « retenu »", icon: IconArrowBackUp, onSelect: () => setUnretaining(true) }]
+      : []),
   ];
 
   const refuse = useMutation({
@@ -151,6 +157,16 @@ export function ExternalApplicationCard({
       setRetaining(false);
     },
     onError: (err) => toast.error(friendlyError(err, "La candidature n'a pas pu être retenue.")),
+  });
+
+  const unretain = useMutation({
+    mutationFn: () => unretainExternalApplication(a.id),
+    onSuccess: () => {
+      refreshList();
+      toast.success("Décision annulée : la personne est prévenue par e-mail.");
+      setUnretaining(false);
+    },
+    onError: (err) => toast.error(friendlyError(err, "La décision n'a pas pu être annulée.")),
   });
 
   async function saveCv() {
@@ -376,6 +392,17 @@ export function ExternalApplicationCard({
         confirmLabel="Retenir"
         pending={retain.isPending}
         onConfirm={() => retain.mutate()}
+      />
+
+      <ActionDialog
+        open={unretaining}
+        onOpenChange={setUnretaining}
+        title={`Ne plus retenir ${name} ?`}
+        description="Le poste est libéré et l'offre recrute de nouveau. La personne est prévenue par e-mail que sa candidature reste à l'étude."
+        confirmLabel="Ne plus retenir"
+        tone="warning"
+        pending={unretain.isPending}
+        onConfirm={() => unretain.mutate()}
       />
 
       <ActionDialog
