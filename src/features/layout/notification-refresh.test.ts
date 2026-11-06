@@ -37,6 +37,10 @@ describe("refreshKeysFor", () => {
     expect(k).toContain(JSON.stringify(["business", "me", "subscription"]));
   });
 
+  it("a LinkedIn post refreshes that offer's posts", () => {
+    expect(keys("LINKEDIN_POST", { jobOfferId: "o1" })).toContain(JSON.stringify(["business", "me", "linkedin", "posts", "o1"]));
+  });
+
   it("an unlock or a payment refreshes the application it is about", () => {
     expect(keys("CONTACT_UNLOCKED", { applicationId: "a1" })).toContain(JSON.stringify(["application", "a1"]));
     expect(keys("PAYMENT_SUCCEEDED", {})).toContain(JSON.stringify(["invoices"]));

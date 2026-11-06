@@ -240,7 +240,14 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
             actions={
               <div className="flex flex-wrap gap-2 empty:hidden">
                 {business?.publicSlug && business.verificationStatus === "VERIFIED" && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
-                  <ShareOfferMenu offerId={o.id} slug={business.publicSlug} reference={o.reference} title={o.title} />
+                  <ShareOfferMenu
+                    offerId={o.id}
+                    slug={business.publicSlug}
+                    reference={o.reference}
+                    title={o.title}
+                    employmentType={o.employmentType}
+                    city={o.city}
+                  />
                 )}
                 {hire && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
                   <Link
@@ -292,8 +299,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
           {published && (
             <PublishedShareCard
               slug={business?.publicSlug ?? null}
-              reference={o.reference}
-              title={o.title}
+              offer={{ id: o.id, title: o.title, reference: o.reference, employmentType: o.employmentType, city: o.city }}
               isPublic={!!business?.publicSlug && business.verificationStatus === "VERIFIED" && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED")}
               onDismiss={() => void setPublished(null)}
             />

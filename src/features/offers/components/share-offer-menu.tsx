@@ -21,7 +21,9 @@ import {
 import { PreviewSheet } from "#/components/preview-sheet";
 import { appConfig } from "#/config";
 import { copyText } from "#/lib/clipboard";
+import type { EmploymentType } from "#/lib/api/offer-controller";
 import { offerShareLinks, offerShareUrl } from "../share-url";
+import { LinkedinPostDialog } from "./linkedin-post-dialog";
 
 const ITEM = "cursor-pointer gap-2.5 rounded-xl px-3 py-2.5 text-sm focus:bg-page";
 
@@ -34,7 +36,16 @@ export function ShareOfferMenu({
   slug,
   reference,
   title,
-}: Readonly<{ offerId: string; slug: string; reference: string; title: string }>) {
+  employmentType,
+  city,
+}: Readonly<{
+  offerId: string;
+  slug: string;
+  reference: string;
+  title: string;
+  employmentType: EmploymentType;
+  city: string | null;
+}>) {
   const url = (source?: string) => offerShareUrl(window.location.origin, slug, reference, source);
   const links = () => offerShareLinks(window.location.origin, slug, reference, title);
   const open = (href: string) => window.open(href, "_blank", "noopener,noreferrer");
@@ -54,6 +65,8 @@ export function ShareOfferMenu({
   };
 
   const [posterOpen, setPosterOpen] = useState(false);
+  // LinkedIn: published from the recruiter's account, or its share box (the dialog decides).
+  const [linkedinOpen, setLinkedinOpen] = useState(false);
 
   return (
     <>
@@ -65,7 +78,7 @@ export function ShareOfferMenu({
         <DropdownMenuContent align="end" className="w-56 rounded-2xl border-0 bg-card p-1.5 shadow-soft">
           <DropdownMenuItem
             className={ITEM}
-            onSelect={() => open(links().linkedin)}
+            onSelect={() => setLinkedinOpen(true)}
           >
             <IconBrandLinkedin className="size-4" />
             LinkedIn
@@ -98,6 +111,12 @@ export function ShareOfferMenu({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <LinkedinPostDialog
+        open={linkedinOpen}
+        onOpenChange={setLinkedinOpen}
+        slug={slug}
+        offer={{ id: offerId, title, reference, employmentType, city }}
+      />
       {/* Read, downloaded and printed from the drawer, like the dashboard's report. */}
       <PreviewSheet
         open={posterOpen}

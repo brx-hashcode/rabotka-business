@@ -86,6 +86,10 @@ export function refreshKeysFor(n: PushedNotification): QueryKey[] {
     case "NEW_MESSAGE":
       add(K.discussions);
       break;
+    // Posted (or not) on LinkedIn: the offer's « Publier sur LinkedIn » follows.
+    case "LINKEDIN_POST":
+      add(offer ? ["business", "me", "linkedin", "posts", offer] : ["business", "me", "linkedin"]);
+      break;
     case "CLAIM_STATUS_CHANGED":
     case "CLAIM_COMMENTED":
       add(K.claims);

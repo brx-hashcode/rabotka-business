@@ -1,10 +1,12 @@
 "use client";
 
 import { IconBrandFacebook, IconBrandLinkedin, IconBrandWhatsapp, IconConfetti, IconLink, IconX } from "@tabler/icons-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { copyText } from "#/lib/clipboard";
 import { offerShareLinks, offerShareUrl } from "../share-url";
+import { LinkedinPostDialog, type LinkedinOffer } from "./linkedin-post-dialog";
 
 const BUTTON = "inline-flex h-10 items-center gap-2 rounded-full px-4 font-medium text-sm transition-colors";
 
@@ -16,11 +18,12 @@ const BUTTON = "inline-flex h-10 items-center gap-2 rounded-full px-4 font-mediu
  */
 export function PublishedShareCard({
   slug,
-  reference,
-  title,
+  offer,
   isPublic,
   onDismiss,
-}: Readonly<{ slug: string | null; reference: string; title: string; isPublic: boolean; onDismiss: () => void }>) {
+}: Readonly<{ slug: string | null; offer: LinkedinOffer; isPublic: boolean; onDismiss: () => void }>) {
+  const { reference, title } = offer;
+  const [linkedinOpen, setLinkedinOpen] = useState(false);
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   const links = slug ? offerShareLinks(origin, slug, reference, title) : null;
   const open = (href: string) => window.open(href, "_blank", "noopener,noreferrer");
@@ -47,7 +50,7 @@ export function PublishedShareCard({
       </div>
       {isPublic && links && (
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => open(links.linkedin)} className={`${BUTTON} bg-[#0a66c2] text-white hover:bg-[#0a66c2]/90`}>
+          <button type="button" onClick={() => setLinkedinOpen(true)} className={`${BUTTON} bg-[#0a66c2] text-white hover:bg-[#0a66c2]/90`}>
             <IconBrandLinkedin className="size-4" />
             LinkedIn
           </button>
@@ -73,6 +76,7 @@ export function PublishedShareCard({
       >
         <IconX className="size-4" />
       </button>
+      {slug && <LinkedinPostDialog open={linkedinOpen} onOpenChange={setLinkedinOpen} slug={slug} offer={offer} />}
     </section>
   );
 }

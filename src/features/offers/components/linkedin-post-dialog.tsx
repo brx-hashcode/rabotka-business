@@ -1,0 +1,259 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { IconBrandLinkedin, IconCheck, IconExternalLink, IconLoader2 } from "@tabler/icons-react";
+import { toast } from "sonner";
+
+import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
+import { Textarea } from "#/components/ui/textarea";
+import { friendlyError } from "#/lib/api/friendly-error";
+import {
+  connectLinkedin,
+  disconnectLinkedin,
+  getLinkedin,
+  getLinkedinPosts,
+  linkedinKey,
+  linkedinPostsKey,
+  postOnLinkedin,
+} from "#/lib/api/linkedin-controller";
+import type { EmploymentType } from "#/lib/api/offer-controller";
+import { getInitials } from "#/lib/utils";
+import { defaultLinkedinText, linkedinDialogState } from "../linkedin-post";
+import { offerShareLinks, offerShareUrl } from "../share-url";
+
+const LINKEDIN_BLUE = "bg-[#0a66c2] text-white hover:bg-[#0a66c2]/90";
+const BUTTON = "inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 font-medium text-sm disabled:opacity-50";
+
+export type LinkedinOffer = {
+  id: string;
+  title: string;
+  reference: string;
+  employmentType: EmploymentType;
+  city: string | null;
+};
+
+/**
+ * « Publier sur LinkedIn »: the offer goes on the recruiter's own LinkedIn as
+ * a card that opens its careers page, where candidates apply (counted as
+ * « LinkedIn »). Connected once (a popup, like the mailbox); without
+ * Rabotka's LinkedIn app set up, LinkedIn's own share box instead.
+ */
+export function LinkedinPostDialog({
+  open,
+  onOpenChange,
+  offer,
+  slug,
+}: Readonly<{ open: boolean; onOpenChange: (open: boolean) => void; offer: LinkedinOffer; slug: string }>) {
+  const queryClient = useQueryClient();
+  const info = useQuery({ queryKey: linkedinKey, queryFn: getLinkedin, enabled: open });
+  const posts = useQuery({
+    queryKey: linkedinPostsKey(offer.id),
+    queryFn: () => getLinkedinPosts(offer.id),
+    enabled: open && !!info.data?.account,
+    // A queued post goes out in a few seconds: follow it until it does.
+    refetchInterval: (q) => (q.state.data?.[0]?.status === "QUEUED" ? 3000 : false),
+  });
+  const state = linkedinDialogState(info.data, posts.data);
+  const [text, setText] = useState(() => defaultLinkedinText(offer.title, offer.employmentType, offer.city));
+  const { connect, connecting } = useLinkedinConnect();
+
+  const origin = typeof window === "undefined" ? "" : window.location.origin;
+  const shareBox = offerShareLinks(origin, slug, offer.reference, offer.title).linkedin;
+  const published = posts.data?.find((p) => p.status === "PUBLISHED");
+  const failed = posts.data?.[0]?.status === "FAILED" ? posts.data[0] : null;
+
+  const publish = useMutation({
+    mutationFn: () => postOnLinkedin(offer.id, text, state === "posted"),
+    onSuccess: () => {
+      toast.success("Publication en cours : elle sera sur LinkedIn dans quelques secondes.");
+      void queryClient.invalidateQueries({ queryKey: linkedinPostsKey(offer.id) });
+    },
+    onError: (err) => toast.error(friendlyError(err, "L'offre n'a pas pu être publiée sur LinkedIn.")),
+  });
+  const disconnect = useMutation({
+    mutationFn: disconnectLinkedin,
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: linkedinKey }),
+    onError: (err) => toast.error(friendlyError(err, "LinkedIn n'a pas pu être déconnecté.")),
+  });
+
+  const account = info.data?.account;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-lg gap-0 overflow-hidden rounded-3xl border-0 bg-card p-0 shadow-soft">
+        <div className="max-h-[85svh] space-y-5 overflow-y-auto px-6 pt-6 pb-6">
+          <div className="flex items-start gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#0a66c2] text-white">
+              <IconBrandLinkedin className="size-5" />
+            </span>
+            <div className="min-w-0 space-y-1">
+              <DialogTitle className="font-semibold text-xl">Publier sur LinkedIn</DialogTitle>
+              <DialogDescription className="text-muted-foreground text-sm">
+                Les candidats ouvrent l&apos;offre sur votre page carrières et postulent directement.
+              </DialogDescription>
+            </div>
+          </div>
+
+          {info.isLoading ? (
+            <div className="h-40 animate-pulse rounded-2xl bg-page" />
+          ) : state === "share" ? (
+            <div className="space-y-4">
+              <p className="text-sm">LinkedIn s&apos;ouvre avec le lien de l&apos;offre et son aperçu : vous n&apos;avez plus qu&apos;à publier.</p>
+              <a href={shareBox} target="_blank" rel="noreferrer" className={`${BUTTON} ${LINKEDIN_BLUE} w-full`}>
+                <IconBrandLinkedin className="size-4" />
+                Ouvrir LinkedIn
+              </a>
+            </div>
+          ) : state === "connect" || state === "expired" ? (
+            <div className="space-y-4">
+              <p className="text-sm">
+                {state === "expired"
+                  ? "Votre connexion LinkedIn a expiré : connectez-la de nouveau pour publier depuis Rabotka."
+                  : "Connectez votre compte LinkedIn une fois : vos offres s'y publient ensuite depuis Rabotka, en un clic."}
+              </p>
+              <button type="button" onClick={() => void connect()} disabled={connecting} className={`${BUTTON} ${LINKEDIN_BLUE} w-full`}>
+                {connecting ? <IconLoader2 className="size-4 animate-spin" /> : <IconBrandLinkedin className="size-4" />}
+                {state === "expired" ? "Reconnecter LinkedIn" : "Connecter LinkedIn"}
+              </button>
+              <a href={shareBox} target="_blank" rel="noreferrer" className={`${BUTTON} w-full bg-page hover:bg-page/70`}>
+                Partager sans connecter
+              </a>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {account && (
+                <div className="flex items-center gap-3">
+                  <Avatar className="size-10">
+                    {account.pictureUrl && <AvatarImage src={account.pictureUrl} alt="" />}
+                    <AvatarFallback className="bg-page text-sm">{getInitials(account.name)}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-sm">{account.name}</p>
+                    <p className="text-muted-foreground text-xs">Publié sur votre fil LinkedIn, visible par tous</p>
+                  </div>
+                </div>
+              )}
+
+              {state === "pending" ? (
+                <p className="flex items-center gap-2 rounded-2xl bg-page px-4 py-3 text-sm">
+                  <IconLoader2 className="size-4 animate-spin" />
+                  Publication en cours…
+                </p>
+              ) : (
+                <>
+                  {published && (
+                    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl bg-chip-green px-4 py-3 text-sm">
+                      <IconCheck className="size-4 text-whatsapp-dark" />
+                      Publiée sur LinkedIn
+                      {published.publishedAt ? ` le ${new Date(published.publishedAt).toLocaleDateString("fr", { day: "numeric", month: "long" })}` : ""}
+                      {published.url && (
+                        <a href={published.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium underline underline-offset-2">
+                          Voir la publication
+                          <IconExternalLink className="size-3.5" />
+                        </a>
+                      )}
+                    </p>
+                  )}
+                  {failed && <p className="rounded-2xl bg-chip-amber px-4 py-3 text-chip-amber-foreground text-sm">La dernière publication n&apos;a pas abouti : {failed.error ?? "réessayez"}.</p>}
+                  <Textarea
+                    value={text}
+                    onChange={(e) => setText(e.target.value.slice(0, 3000))}
+                    rows={6}
+                    aria-label="Texte de la publication"
+                    className="rounded-2xl border-0 bg-page px-4 py-3 text-[15px] shadow-none"
+                  />
+                  {/* The card LinkedIn shows under the text: the offer's share picture and title. */}
+                  <div className="overflow-hidden rounded-2xl bg-page">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- the careers page's own OG image */}
+                    <img
+                      src={`${offerShareUrl(origin, slug, offer.reference)}/opengraph-image`}
+                      alt=""
+                      className="aspect-[1200/630] w-full object-cover"
+                    />
+                    <div className="px-4 py-3">
+                      <p className="truncate font-medium text-sm">{offer.title}</p>
+                      <p className="text-muted-foreground text-xs">{new URL(origin || "https://business.rabotka.work").host}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => publish.mutate()}
+                    disabled={publish.isPending || !text.trim()}
+                    className={`${BUTTON} ${LINKEDIN_BLUE} w-full`}
+                  >
+                    {publish.isPending ? <IconLoader2 className="size-4 animate-spin" /> : <IconBrandLinkedin className="size-4" />}
+                    {state === "posted" ? "Publier à nouveau" : "Publier"}
+                  </button>
+                </>
+              )}
+
+              {account && (
+                <p className="text-center text-muted-foreground text-xs">
+                  Connecté en tant que {account.name} ·{" "}
+                  <button type="button" onClick={() => disconnect.mutate()} disabled={disconnect.isPending} className="underline underline-offset-2 hover:text-foreground">
+                    Déconnecter
+                  </button>
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** LinkedIn's consent screen in a popup; the callback page tells us how it went. */
+function useLinkedinConnect() {
+  const queryClient = useQueryClient();
+  const [connecting, setConnecting] = useState(false);
+  const handler = useRef<((ev: MessageEvent) => void) | null>(null);
+
+  useEffect(() => () => {
+    if (handler.current) window.removeEventListener("message", handler.current);
+  }, []);
+
+  async function connect() {
+    // Opened on the click itself, or the browser blocks it; the address follows.
+    const popup = window.open("", "rabotka-linkedin", "width=520,height=680");
+    setConnecting(true);
+    try {
+      const { url } = await connectLinkedin();
+      if (!popup) {
+        window.location.assign(url);
+        return;
+      }
+      popup.location.href = url;
+    } catch (err) {
+      popup?.close();
+      setConnecting(false);
+      toast.error(friendlyError(err, "La connexion à LinkedIn n'a pas pu commencer. Réessayez dans un instant."));
+      return;
+    }
+
+    if (handler.current) window.removeEventListener("message", handler.current);
+    const onMessage = (ev: MessageEvent) => {
+      if (ev.origin !== window.location.origin) return;
+      const status = (ev.data as { rabotkaLinkedin?: string } | null)?.rabotkaLinkedin;
+      if (!status) return;
+      window.removeEventListener("message", onMessage);
+      handler.current = null;
+      setConnecting(false);
+      if (status === "connected") void queryClient.invalidateQueries({ queryKey: linkedinKey });
+      else if (status !== "denied") toast.error("La connexion à LinkedIn n'a pas abouti. Réessayez.");
+    };
+    handler.current = onMessage;
+    window.addEventListener("message", onMessage);
+    // Closed by hand without an answer: stop waiting.
+    const watch = window.setInterval(() => {
+      if (!popup || popup.closed) {
+        window.clearInterval(watch);
+        setTimeout(() => setConnecting(false), 800);
+      }
+    }, 600);
+  }
+
+  return { connect, connecting };
+}

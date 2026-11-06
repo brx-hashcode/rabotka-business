@@ -1,5 +1,6 @@
 import {
   IconBell,
+  IconBrandLinkedin,
   IconRosetteDiscountCheck,
   IconCalendarEvent,
   IconCrown,
@@ -39,6 +40,7 @@ const LOOK: Record<string, Look> = {
   CONTACT_UNLOCKED: { icon: IconLockOpen, tone: GREEN },
   UNLOCK_CONVERTED_TO_CREDIT: { icon: IconLockOpen, tone: GREEN },
   CV_SCREENING_DONE: { icon: IconFileSearch, tone: VIOLET },
+  LINKEDIN_POST: { icon: IconBrandLinkedin, tone: VIOLET },
   INTERVIEW_INVITED: { icon: IconCalendarEvent, tone: VIOLET },
   INTERVIEW_ANSWERED: { icon: IconMessageCircleQuestion, tone: VIOLET },
   INTERVIEW_CANCELLED: { icon: IconCalendarOff, tone: AMBER },
