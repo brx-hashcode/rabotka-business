@@ -32,7 +32,7 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import { listOffers, offersKey } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
 import { kindFromName, pickKey, type MailPick } from "../mail-picks";
-import { CvLocked, fileSize } from "./cv-bits";
+import { CvLocked, CvUsedUp, fileSize } from "./cv-bits";
 import { MailImport } from "./mail-import";
 
 const TYPES: Record<string, "pdf" | "docx" | "image"> = {
@@ -135,6 +135,9 @@ export function NewCvScreeningPage() {
 
       {!e || e.cvQuota === 0 ? (
         <CvLocked trial={trialLocks(e, "cvAnalysis")} />
+      ) : e.cvRemaining === 0 ? (
+        // An empty form with room for none read as broken.
+        <CvUsedUp until={e.countersResetAt ?? e.endsAt} />
       ) : (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_26rem]">
           <form

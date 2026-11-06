@@ -15,7 +15,12 @@ export function timelineLabel(e: TimelineEvent): string {
     case "REFUSED":
       return who ? `Refusé par ${who}` : "Refusé";
     case "WITHDRAWN":
-      return "A retiré sa candidature";
+      // Only the candidate « retire » : the offer closing or a cancelled hire read otherwise.
+      return e.cancelledBy === "EMPLOYER"
+        ? "Recrutement annulé"
+        : e.cancelledBy === "SYSTEM"
+          ? "Offre fermée ou expirée"
+          : "A retiré sa candidature";
     case "INTERVIEW": {
       const at = e.interview ? new Date(e.interview.startsAt) : null;
       return at

@@ -18,6 +18,8 @@ export type TimelineEvent = {
   member?: Author | null;
   verdict?: Verdict;
   interview?: { startsAt: string; status: string };
+  /** WITHDRAWN: who ended it. Absent from an older backend. */
+  cancelledBy?: "WORKER" | "EMPLOYER" | "SYSTEM" | null;
 };
 export type OfferOpinions = Record<ApplicationKind, Record<string, Record<Verdict, number>>>;
 

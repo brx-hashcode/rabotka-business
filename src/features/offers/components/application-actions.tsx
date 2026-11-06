@@ -150,7 +150,7 @@ function Actions({
       // Straight to what happens next: who still has to pay.
       if (d.unlock) setDialog("unlock");
     },
-    onError: (err) => toast.error(friendlyError(err, "La candidature n'a pas pu être acceptée.")),
+    onError: (err) => toast.error(friendlyError(err, "La candidature n'a pas pu être retenue.")),
   });
   const reject = useMutation({
     mutationFn: () => rejectApplication(id, reason.trim() || undefined),
@@ -320,7 +320,7 @@ function Actions({
         onOpenChange={(o) => setDialog(o ? "cancel" : null)}
         tone="warning"
         title={`Annuler le recrutement de ${name} ?`}
-        description="Le candidat est prévenu et le poste se libère. Attention : annuler baisse votre note d'employeur."
+        description="Le candidat est prévenu et le poste se libère. Une annulation tardive peut baisser votre note d'employeur."
         confirmLabel="Annuler le recrutement"
         pending={cancel.isPending}
         onConfirm={() => cancel.mutate()}
