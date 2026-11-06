@@ -1,11 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
+import { IconBrandLinkedin } from "@tabler/icons-react";
+
+import { Checkbox } from "#/components/ui/checkbox";
+import { getMyBusiness, getMySubscription, myBusinessKey, mySubscriptionKey } from "#/lib/api/business-controller";
+import { getLinkedin, linkedinKey, postOnLinkedin } from "#/lib/api/linkedin-controller";
+import { defaultLinkedinText } from "../linkedin-post";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { createOffer, offersKey } from "#/lib/api/offer-controller";
 import type { MySubscription } from "#/lib/api/types";
@@ -17,9 +23,21 @@ export function NewOfferPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const subscription = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
+  const { data: business } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
+  const { data: linkedin } = useQuery({ queryKey: linkedinKey, queryFn: getLinkedin });
+  // Posted on the recruiter's LinkedIn as soon as it is online: only when the
+  // offer will be on the careers page and their LinkedIn is connected.
+  const canPostOnLinkedin =
+    !!business?.publicSlug && business.verificationStatus === "VERIFIED" && !!linkedin?.account && !linkedin.account.expired;
+  const [alsoLinkedin, setAlsoLinkedin] = useState(true);
   const create = useMutation({
     mutationFn: ({ v, country }: { v: OfferFormValues; country: string | undefined }) => createOffer(toOfferInput(v, country)),
-    onSuccess: ({ id }) => {
+    onSuccess: ({ id }, { v }) => {
+      if (canPostOnLinkedin && alsoLinkedin) {
+        postOnLinkedin(id, defaultLinkedinText(v.title.trim(), v.employmentType, v.isRemote ? null : v.city || null)).catch((err) =>
+          toast.error(friendlyError(err, "L'offre n'a pas pu être publiée sur LinkedIn : réessayez depuis « Partager ».")),
+        );
+      }
       void queryClient.invalidateQueries({ queryKey: offersKey });
       void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
       toast.success("Offre publiée. Les candidats correspondants sont prévenus.");
@@ -39,7 +57,25 @@ export function NewOfferPage() {
         defaultValues={offerFormValues()}
         submitLabel="Publier l'offre"
         pending={create.isPending}
-        aside={subscription.data && <PlanCard subscription={subscription.data} />}
+        aside={
+          <>
+            {subscription.data && <PlanCard subscription={subscription.data} />}
+            {canPostOnLinkedin && (
+              <label className="flex cursor-pointer items-start gap-3 rounded-3xl bg-card p-5">
+                <Checkbox checked={alsoLinkedin} onCheckedChange={(c) => setAlsoLinkedin(c === true)} className="mt-0.5" />
+                <span className="min-w-0 space-y-1">
+                  <span className="flex items-center gap-1.5 font-medium text-sm">
+                    <IconBrandLinkedin className="size-4 text-[#0a66c2]" />
+                    Publier aussi sur LinkedIn
+                  </span>
+                  <span className="block text-muted-foreground text-xs">
+                    Sur le compte de {linkedin?.account?.name}. Les candidats postulent sur votre page carrières.
+                  </span>
+                </span>
+              </label>
+            )}
+          </>
+        }
         onCancel={() => router.push("/espace/offres")}
         onSubmit={(v, country) => create.mutate({ v, country })}
       />
