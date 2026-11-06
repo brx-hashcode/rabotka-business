@@ -4,11 +4,10 @@ import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { parseAsBoolean, useQueryState } from "nuqs";
 import {
   IconArrowLeft,
-  IconBellRinging,
   IconBrandWhatsapp,
-  IconCheck,
   IconFileText,
   IconUpload,
   IconX,
@@ -63,6 +62,7 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
   const missing = questions.some((q) => q.required && !answers[q.id]?.trim());
   const ready = !!cv && consent && !missing && Object.values(details).every((v) => v.trim());
 
+  const [sent, setSent] = useQueryState("envoyee", parseAsBoolean.withDefault(false));
   const send = useMutation({
     mutationFn: () =>
       applyToOffer(slug, reference, {
@@ -72,6 +72,9 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
         source: sentFrom(sourceParam),
         answers: questions.flatMap((q) => (answers[q.id]?.trim() ? [{ questionId: q.id, value: answers[q.id].trim() }] : [])),
       }),
+    // In the address, so a refresh or « back » shows the confirmation again,
+    // not an empty form that invites a second application.
+    onSuccess: () => void setSent(true, { history: "replace" }),
   });
 
   function pick(file: File | undefined) {
@@ -104,13 +107,10 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
               Voir les autres offres
             </Link>
           </div>
-        ) : send.isSuccess ? (
+        ) : send.isSuccess || sent ? (
           // Flat, full width: on a phone, boxes inside the card squeezed the text.
           <div className="space-y-8">
             <div className="space-y-3">
-              <span className="flex size-12 items-center justify-center rounded-full bg-brand-lime text-[#0f2414]">
-                <IconCheck className="size-6" stroke={2.5} />
-              </span>
               <h1 className="font-semibold text-2xl tracking-tight">Candidature envoyée</h1>
               <p className="text-[15px] text-foreground/80 leading-relaxed">
                 {page.company.name} a bien reçu votre dossier. Un e-mail de confirmation vous a été envoyé.
@@ -342,10 +342,7 @@ function JoinRabotka() {
   ];
   return (
     <section className="space-y-4">
-      <h2 className="flex items-center gap-2 font-semibold text-lg">
-        <IconBellRinging className="size-5 shrink-0 text-whatsapp-dark" />
-        Ne manquez plus les prochaines offres
-      </h2>
+      <h2 className="font-semibold text-lg">Ne manquez plus les prochaines offres</h2>
       <p className="text-[15px] text-foreground/80 leading-relaxed">
         Créez votre compte Rabotka et faites valider votre profil : les offres qui vous correspondent arrivent sur votre téléphone, et les
         recruteurs peuvent vous trouver.
