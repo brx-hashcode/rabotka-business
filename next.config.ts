@@ -15,6 +15,11 @@ const nextConfig: NextConfig = {
     // …and gives up on it after 30 s by default: an AI draft (two model calls
     // across the fallback chain), a report or a slow upload took longer.
     proxyTimeout: 120_000,
+    // The /espace pages are thin server shells around client screens that
+    // load through React Query: going back to one reuses its shell for 5 min
+    // instead of a server round trip. Sign-out and session expiry call
+    // router.refresh(), which clears this cache.
+    staleTimes: { dynamic: 300 },
   },
   // « Tri des CV » became « Analyse de CV »: links already sent (in-app
   // notifications, bookmarks) keep working.

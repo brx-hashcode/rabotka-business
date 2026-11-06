@@ -17,10 +17,17 @@ function makeQueryClient() {
     defaultOptions: {
       queries: {
         staleTime: 5 * 60 * 1000,
-        // A 401 has already been through one refresh-and-retry (withSession);
-        // retrying it again only delays the redirect to sign-in.
-        retry: (failureCount, error) =>
-          httpStatusOf(error) !== 401 && failureCount < 3,
+        // Pages visited earlier in the session open from cache (then refresh
+        // in the background) instead of showing their skeleton again.
+        gcTime: 30 * 60 * 1000,
+        // A 4xx won't change on a retry (a 401 has already been through one
+        // refresh-and-retry in withSession): show it at once instead of after
+        // ~7 s of skeleton. Network errors and 5xx get two more tries.
+        retry: (failureCount, error) => {
+          const status = httpStatusOf(error);
+          if (status !== null && status >= 400 && status < 500) return false;
+          return failureCount < 2;
+        },
       },
     },
   });
