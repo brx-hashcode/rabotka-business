@@ -49,15 +49,17 @@ export function ApplicationsPage() {
     queryFn: ({ pageParam }) => listReceivedApplications(pageParam, PAGE),
     initialPageParam: 0,
     getNextPageParam: (last, all) => (all.length * PAGE < last.total ? all.length : undefined),
-    // A candidate's side moves on its own (applying, paying their part).
-    refetchInterval: 30_000,
+    // A candidate's side moves on its own (applying, paying their part). Only
+    // while just the first page is loaded: past it, every page was fetched
+    // again every 30 s.
+    refetchInterval: (q) => ((q.state.data?.pages.length ?? 1) > 1 ? false : 30_000),
   });
   const all = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
   // The interviews already proposed, to show each on its candidate's card.
   const interviews = useQuery({ queryKey: [...interviewsKey, "all"], queryFn: () => listInterviews() });
   const external = useQuery({
     queryKey: externalApplicationsKey,
-    queryFn: listExternalApplications,
+    queryFn: () => listExternalApplications(),
     // A CV being read gets its score in a few seconds.
     refetchInterval: (q) => (q.state.data?.some((a) => a.analysis?.status === "QUEUED") ? 4000 : false),
   });

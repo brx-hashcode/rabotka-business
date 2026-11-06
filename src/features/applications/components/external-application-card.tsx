@@ -94,9 +94,11 @@ export function ExternalApplicationCard({
   const score = a.analysis?.status === "SCORED" ? a.analysis.score : null;
   const insight = score !== null && !!a.analysis && hasInsight(a.analysis);
   // Chat reads the resume as Analyse de CV holds it.
+  // One request per screening, shared by every card of the offer; each picks its own.
   const resume = useQuery({
-    queryKey: [...cvScreeningsKey, a.analysis?.screeningId, "resume", a.analysis?.resumeId],
-    queryFn: async () => (await getCvScreening(a.analysis?.screeningId as string)).resumes.find((r) => r.id === a.analysis?.resumeId) ?? null,
+    queryKey: [...cvScreeningsKey, a.analysis?.screeningId],
+    queryFn: () => getCvScreening(a.analysis?.screeningId as string),
+    select: (s) => s.resumes.find((r) => r.id === a.analysis?.resumeId) ?? null,
     enabled: score !== null,
   });
   const [message, setMessage] = useState("");

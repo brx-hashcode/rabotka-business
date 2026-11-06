@@ -124,9 +124,10 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const needsDate = !offer.data || isDatedMission(offer.data.employmentType);
   const [confirmFinish, setConfirmFinish] = useState(false);
   // Those who applied from the public careers page.
+  // This offer's only: not every application the business ever had, filtered here.
   const external = useQuery({
-    queryKey: externalApplicationsKey,
-    queryFn: listExternalApplications,
+    queryKey: [...externalApplicationsKey, id],
+    queryFn: () => listExternalApplications(id),
     // A CV being read gets its score in a few seconds.
     refetchInterval: (q) => (q.state.data?.some((a) => a.analysis?.status === "QUEUED") ? 4000 : false),
   });
@@ -1052,9 +1053,11 @@ function ApplicantCvAnalysis({
 }>) {
   const [chatting, setChatting] = useState(false);
   const scored = analysis?.status === "SCORED";
+  // One request per screening, shared by every candidate of the offer; each picks its own.
   const resume = useQuery({
-    queryKey: [...cvScreeningsKey, analysis?.screeningId, "resume", analysis?.resumeId],
-    queryFn: async () => (await getCvScreening(analysis?.screeningId as string)).resumes.find((r) => r.id === analysis?.resumeId) ?? null,
+    queryKey: [...cvScreeningsKey, analysis?.screeningId],
+    queryFn: () => getCvScreening(analysis?.screeningId as string),
+    select: (s) => s.resumes.find((r) => r.id === analysis?.resumeId) ?? null,
     enabled: scored,
   });
 

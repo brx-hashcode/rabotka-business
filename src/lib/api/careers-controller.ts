@@ -102,8 +102,9 @@ class CareersController extends BusinessBaseController {
     return this.post(`/public/careers/${encodeURIComponent(slug)}/offers/${encodeURIComponent(reference)}/apply`, form);
   }
 
-  listExternal(): Promise<ExternalApplication[]> {
-    return this.get("/business/me/external-applications");
+  /** All of the business's (the newest 500), or one offer's. */
+  listExternal(offerId?: string): Promise<ExternalApplication[]> {
+    return this.get(`/business/me/external-applications${offerId ? `?offerId=${encodeURIComponent(offerId)}` : ""}`);
   }
 
   /** One candidate, or the offer's not yet read. Each CV uses one « CV inclus ». */
