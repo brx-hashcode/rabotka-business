@@ -107,7 +107,12 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
   }
   const status = STATUS[e.status];
   // Contacts, CVs and AI drafts count per period; online offers do not.
-  const renews = e.endsAt ? `Pour la période, jusqu'au ${date(e.endsAt)}.` : undefined;
+  // An annual plan's counters start again every month: the date they do, else the period's end.
+  const renews = e.countersResetAt
+    ? `Pour ce mois, jusqu'au ${date(e.countersResetAt)} : le compteur repart à zéro ensuite.`
+    : e.endsAt
+      ? `Pour la période, jusqu'au ${date(e.endsAt)}.`
+      : undefined;
   return (
     <section className="space-y-6 rounded-3xl bg-card p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">

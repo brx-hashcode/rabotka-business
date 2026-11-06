@@ -225,6 +225,8 @@ export type MySubscription = {
     plan: { id: string; code: string; name: string } | null;
     status: SubscriptionStatus | null;
     endsAt: string | null;
+    /** When the counters start again (each month of an annual plan); null: at `endsAt`. Absent from an older backend. */
+    countersResetAt?: string | null;
     unlocksRemaining: number | null;
     unlocksQuota: number | null;
     unlocksUsed: number;
