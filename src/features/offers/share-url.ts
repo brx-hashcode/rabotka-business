@@ -9,11 +9,12 @@ export function offerShareUrl(origin: string, slug: string, reference: string, s
 }
 
 /** Each network's share box, opened on the offer's link (tagged with the network). */
-export function offerShareLinks(origin: string, slug: string, reference: string, title: string) {
+export function offerShareLinks(origin: string, slug: string, reference: string, title: string, whatsappText?: string) {
   const url = (source: string) => offerShareUrl(origin, slug, reference, source);
   return {
     linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url("linkedin"))}`,
-    whatsapp: `https://wa.me/?text=${encodeURIComponent(`${title}\n${url("whatsapp")}`)}`,
+    // The offer's details when known, else its title; the link is in the text.
+    whatsapp: `https://wa.me/?text=${encodeURIComponent(whatsappText ?? `${title}\n${url("whatsapp")}`)}`,
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url("facebook"))}`,
   };
 }

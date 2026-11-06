@@ -10,7 +10,6 @@ import {
   IconShare,
 } from "@tabler/icons-react";
 import { useState } from "react";
-import { toast } from "sonner";
 
 import {
   DropdownMenu,
@@ -20,8 +19,7 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { PreviewSheet } from "#/components/preview-sheet";
 import { appConfig } from "#/config";
-import { copyText } from "#/lib/clipboard";
-import { offerShareLinks, offerShareUrl } from "../share-url";
+import { useOfferShare } from "../use-offer-share";
 import { LinkedinPostDialog, type LinkedinOffer } from "./linkedin-post-dialog";
 
 const ITEM = "cursor-pointer gap-2.5 rounded-xl px-3 py-2.5 text-sm focus:bg-page";
@@ -32,23 +30,8 @@ const ITEM = "cursor-pointer gap-2.5 rounded-xl px-3 py-2.5 text-sm focus:bg-pag
  */
 export function ShareOfferMenu({ slug, offer }: Readonly<{ slug: string; offer: LinkedinOffer }>) {
   const { id: offerId, reference, title } = offer;
-  const url = (source?: string) => offerShareUrl(window.location.origin, slug, reference, source);
-  const links = () => offerShareLinks(window.location.origin, slug, reference, title);
-  const open = (href: string) => window.open(href, "_blank", "noopener,noreferrer");
-
-  const copy = async () => {
-    const copied = await copyText(url());
-    if (copied) toast.success("Lien de l'offre copié.");
-    else toast.error("Le lien n'a pas pu être copié.");
-  };
-
-  // TikTok has no share link: the offer's link is copied, to paste there.
-  const shareOnTiktok = async () => {
-    const copied = await copyText(url("tiktok"));
-    if (copied) toast.success("Lien copié. Collez-le sur TikTok.");
-    else toast.error("Le lien n'a pas pu être copié.");
-    window.open("https://www.tiktok.com/", "_blank", "noopener,noreferrer");
-  };
+  // Each network with the offer's details and its tagged link (use-offer-share.ts).
+  const share = useOfferShare(slug, offer);
 
   const [posterOpen, setPosterOpen] = useState(false);
   // LinkedIn: published from the recruiter's account, or its share box (the dialog decides).
@@ -71,23 +54,23 @@ export function ShareOfferMenu({ slug, offer }: Readonly<{ slug: string; offer: 
           </DropdownMenuItem>
           <DropdownMenuItem
             className={ITEM}
-            onSelect={() => open(links().whatsapp)}
+            onSelect={share.whatsapp}
           >
             <IconBrandWhatsapp className="size-4 text-[#1ebe5b]" />
             WhatsApp
           </DropdownMenuItem>
           <DropdownMenuItem
             className={ITEM}
-            onSelect={() => open(links().facebook)}
+            onSelect={share.facebook}
           >
             <IconBrandFacebook className="size-4 text-[#1877f2]" />
             Facebook
           </DropdownMenuItem>
-          <DropdownMenuItem className={ITEM} onSelect={() => void shareOnTiktok()}>
+          <DropdownMenuItem className={ITEM} onSelect={share.tiktok}>
             <IconBrandTiktok className="size-4" />
             TikTok
           </DropdownMenuItem>
-          <DropdownMenuItem className={ITEM} onSelect={() => void copy()}>
+          <DropdownMenuItem className={ITEM} onSelect={() => void share.copyLink()}>
             <IconLink className="size-4" />
             Copier le lien
           </DropdownMenuItem>

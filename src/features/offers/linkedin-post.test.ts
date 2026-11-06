@@ -45,6 +45,12 @@ describe("defaultLinkedinText", () => {
     );
   });
 
+  it("can leave the hashtags out (WhatsApp)", () => {
+    const text = defaultLinkedinText(offer, { hashtags: false });
+    expect(text).not.toContain("#");
+    expect(text.endsWith(offer.url)).toBe(true);
+  });
+
   it("leaves out what the offer does not say, and closes a CDI by its date", () => {
     const text = defaultLinkedinText({ ...offer, employmentType: "CDI", amount: null, city: null, categoryName: null, description: "" });
     expect(text).toContain("💼 CDI\n📅 Candidatures jusqu'au 14 novembre");

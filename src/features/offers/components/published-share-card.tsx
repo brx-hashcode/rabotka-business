@@ -2,10 +2,8 @@
 
 import { IconBrandFacebook, IconBrandLinkedin, IconBrandWhatsapp, IconConfetti, IconLink, IconX } from "@tabler/icons-react";
 import { useState } from "react";
-import { toast } from "sonner";
 
-import { copyText } from "#/lib/clipboard";
-import { offerShareLinks, offerShareUrl } from "../share-url";
+import { useOfferShare } from "../use-offer-share";
 import { LinkedinPostDialog, type LinkedinOffer } from "./linkedin-post-dialog";
 
 const BUTTON = "inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 font-medium text-sm transition-colors";
@@ -22,18 +20,9 @@ export function PublishedShareCard({
   isPublic,
   onDismiss,
 }: Readonly<{ slug: string | null; offer: LinkedinOffer; isPublic: boolean; onDismiss: () => void }>) {
-  const { reference, title } = offer;
   const [linkedinOpen, setLinkedinOpen] = useState(false);
-  const origin = typeof window === "undefined" ? "" : window.location.origin;
-  const links = slug ? offerShareLinks(origin, slug, reference, title) : null;
-  const open = (href: string) => window.open(href, "_blank", "noopener,noreferrer");
-
-  const copy = async () => {
-    if (!slug) return;
-    const copied = await copyText(offerShareUrl(origin, slug, reference));
-    if (copied) toast.success("Lien de l'offre copié.");
-    else toast.error("Le lien n'a pas pu être copié.");
-  };
+  // Each network with the offer's details and its tagged link (use-offer-share.ts).
+  const share = useOfferShare(slug ?? "", offer);
 
   return (
     <section className="relative space-y-5 rounded-3xl bg-card p-5 sm:p-6">
@@ -50,22 +39,22 @@ export function PublishedShareCard({
           </p>
         </div>
       </div>
-      {isPublic && links && (
+      {isPublic && slug && (
         // Each network in its own colours, so it is found at a glance.
         <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap">
           <button type="button" onClick={() => setLinkedinOpen(true)} className={`${BUTTON} bg-[#0a66c2] text-white hover:bg-[#004182]`}>
             <IconBrandLinkedin className="size-[18px]" />
             LinkedIn
           </button>
-          <button type="button" onClick={() => open(links.whatsapp)} className={`${BUTTON} bg-[#25d366] text-[#0b3d20] hover:bg-[#1ebe5b]`}>
+          <button type="button" onClick={share.whatsapp} className={`${BUTTON} bg-[#25d366] text-[#0b3d20] hover:bg-[#1ebe5b]`}>
             <IconBrandWhatsapp className="size-[18px]" />
             WhatsApp
           </button>
-          <button type="button" onClick={() => open(links.facebook)} className={`${BUTTON} bg-[#1877f2] text-white hover:bg-[#0c63d4]`}>
+          <button type="button" onClick={share.facebook} className={`${BUTTON} bg-[#1877f2] text-white hover:bg-[#0c63d4]`}>
             <IconBrandFacebook className="size-[18px]" />
             Facebook
           </button>
-          <button type="button" onClick={() => void copy()} className={`${BUTTON} bg-page text-foreground hover:bg-page/70`}>
+          <button type="button" onClick={() => void share.copyLink()} className={`${BUTTON} bg-page text-foreground hover:bg-page/70`}>
             <IconLink className="size-[18px]" />
             Copier le lien
           </button>

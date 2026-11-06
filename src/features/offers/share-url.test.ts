@@ -23,3 +23,10 @@ describe("offerShareLinks", () => {
     expect(decodeURIComponent(links.facebook)).toContain("?source=facebook");
   });
 });
+
+describe("offerShareLinks with the offer's text", () => {
+  it("opens WhatsApp with the whole text, link included", () => {
+    const links = offerShareLinks("https://b.rabotka.work", "akieni", "OF-12", "Comptable", "🚀 Akieni recrute : Comptable\n\n👉 https://b/x");
+    expect(decodeURIComponent(links.whatsapp.split("text=")[1])).toBe("🚀 Akieni recrute : Comptable\n\n👉 https://b/x");
+  });
+});
