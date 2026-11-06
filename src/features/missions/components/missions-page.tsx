@@ -21,6 +21,7 @@ import {
   type OfferListItem,
 } from "#/lib/api/offer-controller";
 import { cn, getInitials } from "#/lib/utils";
+import { pollEvery } from "#/features/layout/socket-status";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const HIRED = new Set(["ACCEPTED", "WAITING_PAYMENT", "STARTED", "END"]);
@@ -42,7 +43,7 @@ export function MissionsPage() {
   const received = useQuery({
     queryKey: [...offersKey, "received", "missions"],
     queryFn: () => allPages((page) => listReceivedApplications(page, 100)),
-    refetchInterval: 30_000,
+    refetchInterval: () => pollEvery(30_000),
   });
 
   const hiresByOffer = useMemo(() => {

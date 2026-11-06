@@ -105,6 +105,7 @@ import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
 import { TeamOpinionButton } from "#/features/team/components/team-opinion";
 import { getOfferOpinions, offerOpinionsKey, type Verdict } from "#/lib/api/candidate-notes-controller";
+import { pollEvery } from "#/features/layout/socket-status";
 
 /**
  * One offer: where it stands (applications, positions filled, time left), its
@@ -130,7 +131,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
     queryKey: [...externalApplicationsKey, id],
     queryFn: () => listExternalApplications(id),
     // A CV being read gets its score in a few seconds.
-    refetchInterval: (q) => (q.state.data?.some((a) => a.analysis?.status === "QUEUED") ? 4000 : false),
+    refetchInterval: (q) => (q.state.data?.some((a) => a.analysis?.status === "QUEUED") ? pollEvery(4000, 20_000) : false),
   });
   const outsiders = (external.data ?? []).filter((a) => a.offer.id === id);
   // The candidate's side moves on its own (paying their part of an unlock): keep up.
@@ -138,7 +139,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
     queryKey: [...offersKey, id, "applicants"],
     queryFn: () => getOfferApplicants(id),
     // A CV being read gets its score in a few seconds.
-    refetchInterval: (q) => (q.state.data?.some((a) => a.analysis?.status === "QUEUED") ? 4000 : 30_000),
+    refetchInterval: (q) => (q.state.data?.some((a) => a.analysis?.status === "QUEUED") ? pollEvery(4000, 20_000) : pollEvery(30_000)),
   });
   const categories = useQuery({ queryKey: ["job-categories"], queryFn: getJobCategories, staleTime: Infinity });
   const [confirmDelete, setConfirmDelete] = useState(false);

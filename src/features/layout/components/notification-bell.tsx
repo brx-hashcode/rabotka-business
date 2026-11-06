@@ -20,6 +20,7 @@ import {
 import { cn } from "#/lib/utils";
 import { notificationLook } from "../notification-look";
 import { useNotificationsSocket } from "../use-notifications-socket";
+import { pollEvery } from "../socket-status";
 
 const PAGE = 20;
 
@@ -37,7 +38,7 @@ export function NotificationBell() {
   const unread = useQuery({
     queryKey: [...notificationsKey, "unread"],
     queryFn: getUnreadCount,
-    refetchInterval: 60_000,
+    refetchInterval: () => pollEvery(60_000, 300_000),
   });
   const feed = useQuery({
     queryKey: [...notificationsKey, "list", limit],
