@@ -27,11 +27,12 @@ import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { Combobox } from "#/features/sign-up/components/combobox";
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
-import { CV_ACCEPT, createCvScreening, cvScreeningsKey } from "#/lib/api/cv-screening-controller";
+import { addCvScreeningFiles, CV_ACCEPT, createCvScreening, cvScreeningsKey } from "#/lib/api/cv-screening-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { listOffers, offersKey } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
 import { kindFromName, pickKey, type MailPick } from "../mail-picks";
+import { CHUNK_MAX_FILES, chunkCvBatch, mailRefs, sendRest } from "../send-cv-batch";
 import { CvLocked, CvUsedUp, fileSize } from "./cv-bits";
 import { MailImport } from "./mail-import";
 
@@ -105,16 +106,31 @@ export function NewCvScreeningPage() {
     setRefused(out);
   }
 
+  // CVs sent so far: a large batch goes in several requests (send-cv-batch.ts).
+  const [sent, setSent] = useState(0);
   const start = useMutation({
-    mutationFn: () =>
-      createCvScreening(
-        files,
+    mutationFn: async () => {
+      const [first, ...rest] = chunkCvBatch(files, mails);
+      setSent(0);
+      const screening = await createCvScreening(
+        first.files,
         source === "offer" ? { offerId } : { jobTitle: jobTitle.trim(), jobText: jobText.trim() },
-        mails.map(({ mailboxId, messageId, attachmentId }) => ({ mailboxId, messageId, attachmentId })),
-      ),
-    onSuccess: (screening) => {
+        mailRefs(first.mails),
+      );
+      setSent(first.files.length + first.mails.length);
+      const failed = await sendRest(
+        rest,
+        (c) => addCvScreeningFiles(screening.id, c.files, mailRefs(c.mails)),
+        (n) => setSent((s) => s + n),
+      );
+      return { screening, failed: failed.reduce((n, c) => n + c.files.length + c.mails.length, 0) };
+    },
+    onSuccess: ({ screening, failed }) => {
       void queryClient.invalidateQueries({ queryKey: cvScreeningsKey });
       void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
+      if (failed > 0) {
+        toast.error(`${failed} CV n'${failed > 1 ? "ont" : "a"} pas pu être envoyé${failed > 1 ? "s" : ""} : ajoutez-les à nouveau dans une nouvelle analyse.`);
+      }
       router.push(`/espace/analyse-cv/${screening.id}`);
     },
     onError: (err) => toast.error(friendlyError(err, "L'analyse n'a pas pu démarrer. Réessayez dans un instant.")),
@@ -282,7 +298,11 @@ export function NewCvScreeningPage() {
                 disabled={!jobReady || count === 0 || start.isPending}
                 className="inline-flex h-12 items-center justify-center rounded-full bg-ink px-6 font-medium text-white hover:bg-ink/90 disabled:opacity-40"
               >
-                {start.isPending ? "Envoi des CV…" : `Lancer l'analyse${count ? ` de ${count} CV` : ""}`}
+                {start.isPending
+                  ? count > CHUNK_MAX_FILES
+                    ? `Envoi des CV… ${sent} / ${count}`
+                    : "Envoi des CV…"
+                  : `Lancer l'analyse${count ? ` de ${count} CV` : ""}`}
               </button>
             </div>
           </form>
