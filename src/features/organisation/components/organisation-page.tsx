@@ -183,7 +183,16 @@ function ReviewBanner({ business }: Readonly<{ business: MyBusiness }>) {
             title: "Vérification refusée",
             text: `${business.rejectionReason ? `Motif : ${business.rejectionReason}. ` : ""}Corrigez vos informations ou remplacez les documents concernés : la vérification reprendra automatiquement.`,
           }
-        : refusedDocs
+        : refusedDocs && business.verificationStatus === "VERIFIED"
+          ? {
+              // Verified, its papers can't be replaced from here (the server
+              // refuses it): the team does it on request.
+              icon: IconAlertTriangle,
+              tone: "bg-chip-amber text-chip-amber-foreground",
+              title: "Un document a été refusé",
+              text: "Votre organisation est vérifiée. Pour remplacer ce document, faites une demande à l'équipe Rabotka depuis Aide.",
+            }
+          : refusedDocs
           ? {
               icon: IconAlertTriangle,
               tone: "bg-chip-amber text-chip-amber-foreground",
