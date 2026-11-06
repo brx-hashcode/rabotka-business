@@ -77,6 +77,7 @@ import {
   type Offer,
   type OfferApplicant,
 } from "#/lib/api/offer-controller";
+import { showApplicationStatus, showExternalStatus } from "#/features/offers/application-cache";
 import { cn, getInitials } from "#/lib/utils";
 import {
   APPLICATION_STATUS,
@@ -145,15 +146,21 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const [confirmClose, setConfirmClose] = useState(false);
   const [newDate, setNewDate] = useState("");
 
+  // This offer (detail, candidates) is awaited, so its dialog closes on the
+  // new state rather than flashing the old one; the lists follow in the
+  // background (only the ones on screen refetch).
   const refresh = () => {
-    void queryClient.invalidateQueries({ queryKey: offersKey });
+    void queryClient.invalidateQueries({ queryKey: [...offersKey, "list"] });
+    void queryClient.invalidateQueries({ queryKey: [...offersKey, "received"] });
     void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
+    void queryClient.invalidateQueries({ queryKey: ["business", "me", "stats"] });
+    return queryClient.invalidateQueries({ queryKey: [...offersKey, id] });
   };
   const close = useMutation({
     mutationFn: () => closeOffer(id),
-    onSuccess: () => {
-      refresh();
+    onSuccess: async () => {
       void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
+      await refresh();
       setConfirmClose(false);
       toast.success("Offre fermée. Les candidats en attente sont prévenus.");
     },
@@ -161,8 +168,8 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   });
   const finish = useMutation({
     mutationFn: () => confirmOfferHire(id),
-    onSuccess: () => {
-      refresh();
+    onSuccess: async () => {
+      await refresh();
       setConfirmFinish(false);
       toast.success("Offre terminée. Vous pouvez noter votre recrutement.");
     },
@@ -171,7 +178,9 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const remove = useMutation({
     mutationFn: () => deleteOffer(id),
     onSuccess: () => {
-      refresh();
+      // Gone: nothing of it to wait for, the list it goes back to refetches.
+      queryClient.removeQueries({ queryKey: [...offersKey, id] });
+      void refresh();
       toast.success("Offre supprimée. Les candidats en attente sont prévenus.");
       router.push("/espace/offres");
     },
@@ -184,8 +193,8 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
         id,
         needsDate ? scheduledIso(newDate, offer.data?.scheduledAt ? new Date(offer.data.scheduledAt).toTimeString().slice(0, 5) : "") : null,
       ),
-    onSuccess: () => {
-      refresh();
+    onSuccess: async () => {
+      await refresh();
       setRepublishing(false);
       toast.success("Offre republiée.");
     },
@@ -786,21 +795,28 @@ function BulkRefuseDialog({
     mutationFn: async () => {
       const text = message.trim() || undefined;
       const outside = mode === "remaining" ? outsiderIds : selectedOutsiderIds;
-      const rabotka =
+      // Both at once. Each careers candidate on its own: one failure no
+      // longer reads as « none refused », and those already decided are not counted.
+      const [rabotka, results] = await Promise.all([
         (mode === "remaining" && rabotkaWaiting === 0) || (mode === "selected" && ids.length === 0)
-          ? { refused: 0, skipped: 0 }
-          : await refuseApplications(offerId, {
+          ? Promise.resolve({ refused: 0, skipped: 0 })
+          : refuseApplications(offerId, {
               ...(mode === "remaining" ? { remaining: true } : { applicationIds: ids }),
               ...(text ? { message: text } : {}),
-            });
-      // Each careers candidate on its own: one failure no longer reads as
-      // « none refused », and those already decided are not counted.
-      const results = await Promise.allSettled(outside.map((id) => refuseExternalApplication(id, text)));
+            }).catch(() => null),
+        Promise.allSettled(outside.map((id) => refuseExternalApplication(id, text))),
+      ]);
       const outsideRefused = results.filter(
         (r) => r.status === "fulfilled" && (r.value as { refused?: boolean } | undefined)?.refused !== false,
       ).length;
-      const failed = results.filter((r) => r.status === "rejected").length;
-      return { refused: rabotka.refused + outsideRefused, skipped: rabotka.skipped + (outside.length - outsideRefused - failed), failed };
+      const outsideFailed = results.filter((r) => r.status === "rejected").length;
+      // The Rabotka side failed as a whole: counted as failed, the careers side still reported.
+      const rabotkaFailed = rabotka ? 0 : mode === "remaining" ? rabotkaWaiting : ids.length;
+      return {
+        refused: (rabotka?.refused ?? 0) + outsideRefused,
+        skipped: (rabotka?.skipped ?? 0) + (outside.length - outsideRefused - outsideFailed),
+        failed: outsideFailed + rabotkaFailed,
+      };
     },
     onSuccess: ({ refused, skipped, failed }) => {
       void queryClient.invalidateQueries({ queryKey: offersKey });
@@ -814,7 +830,22 @@ function BulkRefuseDialog({
       onDone();
       onClose();
     },
-    onError: (err) => toast.error(friendlyError(err, "Les candidatures n'ont pas pu être refusées.")),
+    // Picked cards change at once; « all the others » waits for the server,
+    // which knows who is still waiting.
+    onMutate: () => {
+      if (mode !== "selected") return { undo: () => {} };
+      const undos = [
+        ...ids.map((id) => showApplicationStatus(queryClient, id, "REJECTED")),
+        ...selectedOutsiderIds.map((id) => showExternalStatus(queryClient, id, "REFUSED")),
+      ];
+      return { undo: () => undos.reverse().forEach((u) => u()) };
+    },
+    onError: (err, _vars, ctx) => {
+      ctx?.undo();
+      void queryClient.invalidateQueries({ queryKey: offersKey });
+      void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
+      toast.error(friendlyError(err, "Les candidatures n'ont pas pu être refusées."));
+    },
   });
   return (
     <ActionDialog

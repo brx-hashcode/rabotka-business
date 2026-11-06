@@ -15,6 +15,7 @@ import {
   notificationsKey,
   timeAgo,
   type AppNotification,
+  type NotificationPage,
 } from "#/lib/api/notification-controller";
 import { cn } from "#/lib/utils";
 import { notificationLook } from "../notification-look";
@@ -45,11 +46,37 @@ export function NotificationBell() {
     placeholderData: keepPreviousData,
   });
   const refresh = () => queryClient.invalidateQueries({ queryKey: notificationsKey });
-  const readAll = useMutation({ mutationFn: markAllNotificationsRead, onSuccess: refresh });
+  // Read in the cache first (the dot and the badge go at once), the server
+  // after; the refresh puts it right either way. `null`: all of them.
+  const showRead = (id: string | null) => {
+    const now = new Date().toISOString();
+    queryClient.setQueriesData<NotificationPage>({ queryKey: [...notificationsKey, "list"] }, (page) =>
+      page && {
+        ...page,
+        items: page.items.map((n) => (!n.readAt && (id === null || n.id === id) ? { ...n, readAt: now } : n)),
+        unreadCount: id === null ? 0 : Math.max(0, page.unreadCount - 1),
+      },
+    );
+    queryClient.setQueryData<{ count: number }>([...notificationsKey, "unread"], (u) =>
+      u && { count: id === null ? 0 : Math.max(0, u.count - 1) },
+    );
+  };
+  const readAll = useMutation({
+    mutationFn: markAllNotificationsRead,
+    onMutate: () => {
+      void queryClient.cancelQueries({ queryKey: notificationsKey });
+      showRead(null);
+    },
+    onSettled: refresh,
+  });
 
-  async function openOne(n: AppNotification) {
-    if (!n.readAt) await markNotificationRead(n.id).catch(() => undefined);
-    void refresh();
+  function openOne(n: AppNotification) {
+    if (!n.readAt) {
+      showRead(n.id);
+      void markNotificationRead(n.id)
+        .catch(() => undefined)
+        .finally(() => void refresh());
+    }
     const link = espaceLink(n.link);
     if (link) {
       setOpen(false);
@@ -101,7 +128,7 @@ export function NotificationBell() {
           )}
         </div>
         <div className="max-h-[min(65svh,32rem)] overflow-y-auto overscroll-contain pb-2">
-          <NotificationList items={items} loading={feed.isLoading} onOpen={(n) => void openOne(n)} />
+          <NotificationList items={items} loading={feed.isLoading} onOpen={openOne} />
           {hasMore && (
             <div className="px-4 pt-2">
               <button

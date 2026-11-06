@@ -87,14 +87,20 @@ export function useDiscussionHistory(id: string, enabled: boolean) {
 /**
  * No optimistic insert: the server decides what the message becomes (clean,
  * redacted or held), and showing the raw text first would flash a number as
- * delivered before taking it back.
+ * delivered before taking it back. Its answer is that verdict, so the message
+ * goes in the thread from it at once — no refetch to wait for.
  */
 export function useSendMessage(conversationId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: string) => sendDiscussionMessage(conversationId, body),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: discussionsKeys.thread(conversationId) });
+    onSuccess: ({ message }) => {
+      queryClient.setQueryData<Awaited<ReturnType<typeof listDiscussionMessages>>>(discussionsKeys.thread(conversationId), (page) =>
+        page && message && !page.data.some((m) => m.id === message.id)
+          ? { ...page, data: [...page.data, message], total: page.total + 1 }
+          : page,
+      );
+      void queryClient.invalidateQueries({ queryKey: discussionsKeys.thread(conversationId) });
       void queryClient.invalidateQueries({ queryKey: discussionsKeys.list() });
     },
   });
