@@ -36,7 +36,7 @@ export function EditOfferPage({ id }: Readonly<{ id: string }>) {
         <h1 className="font-semibold text-3xl tracking-tight">Modifier l&apos;offre</h1>
         <p className="text-muted-foreground">Les candidats déjà positionnés sont prévenus d&apos;un changement de rémunération, de date ou de lieu.</p>
       </div>
-      {offer && values && offer.status === "ACTIVE" ? (
+      {offer && values && (offer.status === "ACTIVE" || offer.status === "PARTIALLY_FILLED") ? (
         <OfferForm
           defaultValues={values}
           keepSchedule={values.scheduledDate ? scheduledIso(values.scheduledDate, values.scheduledTime) : undefined}
@@ -53,7 +53,7 @@ export function EditOfferPage({ id }: Readonly<{ id: string }>) {
           ) : !offer ? (
             <p className="text-muted-foreground">{friendlyError(error, "Cette offre est introuvable.")}</p>
           ) : (
-            <p className="text-muted-foreground">Seule une offre active peut être modifiée.</p>
+            <p className="text-muted-foreground">Seule une offre en ligne peut être modifiée.</p>
           )}
         </section>
       )}
