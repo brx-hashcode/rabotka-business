@@ -461,9 +461,11 @@ export type InterviewSlot = {
 };
 
 export type InterviewInput = InterviewSlot & {
-  /** One of the two: an analysed CV or an application. */
+  /** One of the three: an analysed CV, an application, or a careers-page candidate. */
   cvResumeId?: string;
   applicationId?: string;
+  /** A careers-page candidate without a CV analysis: invited at the address they gave. */
+  externalApplicationId?: string;
   /** For an analysed CV: where the invitation goes. */
   candidateEmail?: string;
 };
@@ -472,6 +474,7 @@ export type Interview = {
   id: string;
   cvResumeId: string | null;
   applicationId: string | null;
+  externalApplicationId?: string | null;
   offerId: string | null;
   jobTitle: string;
   candidateName: string;
