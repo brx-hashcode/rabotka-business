@@ -77,13 +77,19 @@ export function LinkedinPostDialog({
   // the offer's); the large preview shows what « Publier » would send.
   const ogImage = `${offerShareUrl(origin, slug, offer.reference)}/opengraph-image`;
   const postedImage = posts.data?.[0]?.imageUrl ?? null;
-  const previewSrc = ownPreview ?? ogImage;
+  // Posting again keeps the last post's own picture, until another is picked
+  // or the recruiter goes back to the offer's.
+  const [backToOffer, setBackToOffer] = useState(false);
+  const keptImage = state === "posted" && !backToOffer ? postedImage : null;
+  const previewSrc = ownPreview ?? keptImage ?? ogImage;
+  const showsOwn = !!ownImage || !!keptImage;
   const failed = posts.data?.[0]?.status === "FAILED" ? posts.data[0] : null;
 
   const publish = useMutation({
-    mutationFn: () => postOnLinkedin(offer.id, text, state === "posted", ownImage),
+    mutationFn: () => postOnLinkedin(offer.id, text, state === "posted", ownImage, state === "posted" && backToOffer && !ownImage),
     onSuccess: () => {
       setOwnImage(null);
+      setBackToOffer(false);
       toast.success("Publication en cours : elle sera sur LinkedIn dans quelques secondes.");
       void queryClient.invalidateQueries({ queryKey: linkedinPostsKey(offer.id) });
     },
@@ -231,19 +237,28 @@ export function LinkedinPostDialog({
                     {/* eslint-disable-next-line @next/next/no-img-element -- a local preview or the careers page's own OG image */}
                     <img src={previewSrc} alt="" className="block h-full w-full object-contain" />
                   </div>
-                  <p className="text-muted-foreground text-xs">{ownImage ? "Votre image" : "L'image de l'offre"}, publiée en grand sous le texte.</p>
+                  <p className="text-muted-foreground text-xs">
+                    {ownImage
+                      ? "Votre image, publiée en grand sous le texte."
+                      : keptImage
+                        ? "L'image de votre dernière publication, reprise si vous publiez à nouveau."
+                        : "L'image de l'offre, publiée en grand sous le texte."}
+                  </p>
                   <button
                     type="button"
                     onClick={() => imageInput.current?.click()}
                     className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 font-medium text-background text-sm hover:bg-foreground/85"
                   >
                     <IconPhotoEdit className="size-[18px]" />
-                    {ownImage ? "Changer d'image" : "Mettre ma propre image"}
+                    {showsOwn ? "Changer d'image" : "Mettre ma propre image"}
                   </button>
-                  {ownImage && (
+                  {showsOwn && (
                     <button
                       type="button"
-                      onClick={() => setOwnImage(null)}
+                      onClick={() => {
+                        setOwnImage(null);
+                        setBackToOffer(true);
+                      }}
                       className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-full bg-page px-5 font-medium text-sm hover:bg-page/70"
                     >
                       <IconArrowBackUp className="size-4" />
