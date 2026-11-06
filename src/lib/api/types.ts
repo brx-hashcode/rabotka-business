@@ -196,6 +196,8 @@ export type BusinessPlan = {
   cvChatQuestions: number;
   includesPreselection: boolean;
   priorityVisibility: boolean;
+  /** « Publier sur LinkedIn » from Rabotka. Absent before the service. */
+  linkedinPosting?: boolean;
   /** Team places (the holder is the one administrator). Null: unlimited; 0: none. Absent before the team. */
   recruitersLimit?: number | null;
   reviewersLimit?: number | null;
@@ -253,6 +255,8 @@ export type MySubscription = {
     offerDraftsQuota: number | null;
     includesPreselection: boolean;
     priorityVisibility: boolean;
+    /** « Publier sur LinkedIn » from Rabotka (the share link is open to all). */
+    linkedinPosting?: boolean;
     /** Team places and who fills them now (invited or active). Absent before the team. */
     recruitersLimit?: number | null;
     reviewersLimit?: number | null;

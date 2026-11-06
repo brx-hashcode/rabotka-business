@@ -4,6 +4,8 @@ import { BusinessBaseController } from "./base-controller";
 export type LinkedinInfo = {
   /** False when Rabotka's LinkedIn app is not set up: the share link only. */
   available: boolean;
+  /** The plan has « Publier sur LinkedIn »; else the share link only. Absent before the service. */
+  included?: boolean;
   account: { name: string; pictureUrl: string | null; connectedAt: string; expired: boolean } | null;
 };
 

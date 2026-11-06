@@ -67,6 +67,10 @@ describe("linkedinDialogState", () => {
     expect(linkedinDialogState({ available: false, account: null }, [])).toBe("share");
   });
 
+  it("points to the plans when the plan leaves LinkedIn out", () => {
+    expect(linkedinDialogState({ available: true, included: false, account: null }, [])).toBe("upgrade");
+  });
+
   it("asks to connect, or to connect again", () => {
     expect(linkedinDialogState({ available: true, account: null }, [])).toBe("connect");
     expect(linkedinDialogState(account(true), [])).toBe("expired");

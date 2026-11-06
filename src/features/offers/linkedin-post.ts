@@ -74,14 +74,17 @@ export function defaultLinkedinText(o: LinkedinOfferText): string {
 /**
  * What the « Publier sur LinkedIn » dialog shows:
  * - `share`: Rabotka's LinkedIn app is not set up, only the share link;
+ * - `upgrade`: the plan leaves « Publier sur LinkedIn » out: the share link,
+ *   and where to get it;
  * - `connect` / `expired`: the person connects (again) first;
  * - `pending`: a post is on its way; `posted`: it is online;
  * - `ready`: write the text and publish.
  */
-export type LinkedinDialogState = "share" | "connect" | "expired" | "pending" | "posted" | "ready";
+export type LinkedinDialogState = "share" | "upgrade" | "connect" | "expired" | "pending" | "posted" | "ready";
 
 export function linkedinDialogState(info: LinkedinInfo | undefined, posts: LinkedinPost[] | undefined): LinkedinDialogState {
   if (!info?.available) return "share";
+  if (info.included === false) return "upgrade";
   if (!info.account) return "connect";
   if (info.account.expired) return "expired";
   const latest = posts?.[0];

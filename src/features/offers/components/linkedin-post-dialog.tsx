@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IconArrowBackUp, IconBrandLinkedin, IconCheck, IconExternalLink, IconLoader2, IconPhotoEdit } from "@tabler/icons-react";
 import { toast } from "sonner";
@@ -144,6 +145,21 @@ export function LinkedinPostDialog({
             {header}
             {info.isLoading ? (
               <div className="h-40 animate-pulse rounded-2xl bg-page" />
+            ) : state === "upgrade" ? (
+              // The plan leaves it out: say so, keep LinkedIn's own share box, and where to get it.
+              <div className="space-y-4">
+                <p className="rounded-2xl bg-page px-4 py-3 text-sm">
+                  La publication sur LinkedIn depuis Rabotka n&apos;est pas incluse dans votre formule. Vous pouvez partager l&apos;offre
+                  vous-même : LinkedIn s&apos;ouvre avec son lien et son aperçu.
+                </p>
+                <a href={shareBox} target="_blank" rel="noreferrer" className={`${BUTTON} ${LINKEDIN_BLUE} w-full`}>
+                  <IconBrandLinkedin className="size-4" />
+                  Partager sur LinkedIn
+                </a>
+                <Link href="/espace/abonnement" onClick={() => onOpenChange(false)} className={`${BUTTON} w-full bg-page hover:bg-page/70`}>
+                  Voir les formules
+                </Link>
+              </div>
             ) : state === "share" ? (
               <div className="space-y-4">
                 <p className="text-sm">LinkedIn s&apos;ouvre avec le lien de l&apos;offre et son aperçu : vous n&apos;avez plus qu&apos;à publier.</p>
