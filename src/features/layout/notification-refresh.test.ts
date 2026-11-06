@@ -59,6 +59,8 @@ describe("refreshKeysFor", () => {
 
   it("a plan or organisation event refreshes the business", () => {
     expect(keys("BUSINESS_SUBSCRIPTION_GRANTED")).toContain(JSON.stringify(["business", "me"]));
+    // A pack added: the subscription and the packs live under it.
+    expect(keys("BUSINESS_CREDITS_ADDED")).toContain(JSON.stringify(["business", "me"]));
   });
 
   it("an unknown or empty one refreshes the broad set, as before", () => {

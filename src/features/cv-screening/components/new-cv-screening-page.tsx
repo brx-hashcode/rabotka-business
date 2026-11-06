@@ -1,6 +1,8 @@
 "use client";
 
 import { trialLocks } from "#/features/subscription/trial-lock";
+import { cvOutOfReach } from "#/features/subscription/packs";
+import { usePackOnSale } from "#/features/subscription/use-packs";
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -81,6 +83,7 @@ export function NewCvScreeningPage() {
   const input = useRef<HTMLInputElement>(null);
 
   const e = subscription.data?.entitlements;
+  const packOnSale = usePackOnSale("CV");
   const room = e ? Math.min(e.cvBatchMax, e.cvRemaining ?? Number.POSITIVE_INFINITY) : 0;
   const count = files.length + mails.length;
   const items: CvItem[] = [
@@ -150,11 +153,11 @@ export function NewCvScreeningPage() {
         <p className="text-muted-foreground">Le poste, puis les CV : Rabotka lit chacun et le note par rapport au poste.</p>
       </div>
 
-      {!e || e.cvQuota === 0 ? (
-        <CvLocked trial={trialLocks(e, "cvAnalysis")} />
+      {!e || cvOutOfReach(e) ? (
+        <CvLocked trial={trialLocks(e, "cvAnalysis")} packOnSale={packOnSale} />
       ) : e.cvRemaining === 0 ? (
         // An empty form with room for none read as broken.
-        <CvUsedUp until={e.countersResetAt ?? e.endsAt} />
+        <CvUsedUp until={e.countersResetAt ?? e.endsAt} packOnSale={packOnSale} />
       ) : (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_26rem]">
           <form

@@ -5,6 +5,7 @@ import { IconLock } from "@tabler/icons-react";
 
 import type { CvCriterion, CvExperience } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
+import { PACKS_HREF } from "#/features/subscription/packs";
 
 export const CRITERIA: { key: CvCriterion; label: string }[] = [
   { key: "skills", label: "Compétences" },
@@ -73,7 +74,7 @@ export function CriterionBar({ label, value }: Readonly<{ label: string; value: 
   );
 }
 
-export function CvLocked({ trial = false }: Readonly<{ trial?: boolean }>) {
+export function CvLocked({ trial = false, packOnSale = false }: Readonly<{ trial?: boolean; packOnSale?: boolean }>) {
   return (
     <section className="flex flex-col items-center gap-3 rounded-3xl bg-card px-6 py-12 text-center">
       <span className="flex size-12 items-center justify-center rounded-2xl bg-page">
@@ -86,15 +87,13 @@ export function CvLocked({ trial = false }: Readonly<{ trial?: boolean }>) {
         {trial && "Elle n'est pas comprise dans l'essai gratuit. "}
         Envoyez les CV reçus pour un poste : Rabotka les lit, même scannés ou pris en photo, et les classe du plus adapté au moins adapté.
       </p>
-      <Link href="/espace/abonnement" className="mt-1 inline-flex h-11 items-center rounded-full bg-ink px-5 font-medium text-sm text-white hover:bg-ink/90">
-        Voir les formules
-      </Link>
+      <CvWayOut packOnSale={packOnSale && !trial} />
     </section>
   );
 }
 
 /** All the « CV inclus » of the period used: until when, and the way to more. */
-export function CvUsedUp({ until }: Readonly<{ until: string | null }>) {
+export function CvUsedUp({ until, packOnSale = false }: Readonly<{ until: string | null; packOnSale?: boolean }>) {
   const day = until ? new Date(until).toLocaleDateString("fr-FR", { day: "numeric", month: "long" }) : null;
   return (
     <section className="flex flex-col items-center gap-3 rounded-3xl bg-card px-6 py-12 text-center">
@@ -104,12 +103,32 @@ export function CvUsedUp({ until }: Readonly<{ until: string | null }>) {
       <p className="font-medium">Plus de CV inclus{day ? ` jusqu'au ${day}` : ""}</p>
       <p className="max-w-md text-muted-foreground text-sm">
         Vous avez analysé tous les CV de votre formule pour cette période{day ? " : le compteur repart à zéro ensuite" : ""}. Pour en
-        analyser davantage dès maintenant, changez de formule.
+        analyser davantage dès maintenant, {packOnSale ? "ajoutez un pack de CV ou changez de formule" : "changez de formule"}.
       </p>
-      <Link href="/espace/abonnement" className="mt-1 inline-flex h-11 items-center rounded-full bg-ink px-5 font-medium text-sm text-white hover:bg-ink/90">
+      <CvWayOut packOnSale={packOnSale} />
+    </section>
+  );
+}
+
+/** « Voir les formules », and the pack of CVs when one is on sale. */
+function CvWayOut({ packOnSale }: Readonly<{ packOnSale: boolean }>) {
+  return (
+    <div className="mt-1 flex flex-wrap justify-center gap-2">
+      {packOnSale && (
+        <Link href={PACKS_HREF} className="inline-flex h-11 items-center rounded-full bg-ink px-5 font-medium text-sm text-white hover:bg-ink/90">
+          Acheter un pack de CV
+        </Link>
+      )}
+      <Link
+        href="/espace/abonnement"
+        className={cn(
+          "inline-flex h-11 items-center rounded-full px-5 font-medium text-sm",
+          packOnSale ? "bg-page hover:bg-page/70" : "bg-ink text-white hover:bg-ink/90",
+        )}
+      >
         Voir les formules
       </Link>
-    </section>
+    </div>
   );
 }
 

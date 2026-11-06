@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { PACKS_HREF } from "#/features/subscription/packs";
+import { usePackOnSale } from "#/features/subscription/use-packs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -111,6 +113,7 @@ function PlanCard({ subscription }: Readonly<{ subscription: MySubscription }>) 
   const limit = e.plan ? e.activeOffersLimit : 0;
   const used = offersUsed(e);
   const full = offersFull(e);
+  const packOnSale = usePackOnSale("OFFER");
   return (
     <section className="space-y-4 rounded-3xl bg-card p-6">
       <div className="flex items-baseline justify-between gap-3">
@@ -136,7 +139,16 @@ function PlanCard({ subscription }: Readonly<{ subscription: MySubscription }>) 
       </div>
       {full ? (
         <p className="rounded-2xl bg-chip-amber p-3 text-chip-amber-foreground text-sm">
-          {e.plan ? "Toutes les offres de la période sont publiées : attendez la prochaine ou " : "Il faut une formule pour publier : "}
+          {e.plan ? "Toutes les offres de la période sont publiées : attendez la prochaine" : "Il faut une formule pour publier : "}
+          {e.plan && packOnSale && (
+            <>
+              {", "}
+              <Link href={PACKS_HREF} className="font-medium underline">
+                ajoutez un pack d&apos;offres
+              </Link>
+            </>
+          )}
+          {e.plan && " ou "}
           <Link href="/espace/abonnement" className="font-medium underline">
             {e.plan ? "changez de formule" : "choisissez-en une"}
           </Link>

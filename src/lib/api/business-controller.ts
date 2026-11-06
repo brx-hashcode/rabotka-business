@@ -4,7 +4,9 @@ import type {
   BusinessStats,
   ContactedProfile,
   MyBusiness,
+  BusinessPacks,
   MySubscription,
+  PackKind,
   OfferDraft,
   OfferDraftInput,
   StatsPeriod,
@@ -87,6 +89,16 @@ class BusinessController extends BusinessBaseController {
     return this.post("/business/me/subscription", { planId, billingPeriod });
   }
 
+  /** The packs on sale and the credits bought, not expired. */
+  getPacks(): Promise<BusinessPacks> {
+    return this.get("/business/me/packs");
+  }
+
+  /** Buys `count` packs of a kind: the token of their payment page. */
+  buyPack(kind: PackKind, count: number): Promise<{ token: string; amount: number }> {
+    return this.post("/business/me/packs", { kind, count });
+  }
+
   /** Starts the next, already paid period today; the running one ends now. */
   startPeriodNow(subscriptionId: string): Promise<SubscriptionPeriod> {
     return this.post(`/business/me/subscription/${encodeURIComponent(subscriptionId)}/start-now`);
@@ -129,10 +141,14 @@ export const getMySubscription = controller.getSubscription.bind(controller);
 export const draftOffer = controller.draftOffer.bind(controller);
 export const subscribeToPlan = controller.subscribe.bind(controller);
 export const startPeriodNow = controller.startPeriodNow.bind(controller);
+export const getMyPacks = controller.getPacks.bind(controller);
+export const buyPack = controller.buyPack.bind(controller);
 
 export const myStatsKey = (days: StatsPeriod) => ["business", "me", "stats", days] as const;
 
 export const mySubscriptionKey = ["business", "me", "subscription"] as const;
+/** Under the subscription's key: whatever refreshes it refreshes the packs too. */
+export const myPacksKey = ["business", "me", "subscription", "packs"] as const;
 
 /** A paper's bytes, same-origin: the proxy adds the session. */
 export function myBusinessDocumentUrl(documentId: string): string {
