@@ -1,90 +1,142 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo } from "react";
+import { ResponsiveTimeRange, type CalendarDatum, type CalendarTooltipProps, type ColorScale } from "@nivo/calendar";
+import { useTheme } from "next-themes";
 
 import type { BusinessStats } from "#/lib/api/types";
-import { cn } from "#/lib/utils";
 import { shortDay } from "../stats-format";
 
 const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? "s" : ""}`;
 
 /**
- * Applications received per day over the period: one series, columns from a
- * zero baseline. Hovering (or focusing) a day shows its applications and the
- * hires decided that day; a table says the same to screen readers.
+ * Sunday first, nivo's own week: its Monday-first one miscounts the columns
+ * of a period starting on a Sunday (one short, the cells overflow).
+ */
+const WEEKDAYS = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
+
+/** Room on the left for the weekday names, and between the days: shared with the date row above. */
+const LEGEND = 40;
+const GAP = 3;
+
+/** The brand's green, from a quiet day to the busiest; an empty day reads as the page. */
+const PALETTE = {
+  light: {
+    empty: "#f1f4f8",
+    steps: ["hsl(142 60% 86%)", "hsl(142 58% 70%)", "hsl(142 62% 54%)", "hsl(142 72% 42%)", "hsl(142 76% 30%)"],
+    text: "#737373",
+  },
+  dark: {
+    empty: "#2a2a2a",
+    steps: ["hsl(142 40% 22%)", "hsl(142 48% 30%)", "hsl(142 58% 38%)", "hsl(142 70% 45%)", "hsl(142 76% 56%)"],
+    text: "#a1a1a1",
+  },
+} as const;
+
+type Day = CalendarDatum & { hires: number };
+
+/** Midnight of an ISO day, in the browser's time: nivo counts days locally. */
+const localDay = (iso: string) => new Date(`${iso}T00:00:00`);
+
+/**
+ * The date over each week's column, as nivo lays them out (a column per
+ * Sunday-first week): the period's first day, then each Sunday after it.
+ * Past 8 columns every other one, so the dates never run into each other.
+ */
+export function weekLabels(firstIso: string, days: number): (string | null)[] {
+  const first = localDay(firstIso);
+  const lead = first.getDay();
+  const columns = Math.ceil((lead + days) / 7);
+  return Array.from({ length: columns }, (_, c) => {
+    if (columns > 8 && c % 2 === 1) return null;
+    const d = new Date(first);
+    if (c > 0) d.setDate(d.getDate() + 7 * c - lead);
+    return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  });
+}
+
+/**
+ * Applications received per day over the period, as a time range: a column
+ * per week (dated above it), a row per weekday, the busier the greener. A day
+ * without any keeps the page's colour. Hovering a day shows its applications
+ * and the hires decided that day; a table says the same to screen readers.
  */
 export function ApplicationsChart({ series }: Readonly<{ series: BusinessStats["series"] }>) {
-  const [active, setActive] = useState<number | null>(null);
+  const { resolvedTheme } = useTheme();
+  const palette = PALETTE[resolvedTheme === "dark" ? "dark" : "light"];
   const max = Math.max(1, ...series.map((d) => d.applications));
-  // A round top for the scale: the gridline reads as a real value.
-  // Even above 2, so the middle line is a whole number too.
-  const top = max <= 2 ? max : Math.ceil(max / 2) * 2;
-  // A top of 1 has no middle line: [0, 1], not [0, 1, 1].
-  const ticks = [...new Set([0, top / 2, top])].filter(Number.isInteger);
-  const day = active === null ? null : series[active];
+
+  const data = useMemo<Day[]>(() => series.map((d) => ({ day: d.date, value: d.applications, hires: d.hires })), [series]);
+  // Zero is « nothing that day », never the palest green: the page's colour, like the days without data.
+  const colorScale = useMemo(() => {
+    const steps = palette.steps;
+    const scale = (value: number) =>
+      value <= 0 ? palette.empty : steps[Math.min(steps.length - 1, Math.floor(((value - 1) / max) * steps.length))];
+    return scale as unknown as ColorScale;
+  }, [palette, max]);
+
+  if (series.length === 0) return null;
+  const from = localDay(series[0].date);
+  // nivo leaves the last day out: up to the next midnight.
+  const to = localDay(series[series.length - 1].date);
+  to.setDate(to.getDate() + 1);
+  const labels = weekLabels(series[0].date, series.length);
 
   return (
-    <div className="space-y-2">
-      <div className="relative flex h-56 gap-3">
-        <div className="flex flex-col-reverse justify-between pb-0.5 text-right text-muted-foreground text-xs tabular-nums">
-          {ticks.map((t) => (
-            <span key={t} className="leading-none">
-              {t}
-            </span>
-          ))}
-        </div>
-
-        <div className="relative flex-1" onMouseLeave={() => setActive(null)}>
-          {ticks.map((t) => (
-            <div
-              key={t}
-              aria-hidden
-              className={cn("absolute inset-x-0 border-t", t === 0 ? "border-foreground/20" : "border-foreground/5 border-dashed")}
-              style={{ bottom: `${(t / top) * 100}%` }}
-            />
-          ))}
-          <div className={cn("absolute inset-0 flex items-end", series.length > 40 ? "gap-px" : "gap-[2px]")}>
-            {series.map((d, i) => (
-              <button
-                key={d.date}
-                type="button"
-                aria-label={`${shortDay(d.date)} : ${plural(d.applications, "candidature")}, ${plural(d.hires, "retenu")}`}
-                onMouseEnter={() => setActive(i)}
-                onFocus={() => setActive(i)}
-                onBlur={() => setActive(null)}
-                // The whole column is the hit target, not just the bar.
-                className="flex h-full min-w-0 flex-1 items-end outline-none"
-              >
-                <span
-                  className={cn(
-                    "w-full rounded-t-[4px] bg-whatsapp-dark transition-opacity",
-                    active !== null && active !== i && "opacity-40",
-                    d.applications === 0 && "opacity-0",
-                  )}
-                  style={{ height: `${(d.applications / top) * 100}%` }}
-                />
-              </button>
-            ))}
-          </div>
-
-          {day && active !== null && (
-            <div
-              role="status"
-              className="pointer-events-none absolute -top-2 z-10 w-max -translate-x-1/2 -translate-y-full rounded-xl bg-popover px-3 py-2 text-popover-foreground text-sm shadow-soft"
-              style={{ left: `clamp(4rem, ${((active + 0.5) / series.length) * 100}%, calc(100% - 4rem))` }}
-            >
-              <p className="font-medium">{shortDay(day.date)}</p>
-              <p className="text-muted-foreground">{plural(day.applications, "candidature")}</p>
-              <p className="text-muted-foreground">{plural(day.hires, "retenu")}</p>
-            </div>
-          )}
-        </div>
+    <div className="space-y-3">
+      {/* Laid out as nivo lays the columns: after the weekday names, one per week, the same gaps. */}
+      <div
+        aria-hidden
+        className="grid text-muted-foreground text-xs tabular-nums"
+        style={{
+          gridTemplateColumns: `repeat(${labels.length}, minmax(0, 1fr))`,
+          columnGap: GAP,
+          paddingLeft: LEGEND + GAP,
+          paddingRight: GAP,
+        }}
+      >
+        {labels.map((label, i) => (
+          <span key={i} className="truncate">
+            {label}
+          </span>
+        ))}
+      </div>
+      <div className="h-52">
+        <ResponsiveTimeRange
+          data={data}
+          from={from}
+          to={to}
+          weekdays={WEEKDAYS}
+          weekdayTicks={[1, 3, 5]}
+          weekdayLegendOffset={LEGEND}
+          // The dates above say when; nivo's month names would say it twice.
+          monthLegend={() => ""}
+          square={false}
+          colorScale={colorScale}
+          emptyColor={palette.empty}
+          daySpacing={GAP}
+          dayRadius={5}
+          dayBorderWidth={0}
+          margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+          theme={{
+            text: { fill: palette.text, fontSize: 12, fontFamily: "inherit" },
+            tooltip: { container: { background: "transparent", boxShadow: "none", padding: 0 } },
+          }}
+          tooltip={DayTooltip}
+        />
       </div>
 
-      <div className="flex justify-between pl-8 text-muted-foreground text-xs">
-        <span>{shortDay(series[0].date)}</span>
-        <span>{shortDay(series[Math.floor(series.length / 2)].date)}</span>
-        <span>{shortDay(series[series.length - 1].date)}</span>
+      <div className="flex items-center justify-between gap-3 text-muted-foreground text-xs">
+        <span>
+          {shortDay(series[0].date)} – {shortDay(series[series.length - 1].date)}
+        </span>
+        <span className="flex items-center gap-1.5" aria-hidden>
+          Moins
+          {[palette.empty, ...palette.steps].map((c) => (
+            <span key={c} className="size-3 rounded-[3px]" style={{ background: c }} />
+          ))}
+          Plus
+        </span>
       </div>
 
       {/* On the wrapper: a table ignores sr-only's 1px height and would stretch the page. */}
@@ -109,6 +161,20 @@ export function ApplicationsChart({ series }: Readonly<{ series: BusinessStats["
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+/** A day's figures, in the dashboard's own popover. */
+function DayTooltip(props: CalendarTooltipProps) {
+  const { day, value } = props;
+  const applications = Number(value) || 0;
+  const hires = (props as unknown as { hires?: number }).hires ?? 0;
+  return (
+    <div className="w-max rounded-xl bg-popover px-3 py-2 text-popover-foreground text-sm shadow-soft">
+      <p className="font-medium">{shortDay(day)}</p>
+      <p className="text-muted-foreground">{plural(applications, "candidature")}</p>
+      <p className="text-muted-foreground">{plural(hires, "retenu")}</p>
     </div>
   );
 }
