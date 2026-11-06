@@ -21,9 +21,8 @@ import {
 import { PreviewSheet } from "#/components/preview-sheet";
 import { appConfig } from "#/config";
 import { copyText } from "#/lib/clipboard";
-import type { EmploymentType } from "#/lib/api/offer-controller";
 import { offerShareLinks, offerShareUrl } from "../share-url";
-import { LinkedinPostDialog } from "./linkedin-post-dialog";
+import { LinkedinPostDialog, type LinkedinOffer } from "./linkedin-post-dialog";
 
 const ITEM = "cursor-pointer gap-2.5 rounded-xl px-3 py-2.5 text-sm focus:bg-page";
 
@@ -31,21 +30,8 @@ const ITEM = "cursor-pointer gap-2.5 rounded-xl px-3 py-2.5 text-sm focus:bg-pag
  * Where the offer's public page goes, for anyone not on Rabotka. Each network's
  * link says where it was shared, so the candidates it brings are counted there.
  */
-export function ShareOfferMenu({
-  offerId,
-  slug,
-  reference,
-  title,
-  employmentType,
-  city,
-}: Readonly<{
-  offerId: string;
-  slug: string;
-  reference: string;
-  title: string;
-  employmentType: EmploymentType;
-  city: string | null;
-}>) {
+export function ShareOfferMenu({ slug, offer }: Readonly<{ slug: string; offer: LinkedinOffer }>) {
+  const { id: offerId, reference, title } = offer;
   const url = (source?: string) => offerShareUrl(window.location.origin, slug, reference, source);
   const links = () => offerShareLinks(window.location.origin, slug, reference, title);
   const open = (href: string) => window.open(href, "_blank", "noopener,noreferrer");
@@ -115,7 +101,7 @@ export function ShareOfferMenu({
         open={linkedinOpen}
         onOpenChange={setLinkedinOpen}
         slug={slug}
-        offer={{ id: offerId, title, reference, employmentType, city }}
+        offer={offer}
       />
       {/* Read, downloaded and printed from the drawer, like the dashboard's report. */}
       <PreviewSheet
