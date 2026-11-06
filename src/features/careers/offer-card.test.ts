@@ -12,21 +12,19 @@ const offer = {
 };
 
 describe("offerCardFacts", () => {
-  it("says where, what and how much, then until when", () => {
+  it("says where, what and how much", () => {
     expect(offerCardFacts(offer)).toEqual({
       chips: [
         { icon: "place", text: "Brazzaville" },
         { icon: "type", text: "Mission" },
         { icon: "pay", text: "1 000 FCFA / heure" },
       ],
-      closes: "Jusqu'au 30 nov.",
     });
   });
 
   it("leaves out what the offer does not say", () => {
-    const facts = offerCardFacts({ ...offer, city: null, amount: null, closesAt: null });
+    const facts = offerCardFacts({ ...offer, city: null, amount: null });
     expect(facts.chips).toEqual([{ icon: "type", text: "Mission" }]);
-    expect(facts.closes).toBeNull();
     expect(offerCardFacts({ ...offer, isRemote: true }).chips[0].text).toBe("Télétravail");
   });
 

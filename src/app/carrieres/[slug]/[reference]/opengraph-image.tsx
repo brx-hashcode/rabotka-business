@@ -12,7 +12,6 @@ export const contentType = "image/png";
 const INK = "#0F2414";
 const LIME = "#CBFFA5";
 const CHIP = "#EEF6E8";
-const SOFT = "#5B6B5E";
 
 /** Tabler icons (MIT), drawn inline: the card has no other images to load. */
 const ICONS = {
@@ -49,7 +48,7 @@ async function offerOf(slug: string, reference: string) {
 /**
  * A shared offer's preview, as LinkedIn, Facebook and WhatsApp show it: light
  * type on a white page, who hires, the job in large type, where / what / how much, and
- * a real « Postuler » button. Everything is centred, so WhatsApp's square
+ * a « Postuler » button. Everything is centred, so WhatsApp's square
  * crop of the middle still shows the logo, the title and the button. The
  * site's card when the offer is gone.
  */
@@ -58,9 +57,7 @@ export default async function OfferImage({ params }: { params: Promise<{ slug: s
   const asset = (path: string) => readFile(join(process.cwd(), "public", path));
   const [bold, light, page] = await Promise.all([asset("fonts/Gilroy-ExtraBold.otf"), asset("fonts/Gilroy-Light.otf"), offerOf(slug, reference)]);
   const title = page?.offer.title ?? "Offres d'emploi";
-  const facts = page ? offerCardFacts(page.offer) : { chips: [], closes: null };
-  // Business material names this site (www.rabotka.work is the workers').
-  const site = "business.rabotka.work";
+  const facts = page ? offerCardFacts(page.offer) : { chips: [] };
 
   return new ImageResponse(
     <div
@@ -121,18 +118,12 @@ export default async function OfferImage({ params }: { params: Promise<{ slug: s
             ))}
           </div>
         )}
-        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-          <span
-            style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 30, fontWeight: 300, padding: "18px 36px", borderRadius: 999, background: INK, color: "#FFFFFF" }}
-          >
-            Postuler
-            <Icon name="arrow" size={30} color={LIME} />
-          </span>
-          <span style={{ display: "flex", flexDirection: "column", fontSize: 24, color: SOFT, fontWeight: 300 }}>
-            {facts.closes && <span style={{ fontWeight: 300, color: INK }}>{facts.closes}</span>}
-            <span>{site}</span>
-          </span>
-        </div>
+        <span
+          style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 30, fontWeight: 300, padding: "18px 40px", borderRadius: 999, background: INK, color: "#FFFFFF" }}
+        >
+          Postuler
+          <Icon name="arrow" size={30} color={LIME} />
+        </span>
       </div>
     </div>,
     {
