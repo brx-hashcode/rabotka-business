@@ -2,6 +2,7 @@
 
 import { de } from "#/features/subscription/french";
 import { useState } from "react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -29,6 +30,7 @@ import { cn } from "#/lib/utils";
 import { offersPerPeriodLabel, offersUsed } from "../offers-quota";
 import { teamLine } from "../team-places";
 import { packCredits, planShare } from "../packs";
+import { usePacks } from "../use-packs";
 import { PacksSection } from "./packs-section";
 
 type Period = "MONTHLY" | "ANNUAL";
@@ -44,20 +46,57 @@ const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
 const date = (iso: string) =>
   new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
+const TABS = [
+  { key: "formule", label: "Formule" },
+  { key: "packs", label: "Packs" },
+] as const;
+
 /**
  * « Abonnement »: the plan the organisation has now, what it used, and the
  * plans it can choose (monthly or yearly). Choosing one opens the dashboard's
  * pay page; the period starts when the payment succeeds — after the running
- * one when renewing early, so no day is lost.
+ * one when renewing early, so no day is lost. The packs are a tab of their
+ * own (?onglet=packs), so neither makes the page long; the tab only shows
+ * with a plan running and packs on sale or bought.
  */
 export function SubscriptionPage() {
   const { data, isLoading, error } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
+  const packs = usePacks();
+  const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS.map((t) => t.key)).withDefault("formule"));
+  const hasPacks =
+    !!data?.entitlements.plan && ((packs.data?.onSale.length ?? 0) > 0 || (packs.data?.credits.length ?? 0) > 0);
+  const onPacks = hasPacks && tab === "packs";
 
   return (
     <div className="w-full space-y-8 pt-2">
-      <div className="space-y-1.5">
-        <h1 className="font-semibold text-3xl tracking-tight">Abonnement</h1>
-        <p className="text-muted-foreground">Votre formule Rabotka Business, son utilisation et son renouvellement.</p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="space-y-1.5">
+          <h1 className="font-semibold text-3xl tracking-tight">Abonnement</h1>
+          <p className="text-muted-foreground">
+            {onPacks
+              ? "Ajoutez-en à votre formule sans en changer. Valables 12 mois, ils servent une fois ceux de votre formule utilisés."
+              : "Votre formule Rabotka Business, son utilisation et son renouvellement."}
+          </p>
+        </div>
+        {hasPacks && (
+          <div role="tablist" aria-label="Abonnement" className="inline-flex rounded-full bg-card p-1">
+            {TABS.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                role="tab"
+                aria-selected={(onPacks ? "packs" : "formule") === t.key}
+                onClick={() => void setTab(t.key === "formule" ? null : t.key)}
+                className={cn(
+                  "h-10 rounded-full px-5 font-medium text-sm transition-colors",
+                  (onPacks ? "packs" : "formule") === t.key ? "bg-ink text-white" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {isLoading ? (
@@ -87,9 +126,14 @@ export function SubscriptionPage() {
         </p>
       ) : (
         <>
-          <CurrentPlan data={data} />
-          <PacksSection data={data} />
-          <PlanChooser data={data} />
+          {onPacks ? (
+            <PacksSection data={data} />
+          ) : (
+            <>
+              <CurrentPlan data={data} />
+              <PlanChooser data={data} />
+            </>
+          )}
         </>
       )}
     </div>
