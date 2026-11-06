@@ -46,7 +46,7 @@ export function descriptionExcerpt(text: string, max = 380): string {
  * essentials in one glance, the start of the description, and the link to
  * apply — the picture above carries no link of its own.
  */
-export function defaultLinkedinText(o: LinkedinOfferText): string {
+export function defaultLinkedinText(o: LinkedinOfferText, { hashtags = true }: { hashtags?: boolean } = {}): string {
   const place = o.isRemote ? "Télétravail" : o.city?.trim();
   const facts = [
     place ? `📍 ${place}` : null,
@@ -65,7 +65,7 @@ export function defaultLinkedinText(o: LinkedinOfferText): string {
     [facts.join(" · "), when].filter(Boolean).join("\n"),
     o.description.trim() ? descriptionExcerpt(o.description) : null,
     `👉 Postulez en ligne, sans créer de compte : ${o.url}`,
-    tags.join(" "),
+    hashtags ? tags.join(" ") : null,
   ]
     .filter(Boolean)
     .join("\n\n");
