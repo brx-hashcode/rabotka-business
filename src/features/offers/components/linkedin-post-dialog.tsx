@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconBrandLinkedin, IconCheck, IconExternalLink, IconLoader2 } from "@tabler/icons-react";
+import { IconArrowBackUp, IconBrandLinkedin, IconCheck, IconExternalLink, IconLoader2, IconPhotoEdit } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
@@ -58,6 +58,21 @@ export function LinkedinPostDialog({
   const state = linkedinDialogState(info.data, posts.data);
   const [text, setText] = useState(() => defaultLinkedinText(offer.title, offer.employmentType, offer.city));
   const { connect, connecting } = useLinkedinConnect();
+  // The card's picture: the offer's share image, or one of the recruiter's own.
+  const [ownImage, setOwnImage, ownPreview] = usePickedImage();
+  const imageInput = useRef<HTMLInputElement>(null);
+  const pickImage = (file: File | undefined) => {
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      toast.error("Choisissez une image JPEG, PNG ou WEBP.");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("Cette image dépasse 8 Mo.");
+      return;
+    }
+    setOwnImage(file);
+  };
 
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   const shareBox = offerShareLinks(origin, slug, offer.reference, offer.title).linkedin;
@@ -65,8 +80,9 @@ export function LinkedinPostDialog({
   const failed = posts.data?.[0]?.status === "FAILED" ? posts.data[0] : null;
 
   const publish = useMutation({
-    mutationFn: () => postOnLinkedin(offer.id, text, state === "posted"),
+    mutationFn: () => postOnLinkedin(offer.id, text, state === "posted", ownImage),
     onSuccess: () => {
+      setOwnImage(null);
       toast.success("Publication en cours : elle sera sur LinkedIn dans quelques secondes.");
       void queryClient.invalidateQueries({ queryKey: linkedinPostsKey(offer.id) });
     },
@@ -164,14 +180,47 @@ export function LinkedinPostDialog({
                     aria-label="Texte de la publication"
                     className="rounded-2xl border-0 bg-page px-4 py-3 text-[15px] shadow-none"
                   />
-                  {/* The card LinkedIn shows under the text: the offer's share picture and title. */}
+                  {/* The card LinkedIn shows under the text: the offer's share picture (or the
+                      recruiter's own) and title. */}
                   <div className="overflow-hidden rounded-2xl bg-page">
-                    {/* eslint-disable-next-line @next/next/no-img-element -- the careers page's own OG image */}
-                    <img
-                      src={`${offerShareUrl(origin, slug, offer.reference)}/opengraph-image`}
-                      alt=""
-                      className="aspect-[1200/630] w-full object-cover"
-                    />
+                    <div className="group relative">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- a local preview or the careers page's own OG image */}
+                      <img
+                        src={ownPreview ?? `${offerShareUrl(origin, slug, offer.reference)}/opengraph-image`}
+                        alt=""
+                        className="aspect-[1200/630] w-full object-cover"
+                      />
+                      <div className="absolute right-3 bottom-3 flex gap-2">
+                        {ownImage && (
+                          <button
+                            type="button"
+                            onClick={() => setOwnImage(null)}
+                            className="inline-flex h-9 items-center gap-1.5 rounded-full bg-card/95 px-3 font-medium text-xs shadow-soft hover:bg-card"
+                          >
+                            <IconArrowBackUp className="size-4" />
+                            Image de l&apos;offre
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => imageInput.current?.click()}
+                          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-card/95 px-3 font-medium text-xs shadow-soft hover:bg-card"
+                        >
+                          <IconPhotoEdit className="size-4" />
+                          {ownImage ? "Changer" : "Mettre ma propre image"}
+                        </button>
+                      </div>
+                      <input
+                        ref={imageInput}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={(e) => {
+                          pickImage(e.target.files?.[0]);
+                          e.target.value = "";
+                        }}
+                      />
+                    </div>
                     <div className="px-4 py-3">
                       <p className="truncate font-medium text-sm">{offer.title}</p>
                       <p className="text-muted-foreground text-xs">{new URL(origin || "https://business.rabotka.work").host}</p>
@@ -203,6 +252,25 @@ export function LinkedinPostDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+/**
+ * A picked picture and its local preview address, made when it is picked and
+ * freed when it is replaced or the dialog goes.
+ */
+function usePickedImage(): [File | null, (file: File | null) => void, string | null] {
+  const [picked, setPicked] = useState<{ file: File; url: string } | null>(null);
+  const current = useRef<string | null>(null);
+  useEffect(() => () => {
+    if (current.current) URL.revokeObjectURL(current.current);
+  }, []);
+  const set = (file: File | null) => {
+    if (current.current) URL.revokeObjectURL(current.current);
+    const url = file ? URL.createObjectURL(file) : null;
+    current.current = url;
+    setPicked(file && url ? { file, url } : null);
+  };
+  return [picked?.file ?? null, set, picked?.url ?? null];
 }
 
 /** LinkedIn's consent screen in a popup; the callback page tells us how it went. */
