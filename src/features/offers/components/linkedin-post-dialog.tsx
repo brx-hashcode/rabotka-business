@@ -73,6 +73,11 @@ export function LinkedinPostDialog({
 
   const shareBox = offerShareLinks(origin, slug, offer.reference, offer.title).linkedin;
   const published = posts.data?.find((p) => p.status === "PUBLISHED");
+  // The confirmation shows what went out (the newest post's own picture, or
+  // the offer's); the large preview shows what « Publier » would send.
+  const ogImage = `${offerShareUrl(origin, slug, offer.reference)}/opengraph-image`;
+  const postedImage = posts.data?.[0]?.imageUrl ?? null;
+  const previewSrc = ownPreview ?? ogImage;
   const failed = posts.data?.[0]?.status === "FAILED" ? posts.data[0] : null;
 
   const publish = useMutation({
@@ -156,17 +161,24 @@ export function LinkedinPostDialog({
               ) : (
                 <>
                   {published && (
-                    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl bg-chip-green px-4 py-3 text-sm">
-                      <IconCheck className="size-4 text-whatsapp-dark" />
-                      Publiée sur LinkedIn
-                      {published.publishedAt ? ` le ${new Date(published.publishedAt).toLocaleDateString("fr", { day: "numeric", month: "long" })}` : ""}
-                      {published.url && (
-                        <a href={published.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium underline underline-offset-2">
-                          Voir la publication
-                          <IconExternalLink className="size-3.5" />
-                        </a>
-                      )}
-                    </p>
+                    // What went out: the picture it carried (its own, or the offer's) and the link.
+                    <div className="flex items-center gap-3 rounded-2xl bg-chip-green p-3 pr-4">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- LinkedIn's address for the posted picture, or the OG image */}
+                      <img src={postedImage ?? ogImage} alt="" className="aspect-[1200/630] w-28 shrink-0 rounded-lg object-cover" />
+                      <div className="min-w-0 space-y-0.5 text-sm">
+                        <p className="flex items-center gap-1.5 font-medium">
+                          <IconCheck className="size-4 shrink-0 text-whatsapp-dark" />
+                          Publiée sur LinkedIn
+                          {published.publishedAt ? ` le ${new Date(published.publishedAt).toLocaleDateString("fr", { day: "numeric", month: "long" })}` : ""}
+                        </p>
+                        {published.url && (
+                          <a href={published.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 underline underline-offset-2">
+                            Voir la publication
+                            <IconExternalLink className="size-3.5" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
                   )}
                   {failed && <p className="rounded-2xl bg-chip-amber px-4 py-3 text-chip-amber-foreground text-sm">La dernière publication n&apos;a pas abouti : {failed.error ?? "réessayez"}.</p>}
                   <Textarea
@@ -179,44 +191,43 @@ export function LinkedinPostDialog({
                   {/* The picture LinkedIn shows large under the text: the offer's share image or
                       the recruiter's own. The text carries the link to apply. */}
                   <div className="overflow-hidden rounded-2xl bg-page">
-                    <div className="group relative">
-                      {/* eslint-disable-next-line @next/next/no-img-element -- a local preview or the careers page's own OG image */}
-                      <img
-                        src={ownPreview ?? `${offerShareUrl(origin, slug, offer.reference)}/opengraph-image`}
-                        alt=""
-                        className="aspect-[1200/630] w-full object-cover"
-                      />
-                      <div className="absolute right-3 bottom-3 flex gap-2">
-                        {ownImage && (
-                          <button
-                            type="button"
-                            onClick={() => setOwnImage(null)}
-                            className="inline-flex h-9 items-center gap-1.5 rounded-full bg-card/95 px-3 font-medium text-xs shadow-soft hover:bg-card"
-                          >
-                            <IconArrowBackUp className="size-4" />
-                            Image de l&apos;offre
-                          </button>
-                        )}
+                    {/* eslint-disable-next-line @next/next/no-img-element -- a local preview, the posted picture or the careers page's own OG image */}
+                    <img src={previewSrc} alt="" className="aspect-[1200/630] w-full object-cover" />
+                    <p className="px-4 pt-2.5 text-muted-foreground text-xs">
+                      {ownImage ? "Votre image, publiée en grand avec le texte." : "L'image de l'offre, publiée en grand avec le texte."}
+                    </p>
+                    {/* Changing the picture is the one thing to see here: a real button. */}
+                    <div className="flex flex-wrap items-center gap-2 p-3">
+                      <button
+                        type="button"
+                        onClick={() => imageInput.current?.click()}
+                        className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-ink px-5 font-medium text-sm text-white hover:bg-ink/90"
+                      >
+                        <IconPhotoEdit className="size-[18px]" />
+                        {ownImage ? "Changer d'image" : "Mettre ma propre image"}
+                      </button>
+                      {ownImage && (
                         <button
                           type="button"
-                          onClick={() => imageInput.current?.click()}
-                          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-card/95 px-3 font-medium text-xs shadow-soft hover:bg-card"
+                          onClick={() => setOwnImage(null)}
+                          className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-card px-5 font-medium text-sm hover:bg-card/70"
                         >
-                          <IconPhotoEdit className="size-4" />
-                          {ownImage ? "Changer" : "Mettre ma propre image"}
+                          <IconArrowBackUp className="size-[18px]" />
+                          Image de l&apos;offre
                         </button>
-                      </div>
-                      <input
-                        ref={imageInput}
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp"
-                        className="hidden"
-                        onChange={(e) => {
-                          pickImage(e.target.files?.[0]);
-                          e.target.value = "";
-                        }}
-                      />
+                      )}
+                      <p className="w-full text-center text-muted-foreground text-xs">JPEG, PNG ou WEBP · 8 Mo au plus · idéalement 1200 × 630</p>
                     </div>
+                    <input
+                      ref={imageInput}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        pickImage(e.target.files?.[0]);
+                        e.target.value = "";
+                      }}
+                    />
                   </div>
                   <button
                     type="button"

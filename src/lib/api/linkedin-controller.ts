@@ -15,6 +15,8 @@ export type LinkedinPost = {
   error: string | null;
   createdAt: string;
   publishedAt: string | null;
+  /** The newest post's own picture on LinkedIn; null: it carried the offer's share image. */
+  imageUrl: string | null;
 };
 
 /** `business/me/linkedin`: connect, disconnect, post an offer on it. */
