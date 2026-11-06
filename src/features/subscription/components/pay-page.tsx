@@ -94,7 +94,9 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
   const [sentAt, setSentAt] = useState(0);
   const [phoneLabel, setPhoneLabel] = useState("");
   const [startsAt, setStartsAt] = useState<string | null>(null);
-  const paidBefore = useRef<number | null>(null);
+  // The paid periods known before paying, by id: a new one is the payment's.
+  // Counted, they stopped changing once the history (24 rows) was full.
+  const paidBefore = useRef<Set<string>>(new Set());
   const polls = useRef(0);
 
   const dial = selected?.dialCode ?? current?.dialCode ?? "242";
@@ -125,7 +127,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
     }
     setError(null);
     setSending(true);
-    paidBefore.current = (subscription.data?.history ?? []).filter((p) => p.paid).length;
+    paidBefore.current = new Set((subscription.data?.history ?? []).filter((p) => p.paid).map((p) => p.id));
     try {
       await initiatePayment(token, {
         phone: number.number,
@@ -164,8 +166,8 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
         return;
       }
       const sub = await queryClient.fetchQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription, staleTime: 0 });
-      const paidNow = sub.history.filter((p) => p.paid).length;
-      if (paidNow > (paidBefore.current ?? 0)) {
+      // A new period starts now or after the others: always among the newest 24.
+      if (sub.history.some((p) => p.paid && !paidBefore.current.has(p.id))) {
         // A lower plan or a renewal is queued: say when it starts, not « now ».
         const queued = sub.upcoming.find((p) => p.planName.toLowerCase() === what?.planName.toLowerCase());
         setStartsAt(queued?.startsAt ?? null);

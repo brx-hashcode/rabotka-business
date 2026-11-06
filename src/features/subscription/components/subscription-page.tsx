@@ -412,7 +412,9 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
           const change = !currentPlan || isCurrent ? null : plan.monthlyPriceFcfa > currentPlan.monthlyPriceFcfa ? "up" : "down";
           // When a queued period starts: after the running one, or after those already paid.
           const after = data.upcoming.length > 0 ? "après les périodes déjà payées" : "à la fin de la période en cours";
-          const when = isCurrent
+          const when = data.entitlements.status === "TRIAL"
+            ? "Démarre dès le paiement : votre essai gratuit s'arrête alors."
+            : isCurrent
             ? lastEnd && `La nouvelle période commence le ${date(lastEnd)}, ${after}.`
             : change === "up"
               ? `Démarre aujourd'hui : les jours restants ${de(currentPlan?.name ?? "")} sont convertis en jours ${de(plan.name)}.`
