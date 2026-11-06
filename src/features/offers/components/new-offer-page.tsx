@@ -29,7 +29,11 @@ export function NewOfferPage() {
   // Posted on the recruiter's LinkedIn as soon as it is online: only when the
   // offer will be on the careers page and their LinkedIn is connected.
   const canPostOnLinkedin =
-    !!business?.publicSlug && business.verificationStatus === "VERIFIED" && !!linkedin?.account && !linkedin.account.expired;
+    !!business?.publicSlug &&
+    business.verificationStatus === "VERIFIED" &&
+    linkedin?.included !== false &&
+    !!linkedin?.account &&
+    !linkedin.account.expired;
   const [alsoLinkedin, setAlsoLinkedin] = useState(true);
   const categories = useQuery({ queryKey: ["job-categories"], queryFn: getJobCategories, staleTime: Infinity });
   const create = useMutation({

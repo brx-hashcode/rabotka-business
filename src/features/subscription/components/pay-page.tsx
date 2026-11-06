@@ -50,6 +50,7 @@ function planLines(p: BusinessPlan): string[] {
     ...(cvLine(p) ? [cvLine(p) as string] : []),
     ...(p.includesPreselection ? ["Recherche de profils"] : []),
     ...(p.priorityVisibility ? ["Offres affichées en premier"] : []),
+    ...(p.linkedinPosting ? ["Publication sur LinkedIn"] : []),
   ];
 }
 
