@@ -32,6 +32,7 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import { listOffers, offersKey } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
 import { kindFromName, pickKey, type MailPick } from "../mail-picks";
+import { refusedLines } from "../refused-files";
 import { CHUNK_MAX_FILES, chunkCvBatch, mailRefs, sendRest } from "../send-cv-batch";
 import { CvLocked, CvUsedUp, fileSize } from "./cv-bits";
 import { MailImport } from "./mail-import";
@@ -279,9 +280,10 @@ export function NewCvScreeningPage() {
                 <div className="flex gap-3 rounded-2xl bg-chip-amber px-4 py-3 text-chip-amber-foreground text-sm">
                   <IconAlertTriangle className="mt-0.5 size-4 shrink-0" />
                   <ul className="space-y-1">
-                    {refused.map((r) => (
-                      <li key={r.name}>
-                        <span className="font-medium">{r.name}</span> non ajouté : {r.reason}.
+                    {refusedLines(refused).map((line) => (
+                      <li key={line.key}>
+                        {line.name ? <span className="font-medium">{line.name}</span> : null}
+                        {line.text}
                       </li>
                     ))}
                   </ul>
@@ -368,6 +370,9 @@ function Step({ icon: Icon, children }: Readonly<{ icon: typeof IconClock; child
  * to a bar (more can still be dropped there) and the files show as tiles,
  * with how many more the analysis can take.
  */
+/** Files listed before « Afficher les N autres ». */
+const LIST_SHOWN = 12;
+
 function CvDrop({
   items,
   room,
@@ -392,6 +397,9 @@ function CvDrop({
   onClear: () => void;
 }>) {
   const full = items.length >= room;
+  // Up to 100 CVs: the list folds past a dozen.
+  const [unfolded, setUnfolded] = useState(false);
+  const shown = unfolded ? items : items.slice(0, LIST_SHOWN);
   const dropProps = {
     onDragOver: (ev: React.DragEvent) => {
       ev.preventDefault();
@@ -466,7 +474,7 @@ function CvDrop({
       </div>
 
       <ul className="grid gap-2.5 sm:grid-cols-2">
-        {items.map((file) => {
+        {shown.map((file) => {
           const k = KIND[file.kind];
           return (
             <li key={file.key} className="group flex min-w-0 items-center gap-3 rounded-2xl bg-page p-3">
@@ -496,6 +504,15 @@ function CvDrop({
           );
         })}
       </ul>
+      {items.length > LIST_SHOWN && (
+        <button
+          type="button"
+          onClick={() => setUnfolded(!unfolded)}
+          className="font-medium text-muted-foreground text-sm hover:text-foreground"
+        >
+          {unfolded ? "Réduire la liste" : `Afficher les ${items.length - LIST_SHOWN} autres`}
+        </button>
+      )}
 
       {!full && (
         <button

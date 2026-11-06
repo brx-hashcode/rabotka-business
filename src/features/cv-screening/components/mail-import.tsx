@@ -459,11 +459,18 @@ function MailCvSheet({
                   </span>{" "}
                   <span className="text-muted-foreground">CV choisis</span>
                 </p>
-                <div className="flex gap-1" aria-hidden>
-                  {Array.from({ length: total }, (_, i) => (
-                    <span key={i} className={cn("h-1.5 flex-1 rounded-full", i < chosen.length ? "bg-whatsapp-dark" : "bg-page")} />
-                  ))}
-                </div>
+                {/* One segment per CV while it reads; a single bar for a large analysis. */}
+                {total <= 10 ? (
+                  <div className="flex gap-1" aria-hidden>
+                    {Array.from({ length: total }, (_, i) => (
+                      <span key={i} className={cn("h-1.5 flex-1 rounded-full", i < chosen.length ? "bg-whatsapp-dark" : "bg-page")} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-1.5 overflow-hidden rounded-full bg-page" aria-hidden>
+                    <div className="h-full rounded-full bg-whatsapp-dark transition-[width]" style={{ width: `${Math.min(100, (chosen.length / total) * 100)}%` }} />
+                  </div>
+                )}
               </div>
               <button
                 type="button"
