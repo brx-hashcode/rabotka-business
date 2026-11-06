@@ -10,9 +10,7 @@ import {
   IconBrandWhatsapp,
   IconCheck,
   IconFileText,
-  IconRosetteDiscountCheck,
   IconUpload,
-  IconUserCircle,
   IconX,
 } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
@@ -107,15 +105,16 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
             </Link>
           </div>
         ) : send.isSuccess ? (
-          <div className="space-y-5">
-            <div className="flex gap-3 rounded-2xl bg-brand-lime p-5 text-[#0f2414]">
-              <IconCheck className="mt-0.5 size-6 shrink-0" />
-              <div className="space-y-1">
-                <h1 className="font-semibold text-lg">Candidature envoyée</h1>
-                <p className="text-[15px]">
-                  {page.company.name} a bien reçu votre dossier. Un e-mail de confirmation vous a été envoyé.
-                </p>
-              </div>
+          // Flat, full width: on a phone, boxes inside the card squeezed the text.
+          <div className="space-y-8">
+            <div className="space-y-3">
+              <span className="flex size-12 items-center justify-center rounded-full bg-brand-lime text-[#0f2414]">
+                <IconCheck className="size-6" stroke={2.5} />
+              </span>
+              <h1 className="font-semibold text-2xl tracking-tight">Candidature envoyée</h1>
+              <p className="text-[15px] text-foreground/80 leading-relaxed">
+                {page.company.name} a bien reçu votre dossier. Un e-mail de confirmation vous a été envoyé.
+              </p>
             </div>
             <JoinRabotka />
             <Link href={`/carrieres/${slug}`} className="inline-block font-medium text-sm underline underline-offset-2">
@@ -336,31 +335,27 @@ function QuestionField({
  */
 function JoinRabotka() {
   const steps = [
-    { icon: IconBrandWhatsapp, text: "Écrivez à Rabotka sur WhatsApp : votre compte se crée en quelques messages." },
-    { icon: IconUserCircle, text: "Complétez votre profil : vos métiers, votre expérience, votre ville." },
-    { icon: IconRosetteDiscountCheck, text: "Faites valider votre profil : les recruteurs vous font davantage confiance." },
+    "Écrivez à Rabotka sur WhatsApp : votre compte se crée en quelques messages.",
+    "Complétez votre profil : vos métiers, votre expérience, votre ville.",
+    "Faites valider votre profil : les recruteurs vous font davantage confiance.",
   ];
   return (
-    <section className="space-y-5 rounded-2xl bg-page p-5 sm:p-6">
-      <div className="flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-card text-whatsapp-dark">
-          <IconBellRinging className="size-5" />
-        </span>
-        <div className="space-y-1">
-          <h2 className="font-semibold">Ne manquez plus les prochaines offres</h2>
-          <p className="text-[15px] text-muted-foreground">
-            Créez votre compte Rabotka et faites valider votre profil : les offres qui vous correspondent arrivent sur votre téléphone, et
-            les recruteurs peuvent vous trouver.
-          </p>
-        </div>
-      </div>
-      <ol className="space-y-3">
-        {steps.map((s, i) => (
-          <li key={s.text} className="flex items-start gap-3 text-sm">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-card font-semibold text-xs tabular-nums">
+    <section className="space-y-4">
+      <h2 className="flex items-center gap-2 font-semibold text-lg">
+        <IconBellRinging className="size-5 shrink-0 text-whatsapp-dark" />
+        Ne manquez plus les prochaines offres
+      </h2>
+      <p className="text-[15px] text-foreground/80 leading-relaxed">
+        Créez votre compte Rabotka et faites valider votre profil : les offres qui vous correspondent arrivent sur votre téléphone, et les
+        recruteurs peuvent vous trouver.
+      </p>
+      <ol className="space-y-2.5">
+        {steps.map((text, i) => (
+          <li key={text} className="flex items-start gap-3 text-[15px] leading-relaxed">
+            <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-lime font-semibold text-[#0f2414] text-xs tabular-nums">
               {i + 1}
             </span>
-            <span className="pt-1">{s.text}</span>
+            <span>{text}</span>
           </li>
         ))}
       </ol>
@@ -368,12 +363,12 @@ function JoinRabotka() {
         href={appConfig.workerSignupUrl}
         target="_blank"
         rel="noreferrer"
-        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#25d366] px-6 font-medium text-[#0b3d20] hover:bg-[#1ebe5b] sm:w-auto"
+        className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#25d366] px-6 font-medium text-[#0b3d20] hover:bg-[#1ebe5b] sm:w-auto"
       >
-        <IconBrandWhatsapp className="size-5" />
-        Créer mon compte sur WhatsApp
+        <IconBrandWhatsapp className="size-5 shrink-0" />
+        Créer mon compte
       </a>
-      <p className="text-muted-foreground text-xs">Gratuit · sans application à installer</p>
+      <p className="text-muted-foreground text-xs">Sur WhatsApp · gratuit · sans application à installer</p>
     </section>
   );
 }
