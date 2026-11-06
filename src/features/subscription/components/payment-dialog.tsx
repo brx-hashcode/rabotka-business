@@ -30,6 +30,7 @@ export function PaymentDialog({
   planName,
   startsAt,
   approvedText,
+  failureText,
   onClose,
   onResend,
 }: Readonly<{
@@ -44,6 +45,8 @@ export function PaymentDialog({
   startsAt?: string | null;
   /** What the payment did, when not a plan's (a pack). */
   approvedText?: string;
+  /** Why the operator refused, when it said (« Solde mobile money insuffisant… »). */
+  failureText?: string | null;
   onClose: () => void;
   onResend: () => void;
 }>) {
@@ -142,7 +145,9 @@ export function PaymentDialog({
             text={
               phase === "expired"
                 ? "Elle n'a pas été validée à temps. Aucun montant n'a été prélevé."
-                : "Aucun montant n'a été prélevé. Les causes les plus fréquentes : solde insuffisant, code secret erroné, ou demande refusée sur le téléphone."
+                : failureText
+                  ? `${failureText} Aucun montant n'a été prélevé.`
+                  : "Aucun montant n'a été prélevé. Les causes les plus fréquentes : solde insuffisant, code secret erroné, ou demande refusée sur le téléphone."
             }
           >
             <button type="button" onClick={onClose} className="h-11 flex-1 rounded-full bg-page font-medium text-sm hover:bg-page/70">
