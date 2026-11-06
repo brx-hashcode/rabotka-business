@@ -28,6 +28,8 @@ import type { BusinessPlan, MySubscription, SubscriptionPeriod, SubscriptionStat
 import { cn } from "#/lib/utils";
 import { offersPerPeriodLabel, offersUsed } from "../offers-quota";
 import { teamLine } from "../team-places";
+import { packCredits, planShare } from "../packs";
+import { PacksSection } from "./packs-section";
 
 type Period = "MONTHLY" | "ANNUAL";
 
@@ -86,6 +88,7 @@ export function SubscriptionPage() {
       ) : (
         <>
           <CurrentPlan data={data} />
+          <PacksSection data={data} />
           <PlanChooser data={data} />
         </>
       )}
@@ -136,23 +139,36 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
           label="Contacts inclus"
           used={e.unlocksUsed}
           limit={e.unlocksQuota}
+          packs={packCredits(e, "CONTACT")}
           hint={
             e.unlocksRemaining === 0
               ? "Tous vos contacts inclus sont utilisés : les suivants sont payants."
               : renews
           }
         />
-        <Meter icon={IconFileText} label="Offres publiées" used={offersUsed(e)} limit={e.activeOffersLimit} hint={renews} />
+        <Meter
+          icon={IconFileText}
+          label="Offres publiées"
+          used={offersUsed(e)}
+          limit={e.activeOffersLimit}
+          packs={packCredits(e, "OFFER")}
+          hint={renews}
+        />
         {e.cvQuota !== 0 && (
-          <Meter icon={IconFileSearch} label="CV inclus" used={e.cvUsed} limit={e.cvQuota} hint={renews} />
+          <Meter icon={IconFileSearch} label="CV inclus" used={e.cvUsed} limit={e.cvQuota} packs={packCredits(e, "CV")} hint={renews} />
         )}
         {/* Absent from a backend older than AI writing. */}
         {e.offerDraftsQuota !== undefined && e.offerDraftsQuota !== 0 && (
           <Meter
             icon={IconWand}
             label="Rédactions IA"
-            used={e.offerDraftsQuota === null ? 0 : e.offerDraftsQuota - (e.offerDraftsRemaining ?? 0)}
+            used={
+              e.offerDraftsQuota === null
+                ? 0
+                : e.offerDraftsQuota - (planShare(e.offerDraftsRemaining, packCredits(e, "OFFER_DRAFT")) ?? 0)
+            }
             limit={e.offerDraftsQuota}
+            packs={packCredits(e, "OFFER_DRAFT")}
             hint={renews}
           />
         )}
@@ -181,14 +197,21 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
 
 const LENGTH: Record<string, string> = { MONTHLY: "1 mois", ANNUAL: "1 an" };
 
-/** What the running period still has, in words, for the « start now » warning. */
+/**
+ * What the running period still has, in words, for the « start now » warning.
+ * The packs are not lost: they go on with the next plan.
+ */
 function leftover(e: MySubscription["entitlements"]): string[] {
   const out: string[] = [];
   const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
-  if (e.unlocksRemaining) out.push(plural(e.unlocksRemaining, "contact inclus", "contacts inclus"));
-  if (e.cvRemaining) out.push(plural(e.cvRemaining, "CV inclus", "CV inclus"));
-  if (e.offerDraftsRemaining) out.push(plural(e.offerDraftsRemaining, "rédaction IA", "rédactions IA"));
-  if (e.offersRemaining) out.push(plural(e.offersRemaining, "offre à publier", "offres à publier"));
+  const unlocks = planShare(e.unlocksRemaining, packCredits(e, "CONTACT"));
+  const cv = planShare(e.cvRemaining, packCredits(e, "CV"));
+  const drafts = planShare(e.offerDraftsRemaining, packCredits(e, "OFFER_DRAFT"));
+  const offers = planShare(e.offersRemaining, packCredits(e, "OFFER"));
+  if (unlocks) out.push(plural(unlocks, "contact inclus", "contacts inclus"));
+  if (cv) out.push(plural(cv, "CV inclus", "CV inclus"));
+  if (drafts) out.push(plural(drafts, "rédaction IA", "rédactions IA"));
+  if (offers) out.push(plural(offers, "offre à publier", "offres à publier"));
   if (e.endsAt) {
     const days = Math.ceil((new Date(e.endsAt).getTime() - Date.now()) / 86_400_000);
     if (days > 0) out.push(plural(days, "jour", "jours"));
@@ -322,8 +345,17 @@ function Meter({
   label,
   used,
   limit,
+  packs = 0,
   hint,
-}: Readonly<{ icon: typeof IconLockOpen; label: string; used: number; limit: number | null; hint?: React.ReactNode }>) {
+}: Readonly<{
+  icon: typeof IconLockOpen;
+  label: string;
+  used: number;
+  limit: number | null;
+  /** Left in the packs bought, used once the plan's are: shown beside the plan's count. */
+  packs?: number;
+  hint?: React.ReactNode;
+}>) {
   const pct = limit === null || limit === 0 ? 0 : Math.min(100, Math.round((used / limit) * 100));
   return (
     <div className="space-y-3 rounded-2xl bg-page p-4">
@@ -338,6 +370,11 @@ function Meter({
         <div className="h-2 overflow-hidden rounded-full bg-card">
           <div className={cn("h-full rounded-full", pct >= 100 ? "bg-destructive" : "bg-ink")} style={{ width: `${pct}%` }} />
         </div>
+      )}
+      {packs > 0 && limit !== null && (
+        <p className="inline-flex rounded-full bg-brand-lime/50 px-2.5 py-0.5 font-medium text-[#0f2414] text-xs">
+          + {packs} de vos packs
+        </p>
       )}
       {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
     </div>

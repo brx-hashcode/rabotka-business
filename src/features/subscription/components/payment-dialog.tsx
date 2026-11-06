@@ -29,6 +29,7 @@ export function PaymentDialog({
   sentAt,
   planName,
   startsAt,
+  approvedText,
   onClose,
   onResend,
 }: Readonly<{
@@ -41,6 +42,8 @@ export function PaymentDialog({
   planName: string | null;
   /** When the plan paid for starts, if it follows the running one. */
   startsAt?: string | null;
+  /** What the payment did, when not a plan's (a pack). */
+  approvedText?: string;
   onClose: () => void;
   onResend: () => void;
 }>) {
@@ -117,7 +120,7 @@ export function PaymentDialog({
           <Outcome
             tone="good"
             title="Paiement confirmé"
-            text={`${planName ? `Votre formule ${planName}` : "Votre formule"} ${
+            text={approvedText ?? `${planName ? `Votre formule ${planName}` : "Votre formule"} ${
               startsAt
                 ? `démarre le ${new Date(startsAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}, à la suite de la formule en cours`
                 : "est active dès maintenant"

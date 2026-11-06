@@ -1,7 +1,7 @@
 import { appConfig } from "#/config";
 import { BusinessBaseController } from "./base-controller";
 
-export type InvoiceReason = "BUSINESS_SUBSCRIPTION" | "CONTACT_UNLOCK" | "PENALTY" | "WALLET_TOP_UP" | "OTHER";
+export type InvoiceReason = "BUSINESS_SUBSCRIPTION" | "BUSINESS_CREDIT_PACK" | "CONTACT_UNLOCK" | "PENALTY" | "WALLET_TOP_UP" | "OTHER";
 
 export type Invoice = {
   id: string;

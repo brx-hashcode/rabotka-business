@@ -16,6 +16,8 @@ import { FIELD_CLASS, FieldLabel, StepActions, TextField } from "#/features/sign
 import { useCities, useCountries } from "#/hooks/use-geo";
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
 import { trialLocks } from "#/features/subscription/trial-lock";
+import { offerWriterOutOfReach, PACKS_HREF } from "#/features/subscription/packs";
+import { usePackOnSale } from "#/features/subscription/use-packs";
 import { getJobCategories, type EmploymentType, type Offer, type OfferInput, type PaymentFlow } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
 import { AVAILABLE_EMPLOYMENT_TYPES, EMPLOYMENT_TYPES, isDatedMission, PAYMENT_FLOWS } from "../offer-labels";
@@ -177,8 +179,9 @@ export function OfferForm({
   const { data: categories } = useQuery({ queryKey: ["job-categories"], queryFn: getJobCategories, staleTime: Infinity });
   const { data: subscription } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   const [writing, setWriting] = useState(false);
-  // No AI writing in the plan: the button says where to find it instead.
-  const aiIncluded = subscription?.entitlements.offerDraftsQuota !== 0;
+  // No AI writing in the plan nor in a pack: the button says where to find it instead.
+  const aiIncluded = !subscription || !offerWriterOutOfReach(subscription.entitlements);
+  const draftPackOnSale = usePackOnSale("OFFER_DRAFT");
   // Included, but none left this period: said before the dialog, not by a refusal after it.
   const draftsOut = aiIncluded && subscription?.entitlements.offerDraftsRemaining === 0;
   const draftsUntil = subscription?.entitlements.countersResetAt ?? subscription?.entitlements.endsAt;
@@ -209,11 +212,11 @@ export function OfferForm({
           <Section title="L'offre">
             {draftsOut ? (
               <Link
-                href="/espace/abonnement"
+                href={draftPackOnSale ? PACKS_HREF : "/espace/abonnement"}
                 className="flex items-center gap-3 rounded-2xl bg-page px-4 py-3 text-muted-foreground text-sm hover:text-foreground"
               >
                 <IconWand className="size-5 shrink-0" />
-                {`Plus de rédactions par l'IA${draftsUntil ? ` jusqu'au ${new Date(draftsUntil).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}` : ""} : changez de formule pour en avoir davantage.`}
+                {`Plus de rédactions par l'IA${draftsUntil ? ` jusqu'au ${new Date(draftsUntil).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}` : ""} : ${draftPackOnSale ? "ajoutez un pack de rédactions ou changez de formule" : "changez de formule"} pour en avoir davantage.`}
               </Link>
             ) : aiIncluded ? (
               <button

@@ -268,6 +268,11 @@ export type MySubscription = {
     reviewers?: number;
     /** AI features the plan has but the running trial leaves out (their quotas read 0). */
     trialLocked?: TrialAiFeature[];
+    /**
+     * Units bought in packs, not used nor expired: spent once the plan's own
+     * are, and already counted in the `*Remaining` above. Absent before packs.
+     */
+    credits?: { cv: number; offers: number; contacts: number; offerDrafts: number };
   };
   upcoming: SubscriptionPeriod[];
   history: SubscriptionPeriod[];
@@ -537,4 +542,13 @@ export type OfferDraftInput = {
   city?: string;
   isRemote?: boolean;
   quantity?: number;
+};
+
+/** What a pack brings: CVs to analyse, offers to publish, contacts, offers written by the AI. */
+export type PackKind = "CV" | "OFFER" | "CONTACT" | "OFFER_DRAFT";
+
+/** `GET business/me/packs`: the packs on sale, and what is left of those bought (soonest to expire first). */
+export type BusinessPacks = {
+  onSale: { kind: PackKind; quantity: number; priceFcfa: number }[];
+  credits: { id: string; kind: PackKind; quantity: number; left: number; boughtAt: string; expiresAt: string }[];
 };
