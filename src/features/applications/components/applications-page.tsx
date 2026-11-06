@@ -24,6 +24,8 @@ import { externalApplicationsKey, listExternalApplications } from "#/lib/api/car
 import { listReceivedApplications, offersKey, type ReceivedApplication } from "#/lib/api/offer-controller";
 import { cn, getInitials } from "#/lib/utils";
 import { TeamOpinionButton } from "#/features/team/components/team-opinion";
+import { canHire } from "#/features/team/member-access";
+import { useMember } from "#/features/team/use-member";
 
 const PAGE = 100;
 const fold = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
@@ -243,6 +245,7 @@ function ApplicationCard({
 }: Readonly<{ application: ReceivedApplication; focused?: boolean; interview?: Interview }>) {
   const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
   const [planning, setPlanning] = useState(false);
+  const hire = canHire(useMember().role);
   const stage = applicationStage(a.status);
   const waitingDays = a.status === "PENDING" ? daysSince(a.createdAt) : 0;
   const at = a.offer.scheduledAt ? new Date(a.offer.scheduledAt) : null;
@@ -300,6 +303,7 @@ function ApplicationCard({
           <InterviewLine interview={interview} />
         </Link>
       ) : (
+        hire &&
         stage !== "closed" && (
           <button
             type="button"

@@ -896,7 +896,7 @@ function ApplicantRow({
       ? [{ key: "message", label: "Message", icon: IconMessageCircle, onSelect: chat.open, disabled: chat.pending }]
       : []),
     // Invited by e-mail and in the app, as from « Candidatures ».
-    ...(recruiting && applicationStage(a.status) !== "closed"
+    ...(hire && recruiting && applicationStage(a.status) !== "closed"
       ? [{ key: "interview", label: "Planifier un entretien", icon: IconCalendarPlus, onSelect: () => setPanel("interview") }]
       : []),
   ];

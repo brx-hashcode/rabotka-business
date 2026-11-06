@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { listTalents, removeTalent, saveTalent, talentsKey } from "#/lib/api/talent-controller";
 import { cn } from "#/lib/utils";
+import { canHire } from "#/features/team/member-access";
+import { useMember } from "#/features/team/use-member";
 
 /**
  * Keeps a worker in the business's talent pool, or lets them go — a
@@ -16,6 +18,7 @@ export function KeepButton({ workerId, name, className }: Readonly<{ workerId: s
   const queryClient = useQueryClient();
   const talents = useQuery({ queryKey: talentsKey, queryFn: listTalents });
   const kept = !!talents.data?.some((t) => t.workerId === workerId && t.saved);
+  const hire = canHire(useMember().role);
 
   const toggle = useMutation({
     mutationFn: () => (kept ? removeTalent(workerId) : saveTalent(workerId)),
@@ -26,6 +29,8 @@ export function KeepButton({ workerId, name, className }: Readonly<{ workerId: s
     onError: (err) => toast.error(friendlyError(err, "Vos profils n'ont pas pu être mis à jour.")),
   });
 
+  // Keeping a profile is the hiring side's: an Évaluateur was refused it.
+  if (!hire) return null;
   return (
     <button
       type="button"
