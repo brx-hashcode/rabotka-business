@@ -298,7 +298,7 @@ export type PaymentGateways = {
   gateways: { key: string; label: string; requiresOperator: boolean; operators: PaymentOperator[] }[];
 };
 
-/** `GET pay/:token` (fails once the request is settled). */
+/** `GET pay/:token` (fails once the request is paid; a refused one is still served). */
 export type PaymentByToken = {
   id: string;
   status: "PENDING" | "PROCESSING" | "APPROVED" | "REJECTED";
@@ -306,6 +306,10 @@ export type PaymentByToken = {
   amount: number | null;
   description: string | null;
   payerCountry?: string | null;
+  /** Why the last attempt was refused: the operator's code (INSUFFICIENT_BALANCE…). */
+  failureCode?: string | null;
+  /** The same, said to the payer; null when the operator gave no reason worth telling. */
+  failureReason?: string | null;
 };
 
 /** `GET business/me/stats`: recruitment figures, each with the previous period. */

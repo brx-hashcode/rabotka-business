@@ -99,6 +99,8 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
   const [sentAt, setSentAt] = useState(0);
   const [phoneLabel, setPhoneLabel] = useState("");
   const [startsAt, setStartsAt] = useState<string | null>(null);
+  // The operator's reason for refusing, when it gave one worth telling.
+  const [failure, setFailure] = useState<string | null>(null);
   // The paid periods known before paying, by id: a new one is the payment's.
   // Counted, they stopped changing once the history (24 rows) was full.
   const paidBefore = useRef<Set<string>>(new Set());
@@ -144,6 +146,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
         ...(gateway?.requiresOperator && selected ? { operator: selected.code } : {}),
       });
       polls.current = 0;
+      setFailure(null);
       setPhoneLabel(number.formatInternational());
       setSentAt(Date.now());
       setPhase("waiting");
@@ -164,6 +167,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
       try {
         const p = await getPaymentByToken(token);
         if (p.status === "REJECTED") {
+          setFailure(p.failureReason ?? null);
           setPhase("failed");
           return;
         }
@@ -365,6 +369,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
             sentAt={sentAt}
             planName={what?.planName ?? null}
             startsAt={startsAt}
+            failureText={failure}
             approvedText={
               pack ? `Votre pack est ajouté : ${pack}, valables 12 mois. La facture arrive par e-mail et dans Factures.` : undefined
             }
