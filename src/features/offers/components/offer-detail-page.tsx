@@ -30,9 +30,13 @@ import {
   IconUsers,
   IconX,
   type Icon as TablerIcon,
+  IconFileSpreadsheet,
 } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
+
+import { appConfig } from "#/config";
+import { downloadFile } from "#/lib/api/download";
 
 import { ActionDialog } from "#/components/action-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
@@ -278,6 +282,25 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                   name={o.title}
                   className="bg-page hover:bg-page/70"
                   actions={[
+                    // « Exports RH »: Excel of every candidate; without the service, to the plans.
+                    {
+                      key: "export",
+                      label: "Exporter les candidats",
+                      icon: IconFileSpreadsheet,
+                      hint: subscription?.entitlements.hrExports ? "Excel, avec statut, score et origine" : "Inclus dans les formules supérieures",
+                      onSelect: () => {
+                        if (!subscription?.entitlements.hrExports) {
+                          router.push("/espace/abonnement");
+                          return;
+                        }
+                        downloadFile(
+                          `${appConfig.apiUrl}/business/me/exports/offers/${encodeURIComponent(o.id)}/candidates`,
+                          `candidats-${o.reference}.xlsx`,
+                        ).catch((err: unknown) =>
+                          toast.error((err instanceof Error && err.message) || "L'export n'a pas pu être créé. Réessayez dans un instant."),
+                        );
+                      },
+                    },
                     ...(hire && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED")
                       ? [{ key: "close", label: "Fermer l'offre", icon: IconCircleX, onSelect: () => setConfirmClose(true), hint: "Plus de candidatures, les candidats en attente sont prévenus" }]
                       : []),
