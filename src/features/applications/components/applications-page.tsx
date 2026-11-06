@@ -26,6 +26,7 @@ import { cn, getInitials } from "#/lib/utils";
 import { TeamOpinionButton } from "#/features/team/components/team-opinion";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
+import { pollEvery } from "#/features/layout/socket-status";
 
 const PAGE = 100;
 const fold = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
@@ -52,7 +53,7 @@ export function ApplicationsPage() {
     // A candidate's side moves on its own (applying, paying their part). Only
     // while just the first page is loaded: past it, every page was fetched
     // again every 30 s.
-    refetchInterval: (q) => ((q.state.data?.pages.length ?? 1) > 1 ? false : 30_000),
+    refetchInterval: (q) => ((q.state.data?.pages.length ?? 1) > 1 ? false : pollEvery(30_000)),
   });
   const all = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
   // The interviews already proposed, to show each on its candidate's card.
@@ -61,7 +62,7 @@ export function ApplicationsPage() {
     queryKey: externalApplicationsKey,
     queryFn: () => listExternalApplications(),
     // A CV being read gets its score in a few seconds.
-    refetchInterval: (q) => (q.state.data?.some((a) => a.analysis?.status === "QUEUED") ? 4000 : false),
+    refetchInterval: (q) => (q.state.data?.some((a) => a.analysis?.status === "QUEUED") ? pollEvery(4000, 20_000) : false),
   });
   const total = query.data?.pages[0]?.total ?? 0;
 

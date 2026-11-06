@@ -43,6 +43,7 @@ import { ScheduleInterviewDialog } from "#/features/interviews/components/schedu
 import { interviewsKey, listInterviews } from "#/lib/api/interview-controller";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
+import { pollEvery } from "#/features/layout/socket-status";
 
 /** CVs compared at once (the backend's limit too). */
 export const MAX_COMPARED = 5;
@@ -59,7 +60,7 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
   const query = useQuery({
     queryKey: [...cvScreeningsKey, id],
     queryFn: () => getCvScreening(id),
-    refetchInterval: (q) => (q.state.data?.status === "PROCESSING" ? 8_000 : false),
+    refetchInterval: (q) => (q.state.data?.status === "PROCESSING" ? pollEvery(8_000, 30_000) : false),
   });
   const [preview, setPreview] = useState<CvResume | null>(null);
   const [confirm, setConfirm] = useState(false);

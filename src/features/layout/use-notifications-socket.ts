@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { io } from "socket.io-client";
 
 import { createProgressRefresh, refreshFor, type PushedNotification, type ScreeningProgress } from "./notification-refresh";
+import { setSocketConnected } from "./socket-status";
 
 /**
  * Refreshes, the moment the backend pushes a notification (`/notifications`
@@ -22,6 +23,9 @@ export function useNotificationsSocket() {
   useEffect(() => {
     // `/socket.io`, not `/socket.io/`: Next would redirect that one first.
     const socket = io("/notifications", { transports: ["polling"], upgrade: false, addTrailingSlash: false });
+    // The polls it covers slow down while it is up (socket-status.ts).
+    socket.on("connect", () => setSocketConnected(true));
+    socket.on("disconnect", () => setSocketConnected(false));
     // Each notification refreshes what it is about (notification-refresh.ts).
     socket.on("notification:new", (notification?: PushedNotification) => {
       refreshFor(queryClient, notification ?? {});
@@ -33,6 +37,7 @@ export function useNotificationsSocket() {
     socket.on("cv-screening:progress", (event?: ScreeningProgress) => progress(event));
     return () => {
       socket.disconnect();
+      setSocketConnected(false);
     };
   }, [queryClient]);
 }
