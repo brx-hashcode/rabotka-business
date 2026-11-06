@@ -41,6 +41,8 @@ import { CvCompareSheet } from "./cv-compare-sheet";
 import { InterviewLine, latestInterview } from "#/features/interviews/components/interview-bits";
 import { ScheduleInterviewDialog } from "#/features/interviews/components/schedule-interview-dialog";
 import { interviewsKey, listInterviews } from "#/lib/api/interview-controller";
+import { canHire } from "#/features/team/member-access";
+import { useMember } from "#/features/team/use-member";
 
 /** CVs compared at once (the backend's limit too). */
 export const MAX_COMPARED = 5;
@@ -445,6 +447,7 @@ function ResumeCard({
   const [open, setOpen] = useState(r.rank === 1);
   const [chatOpen, setChatOpen] = useState(false);
   const [planning, setPlanning] = useState(false);
+  const hire = canHire(useMember().role);
   const c = r.candidate;
   const name = c?.name ?? r.fileName;
   const score = r.score ?? 0;
@@ -540,7 +543,7 @@ function ResumeCard({
       )}
 
       <div className="mt-5 flex flex-wrap items-center gap-2">
-        {!interview && (
+        {hire && !interview && (
           <button
             type="button"
             onClick={() => setPlanning(true)}
