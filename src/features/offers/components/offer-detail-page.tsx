@@ -85,6 +85,7 @@ import {
   fcfa,
   isDatedMission,
   offerChip,
+  closingTile,
   offerDate,
   PAYMENT_SUFFIX,
   statusClass,
@@ -382,6 +383,7 @@ function OfferHeader({
   const filled = Math.min(Math.max(o.acceptedCount, hired), o.quantity);
   const left = o.scheduledAt ? daysUntil(o.scheduledAt) : null;
   const open = o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED";
+  const closing = closingTile(o, left);
 
   return (
     <section className="space-y-8 rounded-3xl bg-card p-6 sm:p-8">
@@ -416,9 +418,9 @@ function OfferHeader({
         </Tile>
         <Tile
           icon={IconCalendarEvent}
-          label={isDatedMission(o.employmentType) ? "Mission" : "Clôture"}
-          value={o.closedAt ? "Fermée" : left === null ? (isDatedMission(o.employmentType) ? "—" : "Par vous") : left > 0 ? `J-${left}` : left === 0 ? "Aujourd'hui" : "Passée"}
-          hint={o.scheduledAt ? (offerDate(o.scheduledAt, o.employmentType) ?? undefined) : undefined}
+          label={closing.label}
+          value={closing.value}
+          hint={closing.hint ?? (o.scheduledAt ? (offerDate(o.scheduledAt, o.employmentType) ?? undefined) : undefined)}
           muted={!open}
         />
       </div>
