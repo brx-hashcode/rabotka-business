@@ -26,9 +26,9 @@ const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
 const date = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
 /**
- * « Packs »: more CVs, offers, contacts or AI-written offers on top of the
- * plan, without changing it. Kept 12 months, used once the plan's own are,
- * paid on the dashboard's pay page. Shown with a plan running (the packs
+ * The « Packs » tab: more CVs, offers, contacts or AI-written offers on top
+ * of the plan, without changing it. Kept 12 months, used once the plan's own
+ * are, paid on the dashboard's pay page. Shown with a plan running (the packs
  * only add to one), and only what is on sale.
  */
 export function PacksSection({ data }: Readonly<{ data: MySubscription }>) {
@@ -38,15 +38,7 @@ export function PacksSection({ data }: Readonly<{ data: MySubscription }>) {
   if (!data.entitlements.plan || (onSale.length === 0 && bought.length === 0)) return null;
 
   return (
-    <section id="packs" className="scroll-mt-24 space-y-5">
-      <div className="space-y-1">
-        <h2 className="font-semibold text-xl">Packs</h2>
-        <p className="text-muted-foreground text-sm">
-          Besoin de plus cette période ? Ajoutez-en à votre formule sans en changer. Valables 12 mois, ils servent une fois ceux de
-          votre formule utilisés.
-        </p>
-      </div>
-
+    <section className="space-y-5">
       {onSale.length > 0 && (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {onSale.map((p) => (

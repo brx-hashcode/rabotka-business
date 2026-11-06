@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 
 import { SubscriptionPage } from "#/features/subscription/components/subscription-page";
@@ -5,5 +6,10 @@ import { SubscriptionPage } from "#/features/subscription/components/subscriptio
 export const metadata: Metadata = { title: "Abonnement" };
 
 export default function Page() {
-  return <SubscriptionPage />;
+  // Suspense: the page reads its tab from the URL (?onglet=packs).
+  return (
+    <Suspense>
+      <SubscriptionPage />
+    </Suspense>
+  );
 }

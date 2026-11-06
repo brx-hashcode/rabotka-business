@@ -2,8 +2,8 @@ import type { MySubscription, PackKind } from "#/lib/api/types";
 
 type Entitlements = MySubscription["entitlements"];
 
-/** Where the packs are bought: the « Packs » section of the Abonnement page. */
-export const PACKS_HREF = "/espace/abonnement#packs";
+/** Where the packs are bought: the « Packs » tab of the Abonnement page. */
+export const PACKS_HREF = "/espace/abonnement?onglet=packs";
 
 /** The packs, in the order the page shows them. */
 export const PACK_KINDS: PackKind[] = ["CV", "OFFER", "CONTACT", "OFFER_DRAFT"];
