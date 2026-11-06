@@ -80,21 +80,21 @@ export function ShareOfferMenu({
             className={ITEM}
             onSelect={() => setLinkedinOpen(true)}
           >
-            <IconBrandLinkedin className="size-4" />
+            <IconBrandLinkedin className="size-4 text-[#0a66c2]" />
             LinkedIn
           </DropdownMenuItem>
           <DropdownMenuItem
             className={ITEM}
             onSelect={() => open(links().whatsapp)}
           >
-            <IconBrandWhatsapp className="size-4" />
+            <IconBrandWhatsapp className="size-4 text-[#1ebe5b]" />
             WhatsApp
           </DropdownMenuItem>
           <DropdownMenuItem
             className={ITEM}
             onSelect={() => open(links().facebook)}
           >
-            <IconBrandFacebook className="size-4" />
+            <IconBrandFacebook className="size-4 text-[#1877f2]" />
             Facebook
           </DropdownMenuItem>
           <DropdownMenuItem className={ITEM} onSelect={() => void shareOnTiktok()}>
