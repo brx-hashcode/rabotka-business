@@ -241,6 +241,8 @@ export function OrganisationStep({
               label="Pays"
               placeholder="Choisir le pays"
               searchPlaceholder="Rechercher un pays"
+              // Its papers are that country's: verified, it changes on request (Aide).
+              disabled={lockIdentity}
               options={catalog.countries.map((c) => ({ value: c.code, label: c.name }))}
             />
             <ComboboxField
