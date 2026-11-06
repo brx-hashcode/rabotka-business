@@ -207,7 +207,7 @@ export function NotificationList({
 }
 
 function Row({ n, onOpen }: Readonly<{ n: AppNotification; onOpen?: (n: AppNotification) => void }>) {
-  const { icon: Icon, tone } = notificationLook(n.type);
+  const { icon: Icon, tone } = notificationLook(n.type, n.title);
   const unread = !n.readAt;
   return (
     <button
@@ -216,11 +216,11 @@ function Row({ n, onOpen }: Readonly<{ n: AppNotification; onOpen?: (n: AppNotif
       className="flex w-full items-start gap-3 rounded-2xl px-3 py-3 text-left transition-colors hover:bg-page focus-visible:bg-page focus-visible:outline-none"
     >
       <span className="relative shrink-0">
-        <span className={cn("flex size-10 items-center justify-center rounded-full", tone)}>
-          <Icon className="size-[18px]" />
+        <span className={cn("flex size-11 items-center justify-center rounded-2xl", tone)}>
+          <Icon className="size-5" stroke={1.75} />
         </span>
         {unread && (
-          <span aria-label="Non lue" className="absolute -top-0.5 -right-0.5 size-3 rounded-full bg-whatsapp ring-2 ring-card" />
+          <span aria-label="Non lue" className="absolute -top-1 -right-1 size-3 rounded-full bg-whatsapp ring-2 ring-card" />
         )}
       </span>
       <span className="min-w-0 flex-1">
