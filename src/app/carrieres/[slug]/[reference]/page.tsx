@@ -40,7 +40,7 @@ export default async function Page({ params }: Params) {
   const page = await careersOfferServer(slug, reference);
   if (page === null) notFound();
   // An address from before the business was renamed: on to the current one
-  // (a refresh tag once the page streams, which browsers and Google follow).
+  // (a real 308: the page no longer streams before it is decided).
   if (page && page.company.slug !== slug) permanentRedirect(`/carrieres/${page.company.slug}/${reference}`);
   const { origin, indexed } = await siteOrigin();
   const ld =
@@ -51,7 +51,7 @@ export default async function Page({ params }: Params) {
   return (
     <>
       {ld && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldScript(ld) }} />}
-      <OfferPage slug={slug} reference={reference} />
+      <OfferPage slug={slug} reference={reference} initial={page ?? undefined} />
     </>
   );
 }

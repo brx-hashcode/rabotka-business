@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
     // src/proxy.ts sees every /api call, and Next cuts a body it proxies at
     // 10MB by default: an « Analyse de CV » sends all its files in one request.
     proxyClientMaxBodySize: "50mb",
+    // …and gives up on it after 30 s by default: an AI draft (two model calls
+    // across the fallback chain), a report or a slow upload took longer.
+    proxyTimeout: 120_000,
   },
   // « Tri des CV » became « Analyse de CV »: links already sent (in-app
   // notifications, bookmarks) keep working.

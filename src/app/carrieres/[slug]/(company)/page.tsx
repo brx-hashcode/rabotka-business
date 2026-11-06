@@ -29,7 +29,7 @@ export default async function Page({ params }: Params) {
   const page = await careersCompanyServer(slug);
   if (page === null) notFound();
   // An address from before the business was renamed: on to the current one
-  // (a refresh tag once the page streams, which browsers and Google follow).
+  // (a real 308: the page no longer streams before it is decided).
   if (page && page.company.slug !== slug) permanentRedirect(`/carrieres/${page.company.slug}`);
   // Already read for the metadata (cached): the page starts from it instead of loading it again.
   return <CompanyPage slug={slug} initial={page} />;

@@ -9,8 +9,11 @@ import { getCareersCompanies } from "#/lib/api/careers-controller";
 import { CareersShell, CompanyLogo } from "./careers-shell";
 
 /** Every verified business that is hiring now, for someone not on Rabotka. */
-export function DirectoryPage() {
-  const query = useQuery({ queryKey: ["careers"], queryFn: getCareersCompanies, retry: false });
+export function DirectoryPage({
+  initial,
+}: Readonly<{ initial?: Awaited<ReturnType<typeof getCareersCompanies>> }>) {
+  // Read on the server first: the page is indexed, and was only a skeleton.
+  const query = useQuery({ queryKey: ["careers"], queryFn: () => getCareersCompanies(), initialData: initial, retry: false });
   const companies = query.data ?? [];
 
   return (
