@@ -23,7 +23,8 @@ export function NewOfferPage() {
       void queryClient.invalidateQueries({ queryKey: offersKey });
       void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
       toast.success("Offre publiée. Les candidats correspondants sont prévenus.");
-      router.push(`/espace/offres/${id}`);
+      // `publiee`: the offer page opens on « faites-la connaître » (LinkedIn first).
+      router.push(`/espace/offres/${id}?publiee=1`);
     },
     onError: (err) => toast.error(friendlyError(err, "L'offre n'a pas pu être publiée.")),
   });

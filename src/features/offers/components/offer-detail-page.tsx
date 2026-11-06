@@ -97,6 +97,7 @@ import { ApplicationActions, useApplicationChat } from "./application-actions";
 import { MoreActionsMenu, opinionLabel, type MoreAction } from "./more-actions-menu";
 import { OfferDescriptionCard } from "./offer-description-card";
 import { REFUSAL_TEMPLATES, RefusalMessageField } from "./refusal-message";
+import { PublishedShareCard } from "./published-share-card";
 import { ShareOfferMenu } from "./share-offer-menu";
 import { Checkbox } from "#/components/ui/checkbox";
 import { CRITERIA, ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
@@ -122,6 +123,8 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const { data: subscription } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   // An Évaluateur reads the offer; changing it is for those who hire.
   const hire = canHire(useMember().role);
+  // Just published (new-offer-page): the moment to share it.
+  const [published, setPublished] = useQueryState("publiee");
   const noOfferLeft = !!subscription && offersFull(subscription.entitlements);
   const needsDate = !offer.data || isDatedMission(offer.data.employmentType);
   const [confirmFinish, setConfirmFinish] = useState(false);
@@ -285,6 +288,16 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
               </div>
             }
           />
+
+          {published && (
+            <PublishedShareCard
+              slug={business?.publicSlug ?? null}
+              reference={o.reference}
+              title={o.title}
+              isPublic={!!business?.publicSlug && business.verificationStatus === "VERIFIED" && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED")}
+              onDismiss={() => void setPublished(null)}
+            />
+          )}
 
           <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_28rem]">
             <div className="min-w-0 space-y-6">
