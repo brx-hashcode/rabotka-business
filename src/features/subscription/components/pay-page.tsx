@@ -29,6 +29,7 @@ import { PaymentDialog, REQUEST_SECONDS, type PaymentPhase } from "./payment-dia
 import { cvLine } from "./subscription-page";
 import { offersPerPeriodLabel } from "../offers-quota";
 import { readPackDescription } from "../packs";
+import { phonePlaceholder } from "../phone-placeholder";
 import { usePacks } from "../use-packs";
 
 
@@ -109,6 +110,8 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
   const polls = useRef(0);
 
   const dial = selected?.dialCode ?? current?.dialCode ?? "242";
+  // The network's own prefix (MTN 06, Airtel 05 in Congo).
+  const placeholder = phonePlaceholder(selected?.code, dial);
 
   function chooseCountry(next: string) {
     if (next === country) return;
@@ -129,7 +132,11 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
     // (+242 06 …), where elsewhere it is a trunk prefix to drop.
     const number = parsePhoneNumberFromString(digits, { defaultCallingCode: dial });
     if (!number?.isValid()) {
-      setError(dial === "242" ? "Saisissez un numéro de téléphone valide, par exemple 06 123 45 67." : "Saisissez un numéro de téléphone valide.");
+      setError(
+        placeholder === "Numéro"
+          ? "Saisissez un numéro de téléphone valide."
+          : `Saisissez un numéro de téléphone valide, par exemple ${placeholder}.`,
+      );
       return;
     }
     if (gateway?.requiresOperator && !selected) {
@@ -326,7 +333,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
                       value={digits}
                       onChange={(e) => setDigits(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && void pay()}
-                      placeholder={dial === "242" ? "06 123 45 67" : "Numéro"}
+                      placeholder={placeholder}
                       className="h-full flex-1 bg-transparent px-3 text-lg tracking-wide outline-none placeholder:text-muted-foreground/60"
                     />
                   </div>
