@@ -231,11 +231,10 @@ export function LinkedinPostDialog({
                 {/* The picture, shown large under the text. */}
                 <div className="flex flex-col gap-2">
                   <span className="font-medium text-sm">Image</span>
-                  {/* A fixed block, so the dialog keeps its size: the whole picture shown
-                      inside, never cropped (an upright one sits centred on the page colour). */}
+                  {/* A fixed block, so the dialog keeps its size, filled by the picture. */}
                   <div className="flex aspect-[1200/630] w-full items-center justify-center overflow-hidden rounded-2xl bg-page">
                     {/* eslint-disable-next-line @next/next/no-img-element -- a local preview or the careers page's own OG image */}
-                    <img src={previewSrc} alt="" className="block h-full w-full object-contain" />
+                    <img src={previewSrc} alt="" className="block h-full w-full object-cover" />
                   </div>
                   <p className="text-muted-foreground text-xs">
                     {ownImage
