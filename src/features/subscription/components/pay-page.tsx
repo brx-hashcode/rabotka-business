@@ -51,6 +51,7 @@ function planLines(p: BusinessPlan): string[] {
     ...(p.includesPreselection ? ["Recherche de profils"] : []),
     ...(p.priorityVisibility ? ["Offres affichées en premier"] : []),
     ...(p.linkedinPosting ? ["Publication sur LinkedIn"] : []),
+    ...(p.hrExports ? ["Exports RH"] : []),
   ];
 }
 

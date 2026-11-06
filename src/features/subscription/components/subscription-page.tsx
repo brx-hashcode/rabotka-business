@@ -165,11 +165,12 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
         )}
       </div>
 
-      {(e.includesPreselection || e.priorityVisibility || e.linkedinPosting) && (
+      {(e.includesPreselection || e.priorityVisibility || e.linkedinPosting || e.hrExports) && (
         <ul className="flex flex-wrap gap-2">
           {e.includesPreselection && <Feature>Recherche de profils</Feature>}
           {e.priorityVisibility && <Feature>Offres affichées en premier</Feature>}
           {e.linkedinPosting && <Feature>Publication sur LinkedIn</Feature>}
+          {e.hrExports && <Feature>Exports RH</Feature>}
         </ul>
       )}
 
@@ -465,6 +466,7 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
                 {plan.includesPreselection && <PlanLine>Recherche de profils</PlanLine>}
                 {plan.priorityVisibility && <PlanLine>Offres affichées en premier</PlanLine>}
                 {plan.linkedinPosting && <PlanLine>Publication sur LinkedIn</PlanLine>}
+                {plan.hrExports && <PlanLine>Exports RH</PlanLine>}
               </ul>
               {when && <p className="text-muted-foreground text-xs">{when}</p>}
               <button
