@@ -24,7 +24,7 @@ const ICONS = {
 
 function Icon({ name, size: s, color }: { name: keyof typeof ICONS; size: number; color: string }) {
   return (
-    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
       {ICONS[name].map((d) => (
         <path key={d} d={d} />
       ))}
@@ -47,8 +47,8 @@ async function offerOf(slug: string, reference: string) {
 }
 
 /**
- * A shared offer's preview, as LinkedIn, Facebook and WhatsApp show it: on a
- * white page, who hires, the job in large type, where / what / how much, and
+ * A shared offer's preview, as LinkedIn, Facebook and WhatsApp show it: light
+ * type on a white page, who hires, the job in large type, where / what / how much, and
  * a real « Postuler » button. Everything is centred, so WhatsApp's square
  * crop of the middle still shows the logo, the title and the button. The
  * site's card when the offer is gone.
@@ -86,9 +86,9 @@ export default async function OfferImage({ params }: { params: Promise<{ slug: s
         {page?.company.logoUrl && (
           <img src={page.company.logoUrl} width={72} height={72} alt="" style={{ borderRadius: 18, objectFit: "cover" }} />
         )}
-        <span style={{ fontSize: 34, fontWeight: 800 }}>{page?.company.name ?? "Rabotka"}</span>
+        <span style={{ fontSize: 34, fontWeight: 300 }}>{page?.company.name ?? "Rabotka"}</span>
         {page && (
-          <span style={{ display: "flex", fontSize: 24, fontWeight: 800, padding: "8px 18px", borderRadius: 999, background: LIME }}>Recrute</span>
+          <span style={{ display: "flex", fontSize: 24, fontWeight: 300, padding: "8px 18px", borderRadius: 999, background: LIME }}>Recrute</span>
         )}
       </div>
 
@@ -99,9 +99,9 @@ export default async function OfferImage({ params }: { params: Promise<{ slug: s
           justifyContent: "center",
           maxWidth: 1040,
           fontSize: offerCardTitleSize(title),
-          fontWeight: 800,
+          fontWeight: 300,
           lineHeight: 1.05,
-          letterSpacing: -2,
+          letterSpacing: -1.5,
         }}
       >
         {title.length > 90 ? `${title.slice(0, 88).trimEnd()}…` : title}
@@ -113,7 +113,7 @@ export default async function OfferImage({ params }: { params: Promise<{ slug: s
             {facts.chips.map((c) => (
               <span
                 key={c.text}
-                style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 28, fontWeight: 800, padding: "12px 24px", borderRadius: 999, background: CHIP }}
+                style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 28, fontWeight: 300, padding: "12px 24px", borderRadius: 999, background: CHIP }}
               >
                 <Icon name={c.icon} size={30} color={INK} />
                 {c.text}
@@ -123,13 +123,13 @@ export default async function OfferImage({ params }: { params: Promise<{ slug: s
         )}
         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
           <span
-            style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 30, fontWeight: 800, padding: "18px 36px", borderRadius: 999, background: INK, color: "#FFFFFF" }}
+            style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 30, fontWeight: 300, padding: "18px 36px", borderRadius: 999, background: INK, color: "#FFFFFF" }}
           >
             Postuler
             <Icon name="arrow" size={30} color={LIME} />
           </span>
           <span style={{ display: "flex", flexDirection: "column", fontSize: 24, color: SOFT, fontWeight: 300 }}>
-            {facts.closes && <span style={{ fontWeight: 800, color: INK }}>{facts.closes}</span>}
+            {facts.closes && <span style={{ fontWeight: 300, color: INK }}>{facts.closes}</span>}
             <span>{site}</span>
           </span>
         </div>
