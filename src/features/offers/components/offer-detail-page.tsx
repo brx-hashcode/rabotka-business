@@ -227,7 +227,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                 {business?.publicSlug && business.verificationStatus === "VERIFIED" && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
                   <ShareOfferMenu offerId={o.id} slug={business.publicSlug} reference={o.reference} title={o.title} />
                 )}
-                {hire && o.status === "ACTIVE" && (
+                {hire && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
                   <Link
                     href={`/espace/offres/${o.id}/modifier`}
                     className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white hover:bg-ink/90"
@@ -246,7 +246,8 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                     Clôturer l&apos;offre
                   </button>
                 )}
-                {hire && o.status === "EXPIRED" && (
+                {/* Expired, or closed by hand with posts still free: it can recruit again. */}
+                {hire && (o.status === "EXPIRED" || (o.status === "FILLED" && !!o.closedAt && o.acceptedCount < o.quantity)) && (
                   <button
                     type="button"
                     onClick={() => setRepublishing(true)}
