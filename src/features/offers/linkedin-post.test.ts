@@ -15,6 +15,7 @@ const post = (status: LinkedinPost["status"]): LinkedinPost => ({
   error: null,
   createdAt: "",
   publishedAt: null,
+  imageUrl: null,
 });
 
 const offer = {
