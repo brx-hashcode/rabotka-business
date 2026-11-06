@@ -35,10 +35,20 @@ class LinkedinController extends BusinessBaseController {
 
   /**
    * Queued: the post goes out in a few seconds, then a notification says so.
-   * `image` replaces the offer's share picture on the card (sent as a form).
+   * `image` replaces the offer's share picture (sent as a form). Posting
+   * again without one keeps the previous post's own picture, unless
+   * `offerImage` goes back to the offer's.
    */
-  publish(offerId: string, text: string, again = false, image?: File | null): Promise<{ id: string; status: LinkedinPost["status"] }> {
-    if (!image) return this.post("/business/me/linkedin/posts", { offerId, text, ...(again ? { again } : {}) });
+  publish(
+    offerId: string,
+    text: string,
+    again = false,
+    image?: File | null,
+    offerImage = false,
+  ): Promise<{ id: string; status: LinkedinPost["status"] }> {
+    if (!image) {
+      return this.post("/business/me/linkedin/posts", { offerId, text, ...(again ? { again } : {}), ...(offerImage ? { offerImage } : {}) });
+    }
     const form = new FormData();
     form.append("offerId", offerId);
     form.append("text", text);
