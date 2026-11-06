@@ -115,6 +115,11 @@ class CareersController extends BusinessBaseController {
     return this.post(`/business/me/external-applications/${encodeURIComponent(id)}/retain`);
   }
 
+  /** Takes a retention back: the candidate waits again, and is told by e-mail. */
+  unretainExternal(id: string): Promise<unknown> {
+    return this.post(`/business/me/external-applications/${encodeURIComponent(id)}/unretain`);
+  }
+
   refuseExternal(id: string, message?: string): Promise<unknown> {
     return this.post(`/business/me/external-applications/${encodeURIComponent(id)}/refuse`, message ? { message } : {});
   }
@@ -130,3 +135,4 @@ export const listExternalApplications = controller.listExternal.bind(controller)
 export const analyseExternalApplications = controller.analyseExternal.bind(controller);
 export const retainExternalApplication = controller.retainExternal.bind(controller);
 export const refuseExternalApplication = controller.refuseExternal.bind(controller);
+export const unretainExternalApplication = controller.unretainExternal.bind(controller);
