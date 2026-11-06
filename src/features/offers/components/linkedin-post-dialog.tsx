@@ -18,21 +18,15 @@ import {
   linkedinPostsKey,
   postOnLinkedin,
 } from "#/lib/api/linkedin-controller";
-import type { EmploymentType } from "#/lib/api/offer-controller";
 import { getInitials } from "#/lib/utils";
-import { defaultLinkedinText, linkedinDialogState } from "../linkedin-post";
+import { defaultLinkedinText, linkedinDialogState, type LinkedinOfferText } from "../linkedin-post";
 import { offerShareLinks, offerShareUrl } from "../share-url";
 
 const LINKEDIN_BLUE = "bg-[#0a66c2] text-white hover:bg-[#0a66c2]/90";
 const BUTTON = "inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 font-medium text-sm disabled:opacity-50";
 
-export type LinkedinOffer = {
-  id: string;
-  title: string;
-  reference: string;
-  employmentType: EmploymentType;
-  city: string | null;
-};
+/** The offer as the post describes it; its careers link is made here. */
+export type LinkedinOffer = Omit<LinkedinOfferText, "url"> & { id: string; reference: string };
 
 /**
  * « Publier sur LinkedIn »: the offer goes on the recruiter's own LinkedIn as
@@ -56,7 +50,10 @@ export function LinkedinPostDialog({
     refetchInterval: (q) => (q.state.data?.[0]?.status === "QUEUED" ? 3000 : false),
   });
   const state = linkedinDialogState(info.data, posts.data);
-  const [text, setText] = useState(() => defaultLinkedinText(offer.title, offer.employmentType, offer.city));
+  const origin = typeof window === "undefined" ? "" : window.location.origin;
+  const [text, setText] = useState(() =>
+    defaultLinkedinText({ ...offer, url: offerShareUrl(origin, slug, offer.reference, "linkedin") }),
+  );
   const { connect, connecting } = useLinkedinConnect();
   // The card's picture: the offer's share image, or one of the recruiter's own.
   const [ownImage, setOwnImage, ownPreview] = usePickedImage();
@@ -74,7 +71,6 @@ export function LinkedinPostDialog({
     setOwnImage(file);
   };
 
-  const origin = typeof window === "undefined" ? "" : window.location.origin;
   const shareBox = offerShareLinks(origin, slug, offer.reference, offer.title).linkedin;
   const published = posts.data?.find((p) => p.status === "PUBLISHED");
   const failed = posts.data?.[0]?.status === "FAILED" ? posts.data[0] : null;
@@ -176,12 +172,12 @@ export function LinkedinPostDialog({
                   <Textarea
                     value={text}
                     onChange={(e) => setText(e.target.value.slice(0, 3000))}
-                    rows={6}
+                    rows={10}
                     aria-label="Texte de la publication"
                     className="rounded-2xl border-0 bg-page px-4 py-3 text-[15px] shadow-none"
                   />
-                  {/* The card LinkedIn shows under the text: the offer's share picture (or the
-                      recruiter's own) and title. */}
+                  {/* The picture LinkedIn shows large under the text: the offer's share image or
+                      the recruiter's own. The text carries the link to apply. */}
                   <div className="overflow-hidden rounded-2xl bg-page">
                     <div className="group relative">
                       {/* eslint-disable-next-line @next/next/no-img-element -- a local preview or the careers page's own OG image */}
@@ -220,10 +216,6 @@ export function LinkedinPostDialog({
                           e.target.value = "";
                         }}
                       />
-                    </div>
-                    <div className="px-4 py-3">
-                      <p className="truncate font-medium text-sm">{offer.title}</p>
-                      <p className="text-muted-foreground text-xs">{new URL(origin || "https://business.rabotka.work").host}</p>
                     </div>
                   </div>
                   <button

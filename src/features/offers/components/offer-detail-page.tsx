@@ -97,6 +97,7 @@ import { ApplicationActions, useApplicationChat } from "./application-actions";
 import { MoreActionsMenu, opinionLabel, type MoreAction } from "./more-actions-menu";
 import { OfferDescriptionCard } from "./offer-description-card";
 import { REFUSAL_TEMPLATES, RefusalMessageField } from "./refusal-message";
+import { linkedinOffer } from "../linkedin-post";
 import { PublishedShareCard } from "./published-share-card";
 import { ShareOfferMenu } from "./share-offer-menu";
 import { Checkbox } from "#/components/ui/checkbox";
@@ -240,14 +241,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
             actions={
               <div className="flex flex-wrap gap-2 empty:hidden">
                 {business?.publicSlug && business.verificationStatus === "VERIFIED" && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
-                  <ShareOfferMenu
-                    offerId={o.id}
-                    slug={business.publicSlug}
-                    reference={o.reference}
-                    title={o.title}
-                    employmentType={o.employmentType}
-                    city={o.city}
-                  />
+                  <ShareOfferMenu slug={business.publicSlug} offer={linkedinOffer(o, business.name, categories.data?.find((c) => c.id === o.categoryId)?.name)} />
                 )}
                 {hire && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
                   <Link
@@ -299,7 +293,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
           {published && (
             <PublishedShareCard
               slug={business?.publicSlug ?? null}
-              offer={{ id: o.id, title: o.title, reference: o.reference, employmentType: o.employmentType, city: o.city }}
+              offer={linkedinOffer(o, business?.name, categories.data?.find((c) => c.id === o.categoryId)?.name)}
               isPublic={!!business?.publicSlug && business.verificationStatus === "VERIFIED" && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED")}
               onDismiss={() => void setPublished(null)}
             />

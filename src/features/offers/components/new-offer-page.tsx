@@ -12,8 +12,9 @@ import { Checkbox } from "#/components/ui/checkbox";
 import { getMyBusiness, getMySubscription, myBusinessKey, mySubscriptionKey } from "#/lib/api/business-controller";
 import { getLinkedin, linkedinKey, postOnLinkedin } from "#/lib/api/linkedin-controller";
 import { defaultLinkedinText } from "../linkedin-post";
+import { offerShareUrl } from "../share-url";
 import { friendlyError } from "#/lib/api/friendly-error";
-import { createOffer, offersKey } from "#/lib/api/offer-controller";
+import { createOffer, getJobCategories, offersKey } from "#/lib/api/offer-controller";
 import type { MySubscription } from "#/lib/api/types";
 import { OfferForm, offerFormValues, toOfferInput, type OfferFormValues } from "./offer-form";
 import { offersFull, offersUsed } from "#/features/subscription/offers-quota";
@@ -30,11 +31,28 @@ export function NewOfferPage() {
   const canPostOnLinkedin =
     !!business?.publicSlug && business.verificationStatus === "VERIFIED" && !!linkedin?.account && !linkedin.account.expired;
   const [alsoLinkedin, setAlsoLinkedin] = useState(true);
+  const categories = useQuery({ queryKey: ["job-categories"], queryFn: getJobCategories, staleTime: Infinity });
   const create = useMutation({
-    mutationFn: ({ v, country }: { v: OfferFormValues; country: string | undefined }) => createOffer(toOfferInput(v, country)),
-    onSuccess: ({ id }, { v }) => {
-      if (canPostOnLinkedin && alsoLinkedin) {
-        postOnLinkedin(id, defaultLinkedinText(v.title.trim(), v.employmentType, v.isRemote ? null : v.city || null)).catch((err) =>
+    mutationFn: async ({ v, country }: { v: OfferFormValues; country: string | undefined }) => {
+      const input = toOfferInput(v, country);
+      return { ...(await createOffer(input)), input };
+    },
+    onSuccess: ({ id, reference, input }) => {
+      if (canPostOnLinkedin && alsoLinkedin && business?.publicSlug) {
+        const text = defaultLinkedinText({
+          title: input.title,
+          companyName: business.name,
+          employmentType: input.employment_type,
+          isRemote: input.isRemote,
+          city: input.city ?? null,
+          amount: input.amount ?? null,
+          paymentFlow: input.payment_flow ?? null,
+          scheduledAt: input.scheduled_at,
+          description: input.description,
+          categoryName: categories.data?.find((c) => c.id === input.category_id)?.name ?? null,
+          url: offerShareUrl(window.location.origin, business.publicSlug, reference, "linkedin"),
+        });
+        postOnLinkedin(id, text).catch((err) =>
           toast.error(friendlyError(err, "L'offre n'a pas pu être publiée sur LinkedIn : réessayez depuis « Partager ».")),
         );
       }
