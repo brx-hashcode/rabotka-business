@@ -225,8 +225,12 @@ export function LinkedinPostDialog({
                 {/* The picture, shown large under the text. */}
                 <div className="flex flex-col gap-2">
                   <span className="font-medium text-sm">Image</span>
-                  {/* eslint-disable-next-line @next/next/no-img-element -- a local preview or the careers page's own OG image */}
-                  <img src={previewSrc} alt="" className="aspect-[1200/630] w-full rounded-2xl bg-page object-cover" />
+                  {/* As LinkedIn shows it: the picture's own shape, never cropped (a square or
+                      upright picture stays so); only a very tall one is fitted in height. */}
+                  <div className="flex justify-center overflow-hidden rounded-2xl bg-page">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- a local preview or the careers page's own OG image */}
+                    <img src={previewSrc} alt="" className="block h-auto max-h-[26rem] w-auto max-w-full object-contain" />
+                  </div>
                   <p className="text-muted-foreground text-xs">{ownImage ? "Votre image" : "L'image de l'offre"}, publiée en grand sous le texte.</p>
                   <button
                     type="button"
