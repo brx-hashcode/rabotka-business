@@ -184,6 +184,8 @@ function Members() {
 
 const hasPlace = (s: Seats) => s.limit === null || s.used < s.limit;
 
+const ROLE_PLURAL: Record<InvitedRole, string> = { RECRUITER: "recruteurs", REVIEWER: "évaluateurs" };
+
 /** « Inviter », beside the tabs: off when the plan has no place left. */
 function InviteButton() {
   const queryClient = useQueryClient();
@@ -197,7 +199,7 @@ function InviteButton() {
         type="button"
         onClick={() => setOpen(true)}
         disabled={!anyPlace}
-        title={seats && !anyPlace ? "Plus de place avant le renouvellement" : undefined}
+        title={seats && !anyPlace ? "Toutes les places de votre formule sont prises" : undefined}
         className="inline-flex h-11 items-center gap-2 rounded-full bg-ink px-5 font-medium text-sm text-white disabled:opacity-40"
       >
         <IconUserPlus className="size-4" />
@@ -215,21 +217,35 @@ function InviteButton() {
   );
 }
 
-/** The places per role added this period (a new period frees them), with the way to more when none is left. */
+/**
+ * The places per role: the people in the team now (invited or active), freed
+ * when someone leaves. Above the plan (after a smaller plan), how many to
+ * take out; with none left, the way to more.
+ */
 function Places({ seats }: Readonly<{ seats: Team["seats"] }>) {
   const anyPlace = INVITED.some((r) => hasPlace(seats[r]));
   const none = INVITED.every((r) => seats[r].limit === 0);
+  const over = INVITED.map((r) => ({ role: r, extra: seats[r].limit === null ? 0 : seats[r].used - seats[r].limit! })).filter(
+    (o) => o.extra > 0,
+  );
   return (
     <section className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-3xl bg-card px-5 py-4">
-      <p className="font-medium text-sm">Places jusqu&apos;au renouvellement</p>
+      <p className="font-medium text-sm">Places dans votre équipe</p>
       <div className="flex flex-wrap gap-2">
         {INVITED.map((r) => (
           <SeatPill key={r} role={r} used={seats[r].used} limit={seats[r].limit} />
         ))}
       </div>
-      {!anyPlace && (
+      {over.length > 0 && (
+        <p className="w-full rounded-2xl bg-chip-amber px-4 py-3 text-chip-amber-foreground text-sm">
+          Votre équipe dépasse votre formule (
+          {over.map(({ role, extra }) => `${extra} ${extra > 1 ? ROLE_PLURAL[role] : ROLE_LABEL[role].toLowerCase()} en trop`).join(", ")}
+          ). Retirez des membres ou changez de formule.
+        </p>
+      )}
+      {!anyPlace && over.length === 0 && (
         <p className="flex flex-wrap items-center gap-x-2 text-muted-foreground text-sm sm:ml-auto">
-          {none ? "Votre formule n'inclut pas de membres d'équipe." : "Toutes les places sont utilisées : elles reviennent au renouvellement de votre formule."}
+          {none ? "Votre formule n'inclut pas de membres d'équipe." : "Toutes les places sont prises : retirez un membre pour en libérer une, ou changez de formule."}
           <Link href="/espace/abonnement" className="font-medium text-foreground underline underline-offset-2">
             Changer de formule
           </Link>
@@ -324,7 +340,7 @@ function MemberRow({
                   className="cursor-pointer flex-col items-start gap-0 rounded-xl px-3 py-2"
                 >
                   <span className="font-medium text-sm">Passer {ROLE_LABEL[r].toLowerCase()}</span>
-                  <span className="text-muted-foreground text-xs">{full ? "Plus de place avant le renouvellement" : ROLE_HINT[r]}</span>
+                  <span className="text-muted-foreground text-xs">{full ? "Toutes les places sont prises" : ROLE_HINT[r]}</span>
                 </DropdownMenuItem>
               );
             })}
@@ -418,7 +434,7 @@ function InviteDialog({
             >
               <span className="block font-medium text-sm">{ROLE_LABEL[r]}</span>
               <span className={cn("block text-xs", role === r ? "opacity-80" : "text-muted-foreground")}>
-                {free(r) ? ROLE_HINT[r] : "Plus de place avant le renouvellement"}
+                {free(r) ? ROLE_HINT[r] : "Toutes les places sont prises"}
               </span>
             </button>
           ))}
