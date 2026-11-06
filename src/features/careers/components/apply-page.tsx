@@ -138,8 +138,9 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <TextField title="Prénom" autoComplete="given-name" value={details.firstName} onChange={(v) => setDetails({ ...details, firstName: v })} />
+              {/* Nom first, as people here write their name (and as the CV and the ID do). */}
               <TextField title="Nom" autoComplete="family-name" value={details.lastName} onChange={(v) => setDetails({ ...details, lastName: v })} />
+              <TextField title="Prénom" autoComplete="given-name" value={details.firstName} onChange={(v) => setDetails({ ...details, firstName: v })} />
               <TextField title="E-mail" type="email" autoComplete="email" value={details.email} onChange={(v) => setDetails({ ...details, email: v })} />
               <TextField title="Téléphone" type="tel" autoComplete="tel" value={details.phone} onChange={(v) => setDetails({ ...details, phone: v })} />
             </div>
