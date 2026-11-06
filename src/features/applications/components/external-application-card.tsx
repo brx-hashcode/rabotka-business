@@ -27,6 +27,7 @@ import {
 } from "#/lib/api/careers-controller";
 import { cvScreeningsKey, getCvScreening } from "#/lib/api/cv-screening-controller";
 import { sourceLabel } from "#/features/careers/candidate-source";
+import { showExternalStatus } from "#/features/offers/application-cache";
 import { APPLICATION_STATUS, statusClass } from "#/features/offers/offer-labels";
 import { DescriptionText } from "#/features/careers/components/description-text";
 import { canSchedule } from "#/features/applications/can-schedule";
@@ -131,17 +132,27 @@ export function ExternalApplicationCard({
       : []),
   ];
 
+  const refreshList = () => void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
+  // The card shows the decision at once; an error puts it back (application-cache.ts).
+  const decide = (status: ExternalApplication["status"], close: () => void) => () => {
+    close();
+    return { undo: showExternalStatus(queryClient, a.id, status) };
+  };
+  const failed = (message: string) => (err: unknown, _vars: unknown, ctx?: { undo: () => void }) => {
+    ctx?.undo();
+    refreshList();
+    toast.error(friendlyError(err, message));
+  };
+
   const refuse = useMutation({
     mutationFn: () => refuseExternalApplication(a.id, message.trim() || undefined),
+    onMutate: decide("REFUSED", () => setRefusing(false)),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
+      refreshList();
       toast.success(`${name} est prévenu par e-mail.`);
-      setRefusing(false);
     },
-    onError: (err) => toast.error(friendlyError(err, "Le refus n'a pas pu être envoyé.")),
+    onError: failed("Le refus n'a pas pu être envoyé."),
   });
-
-  const refreshList = () => void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
 
   const analyse = useMutation({
     mutationFn: () => analyseExternalApplications(a.offer.id, a.id),
@@ -154,22 +165,22 @@ export function ExternalApplicationCard({
 
   const retain = useMutation({
     mutationFn: () => retainExternalApplication(a.id),
+    onMutate: decide("RETAINED", () => setRetaining(false)),
     onSuccess: () => {
       refreshList();
       toast.success(`${name} est prévenu par e-mail.`);
-      setRetaining(false);
     },
-    onError: (err) => toast.error(friendlyError(err, "La candidature n'a pas pu être retenue.")),
+    onError: failed("La candidature n'a pas pu être retenue."),
   });
 
   const unretain = useMutation({
     mutationFn: () => unretainExternalApplication(a.id),
+    onMutate: decide("PENDING", () => setUnretaining(false)),
     onSuccess: () => {
       refreshList();
       toast.success("Décision annulée : la personne est prévenue par e-mail.");
-      setUnretaining(false);
     },
-    onError: (err) => toast.error(friendlyError(err, "La décision n'a pas pu être annulée.")),
+    onError: failed("La décision n'a pas pu être annulée."),
   });
 
   async function saveCv() {
