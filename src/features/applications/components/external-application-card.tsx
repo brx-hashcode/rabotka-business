@@ -119,7 +119,8 @@ export function ExternalApplicationCard({
         ]
       : []),
     { key: "opinion", label: opinionLabel(opinions), icon: IconUsers, onSelect: () => setOpinionOpen(true) },
-    ...(score !== null && canSchedule(a)
+    // With or without a CV analysis: the address they applied with is enough.
+    ...(hire && canSchedule(a)
       ? [{ key: "interview", label: "Planifier un entretien", icon: IconCalendarPlus, onSelect: () => setScheduling(true) }]
       : []),
     // A mistaken « Retenir », or a candidate who fell through: the post is freed.
@@ -375,11 +376,15 @@ export function ExternalApplicationCard({
         />
       )}
 
-      {scheduling && a.analysis && (
+      {scheduling && (
         <ScheduleInterviewDialog
           open={scheduling}
           onOpenChange={setScheduling}
-          candidate={{ name, cvResumeId: a.analysis.resumeId, email: a.email }}
+          candidate={
+            score !== null && a.analysis
+              ? { name, cvResumeId: a.analysis.resumeId, email: a.email }
+              : { name, externalApplicationId: a.id, email: a.email }
+          }
           jobTitle={a.offer.title}
         />
       )}

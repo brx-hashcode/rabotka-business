@@ -51,7 +51,7 @@ export function ScheduleInterviewDialog({
 }: Readonly<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  candidate: { name: string; cvResumeId?: string; applicationId?: string; email?: string | null };
+  candidate: { name: string; cvResumeId?: string; applicationId?: string; externalApplicationId?: string; email?: string | null };
   jobTitle: string;
   /** Moving an interview already proposed. */
   existing?: Interview;
@@ -86,7 +86,11 @@ export function ScheduleInterviewDialog({
         ? rescheduleInterview(existing.id, slot)
         : createInterview({
             ...slot,
-            ...(candidate.cvResumeId ? { cvResumeId: candidate.cvResumeId } : { applicationId: candidate.applicationId }),
+            ...(candidate.cvResumeId
+              ? { cvResumeId: candidate.cvResumeId }
+              : candidate.externalApplicationId
+                ? { externalApplicationId: candidate.externalApplicationId }
+                : { applicationId: candidate.applicationId }),
             ...(isCv && email.trim() ? { candidateEmail: email.trim() } : {}),
           });
     },
