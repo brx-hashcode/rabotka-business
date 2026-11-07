@@ -1,6 +1,8 @@
 "use client";
 
+import { de } from "#/features/subscription/french";
 import { useState } from "react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -27,6 +29,9 @@ import type { BusinessPlan, MySubscription, SubscriptionPeriod, SubscriptionStat
 import { cn } from "#/lib/utils";
 import { offersPerPeriodLabel, offersUsed } from "../offers-quota";
 import { teamLine } from "../team-places";
+import { packCredits, planShare } from "../packs";
+import { usePacks } from "../use-packs";
+import { PacksSection } from "./packs-section";
 
 type Period = "MONTHLY" | "ANNUAL";
 
@@ -41,20 +46,57 @@ const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
 const date = (iso: string) =>
   new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
+const TABS = [
+  { key: "formule", label: "Formule" },
+  { key: "packs", label: "Packs" },
+] as const;
+
 /**
  * « Abonnement »: the plan the organisation has now, what it used, and the
  * plans it can choose (monthly or yearly). Choosing one opens the dashboard's
  * pay page; the period starts when the payment succeeds — after the running
- * one when renewing early, so no day is lost.
+ * one when renewing early, so no day is lost. The packs are a tab of their
+ * own (?onglet=packs), so neither makes the page long; the tab only shows
+ * with a plan running and packs on sale or bought.
  */
 export function SubscriptionPage() {
   const { data, isLoading, error } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
+  const packs = usePacks();
+  const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS.map((t) => t.key)).withDefault("formule"));
+  const hasPacks =
+    !!data?.entitlements.plan && ((packs.data?.onSale.length ?? 0) > 0 || (packs.data?.credits.length ?? 0) > 0);
+  const onPacks = hasPacks && tab === "packs";
 
   return (
     <div className="w-full space-y-8 pt-2">
-      <div className="space-y-1.5">
-        <h1 className="font-semibold text-3xl tracking-tight">Abonnement</h1>
-        <p className="text-muted-foreground">Votre formule Rabotka Business, son utilisation et son renouvellement.</p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="space-y-1.5">
+          <h1 className="font-semibold text-3xl tracking-tight">Abonnement</h1>
+          <p className="text-muted-foreground">
+            {onPacks
+              ? "Ajoutez-en à votre formule sans en changer. Valables 12 mois, ils servent une fois ceux de votre formule utilisés."
+              : "Votre formule Rabotka Business, son utilisation et son renouvellement."}
+          </p>
+        </div>
+        {hasPacks && (
+          <div role="tablist" aria-label="Abonnement" className="inline-flex rounded-full bg-card p-1">
+            {TABS.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                role="tab"
+                aria-selected={(onPacks ? "packs" : "formule") === t.key}
+                onClick={() => void setTab(t.key === "formule" ? null : t.key)}
+                className={cn(
+                  "h-10 rounded-full px-5 font-medium text-sm transition-colors",
+                  (onPacks ? "packs" : "formule") === t.key ? "bg-ink text-white" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {isLoading ? (
@@ -84,8 +126,14 @@ export function SubscriptionPage() {
         </p>
       ) : (
         <>
-          <CurrentPlan data={data} />
-          <PlanChooser data={data} />
+          {onPacks ? (
+            <PacksSection data={data} />
+          ) : (
+            <>
+              <CurrentPlan data={data} />
+              <PlanChooser data={data} />
+            </>
+          )}
         </>
       )}
     </div>
@@ -106,7 +154,12 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
   }
   const status = STATUS[e.status];
   // Contacts, CVs and AI drafts count per period; online offers do not.
-  const renews = e.endsAt ? `Pour la période, jusqu'au ${date(e.endsAt)}.` : undefined;
+  // An annual plan's counters start again every month: the date they do, else the period's end.
+  const renews = e.countersResetAt
+    ? `Pour ce mois, jusqu'au ${date(e.countersResetAt)} : le compteur repart à zéro ensuite.`
+    : e.endsAt
+      ? `Pour la période, jusqu'au ${date(e.endsAt)}.`
+      : undefined;
   return (
     <section className="space-y-6 rounded-3xl bg-card p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -130,39 +183,54 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
           label="Contacts inclus"
           used={e.unlocksUsed}
           limit={e.unlocksQuota}
+          packs={packCredits(e, "CONTACT")}
           hint={
             e.unlocksRemaining === 0
               ? "Tous vos contacts inclus sont utilisés : les suivants sont payants."
               : renews
           }
         />
-        <Meter icon={IconFileText} label="Offres publiées" used={offersUsed(e)} limit={e.activeOffersLimit} hint={renews} />
+        <Meter
+          icon={IconFileText}
+          label="Offres publiées"
+          used={offersUsed(e)}
+          limit={e.activeOffersLimit}
+          packs={packCredits(e, "OFFER")}
+          hint={renews}
+        />
         {e.cvQuota !== 0 && (
-          <Meter icon={IconFileSearch} label="CV inclus" used={e.cvUsed} limit={e.cvQuota} hint={renews} />
+          <Meter icon={IconFileSearch} label="CV inclus" used={e.cvUsed} limit={e.cvQuota} packs={packCredits(e, "CV")} hint={renews} />
         )}
         {/* Absent from a backend older than AI writing. */}
         {e.offerDraftsQuota !== undefined && e.offerDraftsQuota !== 0 && (
           <Meter
             icon={IconWand}
             label="Rédactions IA"
-            used={e.offerDraftsQuota === null ? 0 : e.offerDraftsQuota - (e.offerDraftsRemaining ?? 0)}
+            used={
+              e.offerDraftsQuota === null
+                ? 0
+                : e.offerDraftsQuota - (planShare(e.offerDraftsRemaining, packCredits(e, "OFFER_DRAFT")) ?? 0)
+            }
             limit={e.offerDraftsQuota}
+            packs={packCredits(e, "OFFER_DRAFT")}
             hint={renews}
           />
         )}
         {/* Added this period, like the offers: a new period frees them, the team stays. */}
         {e.recruitersLimit !== undefined && e.recruitersLimit !== 0 && (
-          <Meter icon={IconUserCheck} label="Recruteurs" used={e.recruiters ?? 0} limit={e.recruitersLimit} hint={<TeamHint endsAt={e.endsAt} />} />
+          <Meter icon={IconUserCheck} label="Recruteurs" used={e.recruiters ?? 0} limit={e.recruitersLimit} hint={<TeamHint />} />
         )}
         {e.reviewersLimit !== undefined && e.reviewersLimit !== 0 && (
-          <Meter icon={IconUserSearch} label="Évaluateurs" used={e.reviewers ?? 0} limit={e.reviewersLimit} hint={<TeamHint endsAt={e.endsAt} />} />
+          <Meter icon={IconUserSearch} label="Évaluateurs" used={e.reviewers ?? 0} limit={e.reviewersLimit} hint={<TeamHint />} />
         )}
       </div>
 
-      {(e.includesPreselection || e.priorityVisibility) && (
+      {(e.includesPreselection || e.priorityVisibility || e.linkedinPosting || e.hrExports) && (
         <ul className="flex flex-wrap gap-2">
           {e.includesPreselection && <Feature>Recherche de profils</Feature>}
           {e.priorityVisibility && <Feature>Offres affichées en premier</Feature>}
+          {e.linkedinPosting && <Feature>Publication sur LinkedIn</Feature>}
+          {e.hrExports && <Feature>Exports RH</Feature>}
         </ul>
       )}
 
@@ -173,14 +241,21 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
 
 const LENGTH: Record<string, string> = { MONTHLY: "1 mois", ANNUAL: "1 an" };
 
-/** What the running period still has, in words, for the « start now » warning. */
+/**
+ * What the running period still has, in words, for the « start now » warning.
+ * The packs are not lost: they go on with the next plan.
+ */
 function leftover(e: MySubscription["entitlements"]): string[] {
   const out: string[] = [];
   const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
-  if (e.unlocksRemaining) out.push(plural(e.unlocksRemaining, "contact inclus", "contacts inclus"));
-  if (e.cvRemaining) out.push(plural(e.cvRemaining, "CV inclus", "CV inclus"));
-  if (e.offerDraftsRemaining) out.push(plural(e.offerDraftsRemaining, "rédaction IA", "rédactions IA"));
-  if (e.offersRemaining) out.push(plural(e.offersRemaining, "offre à publier", "offres à publier"));
+  const unlocks = planShare(e.unlocksRemaining, packCredits(e, "CONTACT"));
+  const cv = planShare(e.cvRemaining, packCredits(e, "CV"));
+  const drafts = planShare(e.offerDraftsRemaining, packCredits(e, "OFFER_DRAFT"));
+  const offers = planShare(e.offersRemaining, packCredits(e, "OFFER"));
+  if (unlocks) out.push(plural(unlocks, "contact inclus", "contacts inclus"));
+  if (cv) out.push(plural(cv, "CV inclus", "CV inclus"));
+  if (drafts) out.push(plural(drafts, "rédaction IA", "rédactions IA"));
+  if (offers) out.push(plural(offers, "offre à publier", "offres à publier"));
   if (e.endsAt) {
     const days = Math.ceil((new Date(e.endsAt).getTime() - Date.now()) / 86_400_000);
     if (days > 0) out.push(plural(days, "jour", "jours"));
@@ -297,11 +372,11 @@ export function cvLine(plan: BusinessPlan): string | null {
   return plan.cvScreeningsPerPeriod === null ? "Analyse de CV illimitée" : `Analyse de CV : ${plan.cvScreeningsPerPeriod} CV inclus`;
 }
 
-/** Team places count per period, like the offers: a new period frees them, the people stay. */
-function TeamHint({ endsAt }: Readonly<{ endsAt: string | null }>) {
+/** Team places are a team size: the people in it now, invited or active. Leaving frees one. */
+function TeamHint() {
   return (
     <>
-      Ajouts à l&apos;équipe{endsAt ? ` jusqu'au ${date(endsAt)}` : ""}, puis à nouveau au renouvellement.{" "}
+      Les membres de votre équipe, invités ou actifs. Retirer quelqu&apos;un libère sa place.{" "}
       <Link href="/espace/equipe" className="font-medium text-foreground underline underline-offset-2">
         Gérer l&apos;équipe
       </Link>
@@ -314,8 +389,17 @@ function Meter({
   label,
   used,
   limit,
+  packs = 0,
   hint,
-}: Readonly<{ icon: typeof IconLockOpen; label: string; used: number; limit: number | null; hint?: React.ReactNode }>) {
+}: Readonly<{
+  icon: typeof IconLockOpen;
+  label: string;
+  used: number;
+  limit: number | null;
+  /** Left in the packs bought, used once the plan's are: shown beside the plan's count. */
+  packs?: number;
+  hint?: React.ReactNode;
+}>) {
   const pct = limit === null || limit === 0 ? 0 : Math.min(100, Math.round((used / limit) * 100));
   return (
     <div className="space-y-3 rounded-2xl bg-page p-4">
@@ -330,6 +414,11 @@ function Meter({
         <div className="h-2 overflow-hidden rounded-full bg-card">
           <div className={cn("h-full rounded-full", pct >= 100 ? "bg-destructive" : "bg-ink")} style={{ width: `${pct}%` }} />
         </div>
+      )}
+      {packs > 0 && limit !== null && (
+        <p className="inline-flex rounded-full bg-brand-lime/50 px-2.5 py-0.5 font-medium text-[#0f2414] text-xs">
+          + {packs} de vos packs
+        </p>
       )}
       {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
     </div>
@@ -404,20 +493,30 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
           const price = period === "ANNUAL" ? plan.annualPriceFcfa : plan.monthlyPriceFcfa;
           const isCurrent = plan.id === current;
           const change = !currentPlan || isCurrent ? null : plan.monthlyPriceFcfa > currentPlan.monthlyPriceFcfa ? "up" : "down";
-          const when = isCurrent
-            ? lastEnd && `S'ajoute à la suite, à partir du ${date(lastEnd)}.`
+          // When a queued period starts: after the running one, or after those already paid.
+          const after = data.upcoming.length > 0 ? "après les périodes déjà payées" : "à la fin de la période en cours";
+          const when = data.entitlements.status === "TRIAL"
+            ? "Démarre dès le paiement : votre essai gratuit s'arrête alors."
+            : isCurrent
+            ? lastEnd && `La nouvelle période commence le ${date(lastEnd)}, ${after}.`
             : change === "up"
-              ? `Démarre aujourd'hui. Les jours restants de ${currentPlan?.name} sont convertis en jours de ${plan.name}.`
+              ? `Démarre aujourd'hui : les jours restants ${de(currentPlan?.name ?? "")} sont convertis en jours ${de(plan.name)}.`
               : change === "down"
-                ? lastEnd &&
-                  `Démarre le ${date(lastEnd)}, ${data.upcoming.length > 0 ? "après les périodes déjà payées" : "à la fin de votre formule actuelle"}.`
+                ? lastEnd && `Démarre le ${date(lastEnd)}, ${after}.`
                 : null;
           const pending = buy.isPending && buy.variables?.id === plan.id;
           return (
             <article key={plan.id} className={cn("flex flex-col gap-5 rounded-3xl bg-card p-6", isCurrent && "ring-2 ring-ink")}>
               <div className="space-y-1">
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="font-semibold text-lg">{plan.name}</h3>
+                  <h3 className="flex items-center gap-2 font-semibold text-lg">
+                    {plan.name}
+                    {plan.custom && (
+                      <span className="rounded-full bg-chip-violet px-2.5 py-1 font-medium text-chip-violet-foreground text-xs">
+                        Sur mesure
+                      </span>
+                    )}
+                  </h3>
                   {isCurrent ? (
                     <span className="rounded-full bg-chip-green px-2.5 py-1 font-medium text-chip-green-foreground text-xs">
                       Votre formule
@@ -447,6 +546,8 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
                 {teamLine(plan) && <PlanLine>{teamLine(plan)}</PlanLine>}
                 {plan.includesPreselection && <PlanLine>Recherche de profils</PlanLine>}
                 {plan.priorityVisibility && <PlanLine>Offres affichées en premier</PlanLine>}
+                {plan.linkedinPosting && <PlanLine>Publication sur LinkedIn</PlanLine>}
+                {plan.hrExports && <PlanLine>Exports RH</PlanLine>}
               </ul>
               {when && <p className="text-muted-foreground text-xs">{when}</p>}
               <button

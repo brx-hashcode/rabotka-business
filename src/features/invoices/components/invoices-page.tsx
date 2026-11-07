@@ -13,6 +13,7 @@ import { cn } from "#/lib/utils";
 
 const REASON: Record<string, string> = {
   BUSINESS_SUBSCRIPTION: "Abonnement Rabotka Business",
+  BUSINESS_CREDIT_PACK: "Pack Rabotka Business",
   CONTACT_UNLOCK: "Accès à un contact",
   PENALTY: "Pénalité",
   WALLET_TOP_UP: "Recharge du solde",

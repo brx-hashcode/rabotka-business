@@ -10,7 +10,6 @@ import {
   IconShare,
 } from "@tabler/icons-react";
 import { useState } from "react";
-import { toast } from "sonner";
 
 import {
   DropdownMenu,
@@ -20,7 +19,8 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { PreviewSheet } from "#/components/preview-sheet";
 import { appConfig } from "#/config";
-import { copyText } from "#/lib/clipboard";
+import { useOfferShare } from "../use-offer-share";
+import { LinkedinPostDialog, type LinkedinOffer } from "./linkedin-post-dialog";
 
 const ITEM = "cursor-pointer gap-2.5 rounded-xl px-3 py-2.5 text-sm focus:bg-page";
 
@@ -28,31 +28,14 @@ const ITEM = "cursor-pointer gap-2.5 rounded-xl px-3 py-2.5 text-sm focus:bg-pag
  * Where the offer's public page goes, for anyone not on Rabotka. Each network's
  * link says where it was shared, so the candidates it brings are counted there.
  */
-export function ShareOfferMenu({
-  offerId,
-  slug,
-  reference,
-  title,
-}: Readonly<{ offerId: string; slug: string; reference: string; title: string }>) {
-  const url = (source?: string) =>
-    `${window.location.origin}/carrieres/${slug}/${reference}${source ? `?source=${source}` : ""}`;
-  const open = (href: string) => window.open(href, "_blank", "noopener,noreferrer");
-
-  const copy = async () => {
-    const copied = await copyText(url());
-    if (copied) toast.success("Lien de l'offre copié.");
-    else toast.error("Le lien n'a pas pu être copié.");
-  };
-
-  // TikTok has no share link: the offer's link is copied, to paste there.
-  const shareOnTiktok = async () => {
-    const copied = await copyText(url("tiktok"));
-    if (copied) toast.success("Lien copié. Collez-le sur TikTok.");
-    else toast.error("Le lien n'a pas pu être copié.");
-    window.open("https://www.tiktok.com/", "_blank", "noopener,noreferrer");
-  };
+export function ShareOfferMenu({ slug, offer }: Readonly<{ slug: string; offer: LinkedinOffer }>) {
+  const { id: offerId, reference, title } = offer;
+  // Each network with the offer's details and its tagged link (use-offer-share.ts).
+  const share = useOfferShare(slug, offer);
 
   const [posterOpen, setPosterOpen] = useState(false);
+  // LinkedIn: published from the recruiter's account, or its share box (the dialog decides).
+  const [linkedinOpen, setLinkedinOpen] = useState(false);
 
   return (
     <>
@@ -64,30 +47,30 @@ export function ShareOfferMenu({
         <DropdownMenuContent align="end" className="w-56 rounded-2xl border-0 bg-card p-1.5 shadow-soft">
           <DropdownMenuItem
             className={ITEM}
-            onSelect={() => open(`https://wa.me/?text=${encodeURIComponent(`${title}\n${url("whatsapp")}`)}`)}
+            onSelect={() => setLinkedinOpen(true)}
           >
-            <IconBrandWhatsapp className="size-4" />
+            <IconBrandLinkedin className="size-4 text-[#0a66c2]" />
+            LinkedIn
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className={ITEM}
+            onSelect={share.whatsapp}
+          >
+            <IconBrandWhatsapp className="size-4 text-[#1ebe5b]" />
             WhatsApp
           </DropdownMenuItem>
           <DropdownMenuItem
             className={ITEM}
-            onSelect={() => open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url("facebook"))}`)}
+            onSelect={share.facebook}
           >
-            <IconBrandFacebook className="size-4" />
+            <IconBrandFacebook className="size-4 text-[#1877f2]" />
             Facebook
           </DropdownMenuItem>
-          <DropdownMenuItem
-            className={ITEM}
-            onSelect={() => open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url("linkedin"))}`)}
-          >
-            <IconBrandLinkedin className="size-4" />
-            LinkedIn
-          </DropdownMenuItem>
-          <DropdownMenuItem className={ITEM} onSelect={() => void shareOnTiktok()}>
+          <DropdownMenuItem className={ITEM} onSelect={share.tiktok}>
             <IconBrandTiktok className="size-4" />
             TikTok
           </DropdownMenuItem>
-          <DropdownMenuItem className={ITEM} onSelect={() => void copy()}>
+          <DropdownMenuItem className={ITEM} onSelect={() => void share.copyLink()}>
             <IconLink className="size-4" />
             Copier le lien
           </DropdownMenuItem>
@@ -97,6 +80,12 @@ export function ShareOfferMenu({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <LinkedinPostDialog
+        open={linkedinOpen}
+        onOpenChange={setLinkedinOpen}
+        slug={slug}
+        offer={offer}
+      />
       {/* Read, downloaded and printed from the drawer, like the dashboard's report. */}
       <PreviewSheet
         open={posterOpen}

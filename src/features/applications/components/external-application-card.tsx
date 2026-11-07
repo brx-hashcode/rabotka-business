@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconAlertTriangle, IconCalendarPlus, IconCheck, IconChevronDown, IconDownload, IconFileText, IconMail, IconPhone, IconUsers, IconX } from "@tabler/icons-react";
+import { IconAlertTriangle, IconArrowBackUp, IconCalendarPlus, IconCheck, IconChevronDown, IconDownload, IconFileText, IconMail, IconPhone, IconUsers, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
@@ -22,10 +22,12 @@ import {
   externalApplicationsKey,
   refuseExternalApplication,
   retainExternalApplication,
+  unretainExternalApplication,
   type ExternalApplication,
 } from "#/lib/api/careers-controller";
 import { cvScreeningsKey, getCvScreening } from "#/lib/api/cv-screening-controller";
 import { sourceLabel } from "#/features/careers/candidate-source";
+import { showExternalStatus } from "#/features/offers/application-cache";
 import { APPLICATION_STATUS, statusClass } from "#/features/offers/offer-labels";
 import { DescriptionText } from "#/features/careers/components/description-text";
 import { canSchedule } from "#/features/applications/can-schedule";
@@ -83,6 +85,7 @@ export function ExternalApplicationCard({
   const hire = canHire(useMember().role);
   const [refusing, setRefusing] = useState(false);
   const [retaining, setRetaining] = useState(false);
+  const [unretaining, setUnretaining] = useState(false);
   // One toggle for its analysis and its answers, as on a Rabotka applicant's card.
   const [showDetails, setShowDetails] = useState(false);
   const [opinionOpen, setOpinionOpen] = useState(false);
@@ -92,9 +95,11 @@ export function ExternalApplicationCard({
   const score = a.analysis?.status === "SCORED" ? a.analysis.score : null;
   const insight = score !== null && !!a.analysis && hasInsight(a.analysis);
   // Chat reads the resume as Analyse de CV holds it.
+  // One request per screening, shared by every card of the offer; each picks its own.
   const resume = useQuery({
-    queryKey: [...cvScreeningsKey, a.analysis?.screeningId, "resume", a.analysis?.resumeId],
-    queryFn: async () => (await getCvScreening(a.analysis?.screeningId as string)).resumes.find((r) => r.id === a.analysis?.resumeId) ?? null,
+    queryKey: [...cvScreeningsKey, a.analysis?.screeningId],
+    queryFn: () => getCvScreening(a.analysis?.screeningId as string),
+    select: (s) => s.resumes.find((r) => r.id === a.analysis?.resumeId) ?? null,
     enabled: score !== null,
   });
   const [message, setMessage] = useState("");
@@ -117,22 +122,37 @@ export function ExternalApplicationCard({
         ]
       : []),
     { key: "opinion", label: opinionLabel(opinions), icon: IconUsers, onSelect: () => setOpinionOpen(true) },
-    ...(score !== null && canSchedule(a)
+    // With or without a CV analysis: the address they applied with is enough.
+    ...(hire && canSchedule(a)
       ? [{ key: "interview", label: "Planifier un entretien", icon: IconCalendarPlus, onSelect: () => setScheduling(true) }]
+      : []),
+    // A mistaken « Retenir », or a candidate who fell through: the post is freed.
+    ...(hire && a.status === "RETAINED"
+      ? [{ key: "unretain", label: "Annuler « retenu »", icon: IconArrowBackUp, onSelect: () => setUnretaining(true) }]
       : []),
   ];
 
+  const refreshList = () => void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
+  // The card shows the decision at once; an error puts it back (application-cache.ts).
+  const decide = (status: ExternalApplication["status"], close: () => void) => () => {
+    close();
+    return { undo: showExternalStatus(queryClient, a.id, status) };
+  };
+  const failed = (message: string) => (err: unknown, _vars: unknown, ctx?: { undo: () => void }) => {
+    ctx?.undo();
+    refreshList();
+    toast.error(friendlyError(err, message));
+  };
+
   const refuse = useMutation({
     mutationFn: () => refuseExternalApplication(a.id, message.trim() || undefined),
+    onMutate: decide("REFUSED", () => setRefusing(false)),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
+      refreshList();
       toast.success(`${name} est prévenu par e-mail.`);
-      setRefusing(false);
     },
-    onError: (err) => toast.error(friendlyError(err, "Le refus n'a pas pu être envoyé.")),
+    onError: failed("Le refus n'a pas pu être envoyé."),
   });
-
-  const refreshList = () => void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
 
   const analyse = useMutation({
     mutationFn: () => analyseExternalApplications(a.offer.id, a.id),
@@ -145,12 +165,22 @@ export function ExternalApplicationCard({
 
   const retain = useMutation({
     mutationFn: () => retainExternalApplication(a.id),
+    onMutate: decide("RETAINED", () => setRetaining(false)),
     onSuccess: () => {
       refreshList();
       toast.success(`${name} est prévenu par e-mail.`);
-      setRetaining(false);
     },
-    onError: (err) => toast.error(friendlyError(err, "La candidature n'a pas pu être retenue.")),
+    onError: failed("La candidature n'a pas pu être retenue."),
+  });
+
+  const unretain = useMutation({
+    mutationFn: () => unretainExternalApplication(a.id),
+    onMutate: decide("PENDING", () => setUnretaining(false)),
+    onSuccess: () => {
+      refreshList();
+      toast.success("Décision annulée : la personne est prévenue par e-mail.");
+    },
+    onError: failed("La décision n'a pas pu être annulée."),
   });
 
   async function saveCv() {
@@ -359,11 +389,15 @@ export function ExternalApplicationCard({
         />
       )}
 
-      {scheduling && a.analysis && (
+      {scheduling && (
         <ScheduleInterviewDialog
           open={scheduling}
           onOpenChange={setScheduling}
-          candidate={{ name, cvResumeId: a.analysis.resumeId, email: a.email }}
+          candidate={
+            score !== null && a.analysis
+              ? { name, cvResumeId: a.analysis.resumeId, email: a.email }
+              : { name, externalApplicationId: a.id, email: a.email }
+          }
           jobTitle={a.offer.title}
         />
       )}
@@ -376,6 +410,17 @@ export function ExternalApplicationCard({
         confirmLabel="Retenir"
         pending={retain.isPending}
         onConfirm={() => retain.mutate()}
+      />
+
+      <ActionDialog
+        open={unretaining}
+        onOpenChange={setUnretaining}
+        title={`Ne plus retenir ${name} ?`}
+        description="Le poste est libéré et l'offre recrute de nouveau. La personne est prévenue par e-mail que sa candidature reste à l'étude."
+        confirmLabel="Ne plus retenir"
+        tone="warning"
+        pending={unretain.isPending}
+        onConfirm={() => unretain.mutate()}
       />
 
       <ActionDialog

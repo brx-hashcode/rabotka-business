@@ -90,7 +90,7 @@ export function AccountMenu() {
           <span className="hidden min-w-0 flex-col text-left leading-tight md:flex">
             <span className="max-w-44 truncate font-medium text-sm">{name || business?.name || "Mon compte"}</span>
             <span className="max-w-44 truncate text-muted-foreground text-xs">
-              {asMember ? `${ROLE_LABEL[member.role]} · ${business?.name ?? ""}` : (user?.email ?? "Compte entreprise")}
+              {asMember ? `${ROLE_LABEL[member.role]} · ${business?.name ?? ""}` : (personEmail ?? "Compte entreprise")}
             </span>
           </span>
           <IconChevronDown className="hidden size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180 sm:block" />

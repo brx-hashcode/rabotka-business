@@ -4,7 +4,8 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { io } from "socket.io-client";
 
-import { refreshFor, SCREENING_PROGRESS_KEYS, type PushedNotification } from "./notification-refresh";
+import { createProgressRefresh, refreshFor, type PushedNotification, type ScreeningProgress } from "./notification-refresh";
+import { setSocketConnected } from "./socket-status";
 
 /**
  * Refreshes, the moment the backend pushes a notification (`/notifications`
@@ -22,17 +23,21 @@ export function useNotificationsSocket() {
   useEffect(() => {
     // `/socket.io`, not `/socket.io/`: Next would redirect that one first.
     const socket = io("/notifications", { transports: ["polling"], upgrade: false, addTrailingSlash: false });
+    // The polls it covers slow down while it is up (socket-status.ts).
+    socket.on("connect", () => setSocketConnected(true));
+    socket.on("disconnect", () => setSocketConnected(false));
     // Each notification refreshes what it is about (notification-refresh.ts).
     socket.on("notification:new", (notification?: PushedNotification) => {
       refreshFor(queryClient, notification ?? {});
     });
     // A CV was read (an « Analyse de CV », or a candidate analysed as they
     // applied): its screening and the offer's cards fill in as it goes.
-    socket.on("cv-screening:progress", () => {
-      for (const queryKey of SCREENING_PROGRESS_KEYS) void queryClient.invalidateQueries({ queryKey });
-    });
+    // Throttled: that screening at once, the rest every 2 s and at the end.
+    const progress = createProgressRefresh((queryKey) => void queryClient.invalidateQueries({ queryKey }));
+    socket.on("cv-screening:progress", (event?: ScreeningProgress) => progress(event));
     return () => {
       socket.disconnect();
+      setSocketConnected(false);
     };
   }, [queryClient]);
 }

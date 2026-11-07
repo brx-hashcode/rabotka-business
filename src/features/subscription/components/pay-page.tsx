@@ -20,7 +20,7 @@ import { toast } from "sonner";
 
 import { Bone } from "#/components/page-skeletons";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
-import { getMySubscription, myBusinessKey, mySubscriptionKey } from "#/lib/api/business-controller";
+import { getMyPacks, getMySubscription, myBusinessKey, myPacksKey, mySubscriptionKey } from "#/lib/api/business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { getPaymentByToken, getPaymentGateways, initiatePayment } from "#/lib/api/payment-controller";
 import type { BusinessPlan, PaymentOperator } from "#/lib/api/types";
@@ -28,6 +28,9 @@ import { cn } from "#/lib/utils";
 import { PaymentDialog, REQUEST_SECONDS, type PaymentPhase } from "./payment-dialog";
 import { cvLine } from "./subscription-page";
 import { offersPerPeriodLabel } from "../offers-quota";
+import { readPackDescription } from "../packs";
+import { phonePlaceholder } from "../phone-placeholder";
+import { usePacks } from "../use-packs";
 
 
 const POLL_MS = 3000;
@@ -50,21 +53,24 @@ function planLines(p: BusinessPlan): string[] {
     ...(cvLine(p) ? [cvLine(p) as string] : []),
     ...(p.includesPreselection ? ["Recherche de profils"] : []),
     ...(p.priorityVisibility ? ["Offres affichées en premier"] : []),
+    ...(p.linkedinPosting ? ["Publication sur LinkedIn"] : []),
+    ...(p.hrExports ? ["Exports RH"] : []),
   ];
 }
 
 /**
- * Paying a subscription, on the public pay API the client app uses
+ * Paying a subscription or a pack, on the public pay API the client app uses
  * (`pay/:token`): the network, the number, the confirmation on the phone —
  * beside what is being paid for. Once the request is settled `GET pay/:token`
- * answers no more, so success is read from the subscription itself: a new
- * paid period means the payment went through.
+ * answers no more, so success is read from what it bought: a new paid period,
+ * or for a pack (told by its description) new credits.
  */
 export function PayPage({ token }: Readonly<{ token: string }>) {
   const queryClient = useQueryClient();
   const payment = useQuery({ queryKey: ["payment", token], queryFn: () => getPaymentByToken(token), retry: false });
   const gateways = useQuery({ queryKey: ["payment-gateways"], queryFn: getPaymentGateways, staleTime: 10 * 60 * 1000 });
   const subscription = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
+  const packs = usePacks();
 
   const gateway = gateways.data?.gateways.find((g) => g.key === (gateways.data?.active ?? payment.data?.gateway));
   // Every country the gateway charges in, from its live configuration — none listed in code.
@@ -94,10 +100,18 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
   const [sentAt, setSentAt] = useState(0);
   const [phoneLabel, setPhoneLabel] = useState("");
   const [startsAt, setStartsAt] = useState<string | null>(null);
-  const paidBefore = useRef<number | null>(null);
+  // The operator's reason for refusing, when it gave one worth telling.
+  const [failure, setFailure] = useState<string | null>(null);
+  // The paid periods known before paying, by id: a new one is the payment's.
+  // Counted, they stopped changing once the history (24 rows) was full.
+  const paidBefore = useRef<Set<string>>(new Set());
+  // A pack's: the credits known before paying.
+  const creditsBefore = useRef<Set<string>>(new Set());
   const polls = useRef(0);
 
   const dial = selected?.dialCode ?? current?.dialCode ?? "242";
+  // The network's own prefix (MTN 06, Airtel 05 in Congo).
+  const placeholder = phonePlaceholder(selected?.code, dial);
 
   function chooseCountry(next: string) {
     if (next === country) return;
@@ -109,6 +123,8 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
   }
   const amount = payment.data?.amount ?? null;
   const what = readDescription(payment.data?.description);
+  /** « 100 CV à analyser » when paying a pack, else null. */
+  const pack = readPackDescription(payment.data?.description);
   const plan = what ? subscription.data?.plans.find((p) => p.name.toLowerCase() === what.planName.toLowerCase()) : undefined;
 
   async function pay() {
@@ -116,7 +132,11 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
     // (+242 06 …), where elsewhere it is a trunk prefix to drop.
     const number = parsePhoneNumberFromString(digits, { defaultCallingCode: dial });
     if (!number?.isValid()) {
-      setError(dial === "242" ? "Saisissez un numéro de téléphone valide, par exemple 06 123 45 67." : "Saisissez un numéro de téléphone valide.");
+      setError(
+        placeholder === "Numéro"
+          ? "Saisissez un numéro de téléphone valide."
+          : `Saisissez un numéro de téléphone valide, par exemple ${placeholder}.`,
+      );
       return;
     }
     if (gateway?.requiresOperator && !selected) {
@@ -125,13 +145,15 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
     }
     setError(null);
     setSending(true);
-    paidBefore.current = (subscription.data?.history ?? []).filter((p) => p.paid).length;
+    paidBefore.current = new Set((subscription.data?.history ?? []).filter((p) => p.paid).map((p) => p.id));
+    creditsBefore.current = new Set((packs.data?.credits ?? []).map((c) => c.id));
     try {
       await initiatePayment(token, {
         phone: number.number,
         ...(gateway?.requiresOperator && selected ? { operator: selected.code } : {}),
       });
       polls.current = 0;
+      setFailure(null);
       setPhoneLabel(number.formatInternational());
       setSentAt(Date.now());
       setPhase("waiting");
@@ -152,6 +174,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
       try {
         const p = await getPaymentByToken(token);
         if (p.status === "REJECTED") {
+          setFailure(p.failureReason ?? null);
           setPhase("failed");
           return;
         }
@@ -163,9 +186,18 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
         if (Date.now() - sentAt > REQUEST_SECONDS * 1000) setPhase("expired");
         return;
       }
+      if (pack) {
+        const now = await queryClient.fetchQuery({ queryKey: myPacksKey, queryFn: getMyPacks, staleTime: 0 });
+        if (now.credits.some((c) => !creditsBefore.current.has(c.id))) {
+          setPhase("approved");
+          // What is left to use, everywhere it shows.
+          void queryClient.invalidateQueries({ queryKey: myBusinessKey });
+        } else if (polls.current > POLL_LIMIT) setPhase("failed");
+        return;
+      }
       const sub = await queryClient.fetchQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription, staleTime: 0 });
-      const paidNow = sub.history.filter((p) => p.paid).length;
-      if (paidNow > (paidBefore.current ?? 0)) {
+      // A new period starts now or after the others: always among the newest 24.
+      if (sub.history.some((p) => p.paid && !paidBefore.current.has(p.id))) {
         // A lower plan or a renewal is queued: say when it starts, not « now ».
         const queued = sub.upcoming.find((p) => p.planName.toLowerCase() === what?.planName.toLowerCase());
         setStartsAt(queued?.startsAt ?? null);
@@ -176,7 +208,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
       else if (polls.current > POLL_LIMIT) setPhase("failed");
     }, POLL_MS);
     return () => clearInterval(timer);
-  }, [phase, token, queryClient, sentAt, what?.planName]);
+  }, [phase, token, queryClient, sentAt, what?.planName, pack]);
 
   return (
     <div className="w-full space-y-6 pt-2">
@@ -186,7 +218,9 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
       </Link>
       <div className="space-y-1.5">
         <h1 className="font-semibold text-3xl tracking-tight">Paiement</h1>
-        <p className="text-muted-foreground">Réglez votre formule par mobile money : vous validez le paiement sur votre téléphone.</p>
+        <p className="text-muted-foreground">
+          Réglez votre {pack ? "pack" : "formule"} par mobile money : vous validez le paiement sur votre téléphone.
+        </p>
       </div>
 
       {payment.isError && phase === null ? (
@@ -299,7 +333,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
                       value={digits}
                       onChange={(e) => setDigits(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && void pay()}
-                      placeholder={dial === "242" ? "06 123 45 67" : "Numéro"}
+                      placeholder={placeholder}
                       className="h-full flex-1 bg-transparent px-3 text-lg tracking-wide outline-none placeholder:text-muted-foreground/60"
                     />
                   </div>
@@ -342,9 +376,17 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
             sentAt={sentAt}
             planName={what?.planName ?? null}
             startsAt={startsAt}
+            failureText={failure}
+            approvedText={
+              pack ? `Votre pack est ajouté : ${pack}, valables 12 mois. La facture arrive par e-mail et dans Factures.` : undefined
+            }
             onClose={() => {
               if (phase === "waiting") {
-                toast("Si vous validez la demande sur votre téléphone, votre formule s'activera quand même.");
+                toast(
+                  pack
+                    ? "Si vous validez la demande sur votre téléphone, votre pack sera ajouté quand même."
+                    : "Si vous validez la demande sur votre téléphone, votre formule s'activera quand même.",
+                );
               }
               setPhase(null);
             }}
@@ -361,6 +403,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
             planName={what?.planName ?? null}
             period={what?.period ?? null}
             plan={plan}
+            pack={pack}
           />
         </div>
       )}
@@ -404,6 +447,7 @@ function Summary({
   planName,
   period,
   plan,
+  pack,
 }: Readonly<{
   loading: boolean;
   amount: number | null;
@@ -411,6 +455,8 @@ function Summary({
   planName: string | null;
   period: "mensuel" | "annuel" | null;
   plan?: BusinessPlan;
+  /** « 100 CV à analyser » when paying a pack. */
+  pack: string | null;
 }>) {
   return (
     <aside className="space-y-6 rounded-3xl bg-card p-6 lg:sticky lg:top-24">
@@ -428,13 +474,19 @@ function Summary({
               <IconRosetteDiscountCheck className="size-6" />
             </span>
             <div className="min-w-0">
-              <p className="font-semibold text-lg">{planName ? `Formule ${planName}` : (description ?? "Abonnement")}</p>
+              <p className="font-semibold text-lg">
+                {pack ? "Pack Rabotka Business" : planName ? `Formule ${planName}` : (description ?? "Abonnement")}
+              </p>
+              {pack && <p className="text-muted-foreground text-sm">{pack}</p>}
               {period && <p className="text-muted-foreground text-sm">Abonnement {period}, renouvelable</p>}
             </div>
           </div>
-          {plan && (
+          {(plan || pack) && (
             <ul className="space-y-2 rounded-2xl bg-page p-4 text-sm">
-              {planLines(plan).map((line) => (
+              {(pack
+                ? ["En plus de votre formule, sans en changer", "Utilisé une fois ceux de votre formule épuisés", "Valable 12 mois"]
+                : planLines(plan as BusinessPlan)
+              ).map((line) => (
                 <li key={line} className="flex items-center gap-2">
                   <IconCheck className="size-4 shrink-0 text-whatsapp-dark" />
                   {line}
@@ -457,7 +509,7 @@ function Summary({
           </li>
           <li className="flex gap-2.5">
             <IconCircleCheckFilled className="mt-0.5 size-4 shrink-0" />
-            Votre formule s&apos;active aussitôt.
+            {pack ? "Votre pack s'ajoute aussitôt." : "Votre formule s'active aussitôt."}
           </li>
           <li className="flex gap-2.5">
             <IconFileInvoice className="mt-0.5 size-4 shrink-0" />

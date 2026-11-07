@@ -15,10 +15,12 @@ import {
   notificationsKey,
   timeAgo,
   type AppNotification,
+  type NotificationPage,
 } from "#/lib/api/notification-controller";
 import { cn } from "#/lib/utils";
 import { notificationLook } from "../notification-look";
 import { useNotificationsSocket } from "../use-notifications-socket";
+import { pollEvery } from "../socket-status";
 
 const PAGE = 20;
 
@@ -36,7 +38,7 @@ export function NotificationBell() {
   const unread = useQuery({
     queryKey: [...notificationsKey, "unread"],
     queryFn: getUnreadCount,
-    refetchInterval: 60_000,
+    refetchInterval: () => pollEvery(60_000, 300_000),
   });
   const feed = useQuery({
     queryKey: [...notificationsKey, "list", limit],
@@ -45,11 +47,37 @@ export function NotificationBell() {
     placeholderData: keepPreviousData,
   });
   const refresh = () => queryClient.invalidateQueries({ queryKey: notificationsKey });
-  const readAll = useMutation({ mutationFn: markAllNotificationsRead, onSuccess: refresh });
+  // Read in the cache first (the dot and the badge go at once), the server
+  // after; the refresh puts it right either way. `null`: all of them.
+  const showRead = (id: string | null) => {
+    const now = new Date().toISOString();
+    queryClient.setQueriesData<NotificationPage>({ queryKey: [...notificationsKey, "list"] }, (page) =>
+      page && {
+        ...page,
+        items: page.items.map((n) => (!n.readAt && (id === null || n.id === id) ? { ...n, readAt: now } : n)),
+        unreadCount: id === null ? 0 : Math.max(0, page.unreadCount - 1),
+      },
+    );
+    queryClient.setQueryData<{ count: number }>([...notificationsKey, "unread"], (u) =>
+      u && { count: id === null ? 0 : Math.max(0, u.count - 1) },
+    );
+  };
+  const readAll = useMutation({
+    mutationFn: markAllNotificationsRead,
+    onMutate: () => {
+      void queryClient.cancelQueries({ queryKey: notificationsKey });
+      showRead(null);
+    },
+    onSettled: refresh,
+  });
 
-  async function openOne(n: AppNotification) {
-    if (!n.readAt) await markNotificationRead(n.id).catch(() => undefined);
-    void refresh();
+  function openOne(n: AppNotification) {
+    if (!n.readAt) {
+      showRead(n.id);
+      void markNotificationRead(n.id)
+        .catch(() => undefined)
+        .finally(() => void refresh());
+    }
     const link = espaceLink(n.link);
     if (link) {
       setOpen(false);
@@ -101,7 +129,7 @@ export function NotificationBell() {
           )}
         </div>
         <div className="max-h-[min(65svh,32rem)] overflow-y-auto overscroll-contain pb-2">
-          <NotificationList items={items} loading={feed.isLoading} onOpen={(n) => void openOne(n)} />
+          <NotificationList items={items} loading={feed.isLoading} onOpen={openOne} />
           {hasMore && (
             <div className="px-4 pt-2">
               <button
@@ -179,7 +207,7 @@ export function NotificationList({
 }
 
 function Row({ n, onOpen }: Readonly<{ n: AppNotification; onOpen?: (n: AppNotification) => void }>) {
-  const { icon: Icon, tone } = notificationLook(n.type);
+  const { icon: Icon, tone } = notificationLook(n.type, n.title);
   const unread = !n.readAt;
   return (
     <button
@@ -188,11 +216,11 @@ function Row({ n, onOpen }: Readonly<{ n: AppNotification; onOpen?: (n: AppNotif
       className="flex w-full items-start gap-3 rounded-2xl px-3 py-3 text-left transition-colors hover:bg-page focus-visible:bg-page focus-visible:outline-none"
     >
       <span className="relative shrink-0">
-        <span className={cn("flex size-10 items-center justify-center rounded-full", tone)}>
-          <Icon className="size-[18px]" />
+        <span className={cn("flex size-11 items-center justify-center rounded-2xl", tone)}>
+          <Icon className="size-5" stroke={1.75} />
         </span>
         {unread && (
-          <span aria-label="Non lue" className="absolute -top-0.5 -right-0.5 size-3 rounded-full bg-whatsapp ring-2 ring-card" />
+          <span aria-label="Non lue" className="absolute -top-1 -right-1 size-3 rounded-full bg-whatsapp ring-2 ring-card" />
         )}
       </span>
       <span className="min-w-0 flex-1">

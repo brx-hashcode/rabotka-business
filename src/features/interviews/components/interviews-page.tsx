@@ -24,6 +24,8 @@ import { cn } from "#/lib/utils";
 import { MODES, StatusChip, modeLabel } from "./interview-bits";
 import { CalendarLinkDialog } from "./calendar-link-dialog";
 import { ScheduleInterviewDialog } from "./schedule-interview-dialog";
+import { canHire } from "#/features/team/member-access";
+import { useMember } from "#/features/team/use-member";
 
 const TABS = [
   { key: "upcoming", label: "À venir" },
@@ -158,6 +160,8 @@ const initials = (name: string) => {
 function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; past: boolean }>) {
   const queryClient = useQueryClient();
   const [moving, setMoving] = useState(false);
+  // Moving or cancelling is the hiring side's: an Évaluateur only reads.
+  const hire = canHire(useMember().role);
   const [confirm, setConfirm] = useState(false);
   const cancel = useMutation({
     mutationFn: () => cancelInterview(i.id),
@@ -234,7 +238,7 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
         )}
       </div>
 
-      {!past && !cancelled && (
+      {hire && !past && !cancelled && (
         <div className="mt-auto flex gap-2">
           <button type="button" onClick={() => setMoving(true)} className="h-10 flex-1 rounded-full bg-page font-medium text-sm hover:bg-page/70">
             Déplacer

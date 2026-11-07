@@ -102,8 +102,9 @@ class CareersController extends BusinessBaseController {
     return this.post(`/public/careers/${encodeURIComponent(slug)}/offers/${encodeURIComponent(reference)}/apply`, form);
   }
 
-  listExternal(): Promise<ExternalApplication[]> {
-    return this.get("/business/me/external-applications");
+  /** All of the business's (the newest 500), or one offer's. */
+  listExternal(offerId?: string): Promise<ExternalApplication[]> {
+    return this.get(`/business/me/external-applications${offerId ? `?offerId=${encodeURIComponent(offerId)}` : ""}`);
   }
 
   /** One candidate, or the offer's not yet read. Each CV uses one « CV inclus ». */
@@ -113,6 +114,11 @@ class CareersController extends BusinessBaseController {
 
   retainExternal(id: string): Promise<unknown> {
     return this.post(`/business/me/external-applications/${encodeURIComponent(id)}/retain`);
+  }
+
+  /** Takes a retention back: the candidate waits again, and is told by e-mail. */
+  unretainExternal(id: string): Promise<unknown> {
+    return this.post(`/business/me/external-applications/${encodeURIComponent(id)}/unretain`);
   }
 
   refuseExternal(id: string, message?: string): Promise<unknown> {
@@ -130,3 +136,4 @@ export const listExternalApplications = controller.listExternal.bind(controller)
 export const analyseExternalApplications = controller.analyseExternal.bind(controller);
 export const retainExternalApplication = controller.retainExternal.bind(controller);
 export const refuseExternalApplication = controller.refuseExternal.bind(controller);
+export const unretainExternalApplication = controller.unretainExternal.bind(controller);

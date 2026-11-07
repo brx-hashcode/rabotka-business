@@ -196,10 +196,19 @@ export type BusinessPlan = {
   cvChatQuestions: number;
   includesPreselection: boolean;
   priorityVisibility: boolean;
+  /** « Publier sur LinkedIn » from Rabotka. Absent before the service. */
+  linkedinPosting?: boolean;
+  /** « Exports RH »: candidates, staff register, ACPE. Absent before the service. */
+  hrExports?: boolean;
   /** Team places (the holder is the one administrator). Null: unlimited; 0: none. Absent before the team. */
   recruitersLimit?: number | null;
   reviewersLimit?: number | null;
+  /** Made for this business alone (« sur mesure »). */
+  custom?: boolean;
 };
+
+/** The AI features a trial may leave out until a paid plan. */
+export type TrialAiFeature = "cvAnalysis" | "cvChat" | "offerWriter";
 
 export type SubscriptionPeriod = {
   id: string;
@@ -220,6 +229,8 @@ export type MySubscription = {
     plan: { id: string; code: string; name: string } | null;
     status: SubscriptionStatus | null;
     endsAt: string | null;
+    /** When the counters start again (each month of an annual plan); null: at `endsAt`. Absent from an older backend. */
+    countersResetAt?: string | null;
     unlocksRemaining: number | null;
     unlocksQuota: number | null;
     unlocksUsed: number;
@@ -246,11 +257,22 @@ export type MySubscription = {
     offerDraftsQuota: number | null;
     includesPreselection: boolean;
     priorityVisibility: boolean;
+    /** « Publier sur LinkedIn » from Rabotka (the share link is open to all). */
+    linkedinPosting?: boolean;
+    /** « Exports RH »: candidates, staff register, ACPE declaration. */
+    hrExports?: boolean;
     /** Team places and who fills them now (invited or active). Absent before the team. */
     recruitersLimit?: number | null;
     reviewersLimit?: number | null;
     recruiters?: number;
     reviewers?: number;
+    /** AI features the plan has but the running trial leaves out (their quotas read 0). */
+    trialLocked?: TrialAiFeature[];
+    /**
+     * Units bought in packs, not used nor expired: spent once the plan's own
+     * are, and already counted in the `*Remaining` above. Absent before packs.
+     */
+    credits?: { cv: number; offers: number; contacts: number; offerDrafts: number };
   };
   upcoming: SubscriptionPeriod[];
   history: SubscriptionPeriod[];
@@ -276,7 +298,7 @@ export type PaymentGateways = {
   gateways: { key: string; label: string; requiresOperator: boolean; operators: PaymentOperator[] }[];
 };
 
-/** `GET pay/:token` (fails once the request is settled). */
+/** `GET pay/:token` (fails once the request is paid; a refused one is still served). */
 export type PaymentByToken = {
   id: string;
   status: "PENDING" | "PROCESSING" | "APPROVED" | "REJECTED";
@@ -284,6 +306,10 @@ export type PaymentByToken = {
   amount: number | null;
   description: string | null;
   payerCountry?: string | null;
+  /** Why the last attempt was refused: the operator's code (INSUFFICIENT_BALANCE…). */
+  failureCode?: string | null;
+  /** The same, said to the payer; null when the operator gave no reason worth telling. */
+  failureReason?: string | null;
 };
 
 /** `GET business/me/stats`: recruitment figures, each with the previous period. */
@@ -452,9 +478,11 @@ export type InterviewSlot = {
 };
 
 export type InterviewInput = InterviewSlot & {
-  /** One of the two: an analysed CV or an application. */
+  /** One of the three: an analysed CV, an application, or a careers-page candidate. */
   cvResumeId?: string;
   applicationId?: string;
+  /** A careers-page candidate without a CV analysis: invited at the address they gave. */
+  externalApplicationId?: string;
   /** For an analysed CV: where the invitation goes. */
   candidateEmail?: string;
 };
@@ -463,6 +491,7 @@ export type Interview = {
   id: string;
   cvResumeId: string | null;
   applicationId: string | null;
+  externalApplicationId?: string | null;
   offerId: string | null;
   jobTitle: string;
   candidateName: string;
@@ -517,4 +546,13 @@ export type OfferDraftInput = {
   city?: string;
   isRemote?: boolean;
   quantity?: number;
+};
+
+/** What a pack brings: CVs to analyse, offers to publish, contacts, offers written by the AI. */
+export type PackKind = "CV" | "OFFER" | "CONTACT" | "OFFER_DRAFT";
+
+/** `GET business/me/packs`: the packs on sale, and what is left of those bought (soonest to expire first). */
+export type BusinessPacks = {
+  onSale: { kind: PackKind; quantity: number; priceFcfa: number }[];
+  credits: { id: string; kind: PackKind; quantity: number; left: number; boughtAt: string; expiresAt: string }[];
 };

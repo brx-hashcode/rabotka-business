@@ -1,5 +1,8 @@
 "use client";
 
+import { trialLocks } from "#/features/subscription/trial-lock";
+import { cvOutOfReach } from "#/features/subscription/packs";
+import { usePackOnSale } from "#/features/subscription/use-packs";
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -26,12 +29,14 @@ import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { Combobox } from "#/features/sign-up/components/combobox";
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
-import { CV_ACCEPT, createCvScreening, cvScreeningsKey } from "#/lib/api/cv-screening-controller";
+import { addCvScreeningFiles, CV_ACCEPT, createCvScreening, cvScreeningsKey } from "#/lib/api/cv-screening-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { listOffers, offersKey } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
 import { kindFromName, pickKey, type MailPick } from "../mail-picks";
-import { CvLocked, fileSize } from "./cv-bits";
+import { refusedLines } from "../refused-files";
+import { CHUNK_MAX_FILES, chunkCvBatch, mailRefs, sendRest } from "../send-cv-batch";
+import { CvLocked, CvUsedUp, fileSize } from "./cv-bits";
 import { MailImport } from "./mail-import";
 
 const TYPES: Record<string, "pdf" | "docx" | "image"> = {
@@ -78,6 +83,7 @@ export function NewCvScreeningPage() {
   const input = useRef<HTMLInputElement>(null);
 
   const e = subscription.data?.entitlements;
+  const packOnSale = usePackOnSale("CV");
   const room = e ? Math.min(e.cvBatchMax, e.cvRemaining ?? Number.POSITIVE_INFINITY) : 0;
   const count = files.length + mails.length;
   const items: CvItem[] = [
@@ -104,16 +110,31 @@ export function NewCvScreeningPage() {
     setRefused(out);
   }
 
+  // CVs sent so far: a large batch goes in several requests (send-cv-batch.ts).
+  const [sent, setSent] = useState(0);
   const start = useMutation({
-    mutationFn: () =>
-      createCvScreening(
-        files,
+    mutationFn: async () => {
+      const [first, ...rest] = chunkCvBatch(files, mails);
+      setSent(0);
+      const screening = await createCvScreening(
+        first.files,
         source === "offer" ? { offerId } : { jobTitle: jobTitle.trim(), jobText: jobText.trim() },
-        mails.map(({ mailboxId, messageId, attachmentId }) => ({ mailboxId, messageId, attachmentId })),
-      ),
-    onSuccess: (screening) => {
+        mailRefs(first.mails),
+      );
+      setSent(first.files.length + first.mails.length);
+      const failed = await sendRest(
+        rest,
+        (c) => addCvScreeningFiles(screening.id, c.files, mailRefs(c.mails)),
+        (n) => setSent((s) => s + n),
+      );
+      return { screening, failed: failed.reduce((n, c) => n + c.files.length + c.mails.length, 0) };
+    },
+    onSuccess: ({ screening, failed }) => {
       void queryClient.invalidateQueries({ queryKey: cvScreeningsKey });
       void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
+      if (failed > 0) {
+        toast.error(`${failed} CV n'${failed > 1 ? "ont" : "a"} pas pu être envoyé${failed > 1 ? "s" : ""} : ajoutez-les à nouveau dans une nouvelle analyse.`);
+      }
       router.push(`/espace/analyse-cv/${screening.id}`);
     },
     onError: (err) => toast.error(friendlyError(err, "L'analyse n'a pas pu démarrer. Réessayez dans un instant.")),
@@ -132,8 +153,11 @@ export function NewCvScreeningPage() {
         <p className="text-muted-foreground">Le poste, puis les CV : Rabotka lit chacun et le note par rapport au poste.</p>
       </div>
 
-      {!e || e.cvQuota === 0 ? (
-        <CvLocked />
+      {!e || cvOutOfReach(e) ? (
+        <CvLocked trial={trialLocks(e, "cvAnalysis")} packOnSale={packOnSale} />
+      ) : e.cvRemaining === 0 ? (
+        // An empty form with room for none read as broken.
+        <CvUsedUp until={e.countersResetAt ?? e.endsAt} packOnSale={packOnSale} />
       ) : (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_26rem]">
           <form
@@ -259,9 +283,10 @@ export function NewCvScreeningPage() {
                 <div className="flex gap-3 rounded-2xl bg-chip-amber px-4 py-3 text-chip-amber-foreground text-sm">
                   <IconAlertTriangle className="mt-0.5 size-4 shrink-0" />
                   <ul className="space-y-1">
-                    {refused.map((r) => (
-                      <li key={r.name}>
-                        <span className="font-medium">{r.name}</span> non ajouté : {r.reason}.
+                    {refusedLines(refused).map((line) => (
+                      <li key={line.key}>
+                        {line.name ? <span className="font-medium">{line.name}</span> : null}
+                        {line.text}
                       </li>
                     ))}
                   </ul>
@@ -278,7 +303,11 @@ export function NewCvScreeningPage() {
                 disabled={!jobReady || count === 0 || start.isPending}
                 className="inline-flex h-12 items-center justify-center rounded-full bg-ink px-6 font-medium text-white hover:bg-ink/90 disabled:opacity-40"
               >
-                {start.isPending ? "Envoi des CV…" : `Lancer l'analyse${count ? ` de ${count} CV` : ""}`}
+                {start.isPending
+                  ? count > CHUNK_MAX_FILES
+                    ? `Envoi des CV… ${sent} / ${count}`
+                    : "Envoi des CV…"
+                  : `Lancer l'analyse${count ? ` de ${count} CV` : ""}`}
               </button>
             </div>
           </form>
@@ -344,6 +373,9 @@ function Step({ icon: Icon, children }: Readonly<{ icon: typeof IconClock; child
  * to a bar (more can still be dropped there) and the files show as tiles,
  * with how many more the analysis can take.
  */
+/** Files listed before « Afficher les N autres ». */
+const LIST_SHOWN = 12;
+
 function CvDrop({
   items,
   room,
@@ -368,6 +400,9 @@ function CvDrop({
   onClear: () => void;
 }>) {
   const full = items.length >= room;
+  // Up to 100 CVs: the list folds past a dozen.
+  const [unfolded, setUnfolded] = useState(false);
+  const shown = unfolded ? items : items.slice(0, LIST_SHOWN);
   const dropProps = {
     onDragOver: (ev: React.DragEvent) => {
       ev.preventDefault();
@@ -442,7 +477,7 @@ function CvDrop({
       </div>
 
       <ul className="grid gap-2.5 sm:grid-cols-2">
-        {items.map((file) => {
+        {shown.map((file) => {
           const k = KIND[file.kind];
           return (
             <li key={file.key} className="group flex min-w-0 items-center gap-3 rounded-2xl bg-page p-3">
@@ -472,6 +507,15 @@ function CvDrop({
           );
         })}
       </ul>
+      {items.length > LIST_SHOWN && (
+        <button
+          type="button"
+          onClick={() => setUnfolded(!unfolded)}
+          className="font-medium text-muted-foreground text-sm hover:text-foreground"
+        >
+          {unfolded ? "Réduire la liste" : `Afficher les ${items.length - LIST_SHOWN} autres`}
+        </button>
+      )}
 
       {!full && (
         <button

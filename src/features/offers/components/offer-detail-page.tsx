@@ -30,9 +30,13 @@ import {
   IconUsers,
   IconX,
   type Icon as TablerIcon,
+  IconFileSpreadsheet,
 } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
+
+import { appConfig } from "#/config";
+import { downloadFile } from "#/lib/api/download";
 
 import { ActionDialog } from "#/components/action-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
@@ -77,6 +81,7 @@ import {
   type Offer,
   type OfferApplicant,
 } from "#/lib/api/offer-controller";
+import { showApplicationStatus, showExternalStatus } from "#/features/offers/application-cache";
 import { cn, getInitials } from "#/lib/utils";
 import {
   APPLICATION_STATUS,
@@ -85,6 +90,7 @@ import {
   fcfa,
   isDatedMission,
   offerChip,
+  closingTile,
   offerDate,
   PAYMENT_SUFFIX,
   statusClass,
@@ -95,6 +101,8 @@ import { ApplicationActions, useApplicationChat } from "./application-actions";
 import { MoreActionsMenu, opinionLabel, type MoreAction } from "./more-actions-menu";
 import { OfferDescriptionCard } from "./offer-description-card";
 import { REFUSAL_TEMPLATES, RefusalMessageField } from "./refusal-message";
+import { linkedinOffer } from "../linkedin-post";
+import { PublishedShareCard } from "./published-share-card";
 import { ShareOfferMenu } from "./share-offer-menu";
 import { Checkbox } from "#/components/ui/checkbox";
 import { CRITERIA, ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
@@ -103,6 +111,7 @@ import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
 import { TeamOpinionButton } from "#/features/team/components/team-opinion";
 import { getOfferOpinions, offerOpinionsKey, type Verdict } from "#/lib/api/candidate-notes-controller";
+import { pollEvery } from "#/features/layout/socket-status";
 
 /**
  * One offer: where it stands (applications, positions filled, time left), its
@@ -119,15 +128,18 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const { data: subscription } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   // An Évaluateur reads the offer; changing it is for those who hire.
   const hire = canHire(useMember().role);
+  // Just published (new-offer-page): the moment to share it.
+  const [published, setPublished] = useQueryState("publiee");
   const noOfferLeft = !!subscription && offersFull(subscription.entitlements);
   const needsDate = !offer.data || isDatedMission(offer.data.employmentType);
   const [confirmFinish, setConfirmFinish] = useState(false);
   // Those who applied from the public careers page.
+  // This offer's only: not every application the business ever had, filtered here.
   const external = useQuery({
-    queryKey: externalApplicationsKey,
-    queryFn: listExternalApplications,
+    queryKey: [...externalApplicationsKey, id],
+    queryFn: () => listExternalApplications(id),
     // A CV being read gets its score in a few seconds.
-    refetchInterval: (q) => (q.state.data?.some((a) => a.analysis?.status === "QUEUED") ? 4000 : false),
+    refetchInterval: (q) => (q.state.data?.some((a) => a.analysis?.status === "QUEUED") ? pollEvery(4000, 20_000) : false),
   });
   const outsiders = (external.data ?? []).filter((a) => a.offer.id === id);
   // The candidate's side moves on its own (paying their part of an unlock): keep up.
@@ -135,7 +147,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
     queryKey: [...offersKey, id, "applicants"],
     queryFn: () => getOfferApplicants(id),
     // A CV being read gets its score in a few seconds.
-    refetchInterval: (q) => (q.state.data?.some((a) => a.analysis?.status === "QUEUED") ? 4000 : 30_000),
+    refetchInterval: (q) => (q.state.data?.some((a) => a.analysis?.status === "QUEUED") ? pollEvery(4000, 20_000) : pollEvery(30_000)),
   });
   const categories = useQuery({ queryKey: ["job-categories"], queryFn: getJobCategories, staleTime: Infinity });
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -143,15 +155,21 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const [confirmClose, setConfirmClose] = useState(false);
   const [newDate, setNewDate] = useState("");
 
+  // This offer (detail, candidates) is awaited, so its dialog closes on the
+  // new state rather than flashing the old one; the lists follow in the
+  // background (only the ones on screen refetch).
   const refresh = () => {
-    void queryClient.invalidateQueries({ queryKey: offersKey });
+    void queryClient.invalidateQueries({ queryKey: [...offersKey, "list"] });
+    void queryClient.invalidateQueries({ queryKey: [...offersKey, "received"] });
     void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
+    void queryClient.invalidateQueries({ queryKey: ["business", "me", "stats"] });
+    return queryClient.invalidateQueries({ queryKey: [...offersKey, id] });
   };
   const close = useMutation({
     mutationFn: () => closeOffer(id),
-    onSuccess: () => {
-      refresh();
+    onSuccess: async () => {
       void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
+      await refresh();
       setConfirmClose(false);
       toast.success("Offre fermée. Les candidats en attente sont prévenus.");
     },
@@ -159,17 +177,19 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   });
   const finish = useMutation({
     mutationFn: () => confirmOfferHire(id),
-    onSuccess: () => {
-      refresh();
+    onSuccess: async () => {
+      await refresh();
       setConfirmFinish(false);
-      toast.success("Offre clôturée. Vous pouvez noter votre recrutement.");
+      toast.success("Offre terminée. Vous pouvez noter votre recrutement.");
     },
-    onError: (err) => toast.error(friendlyError(err, "L'offre n'a pas pu être clôturée.")),
+    onError: (err) => toast.error(friendlyError(err, "L'offre n'a pas pu être terminée.")),
   });
   const remove = useMutation({
     mutationFn: () => deleteOffer(id),
     onSuccess: () => {
-      refresh();
+      // Gone: nothing of it to wait for, the list it goes back to refetches.
+      queryClient.removeQueries({ queryKey: [...offersKey, id] });
+      void refresh();
       toast.success("Offre supprimée. Les candidats en attente sont prévenus.");
       router.push("/espace/offres");
     },
@@ -182,8 +202,8 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
         id,
         needsDate ? scheduledIso(newDate, offer.data?.scheduledAt ? new Date(offer.data.scheduledAt).toTimeString().slice(0, 5) : "") : null,
       ),
-    onSuccess: () => {
-      refresh();
+    onSuccess: async () => {
+      await refresh();
       setRepublishing(false);
       toast.success("Offre republiée.");
     },
@@ -225,9 +245,9 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
             actions={
               <div className="flex flex-wrap gap-2 empty:hidden">
                 {business?.publicSlug && business.verificationStatus === "VERIFIED" && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
-                  <ShareOfferMenu offerId={o.id} slug={business.publicSlug} reference={o.reference} title={o.title} />
+                  <ShareOfferMenu slug={business.publicSlug} offer={linkedinOffer(o, business.name, categories.data?.find((c) => c.id === o.categoryId)?.name)} />
                 )}
-                {hire && o.status === "ACTIVE" && (
+                {hire && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
                   <Link
                     href={`/espace/offres/${o.id}/modifier`}
                     className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white hover:bg-ink/90"
@@ -243,10 +263,11 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                     className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white hover:bg-ink/90"
                   >
                     <IconCircleCheck className="size-4" />
-                    Clôturer l&apos;offre
+                    Terminer l&apos;offre
                   </button>
                 )}
-                {hire && o.status === "EXPIRED" && (
+                {/* Expired, or closed by hand with posts still free: it can recruit again. */}
+                {hire && (o.status === "EXPIRED" || (o.status === "FILLED" && !!o.closedAt && o.acceptedCount < o.quantity)) && (
                   <button
                     type="button"
                     onClick={() => setRepublishing(true)}
@@ -261,6 +282,25 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                   name={o.title}
                   className="bg-page hover:bg-page/70"
                   actions={[
+                    // « Exports RH »: Excel of every candidate; without the service, to the plans.
+                    {
+                      key: "export",
+                      label: "Exporter les candidats",
+                      icon: IconFileSpreadsheet,
+                      hint: subscription?.entitlements.hrExports ? "Excel, avec statut, score et origine" : "Inclus dans les formules supérieures",
+                      onSelect: () => {
+                        if (!subscription?.entitlements.hrExports) {
+                          router.push("/espace/abonnement");
+                          return;
+                        }
+                        downloadFile(
+                          `${appConfig.apiUrl}/business/me/exports/offers/${encodeURIComponent(o.id)}/candidates`,
+                          `candidats-${o.reference}.xlsx`,
+                        ).catch((err: unknown) =>
+                          toast.error((err instanceof Error && err.message) || "L'export n'a pas pu être créé. Réessayez dans un instant."),
+                        );
+                      },
+                    },
                     ...(hire && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED")
                       ? [{ key: "close", label: "Fermer l'offre", icon: IconCircleX, onSelect: () => setConfirmClose(true), hint: "Plus de candidatures, les candidats en attente sont prévenus" }]
                       : []),
@@ -272,6 +312,15 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
               </div>
             }
           />
+
+          {published && (
+            <PublishedShareCard
+              slug={business?.publicSlug ?? null}
+              offer={linkedinOffer(o, business?.name, categories.data?.find((c) => c.id === o.categoryId)?.name)}
+              isPublic={!!business?.publicSlug && business.verificationStatus === "VERIFIED" && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED")}
+              onDismiss={() => void setPublished(null)}
+            />
+          )}
 
           <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_28rem]">
             <div className="min-w-0 space-y-6">
@@ -321,9 +370,9 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
         open={confirmFinish}
         onOpenChange={setConfirmFinish}
         icon={<IconCircleCheck className="size-5" />}
-        title="Clôturer cette offre ?"
+        title="Terminer cette offre ?"
         description="Vous confirmez votre recrutement. L'offre est terminée, et vous pouvez noter les personnes recrutées."
-        confirmLabel="Clôturer l'offre"
+        confirmLabel="Terminer l'offre"
         pending={finish.isPending}
         onConfirm={() => finish.mutate()}
       />
@@ -381,6 +430,7 @@ function OfferHeader({
   const filled = Math.min(Math.max(o.acceptedCount, hired), o.quantity);
   const left = o.scheduledAt ? daysUntil(o.scheduledAt) : null;
   const open = o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED";
+  const closing = closingTile(o, left);
 
   return (
     <section className="space-y-8 rounded-3xl bg-card p-6 sm:p-8">
@@ -415,9 +465,9 @@ function OfferHeader({
         </Tile>
         <Tile
           icon={IconCalendarEvent}
-          label={isDatedMission(o.employmentType) ? "Mission" : "Clôture"}
-          value={o.closedAt ? "Fermée" : left === null ? (isDatedMission(o.employmentType) ? "—" : "Par vous") : left > 0 ? `J-${left}` : left === 0 ? "Aujourd'hui" : "Passée"}
-          hint={o.scheduledAt ? (offerDate(o.scheduledAt, o.employmentType) ?? undefined) : undefined}
+          label={closing.label}
+          value={closing.value}
+          hint={closing.hint ?? (o.scheduledAt ? (offerDate(o.scheduledAt, o.employmentType) ?? undefined) : undefined)}
           muted={!open}
         />
       </div>
@@ -687,6 +737,8 @@ function ApplicantsCard({
           )}
 
           <BulkRefuseDialog
+            // Remounted for each mode: the message starts from its template.
+            key={bulk ?? "closed"}
             offerId={o.id}
             mode={bulk}
             ids={refuseRabotka}
@@ -780,17 +832,30 @@ function BulkRefuseDialog({
     mutationFn: async () => {
       const text = message.trim() || undefined;
       const outside = mode === "remaining" ? outsiderIds : selectedOutsiderIds;
-      const rabotka =
+      // Both at once. Each careers candidate on its own: one failure no
+      // longer reads as « none refused », and those already decided are not counted.
+      const [rabotka, results] = await Promise.all([
         (mode === "remaining" && rabotkaWaiting === 0) || (mode === "selected" && ids.length === 0)
-          ? { refused: 0, skipped: 0 }
-          : await refuseApplications(offerId, {
+          ? Promise.resolve({ refused: 0, skipped: 0 })
+          : refuseApplications(offerId, {
               ...(mode === "remaining" ? { remaining: true } : { applicationIds: ids }),
               ...(text ? { message: text } : {}),
-            });
-      await Promise.all(outside.map((id) => refuseExternalApplication(id, text)));
-      return { refused: rabotka.refused + outside.length, skipped: rabotka.skipped };
+            }).catch(() => null),
+        Promise.allSettled(outside.map((id) => refuseExternalApplication(id, text))),
+      ]);
+      const outsideRefused = results.filter(
+        (r) => r.status === "fulfilled" && (r.value as { refused?: boolean } | undefined)?.refused !== false,
+      ).length;
+      const outsideFailed = results.filter((r) => r.status === "rejected").length;
+      // The Rabotka side failed as a whole: counted as failed, the careers side still reported.
+      const rabotkaFailed = rabotka ? 0 : mode === "remaining" ? rabotkaWaiting : ids.length;
+      return {
+        refused: (rabotka?.refused ?? 0) + outsideRefused,
+        skipped: (rabotka?.skipped ?? 0) + (outside.length - outsideRefused - outsideFailed),
+        failed: outsideFailed + rabotkaFailed,
+      };
     },
-    onSuccess: ({ refused, skipped }) => {
+    onSuccess: ({ refused, skipped, failed }) => {
       void queryClient.invalidateQueries({ queryKey: offersKey });
       void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
       void queryClient.invalidateQueries({ queryKey: ["business", "me", "stats"] });
@@ -798,10 +863,26 @@ function BulkRefuseDialog({
         `${refused === 1 ? "1 candidature refusée" : `${refused} candidatures refusées`}, les candidats en sont prévenus.` +
           (skipped ? ` ${skipped} n'étai${skipped > 1 ? "ent" : "t"} plus en attente.` : ""),
       );
+      if (failed) toast.error(`${failed} n'${failed > 1 ? "ont" : "a"} pas pu être refusée${failed > 1 ? "s" : ""} : réessayez.`);
       onDone();
       onClose();
     },
-    onError: (err) => toast.error(friendlyError(err, "Les candidatures n'ont pas pu être refusées.")),
+    // Picked cards change at once; « all the others » waits for the server,
+    // which knows who is still waiting.
+    onMutate: () => {
+      if (mode !== "selected") return { undo: () => {} };
+      const undos = [
+        ...ids.map((id) => showApplicationStatus(queryClient, id, "REJECTED")),
+        ...selectedOutsiderIds.map((id) => showExternalStatus(queryClient, id, "REFUSED")),
+      ];
+      return { undo: () => undos.reverse().forEach((u) => u()) };
+    },
+    onError: (err, _vars, ctx) => {
+      ctx?.undo();
+      void queryClient.invalidateQueries({ queryKey: offersKey });
+      void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
+      toast.error(friendlyError(err, "Les candidatures n'ont pas pu être refusées."));
+    },
   });
   return (
     <ActionDialog
@@ -883,7 +964,7 @@ function ApplicantRow({
                 icon: IconLock,
                 onSelect: () => undefined,
                 disabled: true,
-                hint: "S'ouvre une fois son contact débloqué",
+                hint: "S'ouvre une fois son contact obtenu",
               },
         ]
       : []),
@@ -893,7 +974,7 @@ function ApplicantRow({
       ? [{ key: "message", label: "Message", icon: IconMessageCircle, onSelect: chat.open, disabled: chat.pending }]
       : []),
     // Invited by e-mail and in the app, as from « Candidatures ».
-    ...(recruiting && applicationStage(a.status) !== "closed"
+    ...(hire && recruiting && applicationStage(a.status) !== "closed"
       ? [{ key: "interview", label: "Planifier un entretien", icon: IconCalendarPlus, onSelect: () => setPanel("interview") }]
       : []),
   ];
@@ -1040,9 +1121,11 @@ function ApplicantCvAnalysis({
 }>) {
   const [chatting, setChatting] = useState(false);
   const scored = analysis?.status === "SCORED";
+  // One request per screening, shared by every candidate of the offer; each picks its own.
   const resume = useQuery({
-    queryKey: [...cvScreeningsKey, analysis?.screeningId, "resume", analysis?.resumeId],
-    queryFn: async () => (await getCvScreening(analysis?.screeningId as string)).resumes.find((r) => r.id === analysis?.resumeId) ?? null,
+    queryKey: [...cvScreeningsKey, analysis?.screeningId],
+    queryFn: () => getCvScreening(analysis?.screeningId as string),
+    select: (s) => s.resumes.find((r) => r.id === analysis?.resumeId) ?? null,
     enabled: scored,
   });
 

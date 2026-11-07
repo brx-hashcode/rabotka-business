@@ -25,10 +25,17 @@ const longDate = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { da
 const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
 
 /** Step 1 of an application from outside Rabotka: the offer, and « Postuler ». */
-export function OfferPage({ slug, reference }: Readonly<{ slug: string; reference: string }>) {
+export function OfferPage({
+  slug,
+  reference,
+  initial,
+}: Readonly<{ slug: string; reference: string; initial?: Awaited<ReturnType<typeof getCareersOffer>> }>) {
+  // Started from what the server read: the description is in the HTML, and
+  // the offer is not asked for a second time.
   const query = useQuery({
     queryKey: ["careers", slug, reference],
     queryFn: () => getCareersOffer(slug, reference),
+    initialData: initial,
     retry: false,
   });
   const page = query.data;

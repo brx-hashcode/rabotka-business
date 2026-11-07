@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { IconLogout } from "@tabler/icons-react";
@@ -91,6 +91,8 @@ export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>
                 <Link
                   key={href}
                   href={href}
+                  // Full prefetch: the pages are thin shells, so a click opens at once.
+                  prefetch
                   onClick={onNavigate}
                   aria-current={active ? "page" : undefined}
                   className={cn(
@@ -99,7 +101,8 @@ export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>
                   )}
                 >
                   <Icon className="size-[18px] shrink-0" />
-                  {label}
+                  <span className="flex-1 truncate">{label}</span>
+                  <PendingDot />
                 </Link>
               );
             })}
@@ -131,5 +134,16 @@ export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>
       </div>
       <LogoutDialog open={confirmLogout} onOpenChange={setConfirmLogout} />
     </div>
+  );
+}
+
+/** A pulsing dot on the link just clicked, while its page is on its way. */
+function PendingDot() {
+  const { pending } = useLinkStatus();
+  return (
+    <span
+      aria-hidden
+      className={cn("size-1.5 shrink-0 rounded-full bg-current transition-opacity", pending ? "animate-pulse opacity-70" : "opacity-0")}
+    />
   );
 }

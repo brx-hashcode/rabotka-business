@@ -3,7 +3,9 @@ import type { Interview, InterviewAnswer, InterviewInput, InterviewInvitation, I
 
 /** « Entretiens »: interviews with candidates, and the candidate's side of one. */
 class InterviewController extends BusinessBaseController {
-  list(params: { scope?: "upcoming" | "past"; cvResumeId?: string; applicationId?: string } = {}): Promise<Interview[]> {
+  list(
+    params: { scope?: "upcoming" | "past"; cvResumeId?: string; applicationId?: string; externalApplicationId?: string } = {},
+  ): Promise<Interview[]> {
     const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v) as [string, string][]);
     return this.get(`/business/me/interviews${qs.size ? `?${qs}` : ""}`);
   }

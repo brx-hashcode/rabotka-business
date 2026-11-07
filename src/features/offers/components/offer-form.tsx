@@ -15,6 +15,9 @@ import { Combobox, type ComboboxOption } from "#/features/sign-up/components/com
 import { FIELD_CLASS, FieldLabel, StepActions, TextField } from "#/features/sign-up/components/form-bits";
 import { useCities, useCountries } from "#/hooks/use-geo";
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
+import { trialLocks } from "#/features/subscription/trial-lock";
+import { offerWriterOutOfReach, PACKS_HREF } from "#/features/subscription/packs";
+import { usePackOnSale } from "#/features/subscription/use-packs";
 import { getJobCategories, type EmploymentType, type Offer, type OfferInput, type PaymentFlow } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
 import { AVAILABLE_EMPLOYMENT_TYPES, EMPLOYMENT_TYPES, isDatedMission, PAYMENT_FLOWS } from "../offer-labels";
@@ -176,8 +179,12 @@ export function OfferForm({
   const { data: categories } = useQuery({ queryKey: ["job-categories"], queryFn: getJobCategories, staleTime: Infinity });
   const { data: subscription } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   const [writing, setWriting] = useState(false);
-  // No AI writing in the plan: the button says where to find it instead.
-  const aiIncluded = subscription?.entitlements.offerDraftsQuota !== 0;
+  // No AI writing in the plan nor in a pack: the button says where to find it instead.
+  const aiIncluded = !subscription || !offerWriterOutOfReach(subscription.entitlements);
+  const draftPackOnSale = usePackOnSale("OFFER_DRAFT");
+  // Included, but none left this period: said before the dialog, not by a refusal after it.
+  const draftsOut = aiIncluded && subscription?.entitlements.offerDraftsRemaining === 0;
+  const draftsUntil = subscription?.entitlements.countersResetAt ?? subscription?.entitlements.endsAt;
 
   useEffect(() => {
     if (cities && city && !cities.includes(city)) form.setValue("city", "");
@@ -203,7 +210,15 @@ export function OfferForm({
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_26rem]">
         <form onSubmit={form.handleSubmit(submit)} noValidate className="space-y-10 rounded-3xl bg-card p-5 sm:p-8">
           <Section title="L'offre">
-            {aiIncluded ? (
+            {draftsOut ? (
+              <Link
+                href={draftPackOnSale ? PACKS_HREF : "/espace/abonnement"}
+                className="flex items-center gap-3 rounded-2xl bg-page px-4 py-3 text-muted-foreground text-sm hover:text-foreground"
+              >
+                <IconWand className="size-5 shrink-0" />
+                {`Plus de rédactions par l'IA${draftsUntil ? ` jusqu'au ${new Date(draftsUntil).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}` : ""} : ${draftPackOnSale ? "ajoutez un pack de rédactions ou changez de formule" : "changez de formule"} pour en avoir davantage.`}
+              </Link>
+            ) : aiIncluded ? (
               <button
                 type="button"
                 onClick={() => setWriting(true)}
@@ -225,7 +240,9 @@ export function OfferForm({
                 className="flex items-center gap-3 rounded-2xl bg-page px-4 py-3 text-muted-foreground text-sm hover:text-foreground"
               >
                 <IconWand className="size-5 shrink-0" />
-                La rédaction d&apos;offres par l&apos;IA est incluse dans les formules supérieures.
+                {trialLocks(subscription?.entitlements, "offerWriter")
+                  ? "La rédaction d'offres par l'IA arrive avec une formule payante, après votre essai gratuit."
+                  : "La rédaction d'offres par l'IA est incluse dans les formules supérieures."}
               </Link>
             )}
             <OfferAiDialog

@@ -30,6 +30,11 @@ export const careersOfferServer = cache((slug: string, reference: string) =>
   ),
 );
 
+/** The directory, for its HTML (it is indexed). */
+export const careersCompaniesServer = cache(() =>
+  getPublic<(CareersCompany & { openOffers: number })[]>(""),
+);
+
 export const careersCompanyServer = cache((slug: string) =>
   getPublic<{ company: CareersCompany; offers: CareersOfferSummary[] }>(`/${encodeURIComponent(slug)}`),
 );

@@ -33,6 +33,7 @@ import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-control
 import { friendlyError } from "#/lib/api/friendly-error";
 import { offersKey, type OfferApplicant } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
+import { showApplicationStatus } from "../application-cache";
 import { fcfa } from "../offer-labels";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
@@ -133,34 +134,53 @@ function Actions({
   const [reason, setReason] = useState("");
   const id = applicant.applicationId;
 
-  const done = (message: string) => {
+  // The card changes at once (application-cache.ts); the refetch after the
+  // answer brings the rest (counts, unlock), an error puts it back.
+  const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: offersKey });
     void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
     void queryClient.invalidateQueries({ queryKey: ["business", "me", "stats"] });
     void queryClient.invalidateQueries({ queryKey: applicationKey(id) });
+  };
+  const done = (message: string) => {
+    refresh();
     setDialog(null);
     setReason("");
     toast.success(message);
   };
+  const decide = (status: string) => () => {
+    setDialog(null);
+    return { undo: showApplicationStatus(queryClient, id, status) };
+  };
+  const failed = (message: string) => (err: unknown, _vars: unknown, ctx?: { undo: () => void }) => {
+    ctx?.undo();
+    refresh();
+    toast.error(friendlyError(err, message));
+  };
 
   const accept = useMutation({
     mutationFn: () => acceptApplication(id),
+    onMutate: decide("ACCEPTED"),
     onSuccess: (d) => {
+      // The server's own word: accepted, or waiting for a payment.
+      showApplicationStatus(queryClient, id, d.status);
       done(`Candidature de ${name} retenue.`);
       // Straight to what happens next: who still has to pay.
       if (d.unlock) setDialog("unlock");
     },
-    onError: (err) => toast.error(friendlyError(err, "La candidature n'a pas pu être acceptée.")),
+    onError: failed("La candidature n'a pas pu être retenue."),
   });
   const reject = useMutation({
     mutationFn: () => rejectApplication(id, reason.trim() || undefined),
+    onMutate: decide("REJECTED"),
     onSuccess: () => done("Candidature refusée. Le candidat en est prévenu."),
-    onError: (err) => toast.error(friendlyError(err, "La candidature n'a pas pu être refusée.")),
+    onError: failed("La candidature n'a pas pu être refusée."),
   });
   const cancel = useMutation({
     mutationFn: () => cancelApplication(id, reason.trim() || undefined),
+    onMutate: decide("CANCELLED"),
     onSuccess: () => done("Recrutement annulé. Le candidat en est prévenu."),
-    onError: (err) => toast.error(friendlyError(err, "Le recrutement n'a pas pu être annulé.")),
+    onError: failed("Le recrutement n'a pas pu être annulé."),
   });
 
   const rate = useMutation({
@@ -320,7 +340,7 @@ function Actions({
         onOpenChange={(o) => setDialog(o ? "cancel" : null)}
         tone="warning"
         title={`Annuler le recrutement de ${name} ?`}
-        description="Le candidat est prévenu et le poste se libère. Attention : annuler baisse votre note d'employeur."
+        description="Le candidat est prévenu et le poste se libère. Une annulation tardive peut baisser votre note d'employeur."
         confirmLabel="Annuler le recrutement"
         pending={cancel.isPending}
         onConfirm={() => cancel.mutate()}

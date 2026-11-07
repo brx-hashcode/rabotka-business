@@ -1,5 +1,8 @@
 "use client";
 
+import { trialLocks } from "#/features/subscription/trial-lock";
+import { cvOutOfReach, packCredits, PACKS_HREF } from "#/features/subscription/packs";
+import { usePackOnSale } from "#/features/subscription/use-packs";
 import { useMemo } from "react";
 import { debounce, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
@@ -62,7 +65,9 @@ export function CvScreeningsPage() {
   const subscription = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   const screenings = useQuery({ queryKey: [...cvScreeningsKey, "list"], queryFn: () => listCvScreenings(0, 50) });
   const e = subscription.data?.entitlements;
-  const locked = e?.cvQuota === 0;
+  // Out of the plan and no pack left (or left out of the trial).
+  const locked = !!e && cvOutOfReach(e);
+  const packOnSale = usePackOnSale("CV");
   const items = useMemo(() => screenings.data?.items ?? [], [screenings.data]);
 
   // The search and the sort live in the URL too (?q=, ?tri=), so a reload keeps them.
@@ -111,9 +116,9 @@ export function CvScreeningsPage() {
           ))}
         </div>
       ) : locked ? (
-        <CvLocked />
+        <CvLocked trial={trialLocks(e, "cvAnalysis")} packOnSale={packOnSale} />
       ) : (
-        e && <Overview e={e} items={items} />
+        e && <Overview e={e} items={items} packOnSale={packOnSale} />
       )}
 
       {(!locked || items.length > 0) && (
@@ -200,7 +205,12 @@ export function CvScreeningsPage() {
 }
 
 /** The figures that matter at a glance: how much was sorted, how good it was, what the plan still covers. */
-function Overview({ e, items }: Readonly<{ e: MySubscription["entitlements"]; items: CvScreeningSummary[] }>) {
+function Overview({
+  e,
+  items,
+  packOnSale,
+}: Readonly<{ e: MySubscription["entitlements"]; items: CvScreeningSummary[]; packOnSale: boolean }>) {
+  const packs = packCredits(e, "CV");
   const scored = items.reduce((n, s) => n + s.scored, 0);
   const weighted = items.reduce((n, s) => n + (s.averageScore ?? 0) * s.scored, 0);
   const average = scored ? Math.round(weighted / scored) : null;
@@ -221,21 +231,36 @@ function Overview({ e, items }: Readonly<{ e: MySubscription["entitlements"]; it
         <div className="flex items-center justify-between gap-2">
           <p className="flex items-center gap-2 text-muted-foreground text-sm">
             <IconFileSearch className="size-4" />
-            CV inclus
+            {e.cvQuota === 0 ? "CV de vos packs" : "CV inclus"}
           </p>
           <p className="font-semibold tabular-nums">
-            {e.cvQuota === null ? "Illimité" : `${e.cvUsed} / ${e.cvQuota}`}
+            {e.cvQuota === null ? "Illimité" : e.cvQuota === 0 ? `${packs} restants` : `${e.cvUsed} / ${e.cvQuota}`}
           </p>
         </div>
-        {e.cvQuota !== null && (
+        {e.cvQuota !== null && e.cvQuota > 0 && (
           <div className="h-2 overflow-hidden rounded-full bg-page">
             <div className={cn("h-full rounded-full", pct >= 100 ? "bg-destructive" : "bg-whatsapp-dark")} style={{ width: `${pct}%` }} />
           </div>
         )}
         <p className="text-muted-foreground text-xs">
-          {e.cvRemaining === 0
-            ? "Tous utilisés : changez de formule pour en analyser davantage."
-            : `${e.cvBatchMax} CV par analyse · ${e.cvFileMaxMb} Mo chacun${e.endsAt ? ` · jusqu'au ${longDate(e.endsAt)}` : ""}`}
+          {e.cvRemaining === 0 ? (
+            <>
+              Tous utilisés : changez de formule
+              {packOnSale && (
+                <>
+                  {" ou "}
+                  <Link href={PACKS_HREF} className="font-medium text-foreground underline underline-offset-2">
+                    ajoutez un pack
+                  </Link>
+                </>
+              )}{" "}
+              pour en analyser davantage.
+            </>
+          ) : (
+            `${packs > 0 && e.cvQuota ? `+ ${packs} de vos packs · ` : ""}${e.cvBatchMax} CV par analyse · ${e.cvFileMaxMb} Mo chacun${
+              e.endsAt && e.cvQuota !== 0 ? ` · jusqu'au ${longDate(e.endsAt)}` : ""
+            }`
+          )}
         </p>
       </div>
     </div>

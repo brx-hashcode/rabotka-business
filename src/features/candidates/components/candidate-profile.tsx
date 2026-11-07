@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { BadgeCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { IconArrowLeft, IconMapPin, IconPhoto, IconStarFilled } from "@tabler/icons-react";
+import { IconArrowLeft, IconMapPin, IconPhoto, IconStarFilled, IconZoomIn } from "@tabler/icons-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Skeleton } from "#/components/ui/skeleton";
@@ -69,12 +69,31 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
   const header = (
     <>
       <div className="flex flex-wrap items-center gap-4">
-        <Avatar className="size-20 rounded-2xl">
-          {c.avatarUrl && <AvatarImage src={c.avatarUrl} alt="" className="object-cover" />}
-          <AvatarFallback className="rounded-2xl bg-brand-lime font-semibold text-[#0f2414] text-xl">
-            {getInitials(name)}
-          </AvatarFallback>
-        </Avatar>
+        {/* The photo opens large, in the same viewer as the « Réalisations ». */}
+        {c.avatarUrl ? (
+          <button
+            type="button"
+            onClick={() => setViewer({ images: [c.avatarUrl as string], index: 0, title: name })}
+            aria-label={`Voir la photo de ${name}`}
+            className="group relative shrink-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Avatar className="size-20 rounded-2xl">
+              <AvatarImage src={c.avatarUrl} alt="" className="object-cover transition-transform duration-200 group-hover:scale-105" />
+              <AvatarFallback className="rounded-2xl bg-brand-lime font-semibold text-[#0f2414] text-xl">
+                {getInitials(name)}
+              </AvatarFallback>
+            </Avatar>
+            <span className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/35 text-white opacity-0 transition-opacity group-hover:opacity-100">
+              <IconZoomIn className="size-6" />
+            </span>
+          </button>
+        ) : (
+          <Avatar className="size-20 rounded-2xl">
+            <AvatarFallback className="rounded-2xl bg-brand-lime font-semibold text-[#0f2414] text-xl">
+              {getInitials(name)}
+            </AvatarFallback>
+          </Avatar>
+        )}
         <div className="min-w-0 flex-1 space-y-1">
           <Title className="truncate font-semibold text-2xl tracking-tight">{name}</Title>
           {/* As the client app: only when verified — a pending or refused

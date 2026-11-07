@@ -4,7 +4,14 @@ import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { IconArrowLeft, IconCheck, IconFileText, IconUpload, IconX } from "@tabler/icons-react";
+import { parseAsBoolean, useQueryState } from "nuqs";
+import {
+  IconArrowLeft,
+  IconBrandWhatsapp,
+  IconFileText,
+  IconUpload,
+  IconX,
+} from "@tabler/icons-react";
 import { Loader } from "lucide-react";
 
 import { Bone } from "#/components/page-skeletons";
@@ -16,6 +23,7 @@ import { SOURCE_KEY } from "#/features/careers/candidate-source";
 import { applyToOffer, getCareersOffer, type CareersQuestion } from "#/lib/api/careers-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { cn } from "#/lib/utils";
+import { appConfig } from "#/config";
 import { CareersShell } from "./careers-shell";
 
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -54,6 +62,7 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
   const missing = questions.some((q) => q.required && !answers[q.id]?.trim());
   const ready = !!cv && consent && !missing && Object.values(details).every((v) => v.trim());
 
+  const [sent, setSent] = useQueryState("envoyee", parseAsBoolean.withDefault(false));
   const send = useMutation({
     mutationFn: () =>
       applyToOffer(slug, reference, {
@@ -63,6 +72,9 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
         source: sentFrom(sourceParam),
         answers: questions.flatMap((q) => (answers[q.id]?.trim() ? [{ questionId: q.id, value: answers[q.id].trim() }] : [])),
       }),
+    // In the address, so a refresh or « back » shows the confirmation again,
+    // not an empty form that invites a second application.
+    onSuccess: () => void setSent(true, { history: "replace" }),
   });
 
   function pick(file: File | undefined) {
@@ -95,17 +107,16 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
               Voir les autres offres
             </Link>
           </div>
-        ) : send.isSuccess ? (
-          <div className="space-y-5">
-            <div className="flex gap-3 rounded-2xl bg-brand-lime p-5 text-[#0f2414]">
-              <IconCheck className="mt-0.5 size-6 shrink-0" />
-              <div className="space-y-1">
-                <h1 className="font-semibold text-lg">Candidature envoyée</h1>
-                <p className="text-[15px]">
-                  {page.company.name} a bien reçu votre dossier. Un e-mail de confirmation vous a été envoyé.
-                </p>
-              </div>
+        ) : send.isSuccess || sent ? (
+          // Flat, full width: on a phone, boxes inside the card squeezed the text.
+          <div className="space-y-8">
+            <div className="space-y-3">
+              <h1 className="font-semibold text-2xl tracking-tight">Candidature envoyée</h1>
+              <p className="text-[15px] text-foreground/80 leading-relaxed">
+                {page.company.name} a bien reçu votre dossier. Un e-mail de confirmation vous a été envoyé.
+              </p>
             </div>
+            <JoinRabotka />
             <Link href={`/carrieres/${slug}`} className="inline-block font-medium text-sm underline underline-offset-2">
               Voir les autres offres de {page.company.name}
             </Link>
@@ -127,8 +138,9 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <TextField title="Prénom" autoComplete="given-name" value={details.firstName} onChange={(v) => setDetails({ ...details, firstName: v })} />
+              {/* Nom first, as people here write their name (and as the CV and the ID do). */}
               <TextField title="Nom" autoComplete="family-name" value={details.lastName} onChange={(v) => setDetails({ ...details, lastName: v })} />
+              <TextField title="Prénom" autoComplete="given-name" value={details.firstName} onChange={(v) => setDetails({ ...details, firstName: v })} />
               <TextField title="E-mail" type="email" autoComplete="email" value={details.email} onChange={(v) => setDetails({ ...details, email: v })} />
               <TextField title="Téléphone" type="tel" autoComplete="tel" value={details.phone} onChange={(v) => setDetails({ ...details, phone: v })} />
             </div>
@@ -314,5 +326,47 @@ function QuestionField({
         className={field}
       />
     </div>
+  );
+}
+
+/**
+ * After applying: the moment to keep the candidate. A Rabotka account (made
+ * on WhatsApp, where candidates are) and a validated profile bring the next
+ * matching offers to their phone, and let recruiters find them.
+ */
+function JoinRabotka() {
+  const steps = [
+    "Écrivez à Rabotka sur WhatsApp : votre compte se crée en quelques messages.",
+    "Complétez votre profil : vos métiers, votre expérience, votre ville.",
+    "Faites valider votre profil : les recruteurs vous font davantage confiance.",
+  ];
+  return (
+    <section className="space-y-4">
+      <h2 className="font-semibold text-lg">Ne manquez plus les prochaines offres</h2>
+      <p className="text-[15px] text-foreground/80 leading-relaxed">
+        Créez votre compte Rabotka et faites valider votre profil : les offres qui vous correspondent arrivent sur votre téléphone, et les
+        recruteurs peuvent vous trouver.
+      </p>
+      <ol className="space-y-2.5">
+        {steps.map((text, i) => (
+          <li key={text} className="flex items-start gap-3 text-[15px] leading-relaxed">
+            <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-lime font-semibold text-[#0f2414] text-xs tabular-nums">
+              {i + 1}
+            </span>
+            <span>{text}</span>
+          </li>
+        ))}
+      </ol>
+      <a
+        href={appConfig.workerSignupUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#25d366] px-6 font-medium text-[#0b3d20] hover:bg-[#1ebe5b] sm:w-auto"
+      >
+        <IconBrandWhatsapp className="size-5 shrink-0" />
+        Créer mon compte
+      </a>
+      <p className="text-muted-foreground text-xs">Sur WhatsApp · gratuit · sans application à installer</p>
+    </section>
   );
 }

@@ -105,7 +105,9 @@ export function SignUpWizard() {
     if (!account || !organisation || !token) return;
     setSubmitting(true);
     setSubmitError(null);
-    const phone = toInternational(account.phone, "CG");
+    // The organisation's country, known by now: a number typed in Cameroon
+    // is Cameroon's, not Congo's.
+    const phone = toInternational(account.phone, organisation.country);
     const countryName = catalog?.countries.find((c) => c.code === organisation.country)?.name ?? organisation.country;
     // The street, then the city: both optional for an organisation online.
     const street = [organisation.address?.trim(), organisation.city].filter(Boolean).join(", ");
@@ -152,7 +154,9 @@ export function SignUpWizard() {
       // The signup token lives an hour; past that the email has to be
       // verified again. A new code goes out and, once it is entered, the
       // review comes back with everything as it was.
-      if (httpStatusOf(err) === 403) {
+      // Only the expired sign-up token: another refusal (a security check, a
+      // rule) re-sent a code and looped on the e-mail step.
+      if (httpStatusOf(err) === 403 && /avant de créer votre compte/i.test(errorText(err))) {
         store.setToken(null);
         setResumeAt("review");
         await sendSignUpCode({
@@ -310,4 +314,13 @@ export function SignUpWizard() {
       </div>
     </AuthShell>
   );
+}
+
+/** The server's message of an error, whatever its shape. */
+function errorText(err: unknown): string {
+  if (typeof err === "object" && err !== null && "message" in err) {
+    const m = (err as { message?: unknown }).message;
+    return Array.isArray(m) ? m.join(" ") : String(m ?? "");
+  }
+  return "";
 }

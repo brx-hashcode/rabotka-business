@@ -1,68 +1,85 @@
 import {
-  IconBell,
-  IconRosetteDiscountCheck,
-  IconCalendarEvent,
-  IconCrown,
-  IconGift,
+  IconBellFilled,
+  IconBrandLinkedin,
+  IconBrandLinkedinFilled,
+  IconCalendarFilled,
   IconCalendarOff,
-  IconCreditCard,
+  IconCreditCardFilled,
   IconCreditCardOff,
+  IconCrownFilled,
+  IconCirclePlusFilled,
   IconFileAlert,
   IconFileSearch,
-  IconHourglass,
+  IconGiftFilled,
+  IconHourglassFilled,
   IconLockOpen,
-  IconMailForward,
-  IconMessage,
+  IconMailFilled,
   IconMessageCircleQuestion,
+  IconMessageFilled,
+  IconRosetteDiscountCheckFilled,
   IconShieldOff,
   IconSpeakerphone,
-  IconUserCheck,
+  IconUserFilled,
   IconUserMinus,
   IconUserPlus,
   type Icon,
 } from "@tabler/icons-react";
 
-type Look = { icon: Icon; tone: string };
+export type Look = { icon: Icon; tone: string };
 
-const GREEN = "bg-chip-green text-chip-green-foreground";
-const VIOLET = "bg-chip-violet text-chip-violet-foreground";
-const AMBER = "bg-chip-amber text-chip-amber-foreground";
-const RED = "bg-destructive/10 text-destructive";
+// One colour per kind of news, so the bell reads at a glance.
+const CANDIDATE = "bg-chip-violet text-chip-violet-foreground";
+const INTERVIEW = "bg-chip-sky text-chip-sky-foreground";
+const GOOD = "bg-chip-green text-chip-green-foreground";
+const WATCH = "bg-chip-amber text-chip-amber-foreground";
+const BAD = "bg-destructive/10 text-destructive";
 const NEUTRAL = "bg-page text-foreground";
+/** LinkedIn's own blue: the post is on LinkedIn. */
+const LINKEDIN = "bg-[#0a66c2] text-white";
 
 /** Each notification type's icon and tint in the bell; anything else gets a plain bell. */
 const LOOK: Record<string, Look> = {
-  NEW_APPLICATION: { icon: IconUserPlus, tone: VIOLET },
-  APPLICATION_CANCELLED: { icon: IconUserMinus, tone: AMBER },
-  APPLICATION_ACCEPTED: { icon: IconUserCheck, tone: GREEN },
-  MISSION_COMPLETED: { icon: IconUserCheck, tone: GREEN },
-  CONTACT_UNLOCKED: { icon: IconLockOpen, tone: GREEN },
-  UNLOCK_CONVERTED_TO_CREDIT: { icon: IconLockOpen, tone: GREEN },
-  CV_SCREENING_DONE: { icon: IconFileSearch, tone: VIOLET },
-  INTERVIEW_INVITED: { icon: IconCalendarEvent, tone: VIOLET },
-  INTERVIEW_ANSWERED: { icon: IconMessageCircleQuestion, tone: VIOLET },
-  INTERVIEW_CANCELLED: { icon: IconCalendarOff, tone: AMBER },
-  JOB_INVITATION: { icon: IconMailForward, tone: VIOLET },
-  JOB_OFFER_EXPIRING: { icon: IconHourglass, tone: AMBER },
-  JOB_OFFER_EXPIRED: { icon: IconHourglass, tone: AMBER },
-  NEW_MESSAGE: { icon: IconMessage, tone: NEUTRAL },
-  PAYMENT_SUCCEEDED: { icon: IconCreditCard, tone: GREEN },
-  PAYMENT_FAILED: { icon: IconCreditCardOff, tone: RED },
-  BUSINESS_VERIFIED: { icon: IconRosetteDiscountCheck, tone: GREEN },
-  BUSINESS_REJECTED: { icon: IconShieldOff, tone: RED },
-  BUSINESS_DOCUMENT_REJECTED: { icon: IconFileAlert, tone: RED },
-  BUSINESS_TRIAL_STARTED: { icon: IconGift, tone: GREEN },
-  BUSINESS_SUBSCRIPTION_ACTIVE: { icon: IconCrown, tone: GREEN },
-  BUSINESS_SUBSCRIPTION_GRANTED: { icon: IconCrown, tone: GREEN },
-  BUSINESS_SUBSCRIPTION_EXPIRING: { icon: IconHourglass, tone: AMBER },
-  BUSINESS_SUBSCRIPTION_EXPIRED: { icon: IconHourglass, tone: RED },
-  BUSINESS_SUBSCRIPTION_CANCELLED: { icon: IconHourglass, tone: RED },
-  CLAIM_COMMENTED: { icon: IconMessage, tone: NEUTRAL },
-  CLAIM_STATUS_CHANGED: { icon: IconMessage, tone: NEUTRAL },
-  ACCOUNT_SUSPENDED: { icon: IconShieldOff, tone: RED },
+  NEW_APPLICATION: { icon: IconUserPlus, tone: CANDIDATE },
+  APPLICATION_CANCELLED: { icon: IconUserMinus, tone: WATCH },
+  APPLICATION_ACCEPTED: { icon: IconUserFilled, tone: GOOD },
+  MISSION_COMPLETED: { icon: IconUserFilled, tone: GOOD },
+  CONTACT_UNLOCKED: { icon: IconLockOpen, tone: GOOD },
+  UNLOCK_CONVERTED_TO_CREDIT: { icon: IconLockOpen, tone: GOOD },
+  CV_SCREENING_DONE: { icon: IconFileSearch, tone: CANDIDATE },
+  LINKEDIN_POST: { icon: IconBrandLinkedinFilled, tone: LINKEDIN },
+  INTERVIEW_INVITED: { icon: IconCalendarFilled, tone: INTERVIEW },
+  INTERVIEW_ANSWERED: { icon: IconMessageCircleQuestion, tone: INTERVIEW },
+  INTERVIEW_CANCELLED: { icon: IconCalendarOff, tone: WATCH },
+  JOB_INVITATION: { icon: IconMailFilled, tone: CANDIDATE },
+  JOB_OFFER_EXPIRING: { icon: IconHourglassFilled, tone: WATCH },
+  JOB_OFFER_EXPIRED: { icon: IconHourglassFilled, tone: WATCH },
+  NEW_MESSAGE: { icon: IconMessageFilled, tone: NEUTRAL },
+  PAYMENT_SUCCEEDED: { icon: IconCreditCardFilled, tone: GOOD },
+  PAYMENT_FAILED: { icon: IconCreditCardOff, tone: BAD },
+  BUSINESS_VERIFIED: { icon: IconRosetteDiscountCheckFilled, tone: GOOD },
+  BUSINESS_REJECTED: { icon: IconShieldOff, tone: BAD },
+  BUSINESS_DOCUMENT_REJECTED: { icon: IconFileAlert, tone: BAD },
+  BUSINESS_TRIAL_STARTED: { icon: IconGiftFilled, tone: GOOD },
+  BUSINESS_SUBSCRIPTION_ACTIVE: { icon: IconCrownFilled, tone: GOOD },
+  BUSINESS_CREDITS_ADDED: { icon: IconCirclePlusFilled, tone: GOOD },
+  BUSINESS_SUBSCRIPTION_GRANTED: { icon: IconCrownFilled, tone: GOOD },
+  BUSINESS_SUBSCRIPTION_EXPIRING: { icon: IconHourglassFilled, tone: WATCH },
+  BUSINESS_SUBSCRIPTION_EXPIRED: { icon: IconHourglassFilled, tone: BAD },
+  BUSINESS_SUBSCRIPTION_CANCELLED: { icon: IconHourglassFilled, tone: BAD },
+  CLAIM_COMMENTED: { icon: IconMessageFilled, tone: NEUTRAL },
+  CLAIM_STATUS_CHANGED: { icon: IconMessageFilled, tone: NEUTRAL },
+  ACCOUNT_SUSPENDED: { icon: IconShieldOff, tone: BAD },
   ANNOUNCEMENT: { icon: IconSpeakerphone, tone: NEUTRAL },
 };
 
-export function notificationLook(type: string): Look {
-  return LOOK[type] ?? { icon: IconBell, tone: NEUTRAL };
+/**
+ * The icon and tint of a notification. A LinkedIn post that did not go out
+ * (its title says « non aboutie », notification-catalog.ts) is not LinkedIn
+ * blue but a warning.
+ */
+export function notificationLook(type: string, title = ""): Look {
+  if (type === "LINKEDIN_POST" && /non abouti/i.test(title)) {
+    return { icon: IconBrandLinkedin, tone: WATCH };
+  }
+  return LOOK[type] ?? { icon: IconBellFilled, tone: NEUTRAL };
 }

@@ -31,6 +31,14 @@ class CvScreeningController extends BusinessBaseController {
     return this.post("/business/me/cv-screenings", form);
   }
 
+  /** More CVs for a screening already opened (a large batch sent in several requests). */
+  addFiles(id: string, files: File[], mailAttachments: MailAttachmentRef[] = []): Promise<CvScreening> {
+    const form = new FormData();
+    for (const file of files) form.append("files", file);
+    if (mailAttachments.length) form.append("mailAttachments", JSON.stringify(mailAttachments));
+    return this.post(`/business/me/cv-screenings/${encodeURIComponent(id)}/files`, form);
+  }
+
   chat(id: string, resumeId: string): Promise<CvChat> {
     return this.get(`/business/me/cv-screenings/${encodeURIComponent(id)}/resumes/${encodeURIComponent(resumeId)}/chat`);
   }
@@ -50,6 +58,7 @@ const controller = new CvScreeningController();
 export const listCvScreenings = controller.list.bind(controller);
 export const getCvScreening = controller.one.bind(controller);
 export const createCvScreening = controller.create.bind(controller);
+export const addCvScreeningFiles = controller.addFiles.bind(controller);
 export const deleteCvScreening = controller.remove.bind(controller);
 export const getCvChat = controller.chat.bind(controller);
 export const openCvComparison = controller.compare.bind(controller);

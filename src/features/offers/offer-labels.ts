@@ -103,3 +103,31 @@ export function offerDate(iso: string | null, type: EmploymentType): string | nu
   const withTime = time === "23:59" ? day : `${day} à ${time}`;
   return isDatedMission(type) ? withTime : `Candidatures jusqu'au ${day}`;
 }
+
+/**
+ * The « Clôture » / « Mission » tile of an offer: where its end stands, in
+ * words. An offer with no date stays open « until you close it » — saying so,
+ * rather than a bare « Par vous » — and an ended one says how it ended, in
+ * the words of its chip.
+ */
+export function closingTile(
+  o: { employmentType: EmploymentType; status: OfferStatus; closedAt?: string | null },
+  /** Days to its date (mission day, or closing day); null when it has none. */
+  left: number | null,
+): { label: string; value: string; hint?: string } {
+  const mission = isDatedMission(o.employmentType);
+  const label = mission ? "Mission" : "Clôture";
+  if (!isRecruiting(o.status)) {
+    // Ended: how, and when you closed it if you did.
+    const closed = o.closedAt
+      ? `le ${new Date(o.closedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}`
+      : undefined;
+    return { label, value: o.closedAt ? "Fermée" : offerChip(o).label, hint: closed };
+  }
+  if (left === null) {
+    return mission
+      ? { label, value: "—" }
+      : { label, value: "Sans date limite", hint: "jusqu'à ce que vous la fermiez" };
+  }
+  return { label, value: left > 0 ? `J-${left}` : left === 0 ? "Aujourd'hui" : "Passée" };
+}
