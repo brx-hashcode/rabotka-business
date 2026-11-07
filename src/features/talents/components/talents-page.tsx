@@ -413,7 +413,7 @@ function InviteDialog({
       onOpenChange={onOpenChange}
       icon={<IconSend className="size-5" />}
       title={`Inviter ${name} à postuler`}
-      description="L'invitation arrive dans ses notifications : un geste suffit pour postuler."
+      description="L'invitation arrive dans ses notifications, et par e-mail s'il en a un : un geste suffit pour postuler."
       confirmLabel="Envoyer l'invitation"
       confirmDisabled={!offerId}
       pending={invite.isPending}

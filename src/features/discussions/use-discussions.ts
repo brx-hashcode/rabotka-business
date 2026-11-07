@@ -10,6 +10,7 @@ import {
   listDiscussions,
   markDiscussionRead,
   openDiscussion,
+  openDiscussionWithProfile,
   reportRedaction,
   sendDiscussionMessage,
 } from "#/lib/api/discussions-controller";
@@ -188,6 +189,19 @@ export function useOpenDiscussion() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (applicationId: string) => openDiscussion(applicationId),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: discussionsKeys.list() }),
+  });
+}
+
+/**
+ * Opens (or finds — the pair has one thread, application or not) the
+ * conversation with a worker who never applied: « Envoyer un message » on a
+ * profile. Can fail on the plan or the daily cap; the caller shows why.
+ */
+export function useOpenDiscussionWithProfile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (profileId: string) => openDiscussionWithProfile(profileId),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: discussionsKeys.list() }),
   });
 }

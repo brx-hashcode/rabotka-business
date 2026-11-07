@@ -13,6 +13,7 @@ import { getCandidate, getCandidatePortfolio } from "#/lib/api/candidate-control
 import { friendlyError } from "#/lib/api/friendly-error";
 import { ImageGallerySheet } from "#/components/image-gallery-sheet";
 import { KeepButton } from "#/features/talents/components/keep-button";
+import { MessageButton } from "./message-button";
 import { ReachButton } from "./reach-button";
 import { SafeImage } from "#/components/safe-image";
 import { getInitials } from "#/lib/utils";
@@ -95,7 +96,8 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
           </Avatar>
         )}
         <div className="min-w-0 flex-1 space-y-1">
-          <Title className="truncate font-semibold text-2xl tracking-tight">{name}</Title>
+          {/* On the page the name is the title row's h1, above the card. */}
+          {!asPage && <Title className="truncate font-semibold text-2xl tracking-tight">{name}</Title>}
           {/* As the client app: only when verified — a pending or refused
               review is never shown to employers. */}
           {c.isVerified && (
@@ -116,9 +118,11 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
       </div>
     </>
   );
-  // Reaching them, from the profile as from the card: « Contact » once obtained.
+  // Reaching them, from the profile as from the card: « Contact » once
+  // obtained, and a moderated message, which needs no contact.
   const reach = (
-    <div className="flex sm:max-w-xs">
+    <div className="flex flex-col gap-3 sm:flex-row">
+      <MessageButton workerId={workerId} name={name} />
       <ReachButton workerId={workerId} name={name} />
     </div>
   );
@@ -213,13 +217,24 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
   if (asPage) {
     return (
       <div className="space-y-6">
-        {/* As the other detail pages: the way back, and the page's action beside it. */}
+        {/* The name as the page's title, the way back as an arrow before it,
+            and the page's actions beside it. */}
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <Link href="/espace/recherche" className="inline-flex items-center gap-1.5 text-muted-foreground text-sm hover:text-foreground">
-            <IconArrowLeft className="size-4" />
-            Trouver des profils
-          </Link>
-          <ReachButton workerId={workerId} name={name} className="h-12 flex-none px-6 text-[15px]" />
+          <div className="flex min-w-0 items-center gap-3">
+            <Link
+              href="/espace/recherche"
+              aria-label="Retour à Trouver des profils"
+              title="Trouver des profils"
+              className="flex size-10 shrink-0 items-center justify-center rounded-full bg-card text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <IconArrowLeft className="size-4.5" />
+            </Link>
+            <Title className="min-w-0 truncate font-semibold text-3xl tracking-tight">{name}</Title>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <MessageButton workerId={workerId} name={name} className="h-12 flex-none px-6 text-[15px]" />
+            <ReachButton workerId={workerId} name={name} className="h-12 flex-none px-6 text-[15px]" />
+          </div>
         </div>
         <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_28rem]">
           <div className="min-w-0 space-y-6 rounded-3xl bg-card p-6 sm:p-8">
