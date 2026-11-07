@@ -19,13 +19,13 @@ import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
 import { Bone } from "#/components/page-skeletons";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { getMyPacks, getMySubscription, myBusinessKey, myPacksKey, mySubscriptionKey } from "#/lib/api/business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { getPaymentByToken, getPaymentGateways, initiatePayment } from "#/lib/api/payment-controller";
 import type { BusinessPlan, PaymentOperator } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { formatMoney } from "#/features/money/money";
+import { CountryPicker, Flag, type PayCountry } from "./country-picker";
 import { PaymentDialog, REQUEST_SECONDS, type PaymentPhase } from "./payment-dialog";
 import { cvLine } from "./subscription-page";
 import { offersPerPeriodLabel } from "../offers-quota";
@@ -261,22 +261,13 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
                       <StepNumber n={1} />
                       Pays du numéro
                     </label>
-                    <Select value={country ?? undefined} onValueChange={chooseCountry}>
-                      <SelectTrigger id="pay-country" className="!h-14 w-full rounded-2xl border-0 bg-page px-4 text-base shadow-none">
-                        <SelectValue placeholder="Choisir un pays" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {covered.map((c) => (
-                          <SelectItem key={c.code} value={c.code}>
-                            <span className="flex items-center gap-2.5">
-                              <Flag country={c} />
-                              <span>{c.name}</span>
-                              {c.dialCode && <span className="text-muted-foreground text-xs">+{c.dialCode}</span>}
-                            </span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <CountryPicker
+                      id="pay-country"
+                      value={country}
+                      onChange={chooseCountry}
+                      countries={covered}
+                      payerCountry={payerCountry}
+                    />
                     {payerNotCovered && (
                       <p className="text-muted-foreground text-xs">
                         Le mobile money de votre pays n&apos;est pas encore accepté : payez avec un numéro d&apos;un des pays de la liste.
@@ -419,28 +410,20 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
   );
 }
 
-type PayCountry = { code: string; name: string; flag?: string; dialCode?: string };
-
 /** Each country the gateway has networks in, once, in the gateway's order. */
 function payCountries(all: readonly PaymentOperator[]): PayCountry[] {
   const out: PayCountry[] = [];
   for (const o of all) {
     if (!o.country || out.some((c) => c.code === o.country)) continue;
-    out.push({ code: o.country, name: o.countryName ?? o.country, flag: o.countryFlag, dialCode: o.dialCode });
+    out.push({
+      code: o.country,
+      name: o.countryName ?? o.country,
+      flag: o.countryFlag,
+      dialCode: o.dialCode,
+      currency: o.currency,
+    });
   }
   return out;
-}
-
-function Flag({ country }: Readonly<{ country: PayCountry }>) {
-  return country.flag ? (
-    // The gateway's flag image: nothing next/image could optimise.
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={country.flag} alt="" className="h-4 w-6 shrink-0 rounded-[3px] object-cover" />
-  ) : (
-    <span className="flex h-4 w-6 shrink-0 items-center justify-center rounded-[3px] bg-foreground/10 font-semibold text-[9px]">
-      {country.code.slice(0, 2)}
-    </span>
-  );
 }
 
 function StepNumber({ n }: Readonly<{ n: number }>) {
