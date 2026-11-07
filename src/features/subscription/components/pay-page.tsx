@@ -25,6 +25,7 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import { getPaymentByToken, getPaymentGateways, initiatePayment } from "#/lib/api/payment-controller";
 import type { BusinessPlan, PaymentOperator } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
+import { formatMoney } from "#/features/money/money";
 import { PaymentDialog, REQUEST_SECONDS, type PaymentPhase } from "./payment-dialog";
 import { cvLine } from "./subscription-page";
 import { offersPerPeriodLabel } from "../offers-quota";
@@ -37,7 +38,6 @@ const POLL_MS = 3000;
 /** Settled but no paid period after this many polls: it did not go through. */
 const POLL_LIMIT = 8;
 
-const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
 
 /** « Abonnement Rabotka Business Pro — mensuel » → the plan's name and its period. */
 function readDescription(description: string | null | undefined) {
@@ -122,6 +122,14 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
     setError(null);
   }
   const amount = payment.data?.amount ?? null;
+  // What the chosen network is charged: the price itself in the CFA zone,
+  // converted in its own currency elsewhere (dollars in the DRC).
+  const charge = payment.data?.prices?.find((p) => p.currency === (selected?.currency ?? "XAF"));
+  const amountLabel = charge
+    ? formatMoney(charge.amount, charge.currency)
+    : amount !== null
+      ? formatMoney(amount, "XAF")
+      : null;
   const what = readDescription(payment.data?.description);
   /** « 100 CV à analyser » when paying a pack, else null. */
   const pack = readPackDescription(payment.data?.description);
@@ -354,7 +362,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
                     ) : (
                       <>
                         <IconLock className="size-5" />
-                        Payer {amount !== null ? fcfa(amount) : ""}
+                        Payer {amountLabel ?? ""}
                       </>
                     )}
                   </button>
@@ -370,7 +378,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
 
           <PaymentDialog
             phase={phase}
-            amount={amount}
+            amount={amountLabel}
             phone={phoneLabel}
             operator={selected}
             sentAt={sentAt}
@@ -398,7 +406,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
 
           <Summary
             loading={payment.isLoading}
-            amount={amount}
+            amount={amountLabel}
             description={payment.data?.description ?? null}
             planName={what?.planName ?? null}
             period={what?.period ?? null}
@@ -450,7 +458,8 @@ function Summary({
   pack,
 }: Readonly<{
   loading: boolean;
-  amount: number | null;
+  /** Said in the chosen network's currency. */
+  amount: string | null;
   description: string | null;
   planName: string | null;
   period: "mensuel" | "annuel" | null;
@@ -496,7 +505,7 @@ function Summary({
           )}
           <div className="flex items-baseline justify-between rounded-2xl bg-page p-4">
             <span className="font-medium">Total à payer</span>
-            <span className="font-semibold text-2xl tracking-tight">{amount !== null ? fcfa(amount) : "—"}</span>
+            <span className="font-semibold text-2xl tracking-tight">{amount ?? "—"}</span>
           </div>
         </>
       )}

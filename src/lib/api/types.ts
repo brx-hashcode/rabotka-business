@@ -290,7 +290,22 @@ export type PaymentOperator = {
   countryFlag?: string;
   dialCode?: string;
   logo?: string;
+  /** What the network is charged in: XAF, XOF, USD (DRC), KES… */
   currency?: string;
+  decimals?: number;
+  minAmount?: number;
+  maxAmount?: number;
+};
+
+/** `GET payment-currency/:country`: the currency a country pays in, and how to convert. */
+export type PaymentCurrency = {
+  country: string;
+  currency: string;
+  perXaf: number;
+  decimals: number;
+  significantDigits: number;
+  marginPercent: number;
+  asOf: string | null;
 };
 
 export type PaymentGateways = {
@@ -303,7 +318,10 @@ export type PaymentByToken = {
   id: string;
   status: "PENDING" | "PROCESSING" | "APPROVED" | "REJECTED";
   gateway: string | null;
+  /** The price, in XAF. */
   amount: number | null;
+  /** What that price costs in each currency on offer: the chosen network's is charged. */
+  prices?: { currency: string; amount: number }[];
   description: string | null;
   payerCountry?: string | null;
   /** Why the last attempt was refused: the operator's code (INSUFFICIENT_BALANCE…). */

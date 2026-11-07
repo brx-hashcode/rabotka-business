@@ -12,6 +12,7 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import type { MySubscription, PackKind } from "#/lib/api/types";
 import { PACK_KINDS, PACK_TITLE, packUnits } from "../packs";
 import { usePacks } from "../use-packs";
+import { useDisplayCurrency } from "#/features/money/use-display-currency";
 
 const ICON: Record<PackKind, typeof IconFileSearch> = {
   CV: IconFileSearch,
@@ -22,7 +23,6 @@ const ICON: Record<PackKind, typeof IconFileSearch> = {
 
 const MAX_COUNT = 10;
 
-const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
 const date = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
 /**
@@ -75,6 +75,9 @@ export function PacksSection({ data }: Readonly<{ data: MySubscription }>) {
 }
 
 function PackCard({ kind, quantity, priceFcfa }: Readonly<{ kind: PackKind; quantity: number; priceFcfa: number }>) {
+  // In the organisation's country's currency; the total converted as a
+  // whole, as checkout charges it, not unit by unit.
+  const { price } = useDisplayCurrency();
   const router = useRouter();
   const [count, setCount] = useState(1);
   const Icon = ICON[kind];
@@ -96,7 +99,7 @@ function PackCard({ kind, quantity, priceFcfa }: Readonly<{ kind: PackKind; quan
         </div>
       </div>
       <p className="flex items-end gap-1.5">
-        <span className="font-semibold text-2xl tracking-tight">{fcfa(priceFcfa)}</span>
+        <span className="font-semibold text-2xl tracking-tight">{price(priceFcfa)}</span>
         <span className="mb-0.5 text-muted-foreground text-sm">/ pack</span>
       </p>
       <div className="mt-auto space-y-3">
@@ -130,7 +133,7 @@ function PackCard({ kind, quantity, priceFcfa }: Readonly<{ kind: PackKind; quan
           disabled={buy.isPending}
           className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-ink px-6 font-medium text-[15px] text-white transition-colors hover:bg-ink/90 disabled:opacity-60"
         >
-          {buy.isPending ? <Loader className="size-5 animate-spin text-white" /> : `Acheter · ${fcfa(priceFcfa * count)}`}
+          {buy.isPending ? <Loader className="size-5 animate-spin text-white" /> : `Acheter · ${price(priceFcfa * count)}`}
         </button>
       </div>
     </article>

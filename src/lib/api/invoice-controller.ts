@@ -6,8 +6,11 @@ export type InvoiceReason = "BUSINESS_SUBSCRIPTION" | "BUSINESS_CREDIT_PACK" | "
 export type Invoice = {
   id: string;
   paymentRequestId: string | null;
-  /** Decimal as a string, FCFA. */
+  /** Decimal as a string, FCFA: the price, and the books. */
   amount: string;
+  /** What the network was charged when not the XAF price (USD in the DRC), else null. */
+  chargedCurrency: string | null;
+  chargedAmount: string | null;
   reason: InvoiceReason | (string & {});
   status: "PENDING_DOWNLOAD" | "DOWNLOADED";
   createdAt: string;
