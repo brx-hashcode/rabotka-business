@@ -29,6 +29,7 @@ export function PaymentDialog({
   planName,
   startsAt,
   approvedText,
+  back = { href: "/espace/abonnement", label: "Retour à l'abonnement" },
   failureText,
   onClose,
   onResend,
@@ -45,6 +46,8 @@ export function PaymentDialog({
   startsAt?: string | null;
   /** What the payment did, when not a plan's (a pack). */
   approvedText?: string;
+  /** Where « paid » leads back to: the plans, or the packs for a pack. */
+  back?: { href: string; label: string };
   /** Why the operator refused, when it said (« Solde mobile money insuffisant… »). */
   failureText?: string | null;
   onClose: () => void;
@@ -132,8 +135,8 @@ export function PaymentDialog({
             <Link href="/espace/factures" className="h-11 flex-1 rounded-full bg-page px-4 font-medium text-sm leading-[2.75rem] hover:bg-page/70">
               Voir la facture
             </Link>
-            <Link href="/espace" className="h-11 flex-1 rounded-full bg-ink px-4 font-medium text-sm text-white leading-[2.75rem] hover:bg-ink/90">
-              Tableau de bord
+            <Link href={back.href} className="h-11 flex-1 rounded-full bg-ink px-4 font-medium text-sm text-white leading-[2.75rem] hover:bg-ink/90">
+              {back.label}
             </Link>
           </Outcome>
         )}
