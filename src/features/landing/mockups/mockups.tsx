@@ -363,8 +363,8 @@ function TrackingMockup() {
 function ProfilesMockup() {
   const PROFILES = [
     { name: "Fortuné Mabiala", job: "Électricien bâtiment", city: "Brazzaville", tags: ["Habilitation B1", "6 ans"] },
-    { name: "Clarisse Ngoma", job: "Aide-soignante", city: "Kinshasa", tags: ["Diplômée", "Nuits"] },
-    { name: "Herman Etoundi", job: "Chauffeur-livreur", city: "Douala", tags: ["Permis C", "Disponible"] },
+    { name: "Clarisse Kouassi", job: "Aide-soignante", city: "Abidjan", tags: ["Diplômée", "Nuits"] },
+    { name: "Brian Otieno", job: "Chauffeur-livreur", city: "Nairobi", tags: ["Permis C", "Disponible"] },
   ];
   return (
     <MockupFrame label="Aperçu : une recherche de profils vérifiés par métier et par ville." title="Trouver des profils">

@@ -2,6 +2,7 @@ import { businessCountriesServer } from "#/lib/api/catalog-server";
 import { LandingFooter, ClosingCta } from "#/features/landing/components/landing-footer";
 import { LandingHeader } from "#/features/landing/components/landing-header";
 import { LandingHero } from "#/features/landing/components/landing-hero";
+import { CountriesSection } from "#/features/landing/components/countries-section";
 import {
   AudiencesSection,
   FaqSection,
@@ -22,6 +23,7 @@ export default async function LandingPage() {
       <main>
         <LandingHero countries={countries} />
         <FeaturesSection />
+        <CountriesSection countries={countries} />
         <TrustSection />
         <StepsSection />
         <AudiencesSection />

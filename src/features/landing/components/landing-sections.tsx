@@ -168,7 +168,7 @@ function countriesAnswer(countries: BusinessCountryName[]) {
   const list = names.length > 1 ? `${names.slice(0, -1).join(", ")} et ${names.at(-1)}` : (names[0] ?? "");
   return {
     q: "Dans quels pays Rabotka Business est-il disponible ?",
-    a: `Aujourd'hui : ${list}. Les pièces demandées, les villes proposées et la diffusion de vos offres sont celles de votre pays ; les abonnements se règlent par mobile money.`,
+    a: `Aujourd'hui : ${list}. Les pièces demandées, les villes proposées et la diffusion de vos offres sont celles de votre pays ; les abonnements se règlent par mobile money, dans la monnaie de votre pays.`,
   };
 }
 

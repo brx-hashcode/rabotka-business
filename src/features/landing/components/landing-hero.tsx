@@ -4,6 +4,7 @@ import { IconArrowRight } from "@tabler/icons-react";
 import { Button } from "#/components/ui/button";
 import type { BusinessCountryName } from "#/lib/api/catalog-server";
 import { SIGN_UP_HREF, STRIP_FEATURES } from "../content";
+import { flagUrl } from "../globe/country-places";
 import { HeroMockup } from "../mockups/mockups";
 
 /**
@@ -40,17 +41,24 @@ export function LandingHero({ countries }: Readonly<{ countries: BusinessCountry
               Voir comment ça marche
             </a>
           </div>
-          {/* Where it is open, from the backend's list: not one country's tool. */}
-          <div className="space-y-2.5 pt-2">
-            <p className="font-medium text-header-muted text-sm">Disponible dans {countries.length} pays</p>
-            <ul className="flex flex-wrap gap-1.5">
-              {countries.map((c) => (
-                <li key={c.code} className="rounded-full bg-ink/10 px-3 py-1 font-medium text-xs">
-                  {c.name}
-                </li>
+          {/* Where it is open, from the backend's list: not one country's tool. The map is further down. */}
+          <a href="#pays" className="group inline-flex items-center gap-3 pt-2">
+            <span className="flex -space-x-1.5">
+              {countries.slice(0, 6).map((c) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={c.code}
+                  src={flagUrl(c.code, 80)}
+                  alt=""
+                  className="size-6 rounded-full object-cover shadow-[0_0_0_2px_var(--header)]"
+                />
               ))}
-            </ul>
-          </div>
+            </span>
+            <span className="font-medium text-header-muted text-sm group-hover:text-header-foreground">
+              Disponible dans {countries.length} pays d&apos;Afrique
+            </span>
+            <IconArrowRight className="size-4 text-header-muted transition-transform group-hover:translate-x-0.5" />
+          </a>
         </div>
 
         <div className="min-w-0 text-foreground motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-6 motion-safe:delay-150 motion-safe:duration-700 motion-safe:fill-mode-both">
