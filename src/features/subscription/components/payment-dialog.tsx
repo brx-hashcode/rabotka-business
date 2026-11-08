@@ -13,7 +13,6 @@ export type PaymentPhase = "waiting" | "approved" | "failed" | "expired";
 /** How long the operator keeps a request open; past it, the page offers to send again. */
 export const REQUEST_SECONDS = 180;
 
-const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
 
 /**
  * The moment the money moves, over the form: the request sent to the phone,
@@ -35,7 +34,8 @@ export function PaymentDialog({
   onResend,
 }: Readonly<{
   phase: PaymentPhase | null;
-  amount: number | null;
+  /** Already said in the network's currency. */
+  amount: string | null;
   /** As people read it: « +242 06 991 76 86 ». */
   phone: string;
   operator: PaymentOperator | null;
@@ -84,7 +84,7 @@ export function PaymentDialog({
                   <p className="truncate font-medium text-sm">{phone}</p>
                   <p className="text-muted-foreground text-xs">{operator?.label ?? "Mobile money"}</p>
                 </div>
-                <p className="font-semibold tabular-nums">{amount !== null ? fcfa(amount) : ""}</p>
+                <p className="font-semibold tabular-nums">{amount ?? ""}</p>
               </div>
             </div>
             <div className="space-y-3 bg-page/60 px-6 py-5 sm:px-8">

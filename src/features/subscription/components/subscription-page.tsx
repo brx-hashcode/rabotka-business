@@ -32,6 +32,7 @@ import { teamLine } from "../team-places";
 import { packCredits, planShare } from "../packs";
 import { usePacks } from "../use-packs";
 import { PacksSection } from "./packs-section";
+import { useDisplayCurrency } from "#/features/money/use-display-currency";
 
 type Period = "MONTHLY" | "ANNUAL";
 
@@ -42,7 +43,6 @@ const STATUS: Record<SubscriptionStatus, { label: string; className: string }> =
   CANCELLED: { label: "Annulé", className: "bg-page text-muted-foreground" },
 };
 
-const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
 const date = (iso: string) =>
   new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
@@ -436,6 +436,8 @@ function Feature({ children }: Readonly<{ children: React.ReactNode }>) {
 
 function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
   const router = useRouter();
+  // In the organisation's country's currency (dollars in the DRC).
+  const { price: priceLabel } = useDisplayCurrency();
   const [period, setPeriod] = useState<Period>("MONTHLY");
   const current = data.entitlements.status === "ACTIVE" ? data.entitlements.plan?.id : null;
   const currentPlan = data.plans.find((p) => p.id === current) ?? null;
@@ -530,7 +532,7 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
                 {plan.description && <p className="text-muted-foreground text-sm">{plan.description}</p>}
               </div>
               <p className="flex items-end gap-1.5">
-                <span className="font-semibold text-3xl tracking-tight">{fcfa(price)}</span>
+                <span className="font-semibold text-3xl tracking-tight">{priceLabel(price)}</span>
                 <span className="mb-1 text-muted-foreground text-sm">/ {period === "ANNUAL" ? "an" : "mois"}</span>
               </p>
               <ul className="flex-1 space-y-2.5 text-sm">
