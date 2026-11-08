@@ -37,7 +37,7 @@ const END_OF_DAY = "23:59";
 const schema = z
   .object({
     title: z.string().trim().min(5, "Entre 5 et 100 caractères").max(100, "Entre 5 et 100 caractères"),
-    description: z.string().trim().min(20, "Entre 20 et 1 000 caractères").max(1000, "Entre 20 et 1 000 caractères"),
+    description: z.string().trim().min(20, "Entre 20 et 2 500 caractères").max(2500, "Entre 20 et 2 500 caractères"),
     employmentType: z.enum(["MISSION", "CDD", "CDI", "STAGE"]),
     scheduledDate: z.string(),
     scheduledTime: z.string(),
