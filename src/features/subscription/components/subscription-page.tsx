@@ -25,6 +25,7 @@ import { Bone } from "#/components/page-skeletons";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
 import { getMySubscription, mySubscriptionKey, startPeriodNow, subscribeToPlan } from "#/lib/api/business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
+import { featuredPlanId } from "../featured-plan";
 import type { BusinessPlan, MySubscription, SubscriptionPeriod, SubscriptionStatus } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { offersPerPeriodLabel, offersUsed } from "../offers-quota";
@@ -450,6 +451,7 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
     .sort()
     .at(-1);
   const scheduled = new Set(data.upcoming.map((p) => p.planName));
+  const featured = data.entitlements.status === "ACTIVE" ? null : featuredPlanId(data.plans);
 
   const buy = useMutation({
     mutationFn: (plan: BusinessPlan) => subscribeToPlan(plan.id, period),
@@ -510,8 +512,12 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
                 ? lastEnd && `Démarre le ${date(lastEnd)}, ${after}.`
                 : null;
           const pending = buy.isPending && buy.variables?.id === plan.id;
+          const isFeatured = plan.id === featured;
           return (
-            <article key={plan.id} className={cn("flex flex-col gap-5 rounded-3xl bg-card p-6", isCurrent && "ring-2 ring-ink")}>
+            <article
+              key={plan.id}
+              className={cn("flex flex-col gap-5 rounded-3xl bg-card p-6", (isCurrent || isFeatured) && "ring-2 ring-ink")}
+            >
               <div className="space-y-1">
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="flex items-center gap-2 font-semibold text-lg">
@@ -526,9 +532,11 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
                     <span className="rounded-full bg-chip-green px-2.5 py-1 font-medium text-chip-green-foreground text-xs">
                       Votre formule
                     </span>
+                  ) : scheduled.has(plan.name) ? (
+                    <span className="rounded-full bg-page px-2.5 py-1 font-medium text-muted-foreground text-xs">Programmée</span>
                   ) : (
-                    scheduled.has(plan.name) && (
-                      <span className="rounded-full bg-page px-2.5 py-1 font-medium text-muted-foreground text-xs">Programmée</span>
+                    isFeatured && (
+                      <span className="rounded-full bg-brand-lime px-2.5 py-1 font-medium text-[#0f2414] text-xs">Le plus choisi</span>
                     )
                   )}
                 </div>
