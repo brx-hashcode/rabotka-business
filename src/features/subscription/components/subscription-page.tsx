@@ -35,6 +35,7 @@ import {
 import { friendlyError } from "#/lib/api/friendly-error";
 import { getPaymentGateways } from "#/lib/api/payment-controller";
 import { featuredPlanId } from "../featured-plan";
+import { runningBillingPeriod } from "../running-period";
 import { localMobileMoney } from "../local-mobile-money";
 import type { BusinessPlan, MySubscription, SubscriptionPeriod, SubscriptionStatus } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
@@ -160,7 +161,7 @@ export function SubscriptionPage() {
 function PayCountryNotice() {
   const business = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
   const gateways = useQuery({ queryKey: ["payment-gateways"], queryFn: getPaymentGateways, staleTime: 10 * 60 * 1000 });
-  const gateway = gateways.data?.gateways.find((g) => g.key === gateways.data?.active);
+  const gateway = gateways.data?.gateways?.find((g) => g.key === gateways.data?.active);
   const local = localMobileMoney(business.data?.countryCode, gateway?.operators ?? []);
   if (!local || local.covered) return null;
   const some = local.elsewhere.slice(0, 3);
@@ -481,8 +482,11 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
   const router = useRouter();
   // In the organisation's country's currency (dollars in the DRC).
   const { price: priceLabel } = useDisplayCurrency();
-  const [period, setPeriod] = useState<Period>("MONTHLY");
   const current = data.entitlements.status === "ACTIVE" ? data.entitlements.plan?.id : null;
+  // How the running plan is billed: the switch opens on it, and the plan is
+  // « Votre formule » on that side only.
+  const runningPeriod = current ? runningBillingPeriod(data.history) : null;
+  const [period, setPeriod] = useState<Period>(runningPeriod ?? "MONTHLY");
   const currentPlan = data.plans.find((p) => p.id === current) ?? null;
   // Where a queued period would start: after the running one and anything already paid.
   const lastEnd = [data.entitlements.endsAt, ...data.upcoming.map((p) => p.endsAt)]
@@ -537,14 +541,18 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {data.plans.map((plan) => {
           const price = period === "ANNUAL" ? plan.annualPriceFcfa : plan.monthlyPriceFcfa;
-          const isCurrent = plan.id === current;
-          const change = !currentPlan || isCurrent ? null : plan.monthlyPriceFcfa > currentPlan.monthlyPriceFcfa ? "up" : "down";
+          const isCurrent = plan.id === current && (!runningPeriod || period === runningPeriod);
+          // The same plan, billed the other way: it takes over when the running period ends.
+          const switching = plan.id === current && !isCurrent;
+          const change = !currentPlan || plan.id === current ? null : plan.monthlyPriceFcfa > currentPlan.monthlyPriceFcfa ? "up" : "down";
           // When a queued period starts: after the running one, or after those already paid.
           const after = data.upcoming.length > 0 ? "après les périodes déjà payées" : "à la fin de la période en cours";
           const when = data.entitlements.status === "TRIAL"
             ? "Démarre dès le paiement : votre essai gratuit s'arrête alors."
             : isCurrent
             ? lastEnd && `La nouvelle période commence le ${date(lastEnd)}, ${after}.`
+            : switching
+            ? lastEnd && `${period === "ANNUAL" ? "L'abonnement annuel" : "L'abonnement mensuel"} commence le ${date(lastEnd)}, ${after}.`
             : change === "up"
               ? `Démarre aujourd'hui : les jours restants ${de(currentPlan?.name ?? "")} sont convertis en jours ${de(plan.name)}.`
               : change === "down"
@@ -570,6 +578,10 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
                   {isCurrent ? (
                     <span className="rounded-full bg-chip-green px-2.5 py-1 font-medium text-chip-green-foreground text-xs">
                       Votre formule
+                    </span>
+                  ) : switching ? (
+                    <span className="rounded-full bg-page px-2.5 py-1 font-medium text-muted-foreground text-xs">
+                      Votre formule, en {runningPeriod === "ANNUAL" ? "annuel" : "mensuel"}
                     </span>
                   ) : scheduled.has(plan.name) ? (
                     <span className="rounded-full bg-page px-2.5 py-1 font-medium text-muted-foreground text-xs">Programmée</span>
@@ -608,7 +620,7 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
                 disabled={buy.isPending || price <= 0}
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-ink px-6 font-medium text-[15px] text-white transition-colors hover:bg-ink/90 disabled:opacity-60"
               >
-                {pending ? <Loader className="size-5 animate-spin text-white" /> : isCurrent ? "Renouveler" : change === "up" ? `Passer à ${plan.name}` : change === "down" ? "Programmer" : "Choisir"}
+                {pending ? <Loader className="size-5 animate-spin text-white" /> : isCurrent ? "Renouveler" : switching ? (period === "ANNUAL" ? "Passer à l'annuel" : "Passer au mensuel") : change === "up" ? `Passer à ${plan.name}` : change === "down" ? "Programmer" : "Choisir"}
               </button>
             </article>
           );
