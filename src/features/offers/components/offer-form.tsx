@@ -89,8 +89,12 @@ const pad = (n: number) => String(n).padStart(2, "0");
 const toDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const toTime = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
-/** The form's values for an existing offer (edit), or a blank form. */
-export function offerFormValues(offer?: Offer): OfferFormValues {
+/**
+ * The form's values for an existing offer (edit), or a blank form placed
+ * where the organisation is (`home`): Rabotka Business is open in several
+ * countries, so no country is assumed.
+ */
+export function offerFormValues(offer?: Offer, home?: { countryCode?: string | null; city?: string | null }): OfferFormValues {
   const at = offer?.scheduledAt ? new Date(offer.scheduledAt) : null;
   const time = at ? toTime(at) : "";
   return {
@@ -100,8 +104,8 @@ export function offerFormValues(offer?: Offer): OfferFormValues {
     scheduledDate: at ? toDate(at) : "",
     scheduledTime: time === END_OF_DAY ? "" : time,
     isRemote: offer?.isRemote ?? false,
-    countryCode: offer?.countryCode ?? "CG",
-    city: offer?.city ?? "",
+    countryCode: offer?.countryCode ?? home?.countryCode ?? "",
+    city: offer?.city ?? (offer ? "" : (home?.city ?? "")),
     address: offer?.address ?? "",
     quantity: String(offer?.quantity ?? 1),
     amount: offer?.amount ? String(offer.amount) : "",

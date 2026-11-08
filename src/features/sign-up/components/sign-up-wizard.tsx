@@ -16,7 +16,7 @@ import { useSignUpStore } from "#/stores/sign-up-store";
 import { STEPS, type StepId } from "../steps";
 import { AccountStep } from "./account-step";
 import { DocumentsStep } from "./documents-step";
-import { OrganisationStep } from "./organisation-step";
+import { emptyOrganisation, OrganisationStep } from "./organisation-step";
 import { ReviewStep, SignUpDone } from "./review-step";
 import { AuthShell, AuthTabs } from "#/features/auth/components/auth-shell";
 import { DONE_STEP, ProgressHeader } from "./sign-up-chrome";
@@ -36,7 +36,8 @@ const stepParser = parseAsStringLiteral(STEP_IDS).withDefault("account");
  * to `?etape=documents` before the email is verified — shows the furthest
  * one that it does.
  */
-export function SignUpWizard() {
+/** `visitorCountry`: where the visitor is (Cloudflare's CF-IPCountry), to suggest. */
+export function SignUpWizard({ visitorCountry }: Readonly<{ visitorCountry?: string | null }>) {
   const queryClient = useQueryClient();
   const [etape, setEtape] = useQueryState("etape", stepParser.withOptions({ history: "push" }));
   const store = useSignUpStore();
@@ -233,7 +234,7 @@ export function SignUpWizard() {
       case 2:
         return (
           <OrganisationStep
-            defaultValues={organisation}
+            defaultValues={organisation ?? emptyOrganisation(visitorCountry, catalog?.countries)}
             onBack={() => go(0)}
             onDone={(values) => {
               // Another type, or another country, asks for other papers.

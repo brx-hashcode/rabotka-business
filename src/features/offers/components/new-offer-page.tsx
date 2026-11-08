@@ -78,7 +78,10 @@ export function NewOfferPage() {
         <p className="text-muted-foreground">Décrivez le poste : les candidats correspondants en sont prévenus dès sa publication.</p>
       </div>
       <OfferForm
-        defaultValues={offerFormValues()}
+        // Placed where the organisation is, once known (it is cached by then
+        // almost always: the sidebar reads it).
+        key={business ? "home" : "blank"}
+        defaultValues={offerFormValues(undefined, business)}
         submitLabel="Publier l'offre"
         pending={create.isPending}
         aside={

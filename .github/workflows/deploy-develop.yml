@@ -79,6 +79,8 @@ jobs:
           target: production
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            APP_VERSION=${{ github.sha }}
           labels: ${{ steps.meta.outputs.labels }}
           # Registry-backed layer cache stored in GHCR (a :buildcache tag), not
           # GitHub's Actions Cache — which returned 400 outages and gave 0% hit,

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { IconArrowRight } from "@tabler/icons-react";
 
 import { Button } from "#/components/ui/button";
+import type { BusinessCountryName } from "#/lib/api/catalog-server";
 import { SIGN_UP_HREF, STRIP_FEATURES } from "../content";
 import { HeroMockup } from "../mockups/mockups";
 
@@ -10,7 +11,7 @@ import { HeroMockup } from "../mockups/mockups";
  * itself beside it. Then the four steps of a hire as cards, each a link to
  * its section.
  */
-export function LandingHero() {
+export function LandingHero({ countries }: Readonly<{ countries: BusinessCountryName[] }>) {
   return (
     <section className="overflow-hidden bg-header text-header-foreground">
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-4 pt-10 pb-14 sm:px-6 md:pt-16 lg:grid-cols-[1fr_1.05fr] lg:gap-16 lg:pb-20">
@@ -38,6 +39,17 @@ export function LandingHero() {
             <a href="#fonctionnalites" className="rounded-full px-4 py-2 font-medium text-sm underline-offset-4 hover:underline">
               Voir comment ça marche
             </a>
+          </div>
+          {/* Where it is open, from the backend's list: not one country's tool. */}
+          <div className="space-y-2.5 pt-2">
+            <p className="font-medium text-header-muted text-sm">Disponible dans {countries.length} pays</p>
+            <ul className="flex flex-wrap gap-1.5">
+              {countries.map((c) => (
+                <li key={c.code} className="rounded-full bg-ink/10 px-3 py-1 font-medium text-xs">
+                  {c.name}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
