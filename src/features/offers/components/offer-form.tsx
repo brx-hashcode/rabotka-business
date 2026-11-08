@@ -26,8 +26,12 @@ import { OfferAiDialog } from "./offer-ai-dialog";
 import { OfferQuestionsField } from "./offer-questions-field";
 import { OfferSummary } from "./offer-summary";
 
-/** Mirrors the server (and the client app): a new date is at least 4 h ahead. */
-const MIN_HOURS_AHEAD = 4;
+/**
+ * Mirrors the server (and the client app): a new date only has to be still to
+ * come. It is when applications close, and an urgent mission may start within
+ * the hour.
+ */
+const MIN_HOURS_AHEAD = 0;
 const END_OF_DAY = "23:59";
 
 const schema = z
@@ -116,7 +120,7 @@ export function offerFormValues(offer?: Offer, home?: { countryCode?: string | n
   };
 }
 
-/** A new date must be at least 4 h ahead (the server's rule). */
+/** A new date must still be to come (the server's rule). */
 function isTooSoon(iso: string): boolean {
   return new Date(iso).getTime() < Date.now() + MIN_HOURS_AHEAD * 3600_000;
 }
@@ -199,7 +203,7 @@ export function OfferForm({
       const iso = scheduledIso(values.scheduledDate, values.scheduledTime);
       if (iso !== keepSchedule && isTooSoon(iso)) {
         form.setError(values.scheduledTime ? "scheduledTime" : "scheduledDate", {
-          message: "La date doit être au moins 4 heures dans le futur",
+          message: "Choisissez une date et une heure à venir",
         });
         return;
       }
@@ -334,7 +338,7 @@ export function OfferForm({
                   name="scheduledDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FieldLabel>Date de la mission</FieldLabel>
+                      <FieldLabel>Candidatures jusqu&apos;au</FieldLabel>
                       <FormControl>
                         <Input {...field} type="date" min={toDate(new Date())} className={FIELD_CLASS} />
                       </FormControl>
@@ -356,6 +360,12 @@ export function OfferForm({
                   )}
                 />
               </div>
+            ) : null}
+            {dated ? (
+              <p className="text-muted-foreground text-sm">
+                Vous acceptez des candidatures jusqu&apos;à ce moment, en général le début de la mission : elle peut commencer
+                aujourd&apos;hui, même dans l&apos;heure. L&apos;heure est facultative.
+              </p>
             ) : (
               <p className="text-muted-foreground text-sm">L&apos;offre reste en ligne jusqu&apos;à ce que vous la clôturiez.</p>
             )}

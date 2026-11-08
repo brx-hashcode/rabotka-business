@@ -385,7 +385,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
         description={
           noOfferLeft
             ? "Votre formule n'a plus d'offre à publier sur cette période."
-            : `${needsDate ? "Choisissez la nouvelle date (au moins 4 heures à l'avance). " : ""}Elle compte comme une offre publiée sur votre formule.`
+            : `${needsDate ? "Choisissez jusqu'à quand vous acceptez des candidatures : la mission peut commencer aujourd'hui. " : ""}Elle compte comme une offre publiée sur votre formule.`
         }
         confirmLabel="Republier"
         confirmDisabled={(needsDate && !newDate) || noOfferLeft}
@@ -1342,7 +1342,7 @@ function DetailsCard({ offer: o, category }: Readonly<{ offer: Offer; category?:
       ? [
           {
             icon: IconCalendarEvent,
-            label: isDatedMission(o.employmentType) ? "Date de la mission" : "Clôture des candidatures",
+            label: isDatedMission(o.employmentType) ? "Candidatures jusqu'au" : "Clôture des candidatures",
             value: offerDate(o.scheduledAt, o.employmentType)?.replace(/^Candidatures jusqu'au /, "") ?? "Non renseignée",
           },
         ]
