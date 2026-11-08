@@ -1,12 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
-import { IconArrowRight, IconCheck, IconChevronDown } from "@tabler/icons-react";
+import { IconArrowRight, IconCheck } from "@tabler/icons-react";
 
 import { Button } from "#/components/ui/button";
 import type { BusinessCountryName } from "#/lib/api/catalog-server";
 import { cn } from "#/lib/utils";
 import { AUDIENCE_PHOTO, AUDIENCES, FAQ, FEATURES, SIGN_UP_HREF, STEPS, TRUST } from "../content";
 import { FeatureMockup } from "../mockups/mockups";
+import { FaqExplorer } from "./faq-explorer";
 
 function SectionHeading({
   kicker,
@@ -172,23 +173,17 @@ function countriesAnswer(countries: BusinessCountryName[]) {
   };
 }
 
-/** Questions, answered in place (native details/summary, no script). */
+/** Questions to browse: a list and its answer side by side, an accordion on a phone. */
 export function FaqSection({ countries }: Readonly<{ countries: BusinessCountryName[] }>) {
   return (
     <section id="faq" className="scroll-mt-20 bg-card py-20 md:py-28">
-      <div className="mx-auto w-full max-w-3xl space-y-10 px-4 sm:px-6">
-        <SectionHeading kicker="Questions fréquentes" title="Tout savoir avant de commencer" center />
-        <div className="space-y-3">
-          {[countriesAnswer(countries), ...FAQ].map((item) => (
-            <details key={item.q} className="group rounded-2xl bg-page px-5 py-4 open:pb-5">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium [&::-webkit-details-marker]:hidden">
-                {item.q}
-                <IconChevronDown className="size-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
-              </summary>
-              <p className="mt-3 text-muted-foreground text-sm">{item.a}</p>
-            </details>
-          ))}
-        </div>
+      <div className="mx-auto w-full max-w-7xl space-y-12 px-4 sm:px-6">
+        <SectionHeading
+          kicker="Questions fréquentes"
+          title="Tout savoir avant de commencer"
+          text="Les pays, l'analyse de CV, vos données et votre compte : l'essentiel en quelques réponses."
+        />
+        <FaqExplorer items={[countriesAnswer(countries), ...FAQ]} />
       </div>
     </section>
   );
