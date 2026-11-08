@@ -72,7 +72,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
   const subscription = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   const packs = usePacks();
 
-  const gateway = gateways.data?.gateways.find((g) => g.key === (gateways.data?.active ?? payment.data?.gateway));
+  const gateway = gateways.data?.gateways?.find((g) => g.key === (gateways.data?.active ?? payment.data?.gateway));
   // Every country the gateway charges in, from its live configuration — none listed in code.
   const covered = useMemo(() => payCountries(gateway?.operators ?? []), [gateway]);
   const [pickedCountry, setPickedCountry] = useState<string | null>(null);
