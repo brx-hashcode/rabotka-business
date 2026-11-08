@@ -113,8 +113,12 @@ function PackCard({ kind, quantity, priceFcfa }: Readonly<{ kind: PackKind; quan
           >
             <IconMinus className="size-4" />
           </button>
-          <span className="text-center text-sm tabular-nums">
-            <span className="font-semibold">{count}</span> pack{count > 1 ? "s" : ""}
+          {/* What the packs add up to, inside the stepper: always there, so the card keeps its height. */}
+          <span className="flex min-w-0 flex-col items-center text-center tabular-nums leading-tight">
+            <span className="text-sm">
+              <span className="font-semibold">{count}</span> pack{count > 1 ? "s" : ""}
+            </span>
+            <span className="truncate text-muted-foreground text-xs">{packUnits(kind, quantity * count)}</span>
           </span>
           <button
             type="button"
@@ -126,7 +130,6 @@ function PackCard({ kind, quantity, priceFcfa }: Readonly<{ kind: PackKind; quan
             <IconPlus className="size-4" />
           </button>
         </div>
-        {count > 1 && <p className="text-center text-muted-foreground text-xs">{packUnits(kind, quantity * count)}</p>}
         <button
           type="button"
           onClick={() => buy.mutate()}
