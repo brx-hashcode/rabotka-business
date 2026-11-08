@@ -29,7 +29,7 @@ import { CountryPicker, Flag, type PayCountry } from "./country-picker";
 import { PaymentDialog, REQUEST_SECONDS, type PaymentPhase } from "./payment-dialog";
 import { cvLine } from "./subscription-page";
 import { offersPerPeriodLabel } from "../offers-quota";
-import { readPackDescription } from "../packs";
+import { PACKS_HREF, readPackDescription } from "../packs";
 import { phonePlaceholder } from "../phone-placeholder";
 import { usePacks } from "../use-packs";
 
@@ -376,6 +376,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
             planName={what?.planName ?? null}
             startsAt={startsAt}
             failureText={failure}
+            back={pack ? { href: PACKS_HREF, label: "Retour aux packs" } : undefined}
             approvedText={
               pack ? `Votre pack est ajouté : ${pack}, valables 12 mois. La facture arrive par e-mail et dans Factures.` : undefined
             }
