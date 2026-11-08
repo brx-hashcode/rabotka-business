@@ -12,6 +12,7 @@ import {
   IconClock,
   IconFileSearch,
   IconFileText,
+  IconInfoCircle,
   IconLockOpen,
   IconPlayerPlay,
   IconUserCheck,
@@ -23,8 +24,18 @@ import { toast } from "sonner";
 
 import { Bone } from "#/components/page-skeletons";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
-import { getMySubscription, mySubscriptionKey, startPeriodNow, subscribeToPlan } from "#/lib/api/business-controller";
+import {
+  getMyBusiness,
+  getMySubscription,
+  myBusinessKey,
+  mySubscriptionKey,
+  startPeriodNow,
+  subscribeToPlan,
+} from "#/lib/api/business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
+import { getPaymentGateways } from "#/lib/api/payment-controller";
+import { featuredPlanId } from "../featured-plan";
+import { localMobileMoney } from "../local-mobile-money";
 import type { BusinessPlan, MySubscription, SubscriptionPeriod, SubscriptionStatus } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { offersPerPeriodLabel, offersUsed } from "../offers-quota";
@@ -32,6 +43,7 @@ import { teamLine } from "../team-places";
 import { packCredits, planShare } from "../packs";
 import { usePacks } from "../use-packs";
 import { PacksSection } from "./packs-section";
+import { useDisplayCurrency } from "#/features/money/use-display-currency";
 
 type Period = "MONTHLY" | "ANNUAL";
 
@@ -42,7 +54,6 @@ const STATUS: Record<SubscriptionStatus, { label: string; className: string }> =
   CANCELLED: { label: "Annulé", className: "bg-page text-muted-foreground" },
 };
 
-const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
 const date = (iso: string) =>
   new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
@@ -126,6 +137,7 @@ export function SubscriptionPage() {
         </p>
       ) : (
         <>
+          <PayCountryNotice />
           {onPacks ? (
             <PacksSection data={data} />
           ) : (
@@ -136,6 +148,34 @@ export function SubscriptionPage() {
           )}
         </>
       )}
+    </div>
+  );
+}
+
+/**
+ * Before choosing: an organisation whose country has no mobile money network
+ * the gateway charges learns now, not at checkout, that it pays with a number
+ * from another country, or writes to support for another way.
+ */
+function PayCountryNotice() {
+  const business = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
+  const gateways = useQuery({ queryKey: ["payment-gateways"], queryFn: getPaymentGateways, staleTime: 10 * 60 * 1000 });
+  const gateway = gateways.data?.gateways.find((g) => g.key === gateways.data?.active);
+  const local = localMobileMoney(business.data?.countryCode, gateway?.operators ?? []);
+  if (!local || local.covered) return null;
+  const some = local.elsewhere.slice(0, 3);
+  return (
+    <div className="flex items-start gap-3 rounded-3xl bg-card p-5 text-sm">
+      <IconInfoCircle className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+      <p>
+        Le mobile money de votre pays n&apos;est pas encore accepté. Vous pouvez payer avec un numéro{" "}
+        {some.length > 0 && <>d&apos;un autre pays ({some.join(", ")}{local.elsewhere.length > some.length ? "…" : ""}) </>}
+        ou{" "}
+        <Link href="/espace/reclamations" className="font-medium underline underline-offset-2">
+          nous écrire
+        </Link>{" "}
+        pour un autre moyen de paiement.
+      </p>
     </div>
   );
 }
@@ -284,11 +324,14 @@ function UpcomingPeriods({
     onError: (err) => toast.error(friendlyError(err, "La formule n'a pas pu démarrer. Réessayez dans un instant.")),
   });
   const lost = leftover(entitlements);
+  // Soonest first, whatever order they come in: only the first one can be
+  // started now (the server refuses the others).
+  const queued = [...upcoming].sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt));
 
   return (
     <div className="space-y-2">
       <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">À suivre</p>
-      {upcoming.map((p, i) => (
+      {queued.map((p, i) => (
         <div key={p.id} className="flex flex-wrap items-start gap-4 rounded-2xl bg-page p-4 sm:items-center">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-card">
             <IconCalendarRepeat className="size-5" />
@@ -436,6 +479,8 @@ function Feature({ children }: Readonly<{ children: React.ReactNode }>) {
 
 function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
   const router = useRouter();
+  // In the organisation's country's currency (dollars in the DRC).
+  const { price: priceLabel } = useDisplayCurrency();
   const [period, setPeriod] = useState<Period>("MONTHLY");
   const current = data.entitlements.status === "ACTIVE" ? data.entitlements.plan?.id : null;
   const currentPlan = data.plans.find((p) => p.id === current) ?? null;
@@ -445,6 +490,7 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
     .sort()
     .at(-1);
   const scheduled = new Set(data.upcoming.map((p) => p.planName));
+  const featured = data.entitlements.status === "ACTIVE" ? null : featuredPlanId(data.plans);
 
   const buy = useMutation({
     mutationFn: (plan: BusinessPlan) => subscribeToPlan(plan.id, period),
@@ -505,8 +551,12 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
                 ? lastEnd && `Démarre le ${date(lastEnd)}, ${after}.`
                 : null;
           const pending = buy.isPending && buy.variables?.id === plan.id;
+          const isFeatured = plan.id === featured;
           return (
-            <article key={plan.id} className={cn("flex flex-col gap-5 rounded-3xl bg-card p-6", isCurrent && "ring-2 ring-ink")}>
+            <article
+              key={plan.id}
+              className={cn("flex flex-col gap-5 rounded-3xl bg-card p-6", (isCurrent || isFeatured) && "ring-2 ring-ink")}
+            >
               <div className="space-y-1">
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="flex items-center gap-2 font-semibold text-lg">
@@ -521,16 +571,18 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
                     <span className="rounded-full bg-chip-green px-2.5 py-1 font-medium text-chip-green-foreground text-xs">
                       Votre formule
                     </span>
+                  ) : scheduled.has(plan.name) ? (
+                    <span className="rounded-full bg-page px-2.5 py-1 font-medium text-muted-foreground text-xs">Programmée</span>
                   ) : (
-                    scheduled.has(plan.name) && (
-                      <span className="rounded-full bg-page px-2.5 py-1 font-medium text-muted-foreground text-xs">Programmée</span>
+                    isFeatured && (
+                      <span className="rounded-full bg-brand-lime px-2.5 py-1 font-medium text-[#0f2414] text-xs">Le plus choisi</span>
                     )
                   )}
                 </div>
                 {plan.description && <p className="text-muted-foreground text-sm">{plan.description}</p>}
               </div>
               <p className="flex items-end gap-1.5">
-                <span className="font-semibold text-3xl tracking-tight">{fcfa(price)}</span>
+                <span className="font-semibold text-3xl tracking-tight">{priceLabel(price)}</span>
                 <span className="mb-1 text-muted-foreground text-sm">/ {period === "ANNUAL" ? "an" : "mois"}</span>
               </p>
               <ul className="flex-1 space-y-2.5 text-sm">

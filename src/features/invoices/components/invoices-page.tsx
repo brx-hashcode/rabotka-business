@@ -9,6 +9,7 @@ import { RowsSkeleton, TilesSkeleton } from "#/components/page-skeletons";
 import { StatTile } from "#/features/home/components/stat-tile";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { invoiceDownloadUrl, invoicesKey, listInvoices, type Invoice } from "#/lib/api/invoice-controller";
+import { formatMoney } from "#/features/money/money";
 import { cn } from "#/lib/utils";
 
 const REASON: Record<string, string> = {
@@ -20,7 +21,35 @@ const REASON: Record<string, string> = {
   OTHER: "Autre",
 };
 
-const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
+/**
+ * What an invoice cost, as it left the account: in the currency its network
+ * was charged in (« 8,50 $ » in the DRC), else the XAF price.
+ */
+const paid = (i: Invoice) =>
+  i.chargedCurrency && i.chargedAmount !== null
+    ? formatMoney(Number(i.chargedAmount), i.chargedCurrency)
+    : formatMoney(Number(i.amount), "XAF");
+
+/**
+ * The total of invoices paid in ONE currency, in it; FCFA, the books', when
+ * they were paid in several.
+ */
+function totalOf(list: Invoice[]): string {
+  const currencies = new Set(list.map((i) => i.chargedCurrency ?? "XAF"));
+  if (currencies.size === 1) {
+    const [only] = currencies;
+    if (only !== "XAF") {
+      return formatMoney(
+        list.reduce((n, i) => n + Number(i.chargedAmount ?? 0), 0),
+        only,
+      );
+    }
+  }
+  return formatMoney(
+    list.reduce((n, i) => n + Number(i.amount), 0),
+    "XAF",
+  );
+}
 const longDate = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 /** The number printed on the PDF's name: the id's head, upper case. */
 const number = (id: string) => `F-${id.slice(0, 8).toUpperCase()}`;
@@ -38,7 +67,6 @@ export function InvoicesPage() {
   );
   const [year, setYear] = useState<number | "all">("all");
   const shown = (invoices.data ?? []).filter((i) => year === "all" || new Date(i.createdAt).getFullYear() === year);
-  const total = shown.reduce((n, i) => n + Number(i.amount), 0);
   const latest = invoices.data?.[0];
 
   return (
@@ -70,9 +98,9 @@ export function InvoicesPage() {
       ) : (
         <>
           <section className="grid gap-4 rounded-3xl bg-card p-6 sm:grid-cols-3 sm:p-8">
-            <StatTile icon={IconReceipt} label={year === "all" ? "Total facturé" : `Total ${year}`} value={fcfa(total)} />
+            <StatTile icon={IconReceipt} label={year === "all" ? "Total facturé" : `Total ${year}`} value={totalOf(shown)} />
             <StatTile icon={IconFileInvoice} label="Factures" value={String(shown.length)} />
-            <StatTile icon={IconCalendar} label="Dernière facture" value={latest ? fcfa(Number(latest.amount)) : "—"} hint={latest ? longDate(latest.createdAt) : undefined} />
+            <StatTile icon={IconCalendar} label="Dernière facture" value={latest ? paid(latest) : "—"} hint={latest ? longDate(latest.createdAt) : undefined} />
           </section>
 
           <section className="space-y-4 rounded-3xl bg-card p-6">
@@ -130,7 +158,7 @@ function InvoiceRow({ invoice: i, onDownload }: Readonly<{ invoice: Invoice; onD
         </p>
       </div>
       {fresh && <span className="rounded-full bg-chip-green px-2.5 py-1 font-medium text-chip-green-foreground text-xs">Nouvelle</span>}
-      <p className="w-32 text-right font-semibold tabular-nums">{fcfa(Number(i.amount))}</p>
+      <p className="w-32 text-right font-semibold tabular-nums">{paid(i)}</p>
       <div className="flex gap-2">
         <button
           type="button"
@@ -158,7 +186,7 @@ function InvoiceRow({ invoice: i, onDownload }: Readonly<{ invoice: Invoice; onD
         open={preview}
         onOpenChange={setPreview}
         title={REASON[i.reason] ?? i.reason}
-        subtitle={`${number(i.id)} · ${longDate(i.createdAt)} · ${fcfa(Number(i.amount))}`}
+        subtitle={`${number(i.id)} · ${longDate(i.createdAt)} · ${paid(i)}`}
         src={invoiceDownloadUrl(i.id)}
         kind="pdf"
         fileName={`facture-${number(i.id)}.pdf`}

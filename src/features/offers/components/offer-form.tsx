@@ -26,14 +26,18 @@ import { OfferAiDialog } from "./offer-ai-dialog";
 import { OfferQuestionsField } from "./offer-questions-field";
 import { OfferSummary } from "./offer-summary";
 
-/** Mirrors the server (and the client app): a new date is at least 4 h ahead. */
-const MIN_HOURS_AHEAD = 4;
+/**
+ * Mirrors the server (and the client app): a new date only has to be still to
+ * come. It is when applications close, and an urgent mission may start within
+ * the hour.
+ */
+const MIN_HOURS_AHEAD = 0;
 const END_OF_DAY = "23:59";
 
 const schema = z
   .object({
     title: z.string().trim().min(5, "Entre 5 et 100 caractères").max(100, "Entre 5 et 100 caractères"),
-    description: z.string().trim().min(20, "Entre 20 et 1 000 caractères").max(1000, "Entre 20 et 1 000 caractères"),
+    description: z.string().trim().min(20, "Entre 20 et 2 500 caractères").max(2500, "Entre 20 et 2 500 caractères"),
     employmentType: z.enum(["MISSION", "CDD", "CDI", "STAGE"]),
     scheduledDate: z.string(),
     scheduledTime: z.string(),
@@ -89,8 +93,12 @@ const pad = (n: number) => String(n).padStart(2, "0");
 const toDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const toTime = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
-/** The form's values for an existing offer (edit), or a blank form. */
-export function offerFormValues(offer?: Offer): OfferFormValues {
+/**
+ * The form's values for an existing offer (edit), or a blank form placed
+ * where the organisation is (`home`): Rabotka Business is open in several
+ * countries, so no country is assumed.
+ */
+export function offerFormValues(offer?: Offer, home?: { countryCode?: string | null; city?: string | null }): OfferFormValues {
   const at = offer?.scheduledAt ? new Date(offer.scheduledAt) : null;
   const time = at ? toTime(at) : "";
   return {
@@ -100,8 +108,8 @@ export function offerFormValues(offer?: Offer): OfferFormValues {
     scheduledDate: at ? toDate(at) : "",
     scheduledTime: time === END_OF_DAY ? "" : time,
     isRemote: offer?.isRemote ?? false,
-    countryCode: offer?.countryCode ?? "CG",
-    city: offer?.city ?? "",
+    countryCode: offer?.countryCode ?? home?.countryCode ?? "",
+    city: offer?.city ?? (offer ? "" : (home?.city ?? "")),
     address: offer?.address ?? "",
     quantity: String(offer?.quantity ?? 1),
     amount: offer?.amount ? String(offer.amount) : "",
@@ -112,7 +120,7 @@ export function offerFormValues(offer?: Offer): OfferFormValues {
   };
 }
 
-/** A new date must be at least 4 h ahead (the server's rule). */
+/** A new date must still be to come (the server's rule). */
 function isTooSoon(iso: string): boolean {
   return new Date(iso).getTime() < Date.now() + MIN_HOURS_AHEAD * 3600_000;
 }
@@ -195,7 +203,7 @@ export function OfferForm({
       const iso = scheduledIso(values.scheduledDate, values.scheduledTime);
       if (iso !== keepSchedule && isTooSoon(iso)) {
         form.setError(values.scheduledTime ? "scheduledTime" : "scheduledDate", {
-          message: "La date doit être au moins 4 heures dans le futur",
+          message: "Choisissez une date et une heure à venir",
         });
         return;
       }
@@ -330,7 +338,7 @@ export function OfferForm({
                   name="scheduledDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FieldLabel>Date de la mission</FieldLabel>
+                      <FieldLabel>Candidatures jusqu&apos;au</FieldLabel>
                       <FormControl>
                         <Input {...field} type="date" min={toDate(new Date())} className={FIELD_CLASS} />
                       </FormControl>
@@ -352,6 +360,12 @@ export function OfferForm({
                   )}
                 />
               </div>
+            ) : null}
+            {dated ? (
+              <p className="text-muted-foreground text-sm">
+                Vous acceptez des candidatures jusqu&apos;à ce moment, en général le début de la mission : elle peut commencer
+                aujourd&apos;hui, même dans l&apos;heure. L&apos;heure est facultative.
+              </p>
             ) : (
               <p className="text-muted-foreground text-sm">L&apos;offre reste en ligne jusqu&apos;à ce que vous la clôturiez.</p>
             )}

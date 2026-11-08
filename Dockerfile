@@ -11,6 +11,9 @@ WORKDIR /app
 COPY . .
 COPY --from=deps /app/node_modules ./node_modules
 ENV NEXT_TELEMETRY_DISABLED=1
+# The commit, shown in the sidebar (next.config.ts): the build has no .git.
+ARG APP_VERSION
+ENV APP_VERSION=$APP_VERSION
 RUN pnpm run build
 
 # `output: "standalone"` (next.config.ts) emits a self-contained server.js with

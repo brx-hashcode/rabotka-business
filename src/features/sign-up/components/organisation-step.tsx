@@ -40,7 +40,33 @@ const schema = z.object({
 
 export type OrganisationValues = z.infer<typeof schema>;
 
-const EMPTY: OrganisationValues = {
+/**
+ * The countries to choose from, plus the organisation's own when sign-up has
+ * closed there since (Chad…): it still reads, under its French name.
+ */
+export function countryOptions(
+  open: readonly { code: string; name: string }[],
+  current: string | null | undefined,
+): ComboboxOption[] {
+  const options = open.map((c) => ({ value: c.code, label: c.name }));
+  const code = current?.toUpperCase();
+  if (!code || options.some((o) => o.value === code)) return options;
+  let label = code;
+  try {
+    label = new Intl.DisplayNames("fr", { type: "region" }).of(code) ?? code;
+  } catch {
+    // An engine without region names: the code.
+  }
+  return [...options, { value: code, label }];
+}
+
+/** A blank organisation in the visitor's country, when Business is open there. */
+export function emptyOrganisation(country: string | null | undefined, open: readonly { code: string }[] | undefined) {
+  const code = country?.toUpperCase();
+  return code && open?.some((c) => c.code === code) ? { ...EMPTY_ORGANISATION, country: code } : EMPTY_ORGANISATION;
+}
+
+export const EMPTY_ORGANISATION: OrganisationValues = {
   name: "",
   category: "",
   legalForm: "",
@@ -49,7 +75,8 @@ const EMPTY: OrganisationValues = {
   taxId: "",
   statisticalId: "",
   address: "",
-  // Congo-Brazzaville first: the first of the countries Business is open in.
+  // The sign-up suggests the visitor's own (`emptyOrganisation`); this one
+  // only when it cannot tell.
   country: "CG",
   city: "",
   website: "",
@@ -86,8 +113,9 @@ const CATEGORY_GROUPS: Record<string, string> = {
 /**
  * The organisation itself. Types and the legal forms each takes come from
  * the catalog the server checks against; choosing a type narrows the legal
- * forms, and clears one that no longer fits. The country (one of the CEMAC
- * and the RDC) is required, and names the official identifiers.
+ * forms, and clears one that no longer fits. The country (one of those the
+ * catalog lists, where the organisation can pay) is required, and names the
+ * official identifiers.
  *
  * Also the dashboard's edit form (/espace/organisation): no heading, no
  * back button, its own submit label.
@@ -112,7 +140,7 @@ export function OrganisationStep({
 }>) {
   const form = useForm<OrganisationValues>({
     resolver: zodResolver(schema),
-    defaultValues: defaultValues ?? EMPTY,
+    defaultValues: defaultValues ?? EMPTY_ORGANISATION,
   });
   const category = useWatch({ control: form.control, name: "category" });
   const legalForm = useWatch({ control: form.control, name: "legalForm" });
@@ -243,7 +271,7 @@ export function OrganisationStep({
               searchPlaceholder="Rechercher un pays"
               // Its papers are that country's: verified, it changes on request (Aide).
               disabled={lockIdentity}
-              options={catalog.countries.map((c) => ({ value: c.code, label: c.name }))}
+              options={countryOptions(catalog.countries, defaultValues?.country)}
             />
             <ComboboxField
               control={form.control}

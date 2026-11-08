@@ -10,6 +10,7 @@ import { BusinessLockup } from "#/components/business-lockup";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { pageAllowed } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
+import { builtAtTitle, versionLabel } from "#/lib/app-version";
 import { getMyBusiness, myBusinessKey } from "#/lib/api/business-controller";
 import { cn, getInitials } from "#/lib/utils";
 import { LogoutDialog } from "./logout-dialog";
@@ -131,6 +132,9 @@ export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>
             <IconLogout className="size-5" />
           </button>
         </div>
+        <p className="mt-2 px-3 text-[11px] text-muted-foreground/70 tabular-nums" title={builtAtTitle()}>
+          {versionLabel()}
+        </p>
       </div>
       <LogoutDialog open={confirmLogout} onOpenChange={setConfirmLogout} />
     </div>

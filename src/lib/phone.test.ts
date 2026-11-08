@@ -15,6 +15,13 @@ describe("toInternational", () => {
 
   it("drops the trunk 0 elsewhere", () => {
     expect(toInternational("0812 345 678", "CD")).toBe("+243812345678");
+    expect(toInternational("0712 345 678", "KE")).toBe("+254712345678");
+    expect(toInternational("0772 123 456", "UG")).toBe("+256772123456");
+  });
+
+  it("keeps the 0 that starts a 10-digit number in Côte d'Ivoire and Bénin", () => {
+    expect(toInternational("07 07 12 34 56", "CI")).toBe("+2250707123456");
+    expect(toInternational("01 97 12 34 56", "BJ")).toBe("+2290197123456");
   });
 
   it("falls back to Congo for a country it does not know", () => {

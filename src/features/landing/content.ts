@@ -1,4 +1,5 @@
 import {
+  IconBrandLinkedin,
   IconBuildingBank,
   IconBuildingSkyscraper,
   IconCalendarEvent,
@@ -45,7 +46,7 @@ export type NavLink = {
   tone?: string;
 };
 
-export type MockupKey = "cv" | "offer" | "applicants" | "interviews" | "tracking" | "profiles";
+export type MockupKey = "cv" | "offer" | "linkedin" | "applicants" | "interviews" | "tracking" | "profiles";
 
 export type Feature = NavLink & {
   id: MockupKey;
@@ -87,6 +88,22 @@ export const FEATURES: Feature[] = [
       "Un intitulé et une description clairs, prêts à publier",
       "Les critères qui écartent des candidats sans rapport avec le poste sont retirés",
       "Diffusion ciblée par ville et par métier, jusque sur WhatsApp côté candidats",
+    ],
+  },
+  {
+    id: "linkedin",
+    href: "#linkedin",
+    label: "Publication sur LinkedIn",
+    description: "Vos offres sur votre LinkedIn, sans copier-coller.",
+    icon: IconBrandLinkedin,
+    tone: "bg-chip-sky text-chip-sky-foreground",
+    title: "Vos offres sur LinkedIn, en un clic",
+    text: "Connectez votre compte LinkedIn une fois : chaque offre s'y publie en carte, avec votre texte et votre image. Elle mène à votre page carrières, où les candidats postulent.",
+    points: [
+      "Le texte du post prêt, à relire et ajuster avant de publier",
+      "L'image de l'offre, générée pour vous, ou la vôtre",
+      "Chaque recruteur de l'équipe publie sur son propre profil",
+      "Les candidatures venues de LinkedIn repérées comme telles",
     ],
   },
   {
@@ -152,7 +169,8 @@ export const FEATURES: Feature[] = [
 ];
 
 /** The cards under the hero: the four steps a recruiter goes through. */
-export const STRIP_FEATURES = FEATURES.filter((f) => f.id !== "tracking" && f.id !== "profiles");
+/** The hero's four cards: the hire's steps (LinkedIn has its row and the menu). */
+export const STRIP_FEATURES = FEATURES.filter((f) => !["linkedin", "tracking", "profiles"].includes(f.id));
 
 export const SOLUTION_LINKS: NavLink[] = FEATURES.map(({ href, label, description, icon, tone }) => ({
   href,
@@ -253,6 +271,10 @@ export const AUDIENCE_PHOTO = "/media/meeting-table.jpg";
 
 export const FAQ = [
   {
+    q: "Puis-je publier mes offres sur LinkedIn ?",
+    a: "Oui. Connectez votre compte LinkedIn une fois depuis une offre : elle se publie sur votre profil en carte, avec un texte prêt que vous relisez et l'image de votre choix. La carte ouvre votre page carrières, où les candidats postulent ; leurs candidatures sont repérées comme venues de LinkedIn. Chaque recruteur de l'équipe publie sur son propre profil.",
+  },
+  {
     q: "Comment fonctionne l'analyse de CV ?",
     a: "Vous choisissez le poste — une de vos offres ou un poste décrit pour l'occasion — puis les CV. Rabotka lit chaque CV, le compare au poste et lui attribue une note sur 100, avec ses points forts, ses points d'attention et une lecture de son parcours. Le classement est prêt en quelques minutes ; une notification vous prévient.",
   },
@@ -278,7 +300,7 @@ export const FAQ = [
   },
   {
     q: "Quelles pièces justificatives sont demandées ?",
-    a: "Elles dépendent de votre statut : RCCM et NIU pour une société, récépissé de déclaration et statuts pour une association ou une ONG, autorisation d'ouverture ou agrément pour un établissement d'enseignement ou de santé, acte de création pour une entité publique. Le formulaire vous indique précisément les pièces attendues.",
+    a: "Elles dépendent de votre pays et de votre statut : registre du commerce (RCCM) et identifiant fiscal pour une société, récépissé de déclaration et statuts pour une association ou une ONG, autorisation d'ouverture ou agrément pour un établissement d'enseignement ou de santé, acte de création pour une entité publique. Le formulaire vous indique précisément les pièces attendues.",
   },
   {
     q: "Comment se connecter à l'espace entreprise ?",

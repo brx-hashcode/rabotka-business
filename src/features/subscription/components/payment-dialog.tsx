@@ -13,7 +13,6 @@ export type PaymentPhase = "waiting" | "approved" | "failed" | "expired";
 /** How long the operator keeps a request open; past it, the page offers to send again. */
 export const REQUEST_SECONDS = 180;
 
-const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
 
 /**
  * The moment the money moves, over the form: the request sent to the phone,
@@ -30,12 +29,14 @@ export function PaymentDialog({
   planName,
   startsAt,
   approvedText,
+  back = { href: "/espace/abonnement", label: "Retour à l'abonnement" },
   failureText,
   onClose,
   onResend,
 }: Readonly<{
   phase: PaymentPhase | null;
-  amount: number | null;
+  /** Already said in the network's currency. */
+  amount: string | null;
   /** As people read it: « +242 06 991 76 86 ». */
   phone: string;
   operator: PaymentOperator | null;
@@ -45,6 +46,8 @@ export function PaymentDialog({
   startsAt?: string | null;
   /** What the payment did, when not a plan's (a pack). */
   approvedText?: string;
+  /** Where « paid » leads back to: the plans, or the packs for a pack. */
+  back?: { href: string; label: string };
   /** Why the operator refused, when it said (« Solde mobile money insuffisant… »). */
   failureText?: string | null;
   onClose: () => void;
@@ -84,7 +87,7 @@ export function PaymentDialog({
                   <p className="truncate font-medium text-sm">{phone}</p>
                   <p className="text-muted-foreground text-xs">{operator?.label ?? "Mobile money"}</p>
                 </div>
-                <p className="font-semibold tabular-nums">{amount !== null ? fcfa(amount) : ""}</p>
+                <p className="font-semibold tabular-nums">{amount ?? ""}</p>
               </div>
             </div>
             <div className="space-y-3 bg-page/60 px-6 py-5 sm:px-8">
@@ -132,8 +135,8 @@ export function PaymentDialog({
             <Link href="/espace/factures" className="h-11 flex-1 rounded-full bg-page px-4 font-medium text-sm leading-[2.75rem] hover:bg-page/70">
               Voir la facture
             </Link>
-            <Link href="/espace" className="h-11 flex-1 rounded-full bg-ink px-4 font-medium text-sm text-white leading-[2.75rem] hover:bg-ink/90">
-              Tableau de bord
+            <Link href={back.href} className="h-11 flex-1 rounded-full bg-ink px-4 font-medium text-sm text-white leading-[2.75rem] hover:bg-ink/90">
+              {back.label}
             </Link>
           </Outcome>
         )}

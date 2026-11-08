@@ -48,7 +48,7 @@ export function OfferSummary({
     { label: "Intitulé", done: v.title.trim().length >= 5 },
     { label: "Description (20 caractères au moins)", done: v.description.trim().length >= 20 },
     { label: "Métier", done: !!v.categoryId },
-    ...(isDatedMission(type) ? [{ label: "Date de la mission", done: !!v.scheduledDate }] : []),
+    ...(isDatedMission(type) ? [{ label: "Candidatures jusqu'au", done: !!v.scheduledDate }] : []),
     { label: "Lieu", done: v.isRemote || (!!v.countryCode && !!v.city) },
   ];
   const done = checks.filter((c) => c.done).length;

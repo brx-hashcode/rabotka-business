@@ -65,7 +65,7 @@ export default async function OpengraphImage() {
         </div>
 
         <div style={{ display: "flex", gap: 12 }}>
-          {["Brazzaville", "Pointe-Noire", "Douala", "Yaoundé"].map((city) => (
+          {["Brazzaville", "Abidjan", "Dakar", "Nairobi"].map((city) => (
             <span
               key={city}
               style={{
