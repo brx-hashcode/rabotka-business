@@ -6,9 +6,15 @@ const KNOWN: BusinessCountryName[] = [
   { code: "CD", name: "Congo-Kinshasa (RDC)" },
   { code: "CM", name: "Cameroun" },
   { code: "GA", name: "Gabon" },
-  { code: "TD", name: "Tchad" },
-  { code: "CF", name: "République centrafricaine" },
-  { code: "GQ", name: "Guinée équatoriale" },
+  { code: "BJ", name: "Bénin" },
+  { code: "CI", name: "Côte d'Ivoire" },
+  { code: "SN", name: "Sénégal" },
+  { code: "SL", name: "Sierra Leone" },
+  { code: "KE", name: "Kenya" },
+  { code: "UG", name: "Ouganda" },
+  { code: "RW", name: "Rwanda" },
+  { code: "ZM", name: "Zambie" },
+  { code: "MZ", name: "Mozambique" },
 ];
 
 /**

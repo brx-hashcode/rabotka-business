@@ -1,9 +1,14 @@
 import {
+  IconArrowRight,
+  IconBrandLinkedin,
   IconBriefcase,
   IconCalendarEvent,
   IconCheck,
   IconFileText,
   IconMapPin,
+  IconMessage,
+  IconRepeat,
+  IconThumbUp,
   IconMessageCircle,
   IconPhone,
   IconSparkles,
@@ -194,6 +199,91 @@ function OfferMockup() {
   );
 }
 
+/** A LinkedIn post of an offer, as it shows in the feed, and what came of it. */
+function LinkedinMockup() {
+  return (
+    <div className="relative pb-10">
+      <MockupFrame
+        label="Aperçu : une offre publiée sur LinkedIn par un recruteur, en carte qui mène à la page carrières, et les candidatures qui en viennent."
+        title="LinkedIn · votre fil"
+      >
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-lime font-semibold text-[#0f2414] text-sm">
+              SM
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-sm">Sandrine Massamba</p>
+              <p className="truncate text-[11px] text-muted-foreground">Responsable RH · Hôtel Les Cocotiers · 2 min</p>
+            </div>
+            <IconBrandLinkedin className="size-6 shrink-0 text-[#0a66c2]" />
+          </div>
+          <p className="text-xs leading-relaxed">
+            Nous recrutons 2 serveurs pour une réception de mariage samedi soir à Pointe-Noire. Expérience en restauration
+            appréciée. Postulez en ligne 👇
+          </p>
+          <div className="overflow-hidden rounded-2xl bg-page">
+            {/* The offer's share image, as the app makes it (carrieres/[slug]/[reference]/opengraph-image). */}
+            <div className="p-1.5 pb-0">
+            <div className="relative flex aspect-[1200/630] flex-col items-center justify-between overflow-hidden rounded-xl bg-white px-4 py-3.5 text-[#0f2414]">
+              <span className="-top-[27%] -right-[12%] absolute aspect-square w-[35%] rounded-full bg-[#cbffa5]" />
+              <span className="-bottom-[33%] -left-[14%] absolute aspect-square w-[35%] rounded-full bg-[#eef6e8]" />
+              <span className="relative flex items-center gap-1.5">
+                <span className="flex size-5 items-center justify-center rounded-md bg-[#0f2414] font-semibold text-[#cbffa5] text-[8px]">
+                  LC
+                </span>
+                <span className="font-light text-[11px]">Hôtel Les Cocotiers</span>
+                <span className="rounded-full bg-[#cbffa5] px-1.5 py-px font-light text-[9px]">Recrute</span>
+              </span>
+              <span className="relative max-w-[80%] text-center font-light text-lg leading-[1.05] tracking-tight sm:text-2xl">
+                Serveurs pour une réception de mariage
+              </span>
+              <span className="relative flex flex-col items-center gap-2">
+                <span className="flex gap-1.5">
+                  <span className="flex items-center gap-1 rounded-full bg-[#eef6e8] px-2 py-0.5 font-light text-[9px]">
+                    <IconMapPin className="size-2.5" /> Pointe-Noire
+                  </span>
+                  <span className="flex items-center gap-1 rounded-full bg-[#eef6e8] px-2 py-0.5 font-light text-[9px]">
+                    <IconBriefcase className="size-2.5" /> Mission
+                  </span>
+                </span>
+                <span className="flex items-center gap-1 rounded-full bg-[#0f2414] px-3 py-1 font-light text-[9px] text-white">
+                  Postuler <IconArrowRight className="size-2.5 text-[#cbffa5]" />
+                </span>
+              </span>
+            </div>
+            </div>
+            <div className="px-3 py-2">
+              <p className="font-medium text-xs">Postuler chez Hôtel Les Cocotiers</p>
+              <p className="text-[10px] text-muted-foreground">business.rabotka.work/carrieres</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-around pt-1 text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <IconThumbUp className="size-3.5" /> J&apos;aime
+            </span>
+            <span className="flex items-center gap-1">
+              <IconMessage className="size-3.5" /> Commenter
+            </span>
+            <span className="flex items-center gap-1">
+              <IconRepeat className="size-3.5" /> Republier
+            </span>
+          </div>
+        </div>
+      </MockupFrame>
+      <FloatCard className="-bottom-1 right-2 flex items-center gap-3 sm:right-6">
+        <span className="flex size-9 items-center justify-center rounded-xl bg-[#0a66c2] text-white">
+          <IconBrandLinkedin className="size-5" />
+        </span>
+        <span>
+          <span className="block font-medium text-xs">6 candidatures via LinkedIn</span>
+          <span className="block text-[11px] text-muted-foreground">Serveurs · cette semaine</span>
+        </span>
+      </FloatCard>
+    </div>
+  );
+}
+
 function ApplicantsMockup() {
   return (
     <div className="relative pb-10">
@@ -363,8 +453,8 @@ function TrackingMockup() {
 function ProfilesMockup() {
   const PROFILES = [
     { name: "Fortuné Mabiala", job: "Électricien bâtiment", city: "Brazzaville", tags: ["Habilitation B1", "6 ans"] },
-    { name: "Clarisse Ngoma", job: "Aide-soignante", city: "Kinshasa", tags: ["Diplômée", "Nuits"] },
-    { name: "Herman Etoundi", job: "Chauffeur-livreur", city: "Douala", tags: ["Permis C", "Disponible"] },
+    { name: "Clarisse Kouassi", job: "Aide-soignante", city: "Abidjan", tags: ["Diplômée", "Nuits"] },
+    { name: "Brian Otieno", job: "Chauffeur-livreur", city: "Nairobi", tags: ["Permis C", "Disponible"] },
   ];
   return (
     <MockupFrame label="Aperçu : une recherche de profils vérifiés par métier et par ville." title="Trouver des profils">
@@ -407,6 +497,7 @@ function ProfilesMockup() {
 const MOCKUPS: Record<MockupKey, () => React.ReactNode> = {
   cv: CvMockup,
   offer: OfferMockup,
+  linkedin: LinkedinMockup,
   applicants: ApplicantsMockup,
   interviews: InterviewsMockup,
   tracking: TrackingMockup,

@@ -10,20 +10,30 @@ export const DIAL_CODES: Record<string, string> = {
   AO: "244",
   CI: "225",
   SN: "221",
+  BJ: "229",
+  SL: "232",
+  KE: "254",
+  UG: "256",
+  RW: "250",
+  ZM: "260",
+  MZ: "258",
 };
+
+/** Where the leading 0 is part of the number (10 digits in Côte d'Ivoire and Bénin), not a trunk prefix. */
+const KEEPS_LEADING_ZERO = new Set(["242", "225", "229"]);
 
 /**
  * What the agent typed, as the international number the backend matches.
  * `+…` and `00…` are kept as given; a local number gets the job country's
- * code — keeping Congo's leading 0, which is part of the number there, and
- * dropping the trunk 0 elsewhere.
+ * code — keeping the leading 0 where it is part of the number (Congo, Côte
+ * d'Ivoire, Bénin), dropping the trunk 0 elsewhere.
  */
 export function toInternational(raw: string, countryCode: string | null): string {
   const value = raw.replace(/[^\d+]/g, "");
   if (value.startsWith("+")) return `+${value.slice(1).replace(/\+/g, "")}`;
   if (value.startsWith("00")) return `+${value.slice(2)}`;
   const dial = dialCode(countryCode);
-  const local = dial !== DIAL_CODES.CG && value.startsWith("0") ? value.slice(1) : value;
+  const local = !KEEPS_LEADING_ZERO.has(dial) && value.startsWith("0") ? value.slice(1) : value;
   return `+${dial}${local}`;
 }
 
