@@ -278,7 +278,7 @@ export const FAQ = [
   },
   {
     q: "Quelles pièces justificatives sont demandées ?",
-    a: "Elles dépendent de votre statut : RCCM et NIU pour une société, récépissé de déclaration et statuts pour une association ou une ONG, autorisation d'ouverture ou agrément pour un établissement d'enseignement ou de santé, acte de création pour une entité publique. Le formulaire vous indique précisément les pièces attendues.",
+    a: "Elles dépendent de votre pays et de votre statut : registre du commerce (RCCM) et identifiant fiscal pour une société, récépissé de déclaration et statuts pour une association ou une ONG, autorisation d'ouverture ou agrément pour un établissement d'enseignement ou de santé, acte de création pour une entité publique. Le formulaire vous indique précisément les pièces attendues.",
   },
   {
     q: "Comment se connecter à l'espace entreprise ?",

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { IconArrowRight, IconCheck, IconChevronDown } from "@tabler/icons-react";
 
 import { Button } from "#/components/ui/button";
+import type { BusinessCountryName } from "#/lib/api/catalog-server";
 import { cn } from "#/lib/utils";
 import { AUDIENCE_PHOTO, AUDIENCES, FAQ, FEATURES, SIGN_UP_HREF, STEPS, TRUST } from "../content";
 import { FeatureMockup } from "../mockups/mockups";
@@ -161,14 +162,24 @@ export function AudiencesSection() {
   );
 }
 
+/** The first question a visitor outside one country asks, from the backend's list. */
+function countriesAnswer(countries: BusinessCountryName[]) {
+  const names = countries.map((c) => c.name);
+  const list = names.length > 1 ? `${names.slice(0, -1).join(", ")} et ${names.at(-1)}` : (names[0] ?? "");
+  return {
+    q: "Dans quels pays Rabotka Business est-il disponible ?",
+    a: `Aujourd'hui : ${list}. Les pièces demandées, les villes proposées et la diffusion de vos offres sont celles de votre pays ; les abonnements se règlent par mobile money.`,
+  };
+}
+
 /** Questions, answered in place (native details/summary, no script). */
-export function FaqSection() {
+export function FaqSection({ countries }: Readonly<{ countries: BusinessCountryName[] }>) {
   return (
     <section id="faq" className="scroll-mt-20 bg-card py-20 md:py-28">
       <div className="mx-auto w-full max-w-3xl space-y-10 px-4 sm:px-6">
         <SectionHeading kicker="Questions fréquentes" title="Tout savoir avant de commencer" center />
         <div className="space-y-3">
-          {FAQ.map((item) => (
+          {[countriesAnswer(countries), ...FAQ].map((item) => (
             <details key={item.q} className="group rounded-2xl bg-page px-5 py-4 open:pb-5">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium [&::-webkit-details-marker]:hidden">
                 {item.q}

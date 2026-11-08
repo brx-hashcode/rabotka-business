@@ -40,7 +40,13 @@ const schema = z.object({
 
 export type OrganisationValues = z.infer<typeof schema>;
 
-const EMPTY: OrganisationValues = {
+/** A blank organisation in the visitor's country, when Business is open there. */
+export function emptyOrganisation(country: string | null | undefined, open: readonly { code: string }[] | undefined) {
+  const code = country?.toUpperCase();
+  return code && open?.some((c) => c.code === code) ? { ...EMPTY_ORGANISATION, country: code } : EMPTY_ORGANISATION;
+}
+
+export const EMPTY_ORGANISATION: OrganisationValues = {
   name: "",
   category: "",
   legalForm: "",
@@ -49,7 +55,8 @@ const EMPTY: OrganisationValues = {
   taxId: "",
   statisticalId: "",
   address: "",
-  // Congo-Brazzaville first: the first of the countries Business is open in.
+  // The sign-up suggests the visitor's own (`emptyOrganisation`); this one
+  // only when it cannot tell.
   country: "CG",
   city: "",
   website: "",
@@ -112,7 +119,7 @@ export function OrganisationStep({
 }>) {
   const form = useForm<OrganisationValues>({
     resolver: zodResolver(schema),
-    defaultValues: defaultValues ?? EMPTY,
+    defaultValues: defaultValues ?? EMPTY_ORGANISATION,
   });
   const category = useWatch({ control: form.control, name: "category" });
   const legalForm = useWatch({ control: form.control, name: "legalForm" });

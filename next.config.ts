@@ -1,10 +1,29 @@
+import { execSync } from "node:child_process";
 import type { NextConfig } from "next";
+
+/**
+ * The commit this build is of, shown in the space's sidebar: the deploy
+ * passes it in (APP_VERSION, the Docker build has no .git), a local build
+ * reads it from git.
+ */
+function buildCommit(): string {
+  if (process.env.APP_VERSION) return process.env.APP_VERSION.slice(0, 7);
+  try {
+    return execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+  } catch {
+    return "dev";
+  }
+}
 
 const nextConfig: NextConfig = {
   // Self-contained server for the Docker image: .next/standalone/server.js
   // plus only the traced node_modules it needs.
   output: "standalone",
   poweredByHeader: false,
+  env: {
+    NEXT_PUBLIC_APP_VERSION: buildCommit(),
+    NEXT_PUBLIC_APP_BUILT_AT: new Date().toISOString(),
+  },
   // Dev only: lets a phone on the local network load the dev server
   // (http://192.168.x.x:3000) with hot reload.
   allowedDevOrigins: ["192.168.*.*"],
