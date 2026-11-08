@@ -1,4 +1,5 @@
 import {
+  IconArrowRight,
   IconBrandLinkedin,
   IconBriefcase,
   IconCalendarEvent,
@@ -222,12 +223,35 @@ function LinkedinMockup() {
             appréciée. Postulez en ligne 👇
           </p>
           <div className="overflow-hidden rounded-2xl bg-page">
-            <div className="flex aspect-[1200/460] flex-col justify-end gap-1 bg-[#0f2414] p-4 text-white">
-              <span className="w-fit rounded-full bg-[#cbffa5] px-2 py-0.5 font-medium text-[#0f2414] text-[10px]">
-                On recrute
+            {/* The offer's share image, as the app makes it (carrieres/[slug]/[reference]/opengraph-image). */}
+            <div className="p-1.5 pb-0">
+            <div className="relative flex aspect-[1200/630] flex-col items-center justify-between overflow-hidden rounded-xl bg-white px-4 py-3.5 text-[#0f2414]">
+              <span className="-top-[27%] -right-[12%] absolute aspect-square w-[35%] rounded-full bg-[#cbffa5]" />
+              <span className="-bottom-[33%] -left-[14%] absolute aspect-square w-[35%] rounded-full bg-[#eef6e8]" />
+              <span className="relative flex items-center gap-1.5">
+                <span className="flex size-5 items-center justify-center rounded-md bg-[#0f2414] font-semibold text-[#cbffa5] text-[8px]">
+                  LC
+                </span>
+                <span className="font-light text-[11px]">Hôtel Les Cocotiers</span>
+                <span className="rounded-full bg-[#cbffa5] px-1.5 py-px font-light text-[9px]">Recrute</span>
               </span>
-              <p className="font-semibold text-sm leading-tight">Serveurs pour une réception de mariage</p>
-              <p className="text-[11px] text-white/70">Pointe-Noire · Mission</p>
+              <span className="relative max-w-[80%] text-center font-light text-lg leading-[1.05] tracking-tight sm:text-2xl">
+                Serveurs pour une réception de mariage
+              </span>
+              <span className="relative flex flex-col items-center gap-2">
+                <span className="flex gap-1.5">
+                  <span className="flex items-center gap-1 rounded-full bg-[#eef6e8] px-2 py-0.5 font-light text-[9px]">
+                    <IconMapPin className="size-2.5" /> Pointe-Noire
+                  </span>
+                  <span className="flex items-center gap-1 rounded-full bg-[#eef6e8] px-2 py-0.5 font-light text-[9px]">
+                    <IconBriefcase className="size-2.5" /> Mission
+                  </span>
+                </span>
+                <span className="flex items-center gap-1 rounded-full bg-[#0f2414] px-3 py-1 font-light text-[9px] text-white">
+                  Postuler <IconArrowRight className="size-2.5 text-[#cbffa5]" />
+                </span>
+              </span>
+            </div>
             </div>
             <div className="px-3 py-2">
               <p className="font-medium text-xs">Postuler chez Hôtel Les Cocotiers</p>
