@@ -284,11 +284,14 @@ function UpcomingPeriods({
     onError: (err) => toast.error(friendlyError(err, "La formule n'a pas pu démarrer. Réessayez dans un instant.")),
   });
   const lost = leftover(entitlements);
+  // Soonest first, whatever order they come in: only the first one can be
+  // started now (the server refuses the others).
+  const queued = [...upcoming].sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt));
 
   return (
     <div className="space-y-2">
       <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">À suivre</p>
-      {upcoming.map((p, i) => (
+      {queued.map((p, i) => (
         <div key={p.id} className="flex flex-wrap items-start gap-4 rounded-2xl bg-page p-4 sm:items-center">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-card">
             <IconCalendarRepeat className="size-5" />
