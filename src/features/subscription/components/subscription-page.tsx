@@ -12,6 +12,7 @@ import {
   IconClock,
   IconFileSearch,
   IconFileText,
+  IconInfoCircle,
   IconLockOpen,
   IconPlayerPlay,
   IconUserCheck,
@@ -23,9 +24,18 @@ import { toast } from "sonner";
 
 import { Bone } from "#/components/page-skeletons";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
-import { getMySubscription, mySubscriptionKey, startPeriodNow, subscribeToPlan } from "#/lib/api/business-controller";
+import {
+  getMyBusiness,
+  getMySubscription,
+  myBusinessKey,
+  mySubscriptionKey,
+  startPeriodNow,
+  subscribeToPlan,
+} from "#/lib/api/business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
+import { getPaymentGateways } from "#/lib/api/payment-controller";
 import { featuredPlanId } from "../featured-plan";
+import { localMobileMoney } from "../local-mobile-money";
 import type { BusinessPlan, MySubscription, SubscriptionPeriod, SubscriptionStatus } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { offersPerPeriodLabel, offersUsed } from "../offers-quota";
@@ -127,6 +137,7 @@ export function SubscriptionPage() {
         </p>
       ) : (
         <>
+          <PayCountryNotice />
           {onPacks ? (
             <PacksSection data={data} />
           ) : (
@@ -137,6 +148,34 @@ export function SubscriptionPage() {
           )}
         </>
       )}
+    </div>
+  );
+}
+
+/**
+ * Before choosing: an organisation whose country has no mobile money network
+ * the gateway charges learns now, not at checkout, that it pays with a number
+ * from another country, or writes to support for another way.
+ */
+function PayCountryNotice() {
+  const business = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
+  const gateways = useQuery({ queryKey: ["payment-gateways"], queryFn: getPaymentGateways, staleTime: 10 * 60 * 1000 });
+  const gateway = gateways.data?.gateways.find((g) => g.key === gateways.data?.active);
+  const local = localMobileMoney(business.data?.countryCode, gateway?.operators ?? []);
+  if (!local || local.covered) return null;
+  const some = local.elsewhere.slice(0, 3);
+  return (
+    <div className="flex items-start gap-3 rounded-3xl bg-card p-5 text-sm">
+      <IconInfoCircle className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+      <p>
+        Le mobile money de votre pays n&apos;est pas encore accepté. Vous pouvez payer avec un numéro{" "}
+        {some.length > 0 && <>d&apos;un autre pays ({some.join(", ")}{local.elsewhere.length > some.length ? "…" : ""}) </>}
+        ou{" "}
+        <Link href="/espace/reclamations" className="font-medium underline underline-offset-2">
+          nous écrire
+        </Link>{" "}
+        pour un autre moyen de paiement.
+      </p>
     </div>
   );
 }
