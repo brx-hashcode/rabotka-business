@@ -1,9 +1,13 @@
 import {
+  IconBrandLinkedin,
   IconBriefcase,
   IconCalendarEvent,
   IconCheck,
   IconFileText,
   IconMapPin,
+  IconMessage,
+  IconRepeat,
+  IconThumbUp,
   IconMessageCircle,
   IconPhone,
   IconSparkles,
@@ -191,6 +195,68 @@ function OfferMockup() {
         </div>
       </div>
     </MockupFrame>
+  );
+}
+
+/** A LinkedIn post of an offer, as it shows in the feed, and what came of it. */
+function LinkedinMockup() {
+  return (
+    <div className="relative pb-10">
+      <MockupFrame
+        label="Aperçu : une offre publiée sur LinkedIn par un recruteur, en carte qui mène à la page carrières, et les candidatures qui en viennent."
+        title="LinkedIn · votre fil"
+      >
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-lime font-semibold text-[#0f2414] text-sm">
+              SM
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-sm">Sandrine Massamba</p>
+              <p className="truncate text-[11px] text-muted-foreground">Responsable RH · Hôtel Les Cocotiers · 2 min</p>
+            </div>
+            <IconBrandLinkedin className="size-6 shrink-0 text-[#0a66c2]" />
+          </div>
+          <p className="text-xs leading-relaxed">
+            Nous recrutons 2 serveurs pour une réception de mariage samedi soir à Pointe-Noire. Expérience en restauration
+            appréciée. Postulez en ligne 👇
+          </p>
+          <div className="overflow-hidden rounded-2xl bg-page">
+            <div className="flex aspect-[1200/460] flex-col justify-end gap-1 bg-[#0f2414] p-4 text-white">
+              <span className="w-fit rounded-full bg-[#cbffa5] px-2 py-0.5 font-medium text-[#0f2414] text-[10px]">
+                On recrute
+              </span>
+              <p className="font-semibold text-sm leading-tight">Serveurs pour une réception de mariage</p>
+              <p className="text-[11px] text-white/70">Pointe-Noire · Mission</p>
+            </div>
+            <div className="px-3 py-2">
+              <p className="font-medium text-xs">Postuler chez Hôtel Les Cocotiers</p>
+              <p className="text-[10px] text-muted-foreground">business.rabotka.work/carrieres</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-around pt-1 text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <IconThumbUp className="size-3.5" /> J&apos;aime
+            </span>
+            <span className="flex items-center gap-1">
+              <IconMessage className="size-3.5" /> Commenter
+            </span>
+            <span className="flex items-center gap-1">
+              <IconRepeat className="size-3.5" /> Republier
+            </span>
+          </div>
+        </div>
+      </MockupFrame>
+      <FloatCard className="-bottom-1 right-2 flex items-center gap-3 sm:right-6">
+        <span className="flex size-9 items-center justify-center rounded-xl bg-[#0a66c2] text-white">
+          <IconBrandLinkedin className="size-5" />
+        </span>
+        <span>
+          <span className="block font-medium text-xs">6 candidatures via LinkedIn</span>
+          <span className="block text-[11px] text-muted-foreground">Serveurs · cette semaine</span>
+        </span>
+      </FloatCard>
+    </div>
   );
 }
 
@@ -407,6 +473,7 @@ function ProfilesMockup() {
 const MOCKUPS: Record<MockupKey, () => React.ReactNode> = {
   cv: CvMockup,
   offer: OfferMockup,
+  linkedin: LinkedinMockup,
   applicants: ApplicantsMockup,
   interviews: InterviewsMockup,
   tracking: TrackingMockup,
