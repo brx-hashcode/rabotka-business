@@ -17,9 +17,6 @@ export function LandingHero({ countries }: Readonly<{ countries: BusinessCountry
     <section className="overflow-hidden bg-header text-header-foreground">
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-4 pt-10 pb-14 sm:px-6 md:pt-16 lg:grid-cols-[1fr_1.05fr] lg:gap-16 lg:pb-20">
         <div className="space-y-6 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700">
-          <span className="inline-flex rounded-full bg-ink/10 px-3 py-1 font-medium text-xs">
-            Le recrutement des organisations, de l&apos;offre à l&apos;entretien
-          </span>
           <h1 className="font-semibold text-4xl leading-[1.06] tracking-tight sm:text-5xl lg:text-[3.5rem]">
             Recevez, triez et rencontrez les bons candidats, au même endroit
           </h1>
