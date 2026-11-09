@@ -53,6 +53,12 @@ export function PreviewSheet({
   const [pages, setPages] = useState(0);
   const [drawFailed, setDrawFailed] = useState(false);
   const failed = file.failed || drawFailed;
+  // A new copy of the file gets a new chance to be drawn.
+  const [drawnUrl, setDrawnUrl] = useState(file.url);
+  if (drawnUrl !== file.url) {
+    setDrawnUrl(file.url);
+    setDrawFailed(false);
+  }
 
   function download() {
     if (!file.url) return;
@@ -247,7 +253,13 @@ function useBlobUrl(src: string | undefined, kind: PreviewKind) {
       .catch(() => !cancelled && setState({ for: src, url: null, failed: true }));
     return () => {
       cancelled = true;
-      if (url) URL.revokeObjectURL(url);
+      if (url) {
+        URL.revokeObjectURL(url);
+        // Forgotten with it: reopening the same file would otherwise hand
+        // the viewer this dead URL before the new copy arrives.
+        const dead = url;
+        setState((s) => (s.url === dead ? { url: null, failed: false } : s));
+      }
     };
   }, [src, sameOrigin, kind]);
 
