@@ -72,6 +72,7 @@ import {
   getJobCategories,
   getOfferApplicants,
   getOfferAssessments,
+  reanalyseApplicant,
   refuseApplications,
   offersKey,
   confirmOfferHire,
@@ -771,6 +772,7 @@ function ApplicantsCard({
                 return e.kind === "rabotka" ? (
                   <ApplicantRow
                     key={e.key}
+                    offerId={o.id}
                     jobTitle={o.title}
                     applicant={e.a}
                     rank={i + 1}
@@ -919,6 +921,7 @@ const APPLICANT_CRITERIA = [
 
 /** One applicant: rank, score and verdict as in CV analysis, and why on demand. */
 function ApplicantRow({
+  offerId,
   jobTitle,
   applicant: a,
   rank,
@@ -931,6 +934,7 @@ function ApplicantRow({
   opinions,
   focused,
 }: Readonly<{
+  offerId: string;
   jobTitle: string;
   applicant: OfferApplicant;
   rank: number;
@@ -1070,6 +1074,7 @@ function ApplicantRow({
             <IconChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
           </button>
         )}
+        {a.newerCv && recruiting && <ReanalyseButton offerId={offerId} applicationId={a.applicationId} />}
         <ApplicantCvAnalysis jobTitle={jobTitle} analysis={a.analysis ?? null} />
         <ApplicationActions applicant={a} name={name} recruiting={recruiting} hideChat />
         <MoreActionsMenu name={name} actions={more} />
@@ -1103,6 +1108,46 @@ function ApplicantRow({
       {open && answers.length > 0 && <Answers answers={answers} />}
       {open && insight && <CandidateInsight {...insight} />}
     </li>
+  );
+}
+
+/**
+ * The candidate added a CV after applying: read them again with it. The
+ * score comes back in a few seconds; the CV analysis, when there was one,
+ * runs again on the plan's « CV inclus ».
+ */
+function ReanalyseButton({ offerId, applicationId }: Readonly<{ offerId: string; applicationId: string }>) {
+  const queryClient = useQueryClient();
+  const refresh = () => {
+    void queryClient.invalidateQueries({ queryKey: [...offersKey, offerId, "applicants"] });
+    void queryClient.invalidateQueries({ queryKey: [...offersKey, offerId, "assessments"] });
+  };
+  const run = useMutation({
+    mutationFn: () => reanalyseApplicant(offerId, applicationId),
+    onSuccess: ({ analysis }) => {
+      toast.success(
+        analysis === "no-room"
+          ? "Nouveau CV pris en compte dans le score. Plus de CV inclus pour relancer l'analyse détaillée."
+          : "Nouveau CV pris en compte : l'analyse est relancée.",
+      );
+      void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
+      refresh();
+      // The score is made in the background: fetched again once it is likely in.
+      setTimeout(refresh, 15_000);
+    },
+    onError: (err) => toast.error(friendlyError(err, "L'analyse n'a pas pu être relancée. Réessayez.")),
+  });
+  return (
+    <button
+      type="button"
+      onClick={() => run.mutate()}
+      disabled={run.isPending}
+      title="Le candidat a ajouté un CV depuis sa candidature"
+      className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-brand-lime px-3.5 font-medium text-ink text-sm hover:brightness-95 disabled:opacity-60"
+    >
+      <IconRefresh className={cn("size-4", run.isPending && "animate-spin")} />
+      Nouveau CV · Réanalyser
+    </button>
   );
 }
 

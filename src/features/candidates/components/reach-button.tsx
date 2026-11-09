@@ -41,6 +41,8 @@ export function ReachButton({ workerId, name, className }: Readonly<{ workerId: 
       void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
       // An unlocked contact opens the « CV joint » on its applications.
       void queryClient.invalidateQueries({ queryKey: offersKey });
+      // And the CV on their profile.
+      void queryClient.invalidateQueries({ queryKey: ["candidate", workerId, "cv"] });
       setConfirm(false);
       setShow(true);
       if (spent) toast.success(`Contact de ${name} obtenu.`);
