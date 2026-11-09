@@ -465,18 +465,12 @@ a {
   --destructive-foreground: var(--color-red-400);
 }
 
-/* Hide scrollbars but keep scroll behavior */
-html,
-body,
-[data-slot="sidebar-inset"],
-.no-scrollbar {
+/* Hide every scrollbar; scrolling (wheel, touch, keyboard) still works. */
+* {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-html::-webkit-scrollbar,
-body::-webkit-scrollbar,
-[data-slot="sidebar-inset"]::-webkit-scrollbar,
-.no-scrollbar::-webkit-scrollbar {
+*::-webkit-scrollbar {
   display: none;
 }
 
