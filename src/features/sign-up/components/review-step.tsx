@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { IconArrowRight, IconCircleCheckFilled, IconPencil } from "@tabler/icons-react";
+import { Loader } from "lucide-react";
 
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
@@ -161,17 +162,19 @@ function Row({ label, children }: Readonly<{ label: string; children: ReactNode 
  * After the send: what happens next, and the way in. Nothing moves until the
  * person clicks — the session already exists, and refreshing the page here
  * would let the auth gate send them to /espace before they read this.
+ *
+ * Leaving does not reset the sign-up store: `finish()` already emptied what
+ * is kept in the tab, and a reset would flip this screen back to an empty
+ * first step for as long as /espace takes to load.
  */
-export function SignUpDone({
-  email,
-  signInRequired,
-  onLeave,
-}: Readonly<{ email: string; signInRequired: boolean; onLeave: () => void }>) {
+export function SignUpDone({ email, signInRequired }: Readonly<{ email: string; signInRequired: boolean }>) {
+  const leaving = useLeaving();
+
   // A full page load, not a client-side navigation: the request then carries
   // the session cookies just set, and if there were none the gate's redirect
   // lands on the sign-in page.
   function enter() {
-    onLeave();
+    leaving.start();
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- deliberate full load, see above
     globalThis.location.assign("/espace");
   }
@@ -216,17 +219,36 @@ export function SignUpDone({
         </ol>
       </div>
       {signInRequired ? (
-        <InlineSignIn email={email} onSignedIn={onLeave} />
+        <InlineSignIn email={email} />
       ) : (
         <Button
           variant="ghost"
           onClick={enter}
-          className="h-12 rounded-full border-0 bg-ink px-6 text-[15px] text-white hover:bg-ink/90 sm:h-12 sm:text-[15px]"
+          disabled={leaving.active}
+          aria-busy={leaving.active || undefined}
+          className="h-12 rounded-full border-0 bg-ink px-6 text-[15px] text-white hover:bg-ink/90 disabled:opacity-100 sm:h-12 sm:text-[15px]"
         >
           Découvrir mon espace entreprise
-          <IconArrowRight />
+          {/* Not Button's `loading`: its spinner is invisible on ink. */}
+          {leaving.active ? <Loader aria-hidden className="size-4 animate-spin" /> : <IconArrowRight />}
         </Button>
       )}
     </div>
   );
+}
+
+/**
+ * Waiting on a full page load. Cleared when the browser restores this page
+ * from its back/forward cache, so the button is not stuck spinning there.
+ */
+export function useLeaving() {
+  const [active, setActive] = useState(false);
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setActive(false);
+    };
+    globalThis.addEventListener("pageshow", onShow);
+    return () => globalThis.removeEventListener("pageshow", onShow);
+  }, []);
+  return { active, start: () => setActive(true) };
 }
