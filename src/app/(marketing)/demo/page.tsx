@@ -27,7 +27,6 @@ export default async function DemoPage() {
     <section className="bg-header text-header-foreground">
       <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 pt-10 pb-20 sm:px-6 md:pt-16 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
         <div className="space-y-6 lg:sticky lg:top-28 lg:self-start">
-          <p className="inline-flex rounded-full bg-black/5 px-3 py-1 font-medium text-sm">Demander une démo</p>
           <h1 className="font-semibold text-4xl leading-[1.08] tracking-tight sm:text-5xl">
             30 minutes pour voir Rabotka sur vos vrais recrutements
           </h1>

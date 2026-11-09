@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { IconArrowRight, IconChevronDown, IconMenu2 } from "@tabler/icons-react";
+import { IconArrowRight, IconChevronDown, IconClock, IconLayoutKanban, IconMenu2 } from "@tabler/icons-react";
 
 import { BusinessLockup } from "#/components/business-lockup";
 import { Button } from "#/components/ui/button";
@@ -23,6 +23,8 @@ import {
   SOLUTION_LINKS,
   type NavLink,
 } from "../content";
+import { GUIDES } from "../site-content";
+import { STAGES } from "./feature-stages";
 import { SmartLink } from "./smart-link";
 
 const MENUS: { label: string; links: NavLink[]; wide?: boolean }[] = [
@@ -101,96 +103,176 @@ function DesktopMenu({ label, links, wide }: Readonly<{ label: string; links: Na
         {label}
         <IconChevronDown className="size-4 transition-transform group-data-[state=open]:rotate-180" />
       </DropdownMenuTrigger>
-      {wide ? (
-        <SolutionsPanel links={links} />
-      ) : (
-        <DropdownMenuContent
-          align="start"
-          sideOffset={8}
-          onCloseAutoFocus={(e) => e.preventDefault()}
-          className="w-72 rounded-3xl border-0 bg-card p-2 shadow-soft"
-        >
-          {links.map((link) => (
-            <DropdownMenuItem
-              key={link.label}
-              asChild
-              className="cursor-pointer flex-col items-start gap-0.5 rounded-2xl px-3 py-2.5 focus:bg-page"
-            >
-              <SmartLink href={link.href}>
-                <span className="font-medium text-sm">{link.label}</span>
-                {link.description && (
-                  <span className="text-muted-foreground text-xs leading-snug">{link.description}</span>
-                )}
-              </SmartLink>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      )}
+      {wide ? <SolutionsPanel /> : <ResourcesPanel links={links} />}
     </DropdownMenu>
   );
 }
 
+const GROUPS = STAGES;
+
 /**
- * The Solutions menu as a small mega-menu: each feature with its coloured
- * tile from the page, and a featured panel to open an account.
+ * The Fonctionnalités mega-menu, read as the pipeline: four stages of a hire,
+ * two tools each; a bar to the overview; and a featured card for the demo.
  */
-function SolutionsPanel({ links }: Readonly<{ links: NavLink[] }>) {
+function SolutionsPanel() {
   return (
     <DropdownMenuContent
       align="start"
-      sideOffset={8}
+      sideOffset={10}
       onCloseAutoFocus={(e) => e.preventDefault()}
-      className="grid w-[52rem] grid-cols-[1fr_15rem] gap-3 rounded-3xl border-0 bg-card p-3 shadow-soft"
+      className="grid w-[60rem] max-w-[calc(100vw-2rem)] grid-cols-[1fr_16rem] gap-3 rounded-[1.75rem] border-0 bg-card p-3 shadow-soft"
     >
-      <div className="grid grid-cols-2 content-start gap-1">
-        {links.map((link) => (
-          <DropdownMenuItem
-            key={link.label}
-            asChild
-            className="group cursor-pointer items-center gap-4 rounded-2xl p-2.5 focus:bg-page"
-          >
-            <Link href={link.href}>
-              {link.icon && (
-                <span className={`flex size-12 shrink-0 items-center justify-center rounded-2xl transition-transform group-hover:scale-105 ${link.tone ?? "bg-page"}`}>
-                  <link.icon className="size-5" />
+      <div className="flex min-w-0 flex-col gap-3">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-4 p-2">
+          {GROUPS.map((group) => (
+            <div key={group.step} className="space-y-1.5">
+              <p className="flex items-center gap-2 px-2.5 pb-1">
+                <span className="flex h-5 min-w-7 items-center justify-center rounded-full bg-header px-1.5 font-semibold text-[10px] text-header-foreground tabular-nums">
+                  {group.number}
                 </span>
-              )}
-              <span className="min-w-0">
-                <span className="block font-medium text-sm">{link.label}</span>
-                {link.description && (
-                  <span className="block text-muted-foreground text-xs leading-snug">{link.description}</span>
-                )}
-              </span>
-            </Link>
-          </DropdownMenuItem>
-        ))}
-        <DropdownMenuItem asChild className="col-span-2 cursor-pointer justify-center rounded-2xl p-2.5 font-medium text-sm focus:bg-page">
+                <span className="font-semibold text-xs uppercase tracking-wide">{group.step}</span>
+                <span className="truncate text-muted-foreground text-xs">· {group.text}</span>
+              </p>
+              {group.features.map((f) => (
+                <DropdownMenuItem
+                  key={f.id}
+                  asChild
+                  className="group cursor-pointer items-center gap-3.5 rounded-2xl p-2.5 focus:bg-page"
+                >
+                  <Link href={f.href}>
+                    <span
+                      className={`flex size-11 shrink-0 items-center justify-center rounded-2xl transition-transform group-hover:scale-105 ${f.tone}`}
+                    >
+                      <f.icon className="size-5" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-1 font-medium text-sm">
+                        {f.label}
+                        <IconArrowRight className="size-3.5 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100 group-focus:translate-x-0 group-focus:opacity-100" />
+                      </span>
+                      <span className="block text-muted-foreground text-xs leading-snug">{f.description}</span>
+                    </span>
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        <DropdownMenuItem
+          asChild
+          className="group mt-auto cursor-pointer items-center justify-between gap-4 rounded-2xl bg-page px-4 py-3 focus:bg-page/70"
+        >
           <Link href={FEATURES_HREF}>
-            Toutes les fonctionnalités
-            <IconArrowRight className="size-4" />
+            <span className="flex min-w-0 items-center gap-3">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-card">
+                <IconLayoutKanban className="size-4" />
+              </span>
+              <span className="min-w-0">
+                <span className="block font-medium text-sm">Un ATS complet, six étapes</span>
+                <span className="block truncate text-muted-foreground text-xs">
+                  De la diffusion de l&apos;offre au contrat, dans un seul pipeline
+                </span>
+              </span>
+            </span>
+            <span className="inline-flex shrink-0 items-center gap-1.5 font-medium text-sm">
+              Toutes les fonctionnalités
+              <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+            </span>
           </Link>
         </DropdownMenuItem>
       </div>
 
       <DropdownMenuItem
         asChild
-        className="group relative cursor-pointer flex-col items-stretch justify-end overflow-hidden rounded-2xl bg-ink p-4 text-white focus:bg-ink focus:text-white"
+        className="group relative cursor-pointer flex-col items-stretch justify-between overflow-hidden rounded-2xl bg-ink p-4 text-white focus:bg-ink focus:text-white"
       >
         <Link href={DEMO_HREF}>
           <Image
             src="/media/boardroom.jpg"
             alt=""
             fill
-            sizes="240px"
+            sizes="256px"
             className="object-cover opacity-90 transition-transform duration-500 group-hover:scale-105"
           />
-          <span className="absolute inset-0 bg-linear-to-t from-black/85 via-black/40 to-transparent" />
-          <span className="relative space-y-2">
-            <span className="block font-semibold text-base leading-snug">
-              Un ATS complet, de l&apos;offre au contrat : voyez-le sur vos postes
+          <span className="absolute inset-0 bg-linear-to-t from-black/90 via-black/45 to-black/10" />
+          <span className="relative w-fit rounded-full bg-header px-2.5 py-1 font-semibold text-[11px] text-header-foreground">
+            ATS nouvelle génération
+          </span>
+          <span className="relative space-y-3">
+            <span className="block font-semibold text-lg leading-snug">
+              Voyez Rabotka sur vos propres postes
             </span>
-            <span className="inline-flex items-center gap-1.5 font-medium text-sm text-white">
+            <span className="block text-white/75 text-xs leading-snug">
+              30 minutes avec notre équipe, réponse sous 24 h ouvrées.
+            </span>
+            <span className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-full bg-white font-medium text-ink text-sm">
               Demander une démo
+              <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+            </span>
+          </span>
+        </Link>
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  );
+}
+
+/**
+ * The Ressources menu: each link with its tile, and the first guide featured
+ * beside them, so the menu itself offers something to read.
+ */
+function ResourcesPanel({ links }: Readonly<{ links: NavLink[] }>) {
+  const guide = GUIDES[0];
+  return (
+    <DropdownMenuContent
+      align="start"
+      sideOffset={10}
+      onCloseAutoFocus={(e) => e.preventDefault()}
+      className="grid w-[40rem] max-w-[calc(100vw-2rem)] grid-cols-[1fr_14rem] gap-3 rounded-[1.75rem] border-0 bg-card p-3 shadow-soft"
+    >
+      <div className="space-y-0.5 p-1">
+        {links.map((link) => (
+          <DropdownMenuItem
+            key={link.label}
+            asChild
+            className="group cursor-pointer items-center gap-3.5 rounded-2xl p-2.5 focus:bg-page"
+          >
+            <SmartLink href={link.href}>
+              {link.icon && (
+                <span
+                  className={`flex size-11 shrink-0 items-center justify-center rounded-2xl transition-transform group-hover:scale-105 ${link.tone ?? "bg-page"}`}
+                >
+                  <link.icon className="size-5" />
+                </span>
+              )}
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-1 font-medium text-sm">
+                  {link.label}
+                  <IconArrowRight className="size-3.5 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100 group-focus:translate-x-0 group-focus:opacity-100" />
+                </span>
+                {link.description && (
+                  <span className="block text-muted-foreground text-xs leading-snug">{link.description}</span>
+                )}
+              </span>
+            </SmartLink>
+          </DropdownMenuItem>
+        ))}
+      </div>
+
+      <DropdownMenuItem
+        asChild
+        className="group cursor-pointer flex-col items-stretch justify-between gap-6 rounded-2xl bg-header p-4 text-header-foreground focus:bg-header focus:text-header-foreground"
+      >
+        <Link href={`/ressources/${guide.slug}`}>
+          <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-card/70 px-2.5 py-1 font-medium text-[11px]">
+            <IconClock className="size-3.5" />
+            Guide · {guide.minutes} min
+          </span>
+          <span className="space-y-3">
+            <span className="block font-semibold text-lg leading-snug">{guide.title}</span>
+            <span className="block text-header-muted text-xs leading-snug">{guide.description}</span>
+            <span className="inline-flex items-center gap-1.5 font-medium text-sm">
+              Lire le guide
               <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </span>
           </span>
@@ -214,7 +296,41 @@ function MobileMenu() {
       <SheetContent side="right" className="w-full gap-0 overflow-y-auto border-0 bg-card p-6 sm:max-w-sm">
         <SheetTitle className="sr-only">Menu</SheetTitle>
         <div className="mt-8 flex flex-col gap-6">
-          {MENUS.map((menu) => (
+          <div className="space-y-3">
+            <p className="px-3 font-medium text-muted-foreground text-xs">Fonctionnalités</p>
+            {GROUPS.map((group) => (
+              <div key={group.step} className="space-y-0.5">
+                <p className="flex items-center gap-2 px-3 pb-0.5">
+                  <span className="flex h-5 min-w-7 items-center justify-center rounded-full bg-header px-1.5 font-semibold text-[10px] text-header-foreground tabular-nums">
+                    {group.number}
+                  </span>
+                  <span className="font-semibold text-[11px] uppercase tracking-wide">{group.step}</span>
+                </p>
+                {group.features.map((f) => (
+                  <Link
+                    key={f.id}
+                    href={f.href}
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 rounded-2xl px-3 py-2 font-medium text-[15px] hover:bg-page"
+                  >
+                    <span className={`flex size-8 shrink-0 items-center justify-center rounded-xl ${f.tone}`}>
+                      <f.icon className="size-4" />
+                    </span>
+                    {f.label}
+                  </Link>
+                ))}
+              </div>
+            ))}
+            <Link
+              href={FEATURES_HREF}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-1.5 rounded-2xl px-3 py-2 font-medium text-sm hover:bg-page"
+            >
+              Toutes les fonctionnalités
+              <IconArrowRight className="size-4" />
+            </Link>
+          </div>
+          {MENUS.filter((menu) => !menu.wide).map((menu) => (
             <div key={menu.label} className="space-y-1">
               <p className="px-3 font-medium text-muted-foreground text-xs">{menu.label}</p>
               {menu.links.map((link) => (

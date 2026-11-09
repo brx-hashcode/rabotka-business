@@ -1,67 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { IconArrowRight, IconCheck } from "@tabler/icons-react";
+import { IconArrowRight } from "@tabler/icons-react";
 
-import { Button } from "#/components/ui/button";
 import type { BusinessCountryName } from "#/lib/api/catalog-server";
-import { cn } from "#/lib/utils";
-import { AUDIENCE_PHOTO, AUDIENCES, FAQ, FEATURES, SIGN_UP_HREF, STEPS, TRUST } from "../content";
-import { FeatureMockup } from "../mockups/mockups";
+import { AUDIENCE_PHOTO, AUDIENCES, FAQ, SIGN_UP_HREF, TRUST } from "../content";
 import { FaqExplorer } from "./faq-explorer";
 import { SectionHeading } from "./section-heading";
-
-/**
- * The product, one feature per row: what it does beside the screen that does
- * it, sides alternating. The page's backbone; the header menu links here.
- */
-export function FeaturesSection() {
-  return (
-    <section className="bg-card py-20 md:py-28">
-      <div className="mx-auto w-full max-w-7xl space-y-20 px-4 sm:px-6 md:space-y-32">
-        <SectionHeading
-          kicker="Tout votre recrutement"
-          title="Un seul espace, de l'offre au candidat retenu"
-          text="Chaque étape a son outil, et chaque outil fait gagner du temps à l'étape suivante."
-          center
-        />
-
-        {FEATURES.map((feature, i) => (
-          <div
-            key={feature.id}
-            id={feature.slug}
-            className="grid scroll-mt-24 items-center gap-10 lg:grid-cols-2 lg:gap-16"
-          >
-            <div className={cn("min-w-0 rounded-[2rem] bg-page p-4 sm:p-8", i % 2 === 1 && "lg:order-2")}>
-              <FeatureMockup id={feature.id} />
-            </div>
-            <div className="space-y-5">
-              <h3 className="font-semibold text-2xl tracking-tight sm:text-3xl">{feature.title}</h3>
-              <p className="text-muted-foreground">{feature.text}</p>
-              <ul className="space-y-2.5">
-                {feature.points.map((point) => (
-                  <li key={point} className="flex items-start gap-3 text-sm">
-                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-whatsapp text-white">
-                      <IconCheck className="size-3" strokeWidth={3} />
-                    </span>
-                    {point}
-                  </li>
-                ))}
-              </ul>
-              <Button
-                variant="ghost"
-                render={<Link href={feature.href} />}
-                className="-ml-3 rounded-full px-3 font-medium hover:bg-page"
-              >
-                En savoir plus : {feature.label}
-                <IconArrowRight />
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
 
 /** What happens to the business's papers, the CVs and its mailbox. */
 export function TrustSection() {
@@ -84,28 +28,6 @@ export function TrustSection() {
             </div>
           ))}
         </div>
-      </div>
-    </section>
-  );
-}
-
-/** Three numbered steps, from sign-up to the first hire. */
-export function StepsSection() {
-  return (
-    <section id="demarche" className="scroll-mt-20 bg-card py-20 md:py-28">
-      <div className="mx-auto w-full max-w-7xl space-y-12 px-4 sm:px-6">
-        <SectionHeading kicker="Notre démarche" title="Trois étapes pour démarrer vos recrutements" center />
-        <ol className="grid gap-4 md:grid-cols-3">
-          {STEPS.map((step, i) => (
-            <li key={step.title} className="space-y-4 rounded-3xl bg-page p-6 sm:p-8">
-              <span className="flex size-10 items-center justify-center rounded-full bg-header font-semibold text-header-foreground">
-                {i + 1}
-              </span>
-              <h3 className="font-semibold text-xl">{step.title}</h3>
-              <p className="text-muted-foreground text-sm">{step.text}</p>
-            </li>
-          ))}
-        </ol>
       </div>
     </section>
   );

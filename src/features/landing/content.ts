@@ -1,11 +1,14 @@
 import {
+  IconBook,
   IconBrandLinkedin,
   IconBuildingBank,
   IconBuildingSkyscraper,
+  IconBuildingStore,
   IconCalendarEvent,
   IconChartBar,
   IconFileSearch,
   IconHeartHandshake,
+  IconHelpCircle,
   IconListCheck,
   IconLock,
   IconMailShare,
@@ -206,9 +209,17 @@ export const FEATURES: Feature[] = [
   },
 ];
 
-/** The cards under the hero: the four steps a recruiter goes through. */
-/** The hero's four cards: the hire's steps (LinkedIn has its row and the menu). */
-export const STRIP_FEATURES = FEATURES.filter((f) => !["linkedin", "tracking", "profiles", "team"].includes(f.id));
+
+/**
+ * The features by stage of a hire, as the Fonctionnalités menu shows them:
+ * the menu reads as the pipeline itself.
+ */
+export const FEATURE_GROUPS: { step: string; text: string; ids: MockupKey[] }[] = [
+  { step: "Attirer", text: "Des offres vues partout", ids: ["offer", "linkedin"] },
+  { step: "Sourcer et trier", text: "Les bons profils en tête", ids: ["profiles", "cv"] },
+  { step: "Évaluer", text: "Chaque candidat suivi", ids: ["applicants", "interviews"] },
+  { step: "Décider et suivre", text: "En équipe, jusqu'au contrat", ids: ["team", "tracking"] },
+];
 
 export const SOLUTION_LINKS: NavLink[] = FEATURES.map(({ href, label, description, icon, tone }) => ({
   href,
@@ -218,19 +229,35 @@ export const SOLUTION_LINKS: NavLink[] = FEATURES.map(({ href, label, descriptio
   tone,
 }));
 
-export const AUDIENCE_LINKS: NavLink[] = [
-  { href: "/#secteurs", label: "Entreprises, PME et TPE" },
-  { href: "/#secteurs", label: "Établissements d'enseignement" },
-  { href: "/#secteurs", label: "ONG et organisations internationales" },
-  { href: "/#secteurs", label: "Administrations et établissements publics" },
-  { href: "/#secteurs", label: "Structures de santé" },
-];
-
 export const RESOURCE_LINKS: NavLink[] = [
-  { href: "/ressources", label: "Guides du recruteur", description: "Des méthodes concrètes pour recruter mieux, plus vite." },
-  { href: "/ressources#faq", label: "Questions fréquentes", description: "Pays, CV, données, compte : l'essentiel." },
-  { href: "/a-propos#confiance", label: "Sécurité et confidentialité", description: "Ce qui est lu, gardé et supprimé." },
-  { href: "/carrieres", label: "Ils recrutent", description: "Les organisations qui recrutent avec Rabotka." },
+  {
+    href: "/ressources",
+    label: "Guides du recruteur",
+    description: "Des méthodes concrètes pour recruter mieux, plus vite.",
+    icon: IconBook,
+    tone: "bg-chip-green text-chip-green-foreground",
+  },
+  {
+    href: "/#faq",
+    label: "Questions fréquentes",
+    description: "Pays, CV, données, compte : l'essentiel.",
+    icon: IconHelpCircle,
+    tone: "bg-chip-sky text-chip-sky-foreground",
+  },
+  {
+    href: "/a-propos#confiance",
+    label: "Sécurité et confidentialité",
+    description: "Ce qui est lu, gardé et supprimé.",
+    icon: IconShieldCheck,
+    tone: "bg-chip-violet text-chip-violet-foreground",
+  },
+  {
+    href: "/carrieres",
+    label: "Ils recrutent",
+    description: "Les organisations qui recrutent avec Rabotka.",
+    icon: IconBuildingStore,
+    tone: "bg-chip-amber text-chip-amber-foreground",
+  },
 ];
 
 export const COMPANY_LINKS: NavLink[] = [
@@ -265,20 +292,6 @@ export const TRUST: Trust[] = [
   },
 ];
 
-export const STEPS = [
-  {
-    title: "Ouvrez votre compte entreprise",
-    text: "Avec l'adresse e-mail professionnelle de votre organisation. Connexion par code à usage unique, sans mot de passe.",
-  },
-  {
-    title: "Faites vérifier votre organisation",
-    text: "Renseignez votre statut juridique et transmettez les pièces correspondantes. Nos équipes les examinent et vous préviennent par e-mail.",
-  },
-  {
-    title: "Publiez, analysez, rencontrez",
-    text: "Mettez vos offres en ligne, faites analyser les CV reçus, invitez les meilleurs candidats en entretien et retenez celui qui vous convient.",
-  },
-];
 
 export type Audience = { title: string; text: string; icon: Icon };
 

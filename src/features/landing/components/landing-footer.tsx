@@ -77,17 +77,6 @@ export function ContactCards({ title = "Besoin d'un accompagnement ?", text = "N
   );
 }
 
-/** The home page's contact strip, after the demo band. */
-export function ContactSection() {
-  return (
-    <section id="contact" className="scroll-mt-20 px-4 pb-20 sm:px-6">
-      <div className="mx-auto w-full max-w-7xl">
-        <ContactCards />
-      </div>
-    </section>
-  );
-}
-
 const FOOTER_COLUMNS: { title: string; links: NavLink[] }[] = [
   { title: "Fonctionnalités", links: SOLUTION_LINKS },
   { title: "Ressources", links: RESOURCE_LINKS },
