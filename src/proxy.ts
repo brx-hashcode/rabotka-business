@@ -20,7 +20,16 @@ export function proxy(request: NextRequest) {
   if (pathname.startsWith("/entretien/")) return NextResponse.next();
   // A business's public careers page: for candidates who are not on Rabotka.
   if (pathname === "/carrieres" || pathname.startsWith("/carrieres/")) return NextResponse.next();
+  // The public site's other pages: open to everyone, signed in or not.
+  if (isMarketingPath(pathname)) return NextResponse.next();
   return requireSession(request);
+}
+
+/** The public site beyond the landing: features, resources, about, contact, demo. */
+const MARKETING_PREFIXES = ["/fonctionnalites", "/ressources", "/a-propos", "/contact", "/demo"];
+
+export function isMarketingPath(pathname: string): boolean {
+  return MARKETING_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
 function forwardApi(request: NextRequest, path = request.nextUrl.pathname) {

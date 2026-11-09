@@ -15,23 +15,31 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "#/components/ui/sheet";
 import {
-  AUDIENCE_LINKS,
-  HELP_LINKS,
+  DEMO_HREF,
+  FEATURES_HREF,
+  RESOURCE_LINKS,
   SIGN_IN_HREF,
   SIGN_UP_HREF,
   SOLUTION_LINKS,
   type NavLink,
 } from "../content";
+import { SmartLink } from "./smart-link";
 
 const MENUS: { label: string; links: NavLink[]; wide?: boolean }[] = [
-  { label: "Solutions", links: SOLUTION_LINKS, wide: true },
-  { label: "Secteurs", links: AUDIENCE_LINKS },
-  { label: "Aide", links: HELP_LINKS },
+  { label: "Fonctionnalités", links: SOLUTION_LINKS, wide: true },
+  { label: "Ressources", links: RESOURCE_LINKS },
+];
+
+/** Pages reached in one click, after the menus. */
+const PAGES: NavLink[] = [
+  { href: "/a-propos", label: "À propos" },
+  { href: "/contact", label: "Contact" },
 ];
 
 /**
- * The landing's own header: brand, three menus of anchors on the page, and the
- * two ways in. Sticky on the lime band; on phones the menus fold into a sheet.
+ * The public site's header: brand, the Fonctionnalités and Ressources menus,
+ * two pages, then the ways in, « Demander une démo » first. Sticky on the
+ * lime band; on phones the menus fold into a sheet.
  */
 export function LandingHeader() {
   return (
@@ -45,22 +53,39 @@ export function LandingHeader() {
           {MENUS.map((menu) => (
             <DesktopMenu key={menu.label} {...menu} />
           ))}
+          {PAGES.map((page) => (
+            <Link
+              key={page.href}
+              href={page.href}
+              className="rounded-full px-3 py-2 font-medium text-sm transition-colors hover:bg-black/5"
+            >
+              {page.label}
+            </Link>
+          ))}
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
           <Button
             variant="ghost"
             render={<Link href={SIGN_IN_HREF} />}
-            className="hidden h-12 rounded-full px-6 py-3 text-[15px] hover:bg-black/5 sm:inline-flex sm:h-12 sm:text-[15px]"
+            className="hidden h-12 rounded-full px-5 py-3 text-[15px] hover:bg-black/5 xl:inline-flex xl:h-12 xl:text-[15px]"
           >
             Se connecter
           </Button>
           <Button
             variant="ghost"
             render={<Link href={SIGN_UP_HREF} />}
-            className="h-10 rounded-full bg-ink px-4 py-2 text-sm text-white hover:bg-ink/90 sm:h-12 sm:px-7 sm:py-3 sm:text-[15px]"
+            className="hidden h-12 rounded-full bg-card/70 px-5 py-3 text-[15px] hover:bg-card md:inline-flex md:h-12 md:text-[15px]"
           >
             Ouvrir un compte
+          </Button>
+          <Button
+            variant="ghost"
+            render={<Link href={DEMO_HREF} />}
+            className="h-10 rounded-full bg-ink px-4 py-2 text-sm text-white hover:bg-ink/90 sm:h-12 sm:px-6 sm:py-3 sm:text-[15px]"
+          >
+            <span className="sm:hidden">Démo</span>
+            <span className="hidden sm:inline">Demander une démo</span>
           </Button>
           <MobileMenu />
         </div>
@@ -91,12 +116,12 @@ function DesktopMenu({ label, links, wide }: Readonly<{ label: string; links: Na
               asChild
               className="cursor-pointer flex-col items-start gap-0.5 rounded-2xl px-3 py-2.5 focus:bg-page"
             >
-              <a href={link.href}>
+              <SmartLink href={link.href}>
                 <span className="font-medium text-sm">{link.label}</span>
                 {link.description && (
                   <span className="text-muted-foreground text-xs leading-snug">{link.description}</span>
                 )}
-              </a>
+              </SmartLink>
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
@@ -117,14 +142,14 @@ function SolutionsPanel({ links }: Readonly<{ links: NavLink[] }>) {
       onCloseAutoFocus={(e) => e.preventDefault()}
       className="grid w-[52rem] grid-cols-[1fr_15rem] gap-3 rounded-3xl border-0 bg-card p-3 shadow-soft"
     >
-      <div className="grid grid-cols-2 gap-1">
+      <div className="grid grid-cols-2 content-start gap-1">
         {links.map((link) => (
           <DropdownMenuItem
             key={link.label}
             asChild
             className="group cursor-pointer items-center gap-4 rounded-2xl p-2.5 focus:bg-page"
           >
-            <a href={link.href}>
+            <Link href={link.href}>
               {link.icon && (
                 <span className={`flex size-12 shrink-0 items-center justify-center rounded-2xl transition-transform group-hover:scale-105 ${link.tone ?? "bg-page"}`}>
                   <link.icon className="size-5" />
@@ -136,16 +161,22 @@ function SolutionsPanel({ links }: Readonly<{ links: NavLink[] }>) {
                   <span className="block text-muted-foreground text-xs leading-snug">{link.description}</span>
                 )}
               </span>
-            </a>
+            </Link>
           </DropdownMenuItem>
         ))}
+        <DropdownMenuItem asChild className="col-span-2 cursor-pointer justify-center rounded-2xl p-2.5 font-medium text-sm focus:bg-page">
+          <Link href={FEATURES_HREF}>
+            Toutes les fonctionnalités
+            <IconArrowRight className="size-4" />
+          </Link>
+        </DropdownMenuItem>
       </div>
 
       <DropdownMenuItem
         asChild
         className="group relative cursor-pointer flex-col items-stretch justify-end overflow-hidden rounded-2xl bg-ink p-4 text-white focus:bg-ink focus:text-white"
       >
-        <Link href={SIGN_UP_HREF}>
+        <Link href={DEMO_HREF}>
           <Image
             src="/media/boardroom.jpg"
             alt=""
@@ -156,10 +187,10 @@ function SolutionsPanel({ links }: Readonly<{ links: NavLink[] }>) {
           <span className="absolute inset-0 bg-linear-to-t from-black/85 via-black/40 to-transparent" />
           <span className="relative space-y-2">
             <span className="block font-semibold text-base leading-snug">
-              Tout votre recrutement, de l&apos;offre à l&apos;entretien, en un seul espace
+              Un ATS complet, de l&apos;offre au contrat : voyez-le sur vos postes
             </span>
             <span className="inline-flex items-center gap-1.5 font-medium text-sm text-white">
-              Ouvrir un compte entreprise
+              Demander une démo
               <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </span>
           </span>
@@ -187,24 +218,53 @@ function MobileMenu() {
             <div key={menu.label} className="space-y-1">
               <p className="px-3 font-medium text-muted-foreground text-xs">{menu.label}</p>
               {menu.links.map((link) => (
-                <a
+                <SmartLink
                   key={link.label}
                   href={link.href}
                   onClick={() => setOpen(false)}
                   className="block rounded-2xl px-3 py-2.5 font-medium text-[15px] hover:bg-page"
                 >
                   {link.label}
-                </a>
+                </SmartLink>
               ))}
             </div>
           ))}
-          <Button
-            variant="ghost"
-            render={<Link href={SIGN_IN_HREF} />}
-            className="h-11 rounded-full bg-page text-base"
-          >
-            Se connecter
-          </Button>
+          <div className="space-y-1">
+            <p className="px-3 font-medium text-muted-foreground text-xs">Rabotka Business</p>
+            {PAGES.map((page) => (
+              <Link
+                key={page.href}
+                href={page.href}
+                onClick={() => setOpen(false)}
+                className="block rounded-2xl px-3 py-2.5 font-medium text-[15px] hover:bg-page"
+              >
+                {page.label}
+              </Link>
+            ))}
+          </div>
+          <div className="space-y-2">
+            <Button
+              variant="ghost"
+              render={<Link href={DEMO_HREF} onClick={() => setOpen(false)} />}
+              className="h-11 w-full rounded-full bg-ink text-base text-white hover:bg-ink/90"
+            >
+              Demander une démo
+            </Button>
+            <Button
+              variant="ghost"
+              render={<Link href={SIGN_UP_HREF} onClick={() => setOpen(false)} />}
+              className="h-11 w-full rounded-full bg-page text-base"
+            >
+              Ouvrir un compte
+            </Button>
+            <Button
+              variant="ghost"
+              render={<Link href={SIGN_IN_HREF} onClick={() => setOpen(false)} />}
+              className="h-11 w-full rounded-full text-base"
+            >
+              Se connecter
+            </Button>
+          </div>
         </div>
       </SheetContent>
     </Sheet>

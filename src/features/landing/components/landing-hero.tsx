@@ -1,42 +1,35 @@
 import Link from "next/link";
 import { IconArrowRight } from "@tabler/icons-react";
 
-import { Button } from "#/components/ui/button";
 import type { BusinessCountryName } from "#/lib/api/catalog-server";
-import { SIGN_UP_HREF, STRIP_FEATURES } from "../content";
+import { STRIP_FEATURES } from "../content";
+import { DemoButton, SignUpButton } from "./demo-button";
 import { flagUrl } from "../globe/country-places";
 import { HeroMockup } from "../mockups/mockups";
 
 /**
- * The opening: what Rabotka does for a recruiter, one way in, and the product
- * itself beside it. Then the four steps of a hire as cards, each a link to
- * its section.
+ * The opening: an ATS, said plainly; the demo first and the account beside
+ * it; the product itself on the right. Then the four steps of a hire as
+ * cards, each a link to its feature page.
  */
 export function LandingHero({ countries }: Readonly<{ countries: BusinessCountryName[] }>) {
   return (
     <section className="overflow-hidden bg-header text-header-foreground">
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-4 pt-10 pb-14 sm:px-6 md:pt-16 lg:grid-cols-[1fr_1.05fr] lg:gap-16 lg:pb-20">
         <div className="space-y-6 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700">
+          <p className="inline-flex rounded-full bg-black/5 px-3 py-1 font-medium text-sm">
+            L&apos;ATS nouvelle génération des recruteurs africains
+          </p>
           <h1 className="font-semibold text-4xl leading-[1.06] tracking-tight sm:text-5xl lg:text-[3.5rem]">
             Recevez, triez et rencontrez les bons candidats, au même endroit
           </h1>
           <p className="max-w-xl text-header-muted text-lg">
-            Des offres rédigées en quelques mots, des CV lus et classés pour chaque poste, même depuis votre messagerie, et
-            des entretiens qui arrivent tout seuls dans votre agenda.
+            Un logiciel de recrutement complet : des offres rédigées et diffusées partout, chaque CV lu et classé pour le
+            poste, un pipeline suivi en équipe, et des entretiens qui arrivent tout seuls dans votre agenda.
           </p>
           <div className="flex flex-wrap items-center gap-3">
-            <Button
-              variant="ghost"
-              size="xl"
-              render={<Link href={SIGN_UP_HREF} />}
-              className="rounded-full bg-ink px-6 text-white hover:bg-ink/90"
-            >
-              Ouvrir un compte entreprise
-              <IconArrowRight />
-            </Button>
-            <a href="#fonctionnalites" className="rounded-full px-4 py-2 font-medium text-sm underline-offset-4 hover:underline">
-              Voir comment ça marche
-            </a>
+            <DemoButton />
+            <SignUpButton />
           </div>
           {/* Where it is open, from the backend's list: not one country's tool. The map is further down. */}
           <a href="#pays" className="group inline-flex items-center gap-3 pt-2">
@@ -67,7 +60,7 @@ export function LandingHero({ countries }: Readonly<{ countries: BusinessCountry
         <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {STRIP_FEATURES.map(({ id, href, label, description, icon: Icon, tone }) => (
             <li key={id}>
-              <a
+              <Link
                 href={href}
                 className="group flex h-full flex-col gap-3 rounded-3xl bg-card p-4 text-foreground transition-colors hover:bg-card/80"
               >
@@ -78,7 +71,7 @@ export function LandingHero({ countries }: Readonly<{ countries: BusinessCountry
                   <span className="block font-semibold text-sm">{label}</span>
                   <span className="block text-muted-foreground text-xs leading-snug">{description}</span>
                 </span>
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
