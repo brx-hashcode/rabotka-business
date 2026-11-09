@@ -187,13 +187,7 @@ export function SignUpWizard({ visitorCountry }: Readonly<{ visitorCountry?: str
       );
     }
     if (done && store.doneEmail) {
-      return (
-        <SignUpDone
-          email={store.doneEmail}
-          signInRequired={store.signInRequired}
-          onLeave={() => store.reset()}
-        />
-      );
+      return <SignUpDone email={store.doneEmail} signInRequired={store.signInRequired} />;
     }
     switch (step) {
       case 0:
