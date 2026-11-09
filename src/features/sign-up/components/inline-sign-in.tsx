@@ -19,7 +19,7 @@ const RESEND_SECONDS = 60;
  * to the same email by itself; the person types it and lands in their space
  * — no detour through the sign-in page.
  */
-export function InlineSignIn({ email, onSignedIn }: Readonly<{ email: string; onSignedIn: () => void }>) {
+export function InlineSignIn({ email }: Readonly<{ email: string }>) {
   const queryClient = useQueryClient();
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +51,8 @@ export function InlineSignIn({ email, onSignedIn }: Readonly<{ email: string; on
     try {
       const { user } = await verifySession({ email, otp });
       queryClient.setQueryData(sessionUserKey, user);
-      onSignedIn();
+      // `pending` stays on until the page is replaced; no store reset, which
+      // would flash the empty first step (see SignUpDone).
       // A full load, for the reason SignUpDone gives.
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- deliberate full load, see above
       globalThis.location.assign("/espace");
