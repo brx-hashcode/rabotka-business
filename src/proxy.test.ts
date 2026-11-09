@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isCrossSiteWrite } from "./proxy";
+import { isCrossSiteWrite, isMarketingPath } from "./proxy";
 
 const req = (method: string, headers: Record<string, string>) => ({ method, headers: new Headers(headers) });
 
@@ -17,5 +17,27 @@ describe("isCrossSiteWrite", () => {
     ).toBe(false);
     expect(isCrossSiteWrite(req("GET", { origin: "https://evil.example", host: "business.rabotka.work" }))).toBe(false);
     expect(isCrossSiteWrite(req("POST", { host: "business.rabotka.work" }))).toBe(false);
+  });
+});
+
+describe("isMarketingPath", () => {
+  it("opens the public site's pages", () => {
+    for (const path of [
+      "/fonctionnalites",
+      "/fonctionnalites/analyse-cv",
+      "/ressources",
+      "/ressources/organiser-ses-entretiens",
+      "/a-propos",
+      "/contact",
+      "/demo",
+    ]) {
+      expect(isMarketingPath(path)).toBe(true);
+    }
+  });
+
+  it("keeps the space and look-alike paths behind the session", () => {
+    for (const path of ["/espace", "/espace/offres", "/demonstration", "/contacts", "/ressources-humaines"]) {
+      expect(isMarketingPath(path)).toBe(false);
+    }
   });
 });

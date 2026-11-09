@@ -8,21 +8,7 @@ import { cn } from "#/lib/utils";
 import { AUDIENCE_PHOTO, AUDIENCES, FAQ, FEATURES, SIGN_UP_HREF, STEPS, TRUST } from "../content";
 import { FeatureMockup } from "../mockups/mockups";
 import { FaqExplorer } from "./faq-explorer";
-
-function SectionHeading({
-  kicker,
-  title,
-  text,
-  center = false,
-}: Readonly<{ kicker: string; title: string; text?: string; center?: boolean }>) {
-  return (
-    <div className={cn("max-w-2xl space-y-3", center && "mx-auto text-center")}>
-      <p className="font-medium text-sm text-whatsapp-dark">{kicker}</p>
-      <h2 className="font-semibold text-3xl tracking-tight sm:text-4xl">{title}</h2>
-      {text && <p className="text-lg text-muted-foreground">{text}</p>}
-    </div>
-  );
-}
+import { SectionHeading } from "./section-heading";
 
 /**
  * The product, one feature per row: what it does beside the screen that does
@@ -42,7 +28,7 @@ export function FeaturesSection() {
         {FEATURES.map((feature, i) => (
           <div
             key={feature.id}
-            id={feature.href.slice(1)}
+            id={feature.slug}
             className="grid scroll-mt-24 items-center gap-10 lg:grid-cols-2 lg:gap-16"
           >
             <div className={cn("min-w-0 rounded-[2rem] bg-page p-4 sm:p-8", i % 2 === 1 && "lg:order-2")}>
@@ -63,10 +49,10 @@ export function FeaturesSection() {
               </ul>
               <Button
                 variant="ghost"
-                render={<Link href={SIGN_UP_HREF} />}
+                render={<Link href={feature.href} />}
                 className="-ml-3 rounded-full px-3 font-medium hover:bg-page"
               >
-                Ouvrir un compte entreprise
+                En savoir plus : {feature.label}
                 <IconArrowRight />
               </Button>
             </div>
@@ -164,7 +150,7 @@ export function AudiencesSection() {
 }
 
 /** The first question a visitor outside one country asks, from the backend's list. */
-function countriesAnswer(countries: BusinessCountryName[]) {
+export function countriesAnswer(countries: BusinessCountryName[]) {
   const names = countries.map((c) => c.name);
   const list = names.length > 1 ? `${names.slice(0, -1).join(", ")} et ${names.at(-1)}` : (names[0] ?? "");
   return {
@@ -175,15 +161,20 @@ function countriesAnswer(countries: BusinessCountryName[]) {
 
 /** Questions to browse: a list and its answer side by side, an accordion on a phone. */
 export function FaqSection({ countries }: Readonly<{ countries: BusinessCountryName[] }>) {
+  return <FaqBlock items={[countriesAnswer(countries), ...FAQ]} />;
+}
+
+/** The FAQ block with any questions: a feature page's, or the whole list. */
+export function FaqBlock({
+  items,
+  title = "Tout savoir avant de commencer",
+  text = "Les pays, l'analyse de CV, vos données et votre compte : l'essentiel en quelques réponses.",
+}: Readonly<{ items: { q: string; a: string }[]; title?: string; text?: string }>) {
   return (
     <section id="faq" className="scroll-mt-20 bg-card py-20 md:py-28">
       <div className="mx-auto w-full max-w-7xl space-y-12 px-4 sm:px-6">
-        <SectionHeading
-          kicker="Questions fréquentes"
-          title="Tout savoir avant de commencer"
-          text="Les pays, l'analyse de CV, vos données et votre compte : l'essentiel en quelques réponses."
-        />
-        <FaqExplorer items={[countriesAnswer(countries), ...FAQ]} />
+        <SectionHeading kicker="Questions fréquentes" title={title} text={text} />
+        <FaqExplorer items={items} />
       </div>
     </section>
   );

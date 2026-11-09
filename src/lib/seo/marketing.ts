@@ -1,0 +1,47 @@
+import type { Metadata } from "next";
+
+import { NOINDEX } from "./indexed-host";
+import { siteOrigin } from "./site";
+
+/** The public site's pages, as robots.txt lets crawlers in and the sitemap lists them. */
+export const MARKETING_PATHS = ["/", "/fonctionnalites", "/ressources", "/a-propos", "/contact", "/demo"] as const;
+
+/**
+ * A marketing page's metadata: its own title, description and canonical,
+ * indexed on business.rabotka.work only (develop and previews stay out).
+ */
+export async function marketingMetadata({
+  title,
+  description,
+  path,
+}: Readonly<{ title: string; description: string; path: string }>): Promise<Metadata> {
+  const { indexed } = await siteOrigin();
+  const full = path === "/" ? title : `${title} · Rabotka Business`;
+  return {
+    title: full,
+    description,
+    robots: indexed ? { index: true, follow: true } : NOINDEX,
+    alternates: { canonical: path },
+    openGraph: { type: "website", siteName: "Rabotka", locale: "fr_FR", title: full, description, url: path },
+    twitter: { card: "summary_large_image", title: full, description },
+  };
+}
+
+/** schema.org Organization for the home and « À propos » pages. */
+export function organizationLd(origin: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Rabotka Business",
+    url: origin,
+    logo: `${origin}/icon-512.png`,
+    description:
+      "Logiciel de recrutement (ATS) des entreprises et organisations en Afrique : diffusion d'offres, analyse de CV, suivi des candidatures, entretiens et recrutement en équipe.",
+    parentOrganization: { "@type": "Organization", name: "Rabotka", url: "https://www.rabotka.work" },
+  };
+}
+
+/** A JSON-LD script's content, safe inside <script>. */
+export function jsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}

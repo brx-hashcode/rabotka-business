@@ -13,6 +13,7 @@ import {
   IconShieldCheck,
   IconStethoscope,
   IconTrash,
+  IconUsers,
   IconUsersGroup,
   IconWand,
   type Icon,
@@ -34,6 +35,8 @@ import {
  */
 
 export const SIGN_UP_HREF = "/auth/sign-up";
+export const DEMO_HREF = "/demo";
+export const FEATURES_HREF = "/fonctionnalites";
 export const SIGN_IN_HREF = "/auth/sign-in";
 export const PUBLIC_SITE = "https://www.rabotka.work";
 
@@ -46,10 +49,21 @@ export type NavLink = {
   tone?: string;
 };
 
-export type MockupKey = "cv" | "offer" | "linkedin" | "applicants" | "interviews" | "tracking" | "profiles";
+export type MockupKey =
+  | "cv"
+  | "offer"
+  | "linkedin"
+  | "applicants"
+  | "interviews"
+  | "tracking"
+  | "profiles"
+  | "team"
+  | "pipeline";
 
 export type Feature = NavLink & {
   id: MockupKey;
+  /** Its page: /fonctionnalites/<slug>. */
+  slug: string;
   icon: Icon;
   tone: string;
   title: string;
@@ -61,7 +75,8 @@ export type Feature = NavLink & {
 export const FEATURES: Feature[] = [
   {
     id: "cv",
-    href: "#analyse-cv",
+    slug: "analyse-cv",
+    href: "/fonctionnalites/analyse-cv",
     label: "Analyse de CV",
     description: "Les CV lus, notés et classés pour chaque poste.",
     icon: IconFileSearch,
@@ -77,7 +92,8 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "offer",
-    href: "#offres",
+    slug: "redaction-offres",
+    href: "/fonctionnalites/redaction-offres",
     label: "Offres rédigées pour vous",
     description: "Quelques mots suffisent : l'offre complète est prête.",
     icon: IconWand,
@@ -92,7 +108,8 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "linkedin",
-    href: "#linkedin",
+    slug: "linkedin",
+    href: "/fonctionnalites/linkedin",
     label: "Publication sur LinkedIn",
     description: "Vos offres sur votre LinkedIn, sans copier-coller.",
     icon: IconBrandLinkedin,
@@ -108,8 +125,9 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "applicants",
-    href: "#candidatures",
-    label: "Candidatures classées",
+    slug: "suivi-candidatures",
+    href: "/fonctionnalites/suivi-candidatures",
+    label: "Suivi des candidatures",
     description: "Les candidats les plus adaptés en tête de liste.",
     icon: IconListCheck,
     tone: "bg-chip-sky text-chip-sky-foreground",
@@ -123,7 +141,8 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "interviews",
-    href: "#entretiens",
+    slug: "entretiens",
+    href: "/fonctionnalites/entretiens",
     label: "Entretiens",
     description: "Invitations, réponses et agenda synchronisé.",
     icon: IconCalendarEvent,
@@ -138,7 +157,8 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "tracking",
-    href: "#suivi",
+    slug: "missions-et-suivi",
+    href: "/fonctionnalites/missions-et-suivi",
     label: "Missions et suivi",
     description: "Contrats, missions et rapport de recrutement.",
     icon: IconChartBar,
@@ -153,7 +173,8 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "profiles",
-    href: "#profils",
+    slug: "recherche-de-profils",
+    href: "/fonctionnalites/recherche-de-profils",
     label: "Profils et agents",
     description: "Recherche de profils vérifiés et agents de terrain.",
     icon: IconUsersGroup,
@@ -166,11 +187,28 @@ export const FEATURES: Feature[] = [
       "La décision finale vous appartient toujours",
     ],
   },
+  {
+    id: "team",
+    slug: "equipe",
+    href: "/fonctionnalites/equipe",
+    label: "Recrutement en équipe",
+    description: "Recruteurs, évaluateurs, avis et notes partagés.",
+    icon: IconUsers,
+    tone: "bg-chip-amber text-chip-amber-foreground",
+    title: "Décidez à plusieurs, sans perdre le fil",
+    text: "Invitez vos collègues dans l'espace : chacun voit les candidats de ses offres, donne son avis et laisse ses notes. La décision se prend sur des faits, pas sur des e-mails éparpillés.",
+    points: [
+      "Des rôles clairs : Administrateur, Recruteur, Évaluateur",
+      "L'avis de chacun sur un candidat : Oui, Peut-être, Non",
+      "Des notes jamais vues du candidat, et l'historique de chaque candidature",
+      "L'Activité de l'équipe, pour savoir qui a fait quoi",
+    ],
+  },
 ];
 
 /** The cards under the hero: the four steps a recruiter goes through. */
 /** The hero's four cards: the hire's steps (LinkedIn has its row and the menu). */
-export const STRIP_FEATURES = FEATURES.filter((f) => !["linkedin", "tracking", "profiles"].includes(f.id));
+export const STRIP_FEATURES = FEATURES.filter((f) => !["linkedin", "tracking", "profiles", "team"].includes(f.id));
 
 export const SOLUTION_LINKS: NavLink[] = FEATURES.map(({ href, label, description, icon, tone }) => ({
   href,
@@ -181,18 +219,24 @@ export const SOLUTION_LINKS: NavLink[] = FEATURES.map(({ href, label, descriptio
 }));
 
 export const AUDIENCE_LINKS: NavLink[] = [
-  { href: "#secteurs", label: "Entreprises, PME et TPE" },
-  { href: "#secteurs", label: "Établissements d'enseignement" },
-  { href: "#secteurs", label: "ONG et organisations internationales" },
-  { href: "#secteurs", label: "Administrations et établissements publics" },
-  { href: "#secteurs", label: "Structures de santé" },
+  { href: "/#secteurs", label: "Entreprises, PME et TPE" },
+  { href: "/#secteurs", label: "Établissements d'enseignement" },
+  { href: "/#secteurs", label: "ONG et organisations internationales" },
+  { href: "/#secteurs", label: "Administrations et établissements publics" },
+  { href: "/#secteurs", label: "Structures de santé" },
 ];
 
-export const HELP_LINKS: NavLink[] = [
-  { href: "#demarche", label: "Notre démarche" },
-  { href: "#confiance", label: "Sécurité et confidentialité" },
-  { href: "#faq", label: "Questions fréquentes" },
-  { href: "#contact", label: "Contacter nos équipes" },
+export const RESOURCE_LINKS: NavLink[] = [
+  { href: "/ressources", label: "Guides du recruteur", description: "Des méthodes concrètes pour recruter mieux, plus vite." },
+  { href: "/ressources#faq", label: "Questions fréquentes", description: "Pays, CV, données, compte : l'essentiel." },
+  { href: "/a-propos#confiance", label: "Sécurité et confidentialité", description: "Ce qui est lu, gardé et supprimé." },
+  { href: "/carrieres", label: "Ils recrutent", description: "Les organisations qui recrutent avec Rabotka." },
+];
+
+export const COMPANY_LINKS: NavLink[] = [
+  { href: "/a-propos", label: "À propos" },
+  { href: "/contact", label: "Contact" },
+  { href: DEMO_HREF, label: "Demander une démo" },
   { href: PUBLIC_SITE, label: "www.rabotka.work" },
 ];
 

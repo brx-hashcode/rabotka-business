@@ -20,6 +20,7 @@ import { ProviderTile } from "#/components/mail-provider-logos";
 import { CriterionBar, ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
 import { cn } from "#/lib/utils";
 import type { MockupKey } from "../content";
+import { PipelineMockup, TeamMockup } from "./ats-mockups";
 import { FloatCard, MockupFrame } from "./frame";
 
 /*
@@ -502,6 +503,8 @@ const MOCKUPS: Record<MockupKey, () => React.ReactNode> = {
   interviews: InterviewsMockup,
   tracking: TrackingMockup,
   profiles: ProfilesMockup,
+  team: TeamMockup,
+  pipeline: PipelineMockup,
 };
 
 export function FeatureMockup({ id }: Readonly<{ id: MockupKey }>) {
