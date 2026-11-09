@@ -34,10 +34,15 @@ import { OfferSummary } from "./offer-summary";
 const MIN_HOURS_AHEAD = 0;
 const END_OF_DAY = "23:59";
 
+/** The server's bounds (trimmed length), shown under the field as it is typed. */
+const DESCRIPTION_MIN = 20;
+const DESCRIPTION_MAX = 2500;
+const DESCRIPTION_RANGE = `Entre ${DESCRIPTION_MIN} et 2 500 caractères`;
+
 const schema = z
   .object({
     title: z.string().trim().min(5, "Entre 5 et 100 caractères").max(100, "Entre 5 et 100 caractères"),
-    description: z.string().trim().min(20, "Entre 20 et 2 500 caractères").max(2500, "Entre 20 et 2 500 caractères"),
+    description: z.string().trim().min(DESCRIPTION_MIN, DESCRIPTION_RANGE).max(DESCRIPTION_MAX, DESCRIPTION_RANGE),
     employmentType: z.enum(["MISSION", "CDD", "CDI", "STAGE"]),
     scheduledDate: z.string(),
     scheduledTime: z.string(),
@@ -294,7 +299,10 @@ export function OfferForm({
                       className="min-h-32 rounded-xl border-0 bg-page px-4 py-3 text-base shadow-none md:text-[15px]"
                     />
                   </FormControl>
-                  <FormMessage />
+                  <div className="flex items-start justify-between gap-3">
+                    <FormMessage />
+                    <CharacterCount length={field.value.trim().length} min={DESCRIPTION_MIN} max={DESCRIPTION_MAX} />
+                  </div>
                 </FormItem>
               )}
             />
@@ -570,5 +578,22 @@ function Choice({
         </FormItem>
       )}
     />
+  );
+}
+
+/** « 1 234 / 2 500 caractères », red once past the limit. */
+function CharacterCount({ length, min, max }: Readonly<{ length: number; min: number; max: number }>) {
+  const fmt = (n: number) => n.toLocaleString("fr-FR");
+  return (
+    <p
+      aria-live="polite"
+      className={cn(
+        "ml-auto shrink-0 text-muted-foreground text-xs tabular-nums",
+        length > max && "font-medium text-destructive",
+        length > 0 && length < min && "text-destructive",
+      )}
+    >
+      {fmt(length)} / {fmt(max)} caractères
+    </p>
   );
 }
