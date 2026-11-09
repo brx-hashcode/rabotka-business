@@ -91,6 +91,8 @@ export type OfferApplicant = {
    * which opens once the contact is unlocked or the application retained.
    */
   cv?: { kind: "RABOTKA" } | { kind: "UPLOADED"; fileName: string; mimeType: string; available: boolean };
+  /** The candidate added (or replaced) their CV since applying: it can be read again. */
+  newerCv?: boolean;
   /**
    * Its CV analysis (1 « CV inclus »), in the offer's screening with the
    * careers-page CVs: what « Interroger le CV » and « Comparer » work on.
@@ -333,10 +335,22 @@ class AssessmentController extends BusinessBaseController {
     const base = `/business/me/offers/${encodeURIComponent(offerId)}/applications`;
     return this.post(applicationId ? `${base}/${encodeURIComponent(applicationId)}/analyse` : `${base}/analyse`, {});
   }
+
+  /**
+   * Reads an applicant again with the CV they added since applying: the
+   * score always, the CV analysis when it had one (1 « CV inclus »).
+   */
+  reanalyse(offerId: string, applicationId: string): Promise<{ cv: true; analysis: "started" | "no-room" | "none" }> {
+    return this.post(
+      `/business/me/offers/${encodeURIComponent(offerId)}/applications/${encodeURIComponent(applicationId)}/reanalyse`,
+      {},
+    );
+  }
 }
 
 const assessments = new AssessmentController();
 export const analyseApplicants = assessments.analyse.bind(assessments);
+export const reanalyseApplicant = assessments.reanalyse.bind(assessments);
 export const getOfferAssessments = assessments.forOffer.bind(assessments);
 export const refuseApplications = assessments.refuse.bind(assessments);
 

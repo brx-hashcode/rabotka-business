@@ -21,6 +21,19 @@ export type Candidate = {
   matchScore: number | null;
 };
 
+/**
+ * The CV a candidate added to their profile (« Mon CV »). It has their phone
+ * and e-mail on it: it opens once the contact is obtained, or one of their
+ * applications retained.
+ */
+export type CandidateCv = {
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  uploadedAt: string;
+  available: boolean;
+};
+
 export type CandidateFilters = {
   q?: string;
   categoryId?: string;
@@ -78,6 +91,11 @@ class CandidateController extends BusinessBaseController {
     return worker;
   }
 
+  /** The CV the candidate added to their profile, if any, and whether it opens yet. */
+  cv(workerId: string): Promise<{ cv: CandidateCv | null }> {
+    return this.get(`/business/me/candidates/${encodeURIComponent(workerId)}/cv`);
+  }
+
   portfolio(slug: string): Promise<CandidatePortfolio> {
     return this.get(`/public/workers/${encodeURIComponent(slug)}`);
   }
@@ -90,6 +108,12 @@ export function candidateResumeUrl(workerId: string): string {
   return `${appConfig.apiUrl}/business/me/candidates/${encodeURIComponent(workerId)}/resume`;
 }
 
+/** That CV's file, for the preview panel. */
+export function candidateCvUrl(workerId: string): string {
+  return `${appConfig.apiUrl}/business/me/candidates/${encodeURIComponent(workerId)}/cv/file`;
+}
+
+export const getCandidateCv = controller.cv.bind(controller);
 export const searchCandidates = controller.search.bind(controller);
 export const getCandidate = controller.detail.bind(controller);
 export const findCandidates = controller.find.bind(controller);

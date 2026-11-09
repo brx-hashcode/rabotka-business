@@ -13,6 +13,7 @@ import { getCandidate, getCandidatePortfolio } from "#/lib/api/candidate-control
 import { friendlyError } from "#/lib/api/friendly-error";
 import { ImageGallerySheet } from "#/components/image-gallery-sheet";
 import { KeepButton } from "#/features/talents/components/keep-button";
+import { CandidateCvSection } from "./candidate-cv";
 import { MessageButton } from "./message-button";
 import { ReachButton } from "./reach-button";
 import { SafeImage } from "#/components/safe-image";
@@ -163,6 +164,7 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
       <p className="whitespace-pre-line text-muted-foreground leading-relaxed">{c.description}</p>
     </section>
   );
+  const ownCv = <CandidateCvSection workerId={workerId} name={name} />;
   const realisations = (
     <section className="space-y-3">
       <h3 className="font-medium text-sm">Réalisations{items.length > 0 ? ` (${items.length})` : ""}</h3>
@@ -240,6 +242,7 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
           <div className="min-w-0 space-y-6 rounded-3xl bg-card p-6 sm:p-8">
             {header}
             {presentation}
+            {ownCv}
             {realisations}
           </div>
           <aside className="space-y-6 rounded-3xl bg-card p-6 lg:sticky lg:top-24">
@@ -262,6 +265,7 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
       <div className="grid grid-cols-3 gap-3">{figures}</div>
       {trades}
       {presentation}
+      {ownCv}
       {realisations}
       {gallery}
     </div>
