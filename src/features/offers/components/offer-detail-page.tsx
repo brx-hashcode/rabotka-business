@@ -2,7 +2,6 @@
 
 import { DescriptionText } from "#/features/careers/components/description-text";
 import { useEffect, useState } from "react";
-import { flushSync } from "react-dom";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -339,9 +338,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
               board ? "" : "lg:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_28rem]",
             )}
           >
-            {/* Named for the view transition: switching list and board glides
-                both columns to their new place instead of jumping. */}
-            <div className="min-w-0 space-y-6" style={{ viewTransitionName: "offer-main" }}>
+            <div className="min-w-0 space-y-6">
               <ApplicantsCard offer={o} applicants={applicants.data} outsiders={outsiders} loading={applicants.isLoading} />
               {(o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
                 <SuggestedCard
@@ -353,8 +350,11 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
               )}
             </div>
             <div
-              style={{ viewTransitionName: "offer-side" }}
+              // Remounted on each switch: the sidebar fades in where it now
+              // sits (right of the list, under the board) instead of jumping.
+              key={board ? "under" : "beside"}
               className={cn(
+                "motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 motion-safe:ease-out",
                 "space-y-6",
                 // Under the board, the details spread over three columns.
                 board ? "lg:grid lg:grid-cols-3 lg:items-start lg:gap-6 lg:space-y-0" : "lg:sticky lg:top-24",
@@ -562,21 +562,8 @@ function ApplicantsCard({
   const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS.map((t) => t.key)).withDefault("all"));
   // The list, or the board (one column per step); in the URL too.
   const [view, setView] = useQueryState("vue", VIEW);
-  // The sidebar goes under the board: a view transition (where the browser
-  // has it, and motion is welcome) moves the blocks smoothly instead.
   const switchView = (next: "liste" | "tableau") => {
-    if (next === view) return;
-    const doc = document as Document & { startViewTransition?: (update: () => Promise<void>) => unknown };
-    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!doc.startViewTransition || still) {
-      void setView(next);
-      return;
-    }
-    // Rendered at once inside the transition (the URL follows on its own),
-    // so the animation starts on the next frame, not after the address.
-    doc.startViewTransition(async () => {
-      flushSync(() => void setView(next));
-    });
+    if (next !== view) void setView(next);
   };
   const list = applicants ?? [];
   const count = (k: (typeof TABS)[number]["key"]) =>
@@ -748,14 +735,16 @@ function ApplicantsCard({
           </p>
         </div>
       ) : view === "tableau" ? (
+        <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300 motion-safe:ease-out">
         <OfferBoard
           offerId={o.id}
           jobTitle={o.title}
           recruiting={open}
           entries={all.filter((e) => !(hideOut && e.a.knockedOut)).sort(byFit)}
         />
+        </div>
       ) : (
-        <>
+        <div className="space-y-5 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300 motion-safe:ease-out">
           <div role="tablist" aria-label="Étape" className="flex gap-1 overflow-x-auto rounded-full bg-page p-1">
             {TABS.map((t) => (
               <button
@@ -911,7 +900,7 @@ function ApplicantsCard({
               })}
             </ul>
           )}
-        </>
+        </div>
       )}
     </section>
   );
