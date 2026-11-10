@@ -175,6 +175,8 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
   const Mode = MODES.find((m) => m.key === i.mode)?.icon ?? IconCalendarEvent;
   const cancelled = i.status === "CANCELLED";
   const at = new Date(i.startsAt);
+  // Several times offered and none chosen yet: the earliest shows, the rest below.
+  const options = i.options ?? [];
 
   return (
     <li className={cn("flex h-full flex-col gap-4 rounded-3xl bg-card p-5", cancelled && "opacity-60")}>
@@ -186,10 +188,16 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-xl tabular-nums leading-tight">{time(i.startsAt)}</p>
           <p className="text-muted-foreground text-xs">
-            {dayWord(at)} · {i.durationMinutes} min
+            {options.length > 0 ? `${options.length} créneaux proposés` : dayWord(at)} · {i.durationMinutes} min
           </p>
         </div>
-        <StatusChip status={i.status} />
+        {options.length > 0 && i.status === "PENDING" ? (
+          <span className="shrink-0 rounded-full bg-chip-amber px-2.5 py-1 font-medium text-chip-amber-foreground text-xs">
+            Au choix du candidat
+          </span>
+        ) : (
+          <StatusChip status={i.status} />
+        )}
       </div>
 
       <div className="flex items-center gap-3">
@@ -230,6 +238,16 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
             <span className="min-w-0 truncate">{modeLabel(i)}</span>
           )}
         </p>
+        {options.length > 0 && (
+          <ul className="space-y-1 rounded-xl bg-card px-3 py-2">
+            <li className="text-muted-foreground text-xs">En attente du choix du candidat :</li>
+            {options.map((o) => (
+              <li key={o.id} className="font-medium tabular-nums">
+                {new Date(o.startsAt).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })} à {time(o.startsAt)}
+              </li>
+            ))}
+          </ul>
+        )}
         {i.responseNote && (
           <p className="rounded-xl bg-card px-3 py-2">
             <span className="text-muted-foreground">Message du candidat : </span>

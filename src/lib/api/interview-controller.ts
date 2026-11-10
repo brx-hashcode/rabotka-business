@@ -36,8 +36,13 @@ class InterviewController extends BusinessBaseController {
     return this.get(`/public/interviews/${encodeURIComponent(token)}`);
   }
 
-  answer(token: string, answer: InterviewAnswer, note?: string): Promise<InterviewInvitation> {
-    return this.post(`/public/interviews/${encodeURIComponent(token)}/answer`, { answer, ...(note ? { note } : {}) });
+  /** `slotId`: with CONFIRMED, the time chosen when several were offered. */
+  answer(token: string, answer: InterviewAnswer, note?: string, slotId?: string): Promise<InterviewInvitation> {
+    return this.post(`/public/interviews/${encodeURIComponent(token)}/answer`, {
+      answer,
+      ...(note ? { note } : {}),
+      ...(slotId ? { slotId } : {}),
+    });
   }
 }
 

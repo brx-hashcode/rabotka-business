@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { IconPlus, IconVideo, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
@@ -31,6 +32,16 @@ const pad = (n: number) => String(n).padStart(2, "0");
 const dateValue = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const timeValue = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
+/** Times a business may offer for one interview (the server's limit). */
+const MAX_SLOTS = 3;
+
+/** A free Jitsi room, hard to guess: nobody needs an account to join. */
+function jitsiLink(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(8));
+  const id = Array.from(bytes, (b) => "abcdefghijkmnpqrstuvwxyz23456789"[b % 32]).join("");
+  return `https://meet.jit.si/Rabotka-${id}`;
+}
+
 const LOCATION: Record<InterviewMode, { label: string; placeholder: string; optional?: boolean }> = {
   IN_PERSON: { label: "Adresse", placeholder: "Ex. : 12 avenue de la Paix, Brazzaville" },
   PHONE: { label: "Numéro à appeler", placeholder: "Le vôtre, si le candidat doit appeler", optional: true },
@@ -58,9 +69,22 @@ export function ScheduleInterviewDialog({
 }>) {
   const queryClient = useQueryClient();
   const business = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness, enabled: open });
-  const start = existing ? new Date(existing.startsAt) : tomorrowAtTen();
-  const [date, setDate] = useState(dateValue(start));
-  const [time, setTime] = useState(timeValue(start));
+  // One time, or up to three for the candidate to choose from.
+  const initial = existing?.options?.length
+    ? existing.options.map((x) => new Date(x.startsAt))
+    : [existing ? new Date(existing.startsAt) : tomorrowAtTen()];
+  const [slots, setSlots] = useState(initial.map((d) => ({ date: dateValue(d), time: timeValue(d) })));
+  const setSlot = (i: number, patch: Partial<{ date: string; time: string }>) =>
+    setSlots((all) => all.map((x, n) => (n === i ? { ...x, ...patch } : x)));
+  const addSlot = () =>
+    setSlots((all) => {
+      // The next one a day after the last, same hour: a sensible start.
+      const last = new Date(`${all.at(-1)?.date}T${all.at(-1)?.time}`);
+      last.setDate(last.getDate() + 1);
+      return [...all, { date: dateValue(last), time: timeValue(last) }];
+    });
+  const times = slots.map((x) => new Date(`${x.date}T${x.time}`).toISOString());
+  const complete = slots.every((x) => x.date && x.time);
   const [duration, setDuration] = useState(existing?.durationMinutes ?? 30);
   const [mode, setMode] = useState<InterviewMode>(existing?.mode ?? "IN_PERSON");
   const [locations, setLocations] = useState<Partial<Record<InterviewMode, string>>>(
@@ -76,7 +100,7 @@ export function ScheduleInterviewDialog({
   const save = useMutation({
     mutationFn: () => {
       const slot = {
-        startsAt: new Date(`${date}T${time}`).toISOString(),
+        ...(times.length > 1 ? { options: times } : { startsAt: times[0] }),
         durationMinutes: duration,
         mode,
         ...(location.trim() ? { location: location.trim() } : {}),
@@ -115,15 +139,51 @@ export function ScheduleInterviewDialog({
             </DialogDescription>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <label className="space-y-1.5">
-              <span className="font-medium text-sm">Date</span>
-              <Input type="date" value={date} min={dateValue(new Date())} onChange={(e) => setDate(e.target.value)} className={field} />
-            </label>
-            <label className="space-y-1.5">
-              <span className="font-medium text-sm">Heure</span>
-              <Input type="time" value={time} step={300} onChange={(e) => setTime(e.target.value)} className={field} />
-            </label>
+          <div className="space-y-2">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="font-medium text-sm">{slots.length > 1 ? "Créneaux proposés" : "Date et heure"}</span>
+              {slots.length > 1 && <span className="text-muted-foreground text-xs">Le candidat choisit celui qui lui convient.</span>}
+            </div>
+            {slots.map((x, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Input
+                  type="date"
+                  aria-label={`Date du créneau ${i + 1}`}
+                  value={x.date}
+                  min={dateValue(new Date())}
+                  onChange={(e) => setSlot(i, { date: e.target.value })}
+                  className={cn(field, "flex-1")}
+                />
+                <Input
+                  type="time"
+                  aria-label={`Heure du créneau ${i + 1}`}
+                  value={x.time}
+                  step={300}
+                  onChange={(e) => setSlot(i, { time: e.target.value })}
+                  className={cn(field, "w-32 shrink-0")}
+                />
+                {slots.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setSlots((all) => all.filter((_, n) => n !== i))}
+                    aria-label={`Retirer le créneau ${i + 1}`}
+                    className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-page hover:text-foreground"
+                  >
+                    <IconX className="size-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+            {slots.length < MAX_SLOTS && (
+              <button
+                type="button"
+                onClick={addSlot}
+                className="inline-flex items-center gap-1.5 rounded-full px-1 py-1 font-medium text-sm text-whatsapp-dark hover:underline"
+              >
+                <IconPlus className="size-4" />
+                {slots.length === 1 ? "Proposer plusieurs créneaux" : "Ajouter un créneau"}
+              </button>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -179,6 +239,17 @@ export function ScheduleInterviewDialog({
               className={field}
             />
             {mode === "PHONE" && !location.trim() && <span className="text-muted-foreground text-xs">Sinon, le candidat sera prévenu que vous l&apos;appelez.</span>}
+            {mode === "VIDEO" && (
+              <button
+                type="button"
+                onClick={() => setLocations((l) => ({ ...l, VIDEO: jitsiLink() }))}
+                className="inline-flex items-center gap-1.5 pt-1 font-medium text-sm text-whatsapp-dark hover:underline"
+              >
+                <IconVideo className="size-4" />
+                Créer un lien de visio
+                <span className="font-normal text-muted-foreground">(Jitsi, gratuit, sans compte)</span>
+              </button>
+            )}
           </label>
 
           {isCv && !existing && (
@@ -215,7 +286,7 @@ export function ScheduleInterviewDialog({
           <button
             type="button"
             onClick={() => save.mutate()}
-            disabled={save.isPending || !date || !time}
+            disabled={save.isPending || !complete}
             className="h-12 flex-[2] rounded-full bg-ink font-medium text-white hover:bg-ink/90 disabled:opacity-40"
           >
             {save.isPending ? "Envoi…" : existing ? "Déplacer et prévenir" : "Envoyer l'invitation"}
