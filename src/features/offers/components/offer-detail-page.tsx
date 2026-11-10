@@ -354,7 +354,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
               // sits (right of the list, under the board) instead of jumping.
               key={board ? "under" : "beside"}
               className={cn(
-                "motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 motion-safe:ease-out",
+                "motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700 motion-safe:ease-[cubic-bezier(0.22,1,0.36,1)] motion-safe:delay-100 motion-safe:fill-mode-both",
                 "space-y-6",
                 // Under the board, the details spread over three columns.
                 board ? "lg:grid lg:grid-cols-3 lg:items-start lg:gap-6 lg:space-y-0" : "lg:sticky lg:top-24",
@@ -735,7 +735,7 @@ function ApplicantsCard({
           </p>
         </div>
       ) : view === "tableau" ? (
-        <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300 motion-safe:ease-out">
+        <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-[0.99] motion-safe:duration-500 motion-safe:ease-[cubic-bezier(0.22,1,0.36,1)]">
         <OfferBoard
           offerId={o.id}
           jobTitle={o.title}
@@ -744,7 +744,7 @@ function ApplicantsCard({
         />
         </div>
       ) : (
-        <div className="space-y-5 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300 motion-safe:ease-out">
+        <div className="space-y-5 motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-[0.99] motion-safe:duration-500 motion-safe:ease-[cubic-bezier(0.22,1,0.36,1)]">
           <div role="tablist" aria-label="Étape" className="flex gap-1 overflow-x-auto rounded-full bg-page p-1">
             {TABS.map((t) => (
               <button
