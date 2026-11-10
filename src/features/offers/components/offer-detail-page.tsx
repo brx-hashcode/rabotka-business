@@ -135,6 +135,8 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const hire = canHire(useMember().role);
   // Just published (new-offer-page): the moment to share it.
   const [published, setPublished] = useQueryState("publiee");
+  // « Tableau » on the candidates: the page goes one column wide (?vue=, set by ApplicantsCard).
+  const board = useSearchParams().get("vue") === "tableau";
   const noOfferLeft = !!subscription && offersFull(subscription.entitlements);
   const needsDate = !offer.data || isDatedMission(offer.data.employmentType);
   const [confirmFinish, setConfirmFinish] = useState(false);
@@ -327,7 +329,13 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
             />
           )}
 
-          <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_28rem]">
+          {/* The board needs the page's width: the details go under it. */}
+          <div
+            className={cn(
+              "grid grid-cols-[minmax(0,1fr)] items-start gap-6",
+              board ? "" : "lg:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_28rem]",
+            )}
+          >
             <div className="min-w-0 space-y-6">
               <ApplicantsCard offer={o} applicants={applicants.data} outsiders={outsiders} loading={applicants.isLoading} />
               {(o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
@@ -335,6 +343,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                   offer={o}
                   category={categories.data?.find((c) => c.id === o.categoryId)?.name}
                   exclude={(applicants.data ?? []).map((a) => a.worker.id)}
+                  wide={board}
                 />
               )}
             </div>
@@ -1325,14 +1334,22 @@ function SuggestedCard({
   offer: o,
   category,
   exclude,
-}: Readonly<{ offer: Offer; category?: string; exclude: string[] }>) {
+  wide = false,
+}: Readonly<{
+  offer: Offer;
+  category?: string;
+  exclude: string[];
+  /** The page's full width (board view): three a row, six shown. */
+  wide?: boolean;
+}>) {
+  const max = wide ? 6 : 4;
   const filters = { categoryId: o.categoryId ?? undefined, city: o.isRemote ? undefined : (o.city ?? undefined), minReliability: 70 };
   const found = useQuery({
     queryKey: ["candidates", "for-offer", o.id],
     // The city first; too few there, the same trade anywhere (people travel for work).
     queryFn: async () => {
       const near = await findCandidates(filters, 0, 8);
-      if (near.items.length >= 4 + exclude.length) return near;
+      if (near.items.length >= 6 + exclude.length) return near;
       const wider = filters.city ? await findCandidates({ ...filters, city: undefined }, 0, 8 + exclude.length) : near;
       const seen = new Set(near.items.map((c) => c.id));
       const found = { total: wider.total, items: [...near.items, ...wider.items.filter((c) => !seen.has(c.id))] };
@@ -1342,7 +1359,7 @@ function SuggestedCard({
     },
     retry: false,
   });
-  const shown = (found.data?.items ?? []).filter((c) => !exclude.includes(c.id)).slice(0, 4);
+  const shown = (found.data?.items ?? []).filter((c) => !exclude.includes(c.id)).slice(0, max);
   if (found.isLoading || shown.length === 0) return null;
   const more = new URLSearchParams(Object.entries(filters).filter(([k, v]) => v !== undefined && k !== "minReliability") as [string, string][]);
 
@@ -1357,7 +1374,7 @@ function SuggestedCard({
         </Link>
       </div>
       <p className="-mt-2 text-muted-foreground text-sm">Ils correspondent à cette offre et n&apos;ont pas encore postulé : contactez-les directement.</p>
-      <ul className="grid gap-3 md:grid-cols-2">
+      <ul className={cn("grid gap-3 md:grid-cols-2", wide && "xl:grid-cols-3")}>
         {shown.map((c) => (
           <CandidateCard key={c.id} candidate={c} compact />
         ))}

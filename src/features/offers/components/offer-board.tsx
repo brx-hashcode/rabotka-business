@@ -13,13 +13,15 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconArrowsMove, IconCalendarEvent, IconCheck, IconGripVertical } from "@tabler/icons-react";
+import { IconBriefcase, IconCalendarEvent, IconCheck, IconDots, IconWorld, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
+import { ExternalApplicationCard } from "#/features/applications/components/external-application-card";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
-import { VerdictChip } from "#/features/cv-screening/components/cv-bits";
+import { band } from "#/features/cv-screening/components/cv-bits";
 import { ScheduleInterviewDialog } from "#/features/interviews/components/schedule-interview-dialog";
 import { showExternalStatus } from "#/features/offers/application-cache";
 import { canHire } from "#/features/team/member-access";
@@ -42,16 +44,18 @@ export type BoardEntry = {
   score: number | null;
 } & ({ kind: "rabotka"; a: OfferApplicant } | { kind: "careers"; a: ExternalApplication });
 
-/** The board's columns: the tabs' stages, with « Entretien » before the decision. */
-type Column = "new" | "viewed" | "shortlisted" | "interview" | "hired" | "closed";
+/**
+ * The board's five columns: new and seen together (« À examiner », as the
+ * page's tile says), then the shortlist, the interview, the decision.
+ */
+type Column = "review" | "shortlisted" | "interview" | "hired" | "closed";
 
-const COLUMNS: { key: Column; label: string; hint: string }[] = [
-  { key: "new", label: "Nouvelles", hint: "Pas encore ouvertes" },
-  { key: "viewed", label: "Vues", hint: "CV ou profil consulté" },
-  { key: "shortlisted", label: "Présélectionnées", hint: "À rencontrer ou à revoir" },
-  { key: "interview", label: "Entretien", hint: "Un entretien est prévu" },
-  { key: "hired", label: "Retenues", hint: "Votre choix" },
-  { key: "closed", label: "Refusées ou annulées", hint: "Le candidat en est prévenu" },
+const COLUMNS: { key: Column; label: string }[] = [
+  { key: "review", label: "À examiner" },
+  { key: "shortlisted", label: "Présélectionnées" },
+  { key: "interview", label: "Entretien" },
+  { key: "hired", label: "Retenues" },
+  { key: "closed", label: "Refusées" },
 ];
 
 /** Interviews that still stand: proposed, confirmed, or to move. */
@@ -78,8 +82,9 @@ type Move = { entry: BoardEntry; to: Column };
 
 /**
  * The offer's candidates as a board, one column per step, best fit first in
- * each. A card is dragged (mouse, touch, or the keyboard: space then the
- * arrows) or moved with « Déplacer vers »:
+ * each: a name and a fit, nothing more (the list has the rest). A card is
+ * dragged (mouse, touch, or the keyboard: space then the arrows) or moved
+ * with its « ⋯ »:
  * - Présélectionnées and back: at once, the candidate is not told;
  * - Entretien: the invitation to fill in;
  * - Retenues / Refusées: the usual confirmation, the candidate is told.
@@ -98,11 +103,17 @@ export function OfferBoard({
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor));
 
   const [scheduling, setScheduling] = useState<BoardEntry | null>(null);
+  // The careers-page candidate open in the panel, read live from the entries.
+  const [openedKey, setOpenedKey] = useState<string | null>(null);
+  const opened = entries.find((e) => e.key === openedKey);
   const [refusing, setRefusing] = useState<BoardEntry | null>(null);
   const [retaining, setRetaining] = useState<{ entry: BoardEntry; nonce: number } | null>(null);
 
-  const columnOf = (e: BoardEntry): Column =>
-    waiting(e) && interviewOf(e, interviews.data ?? []) ? "interview" : (e.stage as Column);
+  const columnOf = (e: BoardEntry): Column => {
+    if (waiting(e) && interviewOf(e, interviews.data ?? [])) return "interview";
+    if (e.stage === "new" || e.stage === "viewed") return "review";
+    return e.stage as Column;
+  };
   const byColumn = new Map<Column, BoardEntry[]>(COLUMNS.map((c) => [c.key, []]));
   for (const e of entries) byColumn.get(columnOf(e))?.push(e);
 
@@ -121,7 +132,7 @@ export function OfferBoard({
   const allowed = (e: BoardEntry, to: Column): boolean => {
     const from = columnOf(e);
     if (!hire || from === to || !waiting(e)) return false;
-    if (to === "new" || to === "viewed") return e.stage === "shortlisted";
+    if (to === "review") return e.stage === "shortlisted";
     if (to === "interview" || to === "hired") return recruiting;
     return true;
   };
@@ -135,7 +146,7 @@ export function OfferBoard({
     }
     const targets = entry.kind === "rabotka" ? { rabotka: [idOf(entry)], external: [] } : { rabotka: [], external: [idOf(entry)] };
     if (to === "shortlisted") shortlist.mutate({ targets, shortlisted: true });
-    else if (to === "new" || to === "viewed") shortlist.mutate({ targets, shortlisted: false });
+    else if (to === "review") shortlist.mutate({ targets, shortlisted: false });
     else if (to === "interview") setScheduling(entry);
     else if (to === "closed") setRefusing(entry);
     else if (to === "hired") setRetaining((prev) => ({ entry, nonce: (prev?.nonce ?? 0) + 1 }));
@@ -149,8 +160,8 @@ export function OfferBoard({
   return (
     <>
       <DndContext sensors={sensors} onDragEnd={onDragEnd}>
-        {/* Six columns side by side; on a phone they scroll sideways, one card width each. */}
-        <div className="-mx-2 flex snap-x gap-3 overflow-x-auto px-2 pb-2">
+        {/* Five equal columns across the page; on a narrow screen they scroll sideways. */}
+        <div className="-mx-1 grid snap-x auto-cols-[minmax(15rem,1fr)] grid-flow-col gap-2.5 overflow-x-auto px-1 pb-2">
           {COLUMNS.map((c) => (
             <BoardColumn key={c.key} column={c} entries={byColumn.get(c.key) ?? []}>
               {(byColumn.get(c.key) ?? []).map((e) => (
@@ -161,12 +172,44 @@ export function OfferBoard({
                   draggable={hire && waiting(e)}
                   targets={COLUMNS.filter((t) => allowed(e, t.key))}
                   onMove={(to) => move({ entry: e, to })}
+                  onOpen={() => setOpenedKey(e.key)}
                 />
               ))}
             </BoardColumn>
           ))}
         </div>
       </DndContext>
+
+      {/* A careers-page candidate, the same window as a Rabotka profile's. */}
+      <Dialog open={opened?.kind === "careers"} onOpenChange={(o) => !o && setOpenedKey(null)}>
+        <DialogContent
+          showClose={false}
+          // The CV opens in a panel portalled outside: a click there is not « outside ».
+          onInteractOutside={(ev) => {
+            if ((ev.target as HTMLElement | null)?.closest("[data-preview-sheet]")) ev.preventDefault();
+          }}
+          // One surface: the window is the card's own colour, the card adds no frame of its own.
+          className="max-h-[90svh] w-[calc(100vw-2rem)] gap-0 overflow-y-auto rounded-3xl border-0 bg-page p-0 shadow-soft sm:max-w-5xl"
+        >
+          <div className="sticky top-0 z-10 flex items-center justify-between gap-4 bg-page px-5 pt-4 pb-1 sm:px-6">
+            <div className="min-w-0">
+              <DialogTitle className="truncate font-medium text-muted-foreground text-sm">Candidature · {jobTitle}</DialogTitle>
+              <DialogDescription className="sr-only">Candidature reçue sur la page carrières</DialogDescription>
+            </div>
+            <DialogClose
+              aria-label="Fermer"
+              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card text-muted-foreground outline-none transition-colors hover:bg-card/70 hover:text-foreground focus-visible:ring-2 focus-visible:ring-whatsapp/40"
+            >
+              <IconX className="size-4" />
+            </DialogClose>
+          </div>
+          {opened?.kind === "careers" && (
+            <ul className="list-none px-1 pb-1 sm:px-2 sm:pb-2">
+              <ExternalApplicationCard onOfferPage application={opened.a} />
+            </ul>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {scheduling && (
         <ScheduleInterviewDialog
@@ -233,16 +276,21 @@ function BoardColumn({
       ref={setNodeRef}
       aria-label={column.label}
       className={cn(
-        "flex w-72 shrink-0 snap-start flex-col gap-2 rounded-3xl bg-page p-2.5 transition-colors duration-200",
+        "flex snap-start flex-col gap-1.5 rounded-2xl bg-page p-2 transition-colors duration-200",
         isOver && "bg-brand-lime/40",
       )}
     >
-      <header className="flex items-baseline justify-between gap-2 px-1.5 pt-1">
+      <header className="flex items-center justify-between gap-2 px-2 pt-2 pb-1">
         <span className="font-semibold text-sm">{column.label}</span>
-        <span className="text-muted-foreground text-xs tabular-nums">{entries.length}</span>
+        <span className="rounded-full bg-card px-2 py-0.5 text-muted-foreground text-xs tabular-nums">{entries.length}</span>
       </header>
-      <p className="px-1.5 text-muted-foreground text-xs">{column.hint}</p>
-      <div className="flex min-h-24 flex-1 flex-col gap-2">{children}</div>
+      <div className="flex min-h-32 flex-1 flex-col gap-1.5">
+        {entries.length === 0 ? (
+          <p className="flex flex-1 items-center justify-center px-3 py-6 text-center text-muted-foreground/70 text-xs">Aucun candidat</p>
+        ) : (
+          children
+        )}
+      </div>
     </section>
   );
 }
@@ -253,82 +301,100 @@ function BoardCard({
   draggable,
   targets,
   onMove,
+  onOpen,
 }: Readonly<{
   entry: BoardEntry;
   interview?: Interview;
   draggable: boolean;
   targets: (typeof COLUMNS)[number][];
   onMove: (to: Column) => void;
+  /** A careers-page candidate: their card in a window over the board. */
+  onOpen: () => void;
 }>) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: e.key, disabled: !draggable });
   const name = nameOf(e);
-  const source = e.kind === "rabotka" ? "Rabotka" : "Page carrières";
-  const href = `?vue=liste&candidature=${idOf(e)}`;
+  const fit = e.score !== null ? band(e.score) : null;
+  // A Jira-like card: the name as its title, a footer of small markers
+  // (where they applied, their fit, the interview) and the avatar on the right.
+  const nameClass = "line-clamp-2 text-left font-medium text-sm leading-snug hover:underline";
   return (
+    // The whole card is the handle (a short drag moves it, a click on the
+    // name opens the candidate); « ⋯ » moves it without dragging.
     <article
       ref={setNodeRef}
+      {...(draggable ? { ...listeners, ...attributes } : {})}
+      aria-label={name}
       style={transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined}
       className={cn(
-        "group relative rounded-2xl bg-card p-3 transition-shadow",
-        isDragging && "z-20 rotate-1 shadow-soft",
-        e.a.knockedOut && "opacity-70",
+        "group relative flex flex-col gap-3 rounded-xl bg-card p-3 transition-[box-shadow,background-color] hover:bg-card/80",
+        draggable && "cursor-grab touch-none active:cursor-grabbing",
+        isDragging && "z-20 rotate-2 shadow-soft",
+        e.a.knockedOut && "opacity-60",
       )}
     >
-      <div className="flex items-start gap-2.5">
-        {draggable && (
-          <button
-            type="button"
-            {...listeners}
-            {...attributes}
-            aria-label={`Déplacer ${name}`}
-            className="-ml-1 mt-1.5 flex size-6 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted-foreground hover:bg-page active:cursor-grabbing"
+      <div className="flex items-start gap-2 pr-6">
+        {e.kind === "rabotka" ? (
+          <Link
+            href={`/espace/candidats/${e.a.worker.id}`}
+            scroll={false}
+            onPointerDown={(ev) => ev.stopPropagation()}
+            className={nameClass}
           >
-            <IconGripVertical className="size-4" />
-          </button>
-        )}
-        <Avatar className="size-9 shrink-0">
-          <AvatarFallback className="text-xs">{getInitials(name)}</AvatarFallback>
-        </Avatar>
-        <div className="min-w-0 flex-1">
-          <Link href={href} className="block truncate font-medium text-sm hover:underline">
             {name}
           </Link>
-          <p className="truncate text-muted-foreground text-xs">
-            {source}
-            {e.a.knockedOut && " · ne remplit pas un critère"}
-          </p>
-        </div>
+        ) : (
+          <button type="button" onClick={onOpen} onPointerDown={(ev) => ev.stopPropagation()} className={nameClass}>
+            {name}
+          </button>
+        )}
       </div>
-      <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-        {e.score !== null && <VerdictChip score={e.score} />}
+
+      {targets.length > 0 && (
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            aria-label={`Déplacer ${name}`}
+            onPointerDown={(ev) => ev.stopPropagation()}
+            className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-md text-muted-foreground opacity-0 outline-none transition-opacity hover:bg-page hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 data-[state=open]:opacity-100 max-md:opacity-100"
+          >
+            <IconDots className="size-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-52 rounded-2xl border-0 bg-card p-1.5 shadow-soft">
+            <p className="px-3 pt-1.5 pb-1 text-muted-foreground text-xs">Déplacer vers</p>
+            {targets.map((t) => (
+              <DropdownMenuItem key={t.key} onSelect={() => onMove(t.key)} className="cursor-pointer rounded-xl px-3 py-2 text-sm focus:bg-page">
+                {t.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+
+      <div className="flex items-center gap-2">
+        <span
+          title={e.kind === "rabotka" ? "Candidature Rabotka" : "Candidature reçue sur la page carrières"}
+          className="flex size-5 shrink-0 items-center justify-center rounded bg-page text-muted-foreground"
+        >
+          {e.kind === "rabotka" ? <IconBriefcase className="size-3.5" /> : <IconWorld className="size-3.5" />}
+        </span>
+        {fit && e.score !== null && (
+          <span title={fit.label} className={cn("rounded px-1.5 py-0.5 font-semibold text-[11px] tabular-nums", fit.chip)}>
+            {e.score}
+          </span>
+        )}
         {interview && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-page px-2.5 py-1 font-medium text-xs">
-            <IconCalendarEvent className="size-3.5" />
+          <span title="Entretien prévu" className="inline-flex items-center gap-1 rounded bg-page px-1.5 py-0.5 font-medium text-[11px]">
+            <IconCalendarEvent className="size-3" />
             {new Date(interview.startsAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
           </span>
         )}
-        {targets.length > 0 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              aria-label={`Déplacer ${name} vers une autre étape`}
-              className="ml-auto inline-flex h-7 items-center gap-1 rounded-full px-2 text-muted-foreground text-xs outline-none hover:bg-page hover:text-foreground"
-            >
-              <IconArrowsMove className="size-3.5" />
-              Déplacer vers
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 rounded-2xl border-0 bg-card p-1.5 shadow-soft">
-              {targets.map((t) => (
-                <DropdownMenuItem
-                  key={t.key}
-                  onSelect={() => onMove(t.key)}
-                  className="cursor-pointer rounded-xl px-3 py-2 text-sm focus:bg-page"
-                >
-                  {t.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {e.a.knockedOut && (
+          <span title="Ne remplit pas un critère éliminatoire" className="rounded bg-chip-amber px-1.5 py-0.5 font-medium text-[11px] text-chip-amber-foreground">
+            Critère
+          </span>
         )}
+        <Avatar className="ml-auto size-6 shrink-0">
+          <AvatarFallback className="text-[10px]">{getInitials(name)}</AvatarFallback>
+        </Avatar>
       </div>
     </article>
   );
