@@ -741,6 +741,23 @@ function ApplicantsCard({
           jobTitle={o.title}
           recruiting={open}
           entries={[...all].sort(byFit)}
+          // In the board's window, a Rabotka candidate reads as in the list:
+          // the analysis, the decision, the ⋯ menu.
+          renderRabotka={(a) => (
+            <ApplicantRow
+              offerId={o.id}
+              jobTitle={o.title}
+              applicant={a}
+              rank={0}
+              assessment={scores.get(a.applicationId)}
+              waiting={pending > 0}
+              asked={asked}
+              recruiting={open}
+              selected={false}
+              opinions={opinions.data?.rabotka[a.applicationId]}
+              focused={false}
+            />
+          )}
         />
         </div>
       ) : (
@@ -1030,10 +1047,13 @@ function ApplicantRow({
       className={cn("scroll-mt-24 rounded-2xl bg-page p-3 pr-4", focused && "ring-2 ring-whatsapp-dark")}
     >
       <div className="flex items-center gap-3">
-        <span className="flex w-5 shrink-0 flex-col items-center gap-1">
-          {onToggle && <Checkbox checked={selected} onCheckedChange={onToggle} aria-label={`Sélectionner ${name}`} className="size-4 rounded" />}
-          <span className="font-semibold text-muted-foreground text-xs tabular-nums">{rank}</span>
-        </span>
+        {/* No rank outside the ranked list (the board's window passes 0). */}
+        {(rank > 0 || onToggle) && (
+          <span className="flex w-5 shrink-0 flex-col items-center gap-1">
+            {onToggle && <Checkbox checked={selected} onCheckedChange={onToggle} aria-label={`Sélectionner ${name}`} className="size-4 rounded" />}
+            {rank > 0 && <span className="font-semibold text-muted-foreground text-xs tabular-nums">{rank}</span>}
+          </span>
+        )}
         {score !== null ? (
           <ScoreRing score={score} size={46} />
         ) : (
