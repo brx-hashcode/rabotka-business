@@ -70,6 +70,7 @@ export function ExternalApplicationCard({
   opinions,
   focused,
   onOfferPage = false,
+  detailsOpen = false,
 }: Readonly<{
   application: ExternalApplication;
   /** On an offer's page: its box in the page's one selection (compare, refuse). */
@@ -80,6 +81,8 @@ export function ExternalApplicationCard({
   focused?: boolean;
   /** On the offer's own page: « Pour l'offre » would only repeat it. */
   onOfferPage?: boolean;
+  /** The analysis and answers shown from the start (the board's window). */
+  detailsOpen?: boolean;
 }>) {
   const queryClient = useQueryClient();
   const name = `${a.firstName} ${a.lastName}`;
@@ -90,7 +93,7 @@ export function ExternalApplicationCard({
   const [retaining, setRetaining] = useState(false);
   const [unretaining, setUnretaining] = useState(false);
   // One toggle for its analysis and its answers, as on a Rabotka applicant's card.
-  const [showDetails, setShowDetails] = useState(false);
+  const [showDetails, setShowDetails] = useState(detailsOpen);
   const [opinionOpen, setOpinionOpen] = useState(false);
   const [analysing, setAnalysing] = useState(false);
   const [scheduling, setScheduling] = useState(false);

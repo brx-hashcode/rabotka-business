@@ -756,6 +756,7 @@ function ApplicantsCard({
               selected={false}
               opinions={opinions.data?.rabotka[a.applicationId]}
               focused={false}
+              detailsOpen
             />
           )}
         />
@@ -944,6 +945,7 @@ function ApplicantRow({
   onToggle,
   opinions,
   focused,
+  detailsOpen = false,
 }: Readonly<{
   offerId: string;
   jobTitle: string;
@@ -961,8 +963,10 @@ function ApplicantRow({
   opinions?: Record<Verdict, number>;
   /** Opened from a notification about it. */
   focused?: boolean;
+  /** The analysis and answers shown from the start (the board's window). */
+  detailsOpen?: boolean;
 }>) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(detailsOpen);
   const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
   // What « ⋯ » opens: the CVs, the team's opinions; « Message » goes straight there.
   const [panel, setPanel] = useState<"own-cv" | "rabotka-cv" | "opinion" | "interview" | null>(null);

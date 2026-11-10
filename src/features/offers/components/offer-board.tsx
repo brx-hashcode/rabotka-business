@@ -352,7 +352,7 @@ export function OfferBoard({
           {opened?.kind === "rabotka" && <ul className="list-none px-1 pb-1 sm:px-2 sm:pb-2">{renderRabotka(opened.a)}</ul>}
           {opened?.kind === "careers" && (
             <ul className="list-none px-1 pb-1 sm:px-2 sm:pb-2">
-              <ExternalApplicationCard onOfferPage application={opened.a} />
+              <ExternalApplicationCard onOfferPage detailsOpen application={opened.a} />
             </ul>
           )}
         </DialogContent>
