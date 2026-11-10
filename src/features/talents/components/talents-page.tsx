@@ -36,9 +36,17 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import { listOffers, offersKey } from "#/lib/api/offer-controller";
 import { inviteTalent, listTalents, removeTalent, saveTalent, talentsKey, type Talent } from "#/lib/api/talent-controller";
 import { cn, getInitials } from "#/lib/utils";
+import { PoolCandidatesSection } from "./pool-candidates-section";
 
 const fold = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 const monthYear = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+
+const SOURCE_KEYS = ["rabotka", "external", "cv"] as const;
+const SOURCES: { key: (typeof SOURCE_KEYS)[number]; label: string }[] = [
+  { key: "rabotka", label: "Candidats Rabotka" },
+  { key: "external", label: "Candidatures gardées" },
+  { key: "cv", label: "CV analysés" },
+];
 
 const TAB_KEYS = ["all", "kept", "alumni"] as const;
 type Tab = (typeof TAB_KEYS)[number];
@@ -55,6 +63,9 @@ export function TalentsPage() {
   // The search and the tag live in the URL too (?q=, ?tag=), so a reload keeps them.
   const [q, setQ] = useQueryState("q", parseAsString.withDefault("").withOptions({ limitUrlUpdates: debounce(300) }));
   const [tag, setTag] = useQueryState("tag");
+  // Where the profiles come from (?source=): Rabotka workers, or careers-page
+  // candidates kept with consent, or CVs analysed — the last two searched by their CV.
+  const [source, setSource] = useQueryState("source", parseAsStringLiteral(SOURCE_KEYS).withDefault("rabotka"));
   const all = useMemo(() => talents.data ?? [], [talents.data]);
 
   const tags = useMemo(() => [...new Set(all.flatMap((t) => t.tags))].sort((a, b) => a.localeCompare(b, "fr")), [all]);
@@ -71,10 +82,32 @@ export function TalentsPage() {
       <div className="space-y-1.5">
         <h1 className="font-semibold text-3xl tracking-tight">Mes profils</h1>
         <p className="text-muted-foreground">
-          Les profils que vous gardez et ceux qui ont déjà travaillé pour vous : invitez-les sur une nouvelle offre.
+          Les profils que vous gardez, ceux qui ont déjà travaillé pour vous et les CV que vous avez reçus : retrouvez-les par ce que dit leur CV, invitez-les sur une nouvelle offre.
         </p>
       </div>
 
+      {/* Rabotka workers, or beyond: careers candidates kept with consent, CVs analysed. */}
+      <div role="tablist" aria-label="Origine des profils" className="inline-flex flex-wrap rounded-full bg-card p-1">
+        {SOURCES.map((x) => (
+          <button
+            key={x.key}
+            type="button"
+            role="tab"
+            aria-selected={source === x.key}
+            onClick={() => void setSource(x.key)}
+            className={cn(
+              "rounded-full px-4 py-2 font-medium text-sm transition-colors",
+              source === x.key ? "bg-ink text-white" : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {x.label}
+          </button>
+        ))}
+      </div>
+
+      {source !== "rabotka" ? (
+        <PoolCandidatesSection key={source} source={source} />
+      ) : (
       <section className="space-y-5 rounded-3xl bg-card p-6">
         <div className="flex flex-wrap items-center gap-3">
           <div role="tablist" className="inline-flex rounded-full bg-page p-1">
@@ -159,6 +192,7 @@ export function TalentsPage() {
           </ul>
         )}
       </section>
+      )}
     </div>
   );
 }
