@@ -56,6 +56,8 @@ export type ApplyInput = {
   website: string;
   source: string;
   answers: { questionId: string; value: string }[];
+  /** « Garder ma candidature pour d'autres postes »: an opt-in. */
+  poolConsent?: boolean;
 };
 
 /** Who applied from the public careers page: the business's side. */
@@ -98,13 +100,19 @@ class CareersController extends BusinessBaseController {
     return this.get(`/public/careers/${encodeURIComponent(slug)}/offers/${encodeURIComponent(reference)}`);
   }
 
-  apply(slug: string, reference: string, { cv, answers, ...fields }: ApplyInput): Promise<{ sent: boolean }> {
+  apply(slug: string, reference: string, { cv, answers, poolConsent, ...fields }: ApplyInput): Promise<{ sent: boolean }> {
     const form = new FormData();
     for (const [key, value] of Object.entries(fields)) form.append(key, value);
     form.append("consent", "true");
+    if (poolConsent) form.append("poolConsent", "true");
     form.append("answers", JSON.stringify(answers));
     form.append("cv", cv);
     return this.post(`/public/careers/${encodeURIComponent(slug)}/offers/${encodeURIComponent(reference)}/apply`, form);
+  }
+
+  /** « Retirer ma candidature de sa liste », from the confirmation e-mail. */
+  withdrawFromPool(token: string): Promise<{ withdrawn: boolean; jobTitle: string }> {
+    return this.post(`/public/careers/pool/withdraw/${encodeURIComponent(token)}`);
   }
 
   /** All of the business's (the newest 500), or one offer's. */
@@ -137,6 +145,7 @@ export const getCareersCompanies = controller.companies.bind(controller);
 export const getCareersCompany = controller.company.bind(controller);
 export const getCareersOffer = controller.offer.bind(controller);
 export const applyToOffer = controller.apply.bind(controller);
+export const withdrawFromPool = controller.withdrawFromPool.bind(controller);
 export const listExternalApplications = controller.listExternal.bind(controller);
 export const analyseExternalApplications = controller.analyseExternal.bind(controller);
 export const retainExternalApplication = controller.retainExternal.bind(controller);

@@ -54,6 +54,8 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
   const [cvError, setCvError] = useState("");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [consent, setConsent] = useState(false);
+  // Optional, unticked: kept for other posts only if they say so.
+  const [keep, setKeep] = useState(false);
   const [trap, setTrap] = useState("");
   const input = useRef<HTMLInputElement>(null);
   const sourceParam = useSearchParams().get("source");
@@ -70,6 +72,7 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
         cv: cv as File,
         website: trap,
         source: sentFrom(sourceParam),
+        poolConsent: keep,
         answers: questions.flatMap((q) => (answers[q.id]?.trim() ? [{ questionId: q.id, value: answers[q.id].trim() }] : [])),
       }),
     // In the address, so a refresh or « back » shows the confirmation again,
@@ -203,6 +206,14 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
                 <a href="https://www.rabotka.work/privacy" target="_blank" rel="noreferrer" className="underline underline-offset-2">
                   Confidentialité
                 </a>
+              </span>
+            </label>
+
+            <label className="flex items-start gap-3 text-sm">
+              <Checkbox checked={keep} onCheckedChange={(c) => setKeep(c === true)} className="mt-0.5" />
+              <span>
+                J&apos;accepte que {page.company.name} garde ma candidature pour me proposer d&apos;autres postes.{" "}
+                <span className="text-muted-foreground">Facultatif ; vous pourrez la retirer à tout moment.</span>
               </span>
             </label>
 
