@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   DndContext,
+  DragOverlay,
+  pointerWithin,
   KeyboardSensor,
   PointerSensor,
   useDraggable,
@@ -11,6 +13,7 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragStartEvent,
 } from "@dnd-kit/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IconBriefcase, IconCalendarEvent, IconCheck, IconDots, IconWorld, IconX } from "@tabler/icons-react";
@@ -152,14 +155,27 @@ export function OfferBoard({
     else if (to === "hired") setRetaining((prev) => ({ entry, nonce: (prev?.nonce ?? 0) + 1 }));
   };
 
+  // The card being dragged: a copy follows the pointer above everything
+  // (DragOverlay), the original stays in its column, faded.
+  const [dragKey, setDragKey] = useState<string | null>(null);
+  const dragged = entries.find((e) => e.key === dragKey);
+  const onDragStart = ({ active }: DragStartEvent) => setDragKey(String(active.id));
   const onDragEnd = ({ active, over }: DragEndEvent) => {
+    setDragKey(null);
     const entry = entries.find((e) => e.key === active.id);
     if (entry && over) move({ entry, to: over.id as Column });
   };
 
   return (
     <>
-      <DndContext sensors={sensors} onDragEnd={onDragEnd}>
+      <DndContext
+        sensors={sensors}
+        // The column under the pointer, not the one the card overlaps most.
+        collisionDetection={pointerWithin}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        onDragCancel={() => setDragKey(null)}
+      >
         {/* Five equal columns across the page; on a narrow screen they scroll sideways. */}
         <div className="-mx-1 grid snap-x auto-cols-[minmax(15rem,1fr)] grid-flow-col gap-2.5 overflow-x-auto px-1 pb-2">
           {COLUMNS.map((c) => (
@@ -178,6 +194,11 @@ export function OfferBoard({
             </BoardColumn>
           ))}
         </div>
+        <DragOverlay dropAnimation={null}>
+          {dragged && (
+            <CardFace entry={dragged} interview={interviewOf(dragged, interviews.data ?? [])} className="rotate-2 cursor-grabbing shadow-soft" />
+          )}
+        </DragOverlay>
       </DndContext>
 
       {/* A careers-page candidate, the same window as a Rabotka profile's. */}
@@ -311,44 +332,20 @@ function BoardCard({
   /** A careers-page candidate: their card in a window over the board. */
   onOpen: () => void;
 }>) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: e.key, disabled: !draggable });
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: e.key, disabled: !draggable });
   const name = nameOf(e);
-  const fit = e.score !== null ? band(e.score) : null;
-  // A Jira-like card: the name as its title, a footer of small markers
-  // (where they applied, their fit, the interview) and the avatar on the right.
-  const nameClass = "line-clamp-2 text-left font-medium text-sm leading-snug hover:underline";
   return (
-    // The whole card is the handle (a short drag moves it, a click on the
-    // name opens the candidate); « ⋯ » moves it without dragging.
-    <article
+    // The whole card is the handle: a short drag moves it (its copy follows
+    // the pointer), a click on the name opens the candidate; « ⋯ » moves it
+    // without dragging.
+    <CardFace
       ref={setNodeRef}
+      entry={e}
+      interview={interview}
+      onOpen={onOpen}
       {...(draggable ? { ...listeners, ...attributes } : {})}
-      aria-label={name}
-      style={transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined}
-      className={cn(
-        "group relative flex flex-col gap-3 rounded-xl bg-card p-3 transition-[box-shadow,background-color] hover:bg-card/80",
-        draggable && "cursor-grab touch-none active:cursor-grabbing",
-        isDragging && "z-20 rotate-2 shadow-soft",
-        e.a.knockedOut && "opacity-60",
-      )}
+      className={cn(draggable && "cursor-grab touch-none", isDragging && "opacity-40")}
     >
-      <div className="flex items-start gap-2 pr-6">
-        {e.kind === "rabotka" ? (
-          <Link
-            href={`/espace/candidats/${e.a.worker.id}`}
-            scroll={false}
-            onPointerDown={(ev) => ev.stopPropagation()}
-            className={nameClass}
-          >
-            {name}
-          </Link>
-        ) : (
-          <button type="button" onClick={onOpen} onPointerDown={(ev) => ev.stopPropagation()} className={nameClass}>
-            {name}
-          </button>
-        )}
-      </div>
-
       {targets.length > 0 && (
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -368,7 +365,65 @@ function BoardCard({
           </DropdownMenuContent>
         </DropdownMenu>
       )}
+    </CardFace>
+  );
+}
 
+/**
+ * What a card shows, Jira-like: the name as its title, then small markers
+ * (where they applied, the score, the interview) and the avatar. Drawn in
+ * the column and, while dragged, as the copy under the pointer.
+ */
+function CardFace({
+  ref,
+  entry: e,
+  interview,
+  onOpen,
+  className,
+  children,
+  ...rest
+}: Readonly<
+  {
+    ref?: React.Ref<HTMLElement>;
+    entry: BoardEntry;
+    interview?: Interview;
+    onOpen?: () => void;
+    className?: string;
+    children?: React.ReactNode;
+  } & Omit<React.HTMLAttributes<HTMLElement>, "className" | "children">
+>) {
+  const name = nameOf(e);
+  const fit = e.score !== null ? band(e.score) : null;
+  const nameClass = "line-clamp-2 text-left font-medium text-sm leading-snug hover:underline";
+  return (
+    <article
+      ref={ref}
+      aria-label={name}
+      {...rest}
+      className={cn(
+        "group relative flex select-none flex-col gap-3 rounded-xl bg-card p-3 transition-[opacity,background-color] hover:bg-card/80",
+        e.a.knockedOut && "opacity-60",
+        className,
+      )}
+    >
+      <div className="flex items-start gap-2 pr-6">
+        {e.kind === "rabotka" ? (
+          <Link
+            href={`/espace/candidats/${e.a.worker.id}`}
+            scroll={false}
+            draggable={false}
+            onPointerDown={(ev) => ev.stopPropagation()}
+            className={nameClass}
+          >
+            {name}
+          </Link>
+        ) : (
+          <button type="button" onClick={onOpen} onPointerDown={(ev) => ev.stopPropagation()} className={nameClass}>
+            {name}
+          </button>
+        )}
+      </div>
+      {children}
       <div className="flex items-center gap-2">
         <span
           title={e.kind === "rabotka" ? "Candidature Rabotka" : "Candidature reçue sur la page carrières"}
@@ -388,7 +443,10 @@ function BoardCard({
           </span>
         )}
         {e.a.knockedOut && (
-          <span title="Ne remplit pas un critère éliminatoire" className="rounded bg-chip-amber px-1.5 py-0.5 font-medium text-[11px] text-chip-amber-foreground">
+          <span
+            title="Ne remplit pas un critère éliminatoire"
+            className="rounded bg-chip-amber px-1.5 py-0.5 font-medium text-[11px] text-chip-amber-foreground"
+          >
             Critère
           </span>
         )}
