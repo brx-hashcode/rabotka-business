@@ -741,6 +741,24 @@ function ApplicantsCard({
           jobTitle={o.title}
           recruiting={open}
           entries={[...all].sort(byFit)}
+          // In the board's window, a Rabotka candidate reads as in the list:
+          // the analysis, the decision, the ⋯ menu.
+          renderRabotka={(a) => (
+            <ApplicantRow
+              offerId={o.id}
+              jobTitle={o.title}
+              applicant={a}
+              rank={0}
+              assessment={scores.get(a.applicationId)}
+              waiting={pending > 0}
+              asked={asked}
+              recruiting={open}
+              selected={false}
+              opinions={opinions.data?.rabotka[a.applicationId]}
+              focused={false}
+              detailsOpen
+            />
+          )}
         />
         </div>
       ) : (
@@ -927,6 +945,7 @@ function ApplicantRow({
   onToggle,
   opinions,
   focused,
+  detailsOpen = false,
 }: Readonly<{
   offerId: string;
   jobTitle: string;
@@ -944,8 +963,10 @@ function ApplicantRow({
   opinions?: Record<Verdict, number>;
   /** Opened from a notification about it. */
   focused?: boolean;
+  /** The analysis and answers shown from the start (the board's window). */
+  detailsOpen?: boolean;
 }>) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(detailsOpen);
   const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
   // What « ⋯ » opens: the CVs, the team's opinions; « Message » goes straight there.
   const [panel, setPanel] = useState<"own-cv" | "rabotka-cv" | "opinion" | "interview" | null>(null);
@@ -1030,10 +1051,13 @@ function ApplicantRow({
       className={cn("scroll-mt-24 rounded-2xl bg-page p-3 pr-4", focused && "ring-2 ring-whatsapp-dark")}
     >
       <div className="flex items-center gap-3">
-        <span className="flex w-5 shrink-0 flex-col items-center gap-1">
-          {onToggle && <Checkbox checked={selected} onCheckedChange={onToggle} aria-label={`Sélectionner ${name}`} className="size-4 rounded" />}
-          <span className="font-semibold text-muted-foreground text-xs tabular-nums">{rank}</span>
-        </span>
+        {/* No rank outside the ranked list (the board's window passes 0). */}
+        {(rank > 0 || onToggle) && (
+          <span className="flex w-5 shrink-0 flex-col items-center gap-1">
+            {onToggle && <Checkbox checked={selected} onCheckedChange={onToggle} aria-label={`Sélectionner ${name}`} className="size-4 rounded" />}
+            {rank > 0 && <span className="font-semibold text-muted-foreground text-xs tabular-nums">{rank}</span>}
+          </span>
+        )}
         {score !== null ? (
           <ScoreRing score={score} size={46} />
         ) : (

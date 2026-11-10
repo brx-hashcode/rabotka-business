@@ -31,7 +31,6 @@ import { toast } from "sonner";
 import { ActionDialog } from "#/components/action-dialog";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
 import { ExternalApplicationCard } from "#/features/applications/components/external-application-card";
-import { CandidateProfile } from "#/features/candidates/components/candidate-profile";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { band } from "#/features/cv-screening/components/cv-bits";
@@ -125,7 +124,15 @@ export function OfferBoard({
   jobTitle,
   entries,
   recruiting,
-}: Readonly<{ offerId: string; jobTitle: string; entries: BoardEntry[]; recruiting: boolean }>) {
+  renderRabotka,
+}: Readonly<{
+  offerId: string;
+  jobTitle: string;
+  entries: BoardEntry[];
+  recruiting: boolean;
+  /** A Rabotka candidate's card as the list draws it (its analysis, its actions), for the window. */
+  renderRabotka: (a: OfferApplicant) => React.ReactNode;
+}>) {
   const hire = canHire(useMember().role);
   const queryClient = useQueryClient();
   const interviews = useQuery({ queryKey: [...interviewsKey, "upcoming"], queryFn: () => listInterviews({ scope: "upcoming" }) });
@@ -322,18 +329,17 @@ export function OfferBoard({
             if ((ev.target as HTMLElement | null)?.closest("[data-preview-sheet]")) ev.preventDefault();
           }}
           // One surface: the window is the card's own colour, the card adds no frame of its own.
-          // A profile reads in one column (the list's own window size); a
-          // careers card needs room for its analysis side by side.
+          // Room for the analysis side by side (strengths, checks, scores).
           className={cn(
             "max-h-[90svh] w-[calc(100vw-2rem)] gap-0 overflow-y-auto rounded-3xl border-0 bg-page p-0 shadow-soft",
-            opened?.kind === "rabotka" ? "sm:max-w-3xl" : "sm:max-w-5xl",
+            "sm:max-w-5xl",
           )}
         >
           <div className="sticky top-0 z-10 flex items-center justify-between gap-4 bg-page px-5 pt-4 pb-1 sm:px-6">
             <div className="min-w-0">
               <DialogTitle className="truncate font-medium text-muted-foreground text-sm">Candidature · {jobTitle}</DialogTitle>
               <DialogDescription className="sr-only">
-                {opened?.kind === "rabotka" ? "Profil du candidat Rabotka" : "Candidature reçue sur la page carrières"}
+                {opened?.kind === "rabotka" ? "Candidature Rabotka" : "Candidature reçue sur la page carrières"}
               </DialogDescription>
             </div>
             <DialogClose
@@ -343,14 +349,10 @@ export function OfferBoard({
               <IconX className="size-4" />
             </DialogClose>
           </div>
-          {opened?.kind === "rabotka" && (
-            <div className="px-5 pb-6 sm:px-8 sm:pb-8">
-              <CandidateProfile workerId={opened.a.worker.id} />
-            </div>
-          )}
+          {opened?.kind === "rabotka" && <ul className="list-none px-1 pb-1 sm:px-2 sm:pb-2">{renderRabotka(opened.a)}</ul>}
           {opened?.kind === "careers" && (
             <ul className="list-none px-1 pb-1 sm:px-2 sm:pb-2">
-              <ExternalApplicationCard onOfferPage application={opened.a} />
+              <ExternalApplicationCard onOfferPage detailsOpen application={opened.a} />
             </ul>
           )}
         </DialogContent>
