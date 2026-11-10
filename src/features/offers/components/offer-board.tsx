@@ -322,7 +322,12 @@ export function OfferBoard({
             if ((ev.target as HTMLElement | null)?.closest("[data-preview-sheet]")) ev.preventDefault();
           }}
           // One surface: the window is the card's own colour, the card adds no frame of its own.
-          className="max-h-[90svh] w-[calc(100vw-2rem)] gap-0 overflow-y-auto rounded-3xl border-0 bg-page p-0 shadow-soft sm:max-w-5xl"
+          // A profile reads in one column (the list's own window size); a
+          // careers card needs room for its analysis side by side.
+          className={cn(
+            "max-h-[90svh] w-[calc(100vw-2rem)] gap-0 overflow-y-auto rounded-3xl border-0 bg-page p-0 shadow-soft",
+            opened?.kind === "rabotka" ? "sm:max-w-3xl" : "sm:max-w-5xl",
+          )}
         >
           <div className="sticky top-0 z-10 flex items-center justify-between gap-4 bg-page px-5 pt-4 pb-1 sm:px-6">
             <div className="min-w-0">
