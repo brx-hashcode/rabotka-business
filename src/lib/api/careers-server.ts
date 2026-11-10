@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { headers } from "next/headers";
 
-import type { CareersCompany, CareersOffer, CareersOfferSummary } from "./careers-controller";
+import type { CareersCompany, CareersOffer, CareersOfferSummary, CareersPartner } from "./careers-controller";
 
 /** The careers API read from the server, for what search engines get in the HTML. */
 async function getPublic<T>(path: string): Promise<T | null | undefined> {
@@ -34,6 +34,9 @@ export const careersOfferServer = cache((slug: string, reference: string) =>
 export const careersCompaniesServer = cache(() =>
   getPublic<(CareersCompany & { openOffers: number })[]>(""),
 );
+
+/** « Ils recrutent avec Rabotka »: empty when none could be read. */
+export const careersPartnersServer = cache(async () => (await getPublic<CareersPartner[]>("/partners")) ?? []);
 
 export const careersCompanyServer = cache((slug: string) =>
   getPublic<{ company: CareersCompany; offers: CareersOfferSummary[] }>(`/${encodeURIComponent(slug)}`),

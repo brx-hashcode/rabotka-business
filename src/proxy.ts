@@ -20,7 +20,16 @@ export function proxy(request: NextRequest) {
   if (pathname.startsWith("/entretien/")) return NextResponse.next();
   // A business's public careers page: for candidates who are not on Rabotka.
   if (pathname === "/carrieres" || pathname.startsWith("/carrieres/")) return NextResponse.next();
+  // The public site's other pages: open to everyone, signed in or not.
+  if (isMarketingPath(pathname)) return NextResponse.next();
   return requireSession(request);
+}
+
+/** The public site beyond the landing: features, resources, about, contact, demo. */
+const MARKETING_PREFIXES = ["/fonctionnalites", "/ressources", "/a-propos", "/contact", "/demo"];
+
+export function isMarketingPath(pathname: string): boolean {
+  return MARKETING_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
 function forwardApi(request: NextRequest, path = request.nextUrl.pathname) {
@@ -100,6 +109,6 @@ function requireSession(request: NextRequest) {
 export const config = {
   // Pages and the API; never Next's assets, the session routes or files in public/.
   matcher: [
-    "/((?!_next/|session/|favicon.ico|icon|apple-icon|opengraph-image|twitter-image|manifest.json|robots.txt|sitemap.xml|fonts/|media/|rabotka-).*)",
+    "/((?!_next/|session/|favicon.ico|icon|apple-icon|opengraph-image|twitter-image|manifest.json|robots.txt|sitemap.xml|fonts/|media/|illustrations/|rabotka-).*)",
   ],
 };

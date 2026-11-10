@@ -1,36 +1,48 @@
-import { businessCountriesServer } from "#/lib/api/catalog-server";
-import { LandingFooter, ClosingCta } from "#/features/landing/components/landing-footer";
-import { LandingHeader } from "#/features/landing/components/landing-header";
-import { LandingHero } from "#/features/landing/components/landing-hero";
+import type { Metadata } from "next";
+
+import { PartnersStrip } from "#/features/careers/components/board/partners-strip";
+import { AtsSection } from "#/features/landing/components/ats-section";
 import { CountriesSection } from "#/features/landing/components/countries-section";
-import {
-  AudiencesSection,
-  FaqSection,
-  FeaturesSection,
-  StepsSection,
-  TrustSection,
-} from "#/features/landing/components/landing-sections";
+import { DemoBlock } from "#/features/landing/components/demo-block";
+import { FeatureStages } from "#/features/landing/components/feature-stages";
+import { LandingHero } from "#/features/landing/components/landing-hero";
+import { AudiencesSection, FaqSection } from "#/features/landing/components/landing-sections";
+import { businessCountriesServer } from "#/lib/api/catalog-server";
+import { careersPartnersServer } from "#/lib/api/careers-server";
+import { jsonLd, marketingMetadata, organizationLd } from "#/lib/seo/marketing";
+import { siteOrigin } from "#/lib/seo/site";
+
+export function generateMetadata(): Promise<Metadata> {
+  return marketingMetadata({
+    title: "Rabotka Business — l'ATS nouvelle génération pour recruter en Afrique",
+    description:
+      "Logiciel de recrutement complet : offres rédigées et diffusées partout, CV lus et classés pour chaque poste, pipeline suivi en équipe, entretiens synchronisés avec votre agenda.",
+    path: "/",
+  });
+}
 
 /**
- * The public landing page. A signed-in business never sees it: src/proxy.ts
- * sends them on to their space.
+ * The landing: a summary that sends each visitor on — the ATS, its tools by
+ * stage, where it is open, who it is for, the questions, the demo.
+ * The detail lives on the other pages, never repeated here.
  */
 export default async function LandingPage() {
-  const countries = await businessCountriesServer();
+  const [countries, { origin }, partners] = await Promise.all([
+    businessCountriesServer(),
+    siteOrigin(),
+    careersPartnersServer(),
+  ]);
   return (
     <>
-      <LandingHeader />
-      <main>
-        <LandingHero countries={countries} />
-        <FeaturesSection />
-        <CountriesSection countries={countries} />
-        <TrustSection />
-        <StepsSection />
-        <AudiencesSection />
-        <FaqSection countries={countries} />
-        <ClosingCta />
-      </main>
-      <LandingFooter />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(organizationLd(origin)) }} />
+      <LandingHero countries={countries} />
+      <PartnersStrip partners={partners} className="pt-14" />
+      <AtsSection />
+      <FeatureStages />
+      <CountriesSection countries={countries} />
+      <AudiencesSection />
+      <FaqSection countries={countries} />
+      <DemoBlock />
     </>
   );
 }

@@ -1,16 +1,14 @@
-import Link from "next/link";
 import { IconArrowRight } from "@tabler/icons-react";
 
-import { Button } from "#/components/ui/button";
 import type { BusinessCountryName } from "#/lib/api/catalog-server";
-import { SIGN_UP_HREF, STRIP_FEATURES } from "../content";
+import { DemoButton, SignUpButton } from "./demo-button";
 import { flagUrl } from "../globe/country-places";
 import { HeroMockup } from "../mockups/mockups";
 
 /**
- * The opening: what Rabotka does for a recruiter, one way in, and the product
- * itself beside it. Then the four steps of a hire as cards, each a link to
- * its section.
+ * The opening: an ATS, said plainly; the demo first and the account beside
+ * it; the product itself on the right. Then the four steps of a hire as
+ * cards, each a link to its feature page.
  */
 export function LandingHero({ countries }: Readonly<{ countries: BusinessCountryName[] }>) {
   return (
@@ -21,22 +19,12 @@ export function LandingHero({ countries }: Readonly<{ countries: BusinessCountry
             Recevez, triez et rencontrez les bons candidats, au même endroit
           </h1>
           <p className="max-w-xl text-header-muted text-lg">
-            Des offres rédigées en quelques mots, des CV lus et classés pour chaque poste, même depuis votre messagerie, et
-            des entretiens qui arrivent tout seuls dans votre agenda.
+            Un logiciel de recrutement complet : des offres rédigées et diffusées partout, chaque CV lu et classé pour le
+            poste, un pipeline suivi en équipe, et des entretiens qui arrivent tout seuls dans votre agenda.
           </p>
           <div className="flex flex-wrap items-center gap-3">
-            <Button
-              variant="ghost"
-              size="xl"
-              render={<Link href={SIGN_UP_HREF} />}
-              className="rounded-full bg-ink px-6 text-white hover:bg-ink/90"
-            >
-              Ouvrir un compte entreprise
-              <IconArrowRight />
-            </Button>
-            <a href="#fonctionnalites" className="rounded-full px-4 py-2 font-medium text-sm underline-offset-4 hover:underline">
-              Voir comment ça marche
-            </a>
+            <DemoButton />
+            <SignUpButton />
           </div>
           {/* Where it is open, from the backend's list: not one country's tool. The map is further down. */}
           <a href="#pays" className="group inline-flex items-center gap-3 pt-2">
@@ -63,26 +51,6 @@ export function LandingHero({ countries }: Readonly<{ countries: BusinessCountry
         </div>
       </div>
 
-      <div id="fonctionnalites" className="mx-auto w-full max-w-7xl scroll-mt-24 px-4 pb-14 sm:px-6 lg:pb-20">
-        <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {STRIP_FEATURES.map(({ id, href, label, description, icon: Icon, tone }) => (
-            <li key={id}>
-              <a
-                href={href}
-                className="group flex h-full flex-col gap-3 rounded-3xl bg-card p-4 text-foreground transition-colors hover:bg-card/80"
-              >
-                <span className={`flex size-10 items-center justify-center rounded-2xl ${tone}`}>
-                  <Icon className="size-5" />
-                </span>
-                <span className="space-y-1">
-                  <span className="block font-semibold text-sm">{label}</span>
-                  <span className="block text-muted-foreground text-xs leading-snug">{description}</span>
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
     </section>
   );
 }
