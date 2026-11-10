@@ -7,6 +7,7 @@ import { IconArrowRight, IconCheck } from "@tabler/icons-react";
 import { cn } from "#/lib/utils";
 import { FeatureMockup } from "../mockups/mockups";
 import { STAGES } from "./feature-stages";
+import { IconTile } from "./icon-tile";
 
 /**
  * « Fonctionnalités clés »: the tools by stage on the left, the chosen one on
@@ -38,13 +39,11 @@ export function FeatureTabs() {
                   aria-controls="feature-panel"
                   onClick={() => setActiveId(f.id)}
                   className={cn(
-                    "flex w-full items-center gap-3 rounded-2xl p-2.5 text-left transition-colors",
-                    selected ? "bg-ink text-white" : "hover:bg-page",
+                    "group flex w-full items-center gap-3 rounded-2xl p-2.5 text-left transition-colors duration-300 ease-out",
+                    selected ? "bg-page font-semibold" : "hover:bg-page/60",
                   )}
                 >
-                  <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-xl", f.tone)}>
-                    <f.icon className="size-4" />
-                  </span>
+                  <IconTile icon={f.icon} size="sm" active={selected} />
                   <span className="font-medium text-sm">{f.label}</span>
                 </button>
               );
@@ -57,14 +56,23 @@ export function FeatureTabs() {
         role="tabpanel"
         id="feature-panel"
         aria-labelledby={`tab-${active.id}`}
-        className="grid min-w-0 items-center gap-8 rounded-[2rem] bg-page p-5 sm:p-8 xl:grid-cols-[1fr_1.1fr]"
+        className="grid min-w-0 items-center gap-8 overflow-hidden rounded-[2rem] bg-page p-5 sm:p-8 xl:min-h-[34rem] xl:grid-cols-[1fr_1.1fr]"
       >
-        <div key={active.id} className="space-y-5 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300">
+        {/* Keyed by the tool: each choice replays the entrance, the text
+            rising first, its points one after the other, then the screen. */}
+        <div
+          key={active.id}
+          className="space-y-5 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-700 motion-safe:ease-[cubic-bezier(0.22,1,0.36,1)]"
+        >
           <h3 className="font-semibold text-2xl tracking-tight sm:text-3xl">{active.title}</h3>
           <p className="text-muted-foreground">{active.text}</p>
           <ul className="space-y-2.5">
-            {active.points.map((point) => (
-              <li key={point} className="flex items-start gap-3 text-sm">
+            {active.points.map((point, i) => (
+              <li
+                key={point}
+                style={{ animationDelay: `${150 + i * 100}ms` }}
+                className="flex items-start gap-3 text-sm motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-left-1 motion-safe:fill-mode-both motion-safe:duration-700 motion-safe:ease-[cubic-bezier(0.22,1,0.36,1)]"
+              >
                 <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-whatsapp text-white">
                   <IconCheck className="size-3" strokeWidth={3} />
                 </span>
@@ -80,7 +88,10 @@ export function FeatureTabs() {
             <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
-        <div className="min-w-0">
+        <div
+          key={`${active.id}-screen`}
+          className="min-w-0 motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-[0.98] motion-safe:slide-in-from-right-2 motion-safe:delay-150 motion-safe:fill-mode-both motion-safe:duration-[900ms] motion-safe:ease-[cubic-bezier(0.22,1,0.36,1)]"
+        >
           <FeatureMockup id={active.id} />
         </div>
       </div>

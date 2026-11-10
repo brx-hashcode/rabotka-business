@@ -26,6 +26,7 @@ import {
 import { GUIDES } from "../site-content";
 import { STAGES } from "./feature-stages";
 import { SmartLink } from "./smart-link";
+import { IconTile } from "./icon-tile";
 
 const MENUS: { label: string; links: NavLink[]; wide?: boolean }[] = [
   { label: "Fonctionnalités", links: SOLUTION_LINKS, wide: true },
@@ -45,7 +46,7 @@ const PAGES: NavLink[] = [
  */
 export function LandingHeader() {
   return (
-    <header className="sticky top-[env(safe-area-inset-top)] z-40 bg-header/95 text-header-foreground backdrop-blur">
+    <header data-site-header className="sticky top-[env(safe-area-inset-top)] z-40 bg-header/95 text-header-foreground backdrop-blur">
       <div className="mx-auto flex h-18 w-full max-w-7xl items-center gap-6 px-4 sm:px-6">
         <Link href="/" aria-label="Rabotka Business — accueil" className="shrink-0">
           <BusinessLockup compact />
@@ -140,11 +141,7 @@ function SolutionsPanel() {
                   className="group cursor-pointer items-center gap-3.5 rounded-2xl p-2.5 focus:bg-page"
                 >
                   <Link href={f.href}>
-                    <span
-                      className={`flex size-11 shrink-0 items-center justify-center rounded-2xl transition-transform group-hover:scale-105 ${f.tone}`}
-                    >
-                      <f.icon className="size-5" />
-                    </span>
+                    <IconTile icon={f.icon} />
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-1 font-medium text-sm">
                         {f.label}
@@ -238,13 +235,7 @@ function ResourcesPanel({ links }: Readonly<{ links: NavLink[] }>) {
             className="group cursor-pointer items-center gap-3.5 rounded-2xl p-2.5 focus:bg-page"
           >
             <SmartLink href={link.href}>
-              {link.icon && (
-                <span
-                  className={`flex size-11 shrink-0 items-center justify-center rounded-2xl transition-transform group-hover:scale-105 ${link.tone ?? "bg-page"}`}
-                >
-                  <link.icon className="size-5" />
-                </span>
-              )}
+              {link.icon && <IconTile icon={link.icon} />}
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-1 font-medium text-sm">
                   {link.label}
@@ -313,9 +304,7 @@ function MobileMenu() {
                     onClick={() => setOpen(false)}
                     className="flex items-center gap-3 rounded-2xl px-3 py-2 font-medium text-[15px] hover:bg-page"
                   >
-                    <span className={`flex size-8 shrink-0 items-center justify-center rounded-xl ${f.tone}`}>
-                      <f.icon className="size-4" />
-                    </span>
+                    <IconTile icon={f.icon} size="sm" />
                     {f.label}
                   </Link>
                 ))}

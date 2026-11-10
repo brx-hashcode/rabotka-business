@@ -16,10 +16,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...GUIDES.map((g) => ({ url: `${origin}/ressources/${g.slug}`, changeFrequency: "monthly" as const })),
   ];
   const map = await careersSitemapServer();
-  if (!map) return [...site, { url: `${origin}/carrieres` }];
+  if (!map) return site;
   return [
     ...site,
-    { url: `${origin}/carrieres`, changeFrequency: "daily" },
     ...map.companies.map((c) => ({
       url: `${origin}/carrieres/${c.slug}`,
       lastModified: c.updatedAt,

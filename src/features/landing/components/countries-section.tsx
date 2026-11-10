@@ -16,7 +16,7 @@ export function CountriesSection({ countries }: Readonly<{ countries: BusinessCo
   const groups = [...byRegion, { region: "Ailleurs", countries: elsewhere }].filter((g) => g.countries.length > 0);
 
   return (
-    <section id="pays" className="scroll-mt-20 overflow-hidden bg-[#0f2414] py-20 text-white md:py-28">
+    <section id="pays" className="overflow-hidden bg-[#0f2414] py-20 text-white md:py-28">
       <div className="mx-auto grid w-full max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
         <div className="relative mx-auto w-full max-w-[560px]">
           {/* A soft halo behind the globe. */}

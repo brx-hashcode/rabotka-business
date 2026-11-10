@@ -3,6 +3,7 @@ import { IconArrowRight } from "@tabler/icons-react";
 
 import { FEATURE_GROUPS, FEATURES, FEATURES_HREF } from "../content";
 import { SectionHeading } from "./section-heading";
+import { IconTile } from "./icon-tile";
 
 /** The groups with their features, numbered: the hire's four stages. */
 export const STAGES = FEATURE_GROUPS.map((group, i) => ({
@@ -14,7 +15,7 @@ export const STAGES = FEATURE_GROUPS.map((group, i) => ({
 /** The home page's product overview: four stages, two tools each, each a link to its page. */
 export function FeatureStages() {
   return (
-    <section id="fonctionnalites" className="scroll-mt-20 py-20 md:py-28">
+    <section id="fonctionnalites" className="py-20 md:py-28">
       <div className="mx-auto w-full max-w-7xl space-y-12 px-4 sm:px-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <SectionHeading
@@ -38,15 +39,13 @@ export function FeatureStages() {
                 <h3 className="font-semibold text-xl">{stage.step}</h3>
                 <p className="text-muted-foreground text-sm">{stage.text}</p>
               </div>
-              {stage.features.map(({ id, href, label, description, icon: Icon, tone }) => (
+              {stage.features.map(({ id, href, label, description, icon }) => (
                 <Link
                   key={id}
                   href={href}
                   className="group flex flex-1 flex-col gap-3 rounded-3xl bg-page p-4 transition-colors hover:bg-page/70"
                 >
-                  <span className={`flex size-10 items-center justify-center rounded-2xl ${tone}`}>
-                    <Icon className="size-5" />
-                  </span>
+                  <IconTile icon={icon} surface="card" />
                   <span className="flex-1 space-y-1">
                     <span className="flex items-center gap-1 font-semibold text-sm">
                       {label}

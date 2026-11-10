@@ -59,8 +59,9 @@
   --page: #f1f4f8;
   /* Brand lime band (header, hero, sign-in panel) with dark text on it. */
   --header: #cbffa5;
-  /* Behind the phone browser's bars and on overscroll. */
-  --chrome: #ffffff;
+  /* Behind the phone browser's bars and on overscroll: the header's lime,
+     so the status bar continues the band. Keep theme-color (layout.tsx) equal. */
+  --chrome: #cbffa5;
   --header-foreground: #0f2414;
   --header-muted: #3f5f3a;
   /* Dark ink for fills that need white on top (ticked checkboxes, active tabs). */
@@ -519,4 +520,12 @@ html {
   html {
     scroll-behavior: auto;
   }
+}
+
+/* The public site's sticky header covers the top 4.5rem: tell the browser, so
+   anchors land below it, and Next, which reads it to decide whether a new
+   page's top is visible — without it, a page reached after a small scroll
+   keeps its hero tucked under the header. */
+html:has([data-site-header]) {
+  scroll-padding-top: calc(4.5rem + env(safe-area-inset-top));
 }

@@ -8,12 +8,12 @@ import {
   IconMapPin,
   IconMessage,
   IconRepeat,
+  IconSearch,
   IconThumbUp,
   IconMessageCircle,
   IconPhone,
-  IconSparkles,
   IconVideo,
-  IconWand,
+  IconWriting,
 } from "@tabler/icons-react";
 
 import { ProviderTile } from "#/components/mail-provider-logos";
@@ -172,7 +172,7 @@ function OfferMockup() {
         </div>
         <div className="flex justify-center">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-chip-violet px-3 py-1 font-medium text-chip-violet-foreground text-xs">
-            <IconWand className="size-3.5" />
+            <IconWriting className="size-3.5" />
             Offre rédigée
           </span>
         </div>
@@ -461,7 +461,7 @@ function ProfilesMockup() {
     <MockupFrame label="Aperçu : une recherche de profils vérifiés par métier et par ville." title="Trouver des profils">
       <div className="space-y-2.5">
         <div className="flex items-center gap-2 rounded-full bg-page px-4 py-2.5 text-muted-foreground text-sm">
-          <IconSparkles className="size-4" />
+          <IconSearch className="size-4" />
           électricien, aide-soignante, chauffeur…
         </div>
         {PROFILES.map((p) => (

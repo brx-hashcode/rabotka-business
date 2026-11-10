@@ -56,7 +56,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: light)", color: "#cbffa5" },
     { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
   ],
   // Lets env(safe-area-inset-top) report the status bar's height.

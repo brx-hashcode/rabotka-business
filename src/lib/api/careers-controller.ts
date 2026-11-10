@@ -16,6 +16,9 @@ export type CareersCompany = {
   benefits?: string[];
 };
 
+/** A partner's logo, as « Ils recrutent avec Rabotka » shows it. */
+export type CareersPartner = { slug: string; name: string; logoUrl: string };
+
 export type CareersOfferSummary = {
   reference: string;
   title: string;

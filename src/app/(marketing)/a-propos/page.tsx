@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { Illustration } from "#/components/illustration";
 import { DemoBlock } from "#/features/landing/components/demo-block";
 import { TrustSection } from "#/features/landing/components/landing-sections";
 import { flagUrl } from "#/features/landing/globe/country-places";
@@ -20,14 +21,17 @@ export function generateMetadata(): Promise<Metadata> {
 
 const BELIEFS = [
   {
+    illustration: "job-hunt" as const,
     title: "Le bon candidat existe souvent déjà",
     text: "Il est dans la pile de CV, dans votre messagerie ou sur WhatsApp. Notre travail : qu'il ne passe plus inaperçu.",
   },
   {
+    illustration: "team" as const,
     title: "Un recrutement se décide en équipe",
     text: "Le responsable du poste, les RH, la direction : chacun doit voir les mêmes candidats et donner son avis au même endroit.",
   },
   {
+    illustration: "mobile" as const,
     title: "Des outils faits pour ici",
     text: "Les pièces officielles de votre pays, le paiement par mobile money, les candidats joints là où ils sont : sur leur téléphone.",
   },
@@ -52,6 +56,9 @@ export default async function AboutPage() {
           <div className="grid gap-4 md:grid-cols-3">
             {BELIEFS.map((b, i) => (
               <div key={b.title} className="space-y-4 rounded-3xl bg-page p-6 sm:p-8">
+                <div className="flex h-36 items-center justify-center">
+                  <Illustration name={b.illustration} className="h-full w-auto" />
+                </div>
                 <span className="flex size-10 items-center justify-center rounded-full bg-header font-semibold text-header-foreground">
                   {i + 1}
                 </span>

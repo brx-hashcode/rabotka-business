@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { IconArrowRight, IconClock } from "@tabler/icons-react";
 
+import { Illustration } from "#/components/illustration";
 import { DemoBlock } from "#/features/landing/components/demo-block";
 import { PageHero } from "#/features/landing/components/page-hero";
 import { SectionHeading } from "#/features/landing/components/section-heading";
@@ -26,7 +27,7 @@ export default function ResourcesPage() {
         actions={false}
       />
 
-      <section id="guides" className="scroll-mt-20 py-20 md:py-28">
+      <section id="guides" className="py-20 md:py-28">
         <div className="mx-auto w-full max-w-7xl space-y-12 px-4 sm:px-6">
           <SectionHeading kicker="Guides du recruteur" title="Des méthodes, pas des promesses" />
           <ul className="grid gap-4 md:grid-cols-3">
@@ -36,6 +37,9 @@ export default function ResourcesPage() {
                   href={`/ressources/${g.slug}`}
                   className="group flex h-full flex-col gap-4 rounded-3xl bg-card p-6 transition-colors hover:bg-card/70"
                 >
+                  <span className="flex h-40 items-center justify-center rounded-2xl bg-page p-5">
+                    <Illustration name={g.illustration} className="h-full w-auto" />
+                  </span>
                   <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-page px-2.5 py-1 text-muted-foreground text-xs">
                     <IconClock className="size-3.5" />
                     {g.minutes} min de lecture
