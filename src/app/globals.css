@@ -534,14 +534,14 @@ html:has([data-site-header]) {
    columns glide to their new place, softly. */
 ::view-transition-group(offer-main),
 ::view-transition-group(offer-side) {
-  animation-duration: 450ms;
+  animation-duration: 260ms;
   animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 ::view-transition-old(offer-main),
 ::view-transition-new(offer-main),
 ::view-transition-old(offer-side),
 ::view-transition-new(offer-side) {
-  animation-duration: 300ms;
+  animation-duration: 180ms;
   /* Keep the aspect while resizing: no stretched snapshots. */
   height: 100%;
   object-fit: cover;
@@ -549,5 +549,5 @@ html:has([data-site-header]) {
 }
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 250ms;
+  animation-duration: 150ms;
 }

@@ -2,6 +2,7 @@
 
 import { DescriptionText } from "#/features/careers/components/description-text";
 import { useEffect, useState } from "react";
+import { flushSync } from "react-dom";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -135,8 +136,10 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const hire = canHire(useMember().role);
   // Just published (new-offer-page): the moment to share it.
   const [published, setPublished] = useQueryState("publiee");
-  // « Tableau » on the candidates: the page goes one column wide (?vue=, set by ApplicantsCard).
-  const board = useSearchParams().get("vue") === "tableau";
+  // « Tableau » on the candidates: the page goes one column wide. The same
+  // state as ApplicantsCard's (nuqs), so both change in the same render.
+  const [view] = useQueryState("vue", VIEW);
+  const board = view === "tableau";
   const noOfferLeft = !!subscription && offersFull(subscription.entitlements);
   const needsDate = !offer.data || isDatedMission(offer.data.employmentType);
   const [confirmFinish, setConfirmFinish] = useState(false);
@@ -521,6 +524,9 @@ function Tile({
   );
 }
 
+/** `?vue=`: the candidates as a list or a board; the page and the card share it. */
+const VIEW = parseAsStringLiteral(["liste", "tableau"] as const).withDefault("liste");
+
 const TABS: { key: "all" | ApplicationStage; label: string }[] = [
   { key: "all", label: "Toutes" },
   { key: "new", label: "Nouvelles" },
@@ -555,7 +561,7 @@ function ApplicantsCard({
   // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
   const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS.map((t) => t.key)).withDefault("all"));
   // The list, or the board (one column per step); in the URL too.
-  const [view, setView] = useQueryState("vue", parseAsStringLiteral(["liste", "tableau"] as const).withDefault("liste"));
+  const [view, setView] = useQueryState("vue", VIEW);
   // The sidebar goes under the board: a view transition (where the browser
   // has it, and motion is welcome) moves the blocks smoothly instead.
   const switchView = (next: "liste" | "tableau") => {
@@ -566,10 +572,10 @@ function ApplicantsCard({
       void setView(next);
       return;
     }
+    // Rendered at once inside the transition (the URL follows on its own),
+    // so the animation starts on the next frame, not after the address.
     doc.startViewTransition(async () => {
-      await setView(next);
-      // The page re-renders from the URL: one frame for it to land.
-      await new Promise((r) => requestAnimationFrame(() => r(undefined)));
+      flushSync(() => void setView(next));
     });
   };
   const list = applicants ?? [];
