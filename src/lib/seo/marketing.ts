@@ -3,6 +3,18 @@ import type { Metadata } from "next";
 import { NOINDEX } from "./indexed-host";
 import { siteOrigin } from "./site";
 
+/**
+ * The share card (src/app/opengraph-image.tsx). Named here because a page
+ * that sets `openGraph` replaces its parent's whole object: without this the
+ * file's image is dropped and WhatsApp shows the bare logo.
+ */
+export const SHARE_IMAGE = {
+  url: "/opengraph-image",
+  width: 1200,
+  height: 630,
+  alt: "Rabotka Business — l'ATS des organisations africaines",
+} as const;
+
 /** The public site's pages, as robots.txt lets crawlers in and the sitemap lists them. */
 export const MARKETING_PATHS = ["/", "/fonctionnalites", "/ressources", "/a-propos", "/contact", "/demo"] as const;
 
@@ -22,8 +34,16 @@ export async function marketingMetadata({
     description,
     robots: indexed ? { index: true, follow: true } : NOINDEX,
     alternates: { canonical: path },
-    openGraph: { type: "website", siteName: "Rabotka", locale: "fr_FR", title: full, description, url: path },
-    twitter: { card: "summary_large_image", title: full, description },
+    openGraph: {
+      type: "website",
+      siteName: "Rabotka",
+      locale: "fr_FR",
+      title: full,
+      description,
+      url: path,
+      images: [SHARE_IMAGE],
+    },
+    twitter: { card: "summary_large_image", title: full, description, images: [SHARE_IMAGE.url] },
   };
 }
 
