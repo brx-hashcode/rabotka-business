@@ -22,6 +22,7 @@ import {
   IconChevronsLeft,
   IconChevronsRight,
   IconDots,
+  IconMail,
   IconSearch,
   IconWorld,
   IconX,
@@ -45,9 +46,11 @@ import type { OfferApplicant } from "#/lib/api/offer-controller";
 import type { Interview } from "#/lib/api/types";
 import { cn, getInitials } from "#/lib/utils";
 import type { ApplicationStage } from "../offer-labels";
-import { useShortlist } from "../use-shortlist";
+import { useConfirmedShortlist } from "../use-shortlist";
 import { ApplicationActions } from "./application-actions";
 import { BulkRefuseDialog } from "./bulk-refuse-dialog";
+import { BulkMessageDialog } from "#/features/messages/components/bulk-message-dialog";
+import { getMyBusiness, myBusinessKey } from "#/lib/api/business-controller";
 
 /** A candidate of the offer, as the board shows it. */
 export type BoardEntry = {
@@ -136,7 +139,7 @@ export function OfferBoard({
   const hire = canHire(useMember().role);
   const queryClient = useQueryClient();
   const interviews = useQuery({ queryKey: [...interviewsKey, "upcoming"], queryFn: () => listInterviews({ scope: "upcoming" }) });
-  const shortlist = useShortlist(offerId);
+  const shortlist = useConfirmedShortlist(offerId);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor));
 
   const [scheduling, setScheduling] = useState<BoardEntry | null>(null);
@@ -171,6 +174,8 @@ export function OfferBoard({
   // hundreds of candidates, the best fits on top.
   const [limits, setLimits] = useState<Partial<Record<Column, number>>>({});
   const limitOf = (c: Column) => limits[c] ?? PAGE;
+  const [writingTo, setWritingTo] = useState<BoardEntry[] | null>(null);
+  const { data: business } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
   // « Refusées » is folded to a strip: rarely worked on, and soon the longest.
   const [closedOpen, setClosedOpen] = useState(false);
 
@@ -202,8 +207,8 @@ export function OfferBoard({
       return;
     }
     const targets = entry.kind === "rabotka" ? { rabotka: [idOf(entry)], external: [] } : { rabotka: [], external: [idOf(entry)] };
-    if (to === "shortlisted") shortlist.mutate({ targets, shortlisted: true });
-    else if (to === "review") shortlist.mutate({ targets, shortlisted: false });
+    if (to === "shortlisted") shortlist.ask({ targets, shortlisted: true, who: nameOf(entry) });
+    else if (to === "review") shortlist.ask({ targets, shortlisted: false, who: nameOf(entry) });
     else if (to === "interview") setScheduling(entry);
     else if (to === "closed") setRefusing(entry);
     else if (to === "hired") setRetaining((prev) => ({ entry, nonce: (prev?.nonce ?? 0) + 1 }));
@@ -296,6 +301,8 @@ export function OfferBoard({
               more={all.length - shown.length}
               onMore={() => setLimits((l) => ({ ...l, [c.key]: limitOf(c.key) + PAGE }))}
               onFold={c.key === "closed" ? () => setClosedOpen(false) : undefined}
+              // « Écrire aux présélectionnés »: one message to the whole column.
+              onWrite={hire && c.key === "shortlisted" && all.length > 0 ? () => setWritingTo(all) : undefined}
             >
               {shown.map((e) => (
                 <BoardCard
@@ -358,6 +365,21 @@ export function OfferBoard({
         </DialogContent>
       </Dialog>
 
+      {shortlist.dialog}
+
+      <BulkMessageDialog
+        open={!!writingTo}
+        onOpenChange={(o) => !o && setWritingTo(null)}
+        offerId={offerId}
+        jobTitle={jobTitle}
+        businessName={business?.name ?? ""}
+        recipients={{
+          rabotka: (writingTo ?? []).filter((e) => e.kind === "rabotka").map(idOf),
+          external: (writingTo ?? []).filter((e) => e.kind === "careers").map(idOf),
+          firstName: writingTo?.[0] ? nameOf(writingTo[0]).split(" ")[0] : "",
+        }}
+      />
+
       {scheduling && (
         <ScheduleInterviewDialog
           open
@@ -418,6 +440,7 @@ function BoardColumn({
   more,
   onMore,
   onFold,
+  onWrite,
   children,
 }: Readonly<{
   column: (typeof COLUMNS)[number];
@@ -427,6 +450,8 @@ function BoardColumn({
   onMore: () => void;
   /** « Refusées » folds back to its strip. */
   onFold?: () => void;
+  /** One message to the whole column (« Présélectionnées »). */
+  onWrite?: () => void;
   children: React.ReactNode;
 }>) {
   const { setNodeRef, isOver } = useDroppable({ id: column.key });
@@ -443,6 +468,17 @@ function BoardColumn({
         <span className="font-semibold text-sm">{column.label}</span>
         <span className="flex items-center gap-1">
           <span className="rounded-full bg-card px-2 py-0.5 text-muted-foreground text-xs tabular-nums">{count}</span>
+          {onWrite && (
+            <button
+              type="button"
+              onClick={onWrite}
+              title="Écrire à tous les candidats de cette colonne"
+              aria-label={`Écrire aux candidats de « ${column.label} »`}
+              className="flex size-6 items-center justify-center rounded-full text-muted-foreground hover:bg-card hover:text-foreground"
+            >
+              <IconMail className="size-4" />
+            </button>
+          )}
           {onFold && (
             <button
               type="button"
