@@ -336,7 +336,9 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
               board ? "" : "lg:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_28rem]",
             )}
           >
-            <div className="min-w-0 space-y-6">
+            {/* Named for the view transition: switching list and board glides
+                both columns to their new place instead of jumping. */}
+            <div className="min-w-0 space-y-6" style={{ viewTransitionName: "offer-main" }}>
               <ApplicantsCard offer={o} applicants={applicants.data} outsiders={outsiders} loading={applicants.isLoading} />
               {(o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED") && (
                 <SuggestedCard
@@ -347,7 +349,14 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                 />
               )}
             </div>
-            <div className="space-y-6 lg:sticky lg:top-24">
+            <div
+              style={{ viewTransitionName: "offer-side" }}
+              className={cn(
+                "space-y-6",
+                // Under the board, the details spread over three columns.
+                board ? "lg:grid lg:grid-cols-3 lg:items-start lg:gap-6 lg:space-y-0" : "lg:sticky lg:top-24",
+              )}
+            >
               <DetailsCard offer={o} category={categories.data?.find((c) => c.id === o.categoryId)?.name} />
               <QuestionsCard offer={o} />
               <OfferDescriptionCard description={o.description} note={o.note} />
@@ -547,6 +556,22 @@ function ApplicantsCard({
   const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS.map((t) => t.key)).withDefault("all"));
   // The list, or the board (one column per step); in the URL too.
   const [view, setView] = useQueryState("vue", parseAsStringLiteral(["liste", "tableau"] as const).withDefault("liste"));
+  // The sidebar goes under the board: a view transition (where the browser
+  // has it, and motion is welcome) moves the blocks smoothly instead.
+  const switchView = (next: "liste" | "tableau") => {
+    if (next === view) return;
+    const doc = document as Document & { startViewTransition?: (update: () => Promise<void>) => unknown };
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!doc.startViewTransition || still) {
+      void setView(next);
+      return;
+    }
+    doc.startViewTransition(async () => {
+      await setView(next);
+      // The page re-renders from the URL: one frame for it to land.
+      await new Promise((r) => requestAnimationFrame(() => r(undefined)));
+    });
+  };
   const list = applicants ?? [];
   const count = (k: (typeof TABS)[number]["key"]) =>
     k === "all"
@@ -688,7 +713,7 @@ function ApplicantsCard({
                 type="button"
                 role="tab"
                 aria-selected={view === v.key}
-                onClick={() => void setView(v.key)}
+                onClick={() => switchView(v.key)}
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-medium text-sm transition-colors",
                   view === v.key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
