@@ -3,7 +3,16 @@ import { BusinessBaseController } from "./base-controller";
 export type Country = { code: string; name: string };
 
 /** `GET public/config/contact` — Rabotka's own contact, set in the admin's Contact card. */
-export type SupportContact = { email: string; phone: string; address: string };
+/** A network Rabotka can be followed on (Settings → Contact in admin). */
+export type SocialNetwork = "facebook" | "instagram" | "linkedin" | "tiktok" | "x" | "youtube" | "whatsapp";
+
+/** `GET public/config/contact`; `socials` holds only the networks with a link (absent on an older backend). */
+export type SupportContact = {
+  email: string;
+  phone: string;
+  address: string;
+  socials?: { network: SocialNetwork; url: string }[];
+};
 
 /** « Demander une démo »: `POST public/business/demo-requests`. */
 export type DemoRequestInput = {
