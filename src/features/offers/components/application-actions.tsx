@@ -118,19 +118,29 @@ function Actions({
   variant = "inline",
   recruiting = true,
   hideChat = false,
+  request,
 }: Readonly<{
   applicant: OfferApplicant;
   name: string;
-  variant?: "inline" | "card" | "compact";
+  /** `dialogs`: no buttons, only the dialogs, opened by `request` (the board's drops). */
+  variant?: "inline" | "card" | "compact" | "dialogs";
   /** False once the offer stopped hiring: refusing is all that is left. */
   recruiting?: boolean;
   /** « Message » lives elsewhere (a « ⋯ » menu, `useApplicationChat`). */
   hideChat?: boolean;
+  /** Opens « Retenir » from outside (a card dropped on « Retenues »); a new `nonce` opens it again. */
+  request?: { dialog: "accept"; nonce: number } | null;
 }>) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const openChat = useOpenDiscussion();
   const [dialog, setDialog] = useState<Dialog>(null);
+  // Set during render, not in an effect: each new request opens its dialog once.
+  const [handled, setHandled] = useState<number | null>(null);
+  if (request && request.nonce !== handled) {
+    setHandled(request.nonce);
+    setDialog(request.dialog);
+  }
   const [reason, setReason] = useState("");
   const id = applicant.applicationId;
 
@@ -241,7 +251,7 @@ function Actions({
 
   return (
     <>
-      {variant === "compact" ? (
+      {variant === "dialogs" ? null : variant === "compact" ? (
         <div className="flex shrink-0 items-center gap-1.5">
           {chat}
           {contact && (

@@ -75,6 +75,8 @@ export type ExternalApplication = {
   cvMimeType: string;
   createdAt: string;
   viewedAt: string | null;
+  /** « Présélectionnée », while waiting: the business's own step. */
+  shortlistedAt?: string | null;
   offer: { id: string; title: string; status: string };
   /** Once the business asked for it: the score lives in Analyse de CV. */
   analysis: CvAnalysis | null;

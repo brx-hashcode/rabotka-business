@@ -82,6 +82,8 @@ export type OfferApplicant = {
   createdAt: string;
   /** Rated by this employer already (finished missions only). */
   ratedByEmployer?: boolean;
+  /** « Présélectionnée », while waiting: the business's own step. */
+  shortlistedAt?: string | null;
   /** Its answers to the offer's questions; empty when it applied without them. */
   answers?: ApplicantAnswer[];
   /** A wrong answer to an « éliminatoire » question. */
@@ -205,6 +207,7 @@ class OfferController extends BusinessBaseController {
         status: String(a.status),
         createdAt: String(a.created_at ?? ""),
         ratedByEmployer: Boolean(a.ratedByEmployer),
+        shortlistedAt: str(a.shortlistedAt),
         knockedOut: Boolean(a.knockedOut),
         answers: Array.isArray(a.answers) ? (a.answers as ApplicantAnswer[]) : [],
         cv: (a.cv as OfferApplicant["cv"]) ?? { kind: "RABOTKA" },
@@ -317,6 +320,9 @@ export type ApplicantAssessment = {
   gaps: string[];
 };
 
+/** Rabotka applications, or careers-page ones, as the business routes name them. */
+export type ShortlistKind = "rabotka" | "external";
+
 class AssessmentController extends BusinessBaseController {
   forOffer(offerId: string): Promise<{ assessments: ApplicantAssessment[]; pending: number }> {
     return this.get(`/business/me/offers/${encodeURIComponent(offerId)}/assessments`);
@@ -325,9 +331,23 @@ class AssessmentController extends BusinessBaseController {
   /** Refuses the applications picked, or every one still waiting, with one message. */
   refuse(
     offerId: string,
-    body: { applicationIds?: string[]; remaining?: boolean; message?: string },
+    body: { applicationIds?: string[]; externalIds?: string[]; remaining?: boolean; message?: string },
   ): Promise<{ refused: number; skipped: number }> {
     return this.post(`/business/me/offers/${encodeURIComponent(offerId)}/applications/refuse`, body);
+  }
+
+  /** « Présélectionner » one candidature (`rabotka` or `external`), or take it off. */
+  shortlistOne(kind: ShortlistKind, id: string, shortlisted: boolean): Promise<{ shortlisted: boolean; shortlistedAt: string | null }> {
+    const path = `/business/me/applications/${kind}/${encodeURIComponent(id)}/shortlist`;
+    return shortlisted ? this.post(path) : this.delete(path);
+  }
+
+  /** The same for several candidatures of an offer; only those still waiting change. */
+  shortlistMany(
+    offerId: string,
+    body: { rabotka?: string[]; external?: string[]; shortlisted: boolean },
+  ): Promise<{ changed: number; skipped: number }> {
+    return this.post(`/business/me/offers/${encodeURIComponent(offerId)}/applications/shortlist`, body);
   }
 
   /** CV analysis of Rabotka applicants: one, or all those not read yet (1 « CV inclus » each). */
@@ -353,6 +373,8 @@ export const analyseApplicants = assessments.analyse.bind(assessments);
 export const reanalyseApplicant = assessments.reanalyse.bind(assessments);
 export const getOfferAssessments = assessments.forOffer.bind(assessments);
 export const refuseApplications = assessments.refuse.bind(assessments);
+export const shortlistApplication = assessments.shortlistOne.bind(assessments);
+export const shortlistApplications = assessments.shortlistMany.bind(assessments);
 
 /** The candidate's own CV sent with an application (« CV joint »). */
 export function applicationCvUrl(applicationId: string): string {
