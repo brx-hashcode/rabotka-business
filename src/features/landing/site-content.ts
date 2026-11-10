@@ -8,7 +8,7 @@ import {
   type Icon,
 } from "@tabler/icons-react";
 
-import { FAQ, type MockupKey } from "./content";
+import type { MockupKey } from "./content";
 
 /*
  * The public site's pages beyond the landing: the ATS story, each feature's
@@ -69,13 +69,6 @@ export type FeaturePage = {
   heading: string;
   intro: string;
   benefits: { title: string; text: string }[];
-  faq: { q: string; a: string }[];
-};
-
-const faqAbout = (q: string) => {
-  const item = FAQ.find((f) => f.q === q);
-  if (!item) throw new Error(`FAQ missing: ${q}`);
-  return item;
 };
 
 /** One page per feature, keyed like FEATURES. */
@@ -105,12 +98,6 @@ export const FEATURE_PAGES: Record<Exclude<MockupKey, "pipeline">, FeaturePage> 
         text: "Exportez le classement et vos échanges en PDF pour votre direction ou le responsable du poste.",
       },
     ],
-    faq: [
-      faqAbout("Comment fonctionne l'analyse de CV ?"),
-      faqAbout("Quels CV puis-je envoyer ?"),
-      faqAbout("Que fait Rabotka dans ma messagerie ?"),
-      faqAbout("Combien de temps les CV sont-ils conservés ?"),
-    ],
   },
   offer: {
     metaTitle: "Rédaction et diffusion d'offres",
@@ -137,16 +124,6 @@ export const FEATURE_PAGES: Record<Exclude<MockupKey, "pipeline">, FeaturePage> 
         text: "Si la rémunération, la date ou le lieu change, les candidats déjà engagés sont prévenus. Une offre expirée se republie en un clic.",
       },
     ],
-    faq: [
-      {
-        q: "Où mes offres sont-elles visibles ?",
-        a: "Auprès des candidats Rabotka de la ville et du métier, jusque sur WhatsApp ; sur votre page carrières, que Google peut afficher dans ses résultats d'emploi ; sur LinkedIn si vous le connectez ; et partout où vous partagez le lien ou l'affiche à QR code.",
-      },
-      {
-        q: "Puis-je poser des questions aux candidats ?",
-        a: "Oui. Ajoutez vos questions à l'offre ; une question peut être éliminatoire. Les candidatures qui y répondent mal restent visibles, rangées après les autres.",
-      },
-    ],
   },
   linkedin: {
     metaTitle: "Publication sur LinkedIn",
@@ -161,7 +138,6 @@ export const FEATURE_PAGES: Record<Exclude<MockupKey, "pipeline">, FeaturePage> 
       { title: "Chaque recruteur, son profil", text: "Chaque recruteur de l'équipe publie sur son propre profil LinkedIn." },
       { title: "La provenance suivie", text: "Les candidatures venues de LinkedIn sont repérées dans votre boîte de réception." },
     ],
-    faq: [faqAbout("Puis-je publier mes offres sur LinkedIn ?")],
   },
   applicants: {
     metaTitle: "Suivi des candidatures (ATS)",
@@ -188,16 +164,6 @@ export const FEATURE_PAGES: Record<Exclude<MockupKey, "pipeline">, FeaturePage> 
         text: "La liste des candidats d'une offre en Excel, et le rapport de recrutement en PDF pour votre direction.",
       },
     ],
-    faq: [
-      {
-        q: "D'où viennent les candidatures ?",
-        a: "Des candidats Rabotka, qui postulent depuis l'application ou WhatsApp, et de votre page carrières, où postulent ceux qui ne sont pas sur Rabotka, y compris depuis LinkedIn ou une affiche à QR code. La provenance de chacune est indiquée.",
-      },
-      {
-        q: "Les candidats non retenus sont-ils prévenus ?",
-        a: "Oui, si vous le souhaitez : un message prêt à l'emploi, que vous pouvez modifier, leur est envoyé, un par un ou à tous à la fois.",
-      },
-    ],
   },
   interviews: {
     metaTitle: "Entretiens",
@@ -212,7 +178,6 @@ export const FEATURE_PAGES: Record<Exclude<MockupKey, "pipeline">, FeaturePage> 
       { title: "Votre agenda synchronisé", text: "Google Agenda, Outlook ou Apple Calendrier : chaque entretien y apparaît et s'y met à jour." },
       { title: "Un rappel la veille", text: "Pour vous et pour le candidat, afin que personne n'oublie." },
     ],
-    faq: [faqAbout("Les entretiens apparaissent-ils dans mon agenda ?")],
   },
   tracking: {
     metaTitle: "Missions, contrats et tableau de bord",
@@ -226,12 +191,6 @@ export const FEATURE_PAGES: Record<Exclude<MockupKey, "pipeline">, FeaturePage> 
       { title: "Les missions suivies", text: "Qui arrive, qui est en mission, qui a terminé ; et votre avis sur chaque mission terminée." },
       { title: "Un tableau de bord", text: "Candidatures, entretiens, délais et postes pourvus sur 7, 30 ou 90 jours, comparés à la période d'avant." },
       { title: "Des exports RH", text: "Le rapport de recrutement en PDF, vos données en Excel, et le registre du personnel." },
-    ],
-    faq: [
-      {
-        q: "Puis-je exporter mes données de recrutement ?",
-        a: "Oui : le rapport de recrutement en PDF, et vos données en Excel ou CSV, dont la liste des candidats d'une offre et le registre du personnel.",
-      },
     ],
   },
   profiles: {
@@ -247,12 +206,6 @@ export const FEATURE_PAGES: Record<Exclude<MockupKey, "pipeline">, FeaturePage> 
       { title: "Invités à vos offres", text: "Proposez une offre en ligne à un profil gardé : il est invité à postuler." },
       { title: "Des agents sur le terrain", text: "Nos agents mobilisent aussi les candidats absents des plateformes." },
     ],
-    faq: [
-      {
-        q: "Comment joindre un profil ?",
-        a: "Obtenez son contact depuis sa fiche : votre formule comprend des contacts inclus, et un pack en ajoute si vous en avez besoin.",
-      },
-    ],
   },
   team: {
     metaTitle: "Recrutement en équipe",
@@ -266,12 +219,6 @@ export const FEATURE_PAGES: Record<Exclude<MockupKey, "pipeline">, FeaturePage> 
       { title: "L'avis de chacun", text: "Oui, Peut-être ou Non sur chaque candidat : la décision se lit d'un coup d'œil." },
       { title: "Des notes privées", text: "Ce que l'équipe écrit sur un candidat n'est jamais vu de lui." },
       { title: "Activité et historique", text: "Qui a fait quoi, et quand : pour l'équipe comme pour chaque candidature." },
-    ],
-    faq: [
-      {
-        q: "Combien de collègues puis-je inviter ?",
-        a: "Votre formule comprend des places de Recruteur et d'Évaluateur. Une invitation part par e-mail ; vous pouvez la renvoyer ou la retirer.",
-      },
     ],
   },
 };

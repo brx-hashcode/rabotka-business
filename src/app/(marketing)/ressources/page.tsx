@@ -3,30 +3,26 @@ import Link from "next/link";
 import { IconArrowRight, IconClock } from "@tabler/icons-react";
 
 import { DemoBlock } from "#/features/landing/components/demo-block";
-import { FaqSection } from "#/features/landing/components/landing-sections";
 import { PageHero } from "#/features/landing/components/page-hero";
 import { SectionHeading } from "#/features/landing/components/section-heading";
 import { GUIDES } from "#/features/landing/site-content";
-import { businessCountriesServer } from "#/lib/api/catalog-server";
 import { marketingMetadata } from "#/lib/seo/marketing";
 
 export function generateMetadata(): Promise<Metadata> {
   return marketingMetadata({
     title: "Ressources",
     description:
-      "Guides pratiques pour recruter mieux et plus vite, et réponses aux questions fréquentes sur Rabotka Business.",
+      "Guides pratiques pour rédiger vos offres, trier vos candidatures et mener vos entretiens avec Rabotka Business.",
     path: "/ressources",
   });
 }
 
-export default async function ResourcesPage() {
-  const countries = await businessCountriesServer();
+export default function ResourcesPage() {
   return (
     <>
       <PageHero
-        kicker="Ressources"
         title="Recruter mieux, plus vite"
-        text="Des guides concrets pour rédiger vos offres, trier vos candidatures et mener vos entretiens, et les réponses aux questions que l'on nous pose le plus."
+        text="Des guides concrets pour rédiger vos offres, trier vos candidatures et mener vos entretiens."
         actions={false}
       />
 
@@ -59,7 +55,6 @@ export default async function ResourcesPage() {
         </div>
       </section>
 
-      <FaqSection countries={countries} />
 
       <DemoBlock />
     </>

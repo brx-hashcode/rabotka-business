@@ -38,7 +38,6 @@ export default function ContactPage() {
   return (
     <>
       <PageHero
-        kicker="Contact"
         title="Parlons de vos recrutements"
         text="Une démo, une question sur votre compte ou sur la mise en place : nos équipes vous répondent."
         actions={false}

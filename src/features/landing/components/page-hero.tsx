@@ -2,14 +2,13 @@ import type { ReactNode } from "react";
 
 import { DemoButton, SignUpButton } from "./demo-button";
 
-/** The lime opening of an inner page: kicker, title, lead, the two ways in, and a picture. */
+/** The lime opening of an inner page: title, lead, the two ways in, and a picture. */
 export function PageHero({
-  kicker,
   title,
   text,
   aside,
   actions = true,
-}: Readonly<{ kicker: string; title: string; text: string; aside?: ReactNode; actions?: boolean }>) {
+}: Readonly<{ title: string; text: string; aside?: ReactNode; actions?: boolean }>) {
   return (
     <section className="overflow-hidden bg-header text-header-foreground">
       <div
@@ -20,7 +19,6 @@ export function PageHero({
         }
       >
         <div className={aside ? "space-y-6" : "mx-auto max-w-3xl space-y-6"}>
-          <p className="inline-flex rounded-full bg-black/5 px-3 py-1 font-medium text-sm">{kicker}</p>
           <h1 className="font-semibold text-4xl leading-[1.08] tracking-tight sm:text-5xl">{title}</h1>
           <p className="text-header-muted text-lg">{text}</p>
           {actions && (

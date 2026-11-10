@@ -3,15 +3,9 @@ import type { Metadata } from "next";
 import { AtsSection } from "#/features/landing/components/ats-section";
 import { CountriesSection } from "#/features/landing/components/countries-section";
 import { DemoBlock } from "#/features/landing/components/demo-block";
-import { ContactSection } from "#/features/landing/components/landing-footer";
+import { FeatureStages } from "#/features/landing/components/feature-stages";
 import { LandingHero } from "#/features/landing/components/landing-hero";
-import {
-  AudiencesSection,
-  FaqSection,
-  FeaturesSection,
-  StepsSection,
-  TrustSection,
-} from "#/features/landing/components/landing-sections";
+import { AudiencesSection, FaqSection } from "#/features/landing/components/landing-sections";
 import { businessCountriesServer } from "#/lib/api/catalog-server";
 import { jsonLd, marketingMetadata, organizationLd } from "#/lib/seo/marketing";
 import { siteOrigin } from "#/lib/seo/site";
@@ -26,8 +20,9 @@ export function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * The public landing page. A signed-in business never sees it: src/proxy.ts
- * sends them on to their space.
+ * The landing: a summary that sends each visitor on — the ATS, its tools by
+ * stage, where it is open, who it is for, the questions, the demo.
+ * The detail lives on the other pages, never repeated here.
  */
 export default async function LandingPage() {
   const [countries, { origin }] = await Promise.all([businessCountriesServer(), siteOrigin()]);
@@ -36,14 +31,11 @@ export default async function LandingPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(organizationLd(origin)) }} />
       <LandingHero countries={countries} />
       <AtsSection />
-      <FeaturesSection />
+      <FeatureStages />
       <CountriesSection countries={countries} />
-      <TrustSection />
-      <StepsSection />
       <AudiencesSection />
       <FaqSection countries={countries} />
       <DemoBlock />
-      <ContactSection />
     </>
   );
 }

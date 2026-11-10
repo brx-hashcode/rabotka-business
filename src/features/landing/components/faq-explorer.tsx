@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { IconArrowRight, IconPlus } from "@tabler/icons-react";
 
 import { cn } from "#/lib/utils";
@@ -111,13 +112,13 @@ export function FaqExplorer({ items }: Readonly<{ items: Item[] }>) {
             </div>
             <div className="relative mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white/[0.06] p-4 pl-5">
               <span className="text-sm text-white/70">Une autre question ?</span>
-              <a
-                href="#contact"
+              <Link
+                href="/contact"
                 className="inline-flex h-10 items-center gap-2 rounded-full bg-[#cbffa5] px-4 font-medium text-[#0f2414] text-sm transition-transform hover:translate-x-0.5"
               >
                 Nous contacter
                 <IconArrowRight className="size-4" />
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -170,8 +171,8 @@ export function FaqExplorer({ items }: Readonly<{ items: Item[] }>) {
             </div>
           );
         })}
-        <a
-          href="#contact"
+        <Link
+          href="/contact"
           className="mt-4 flex items-center justify-between gap-4 rounded-3xl bg-[#0f2414] p-5 text-white"
         >
           <span className="text-sm text-white/75">Une autre question ?</span>
@@ -179,7 +180,7 @@ export function FaqExplorer({ items }: Readonly<{ items: Item[] }>) {
             Nous contacter
             <IconArrowRight className="size-4" />
           </span>
-        </a>
+        </Link>
       </div>
     </>
   );

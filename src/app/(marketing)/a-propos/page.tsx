@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
-import { CountriesSection } from "#/features/landing/components/countries-section";
 import { DemoBlock } from "#/features/landing/components/demo-block";
-import { AudiencesSection, TrustSection } from "#/features/landing/components/landing-sections";
+import { TrustSection } from "#/features/landing/components/landing-sections";
+import { flagUrl } from "#/features/landing/globe/country-places";
 import { PageHero } from "#/features/landing/components/page-hero";
 import { SectionHeading } from "#/features/landing/components/section-heading";
 import { businessCountriesServer } from "#/lib/api/catalog-server";
@@ -39,7 +39,6 @@ export default async function AboutPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(organizationLd(origin)) }} />
       <PageHero
-        kicker="À propos"
         title="Le recrutement des organisations africaines, enfin outillé"
         text="Rabotka met en relation les personnes qui cherchent un emploi et celles qui recrutent, jusque sur WhatsApp. Rabotka Business est son espace pour les entreprises, institutions et organisations : un ATS complet, pensé pour le marché de l'emploi africain."
       />
@@ -64,9 +63,25 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <CountriesSection countries={countries} />
+      <section className="py-20 md:py-28">
+        <div className="mx-auto w-full max-w-7xl space-y-10 px-4 sm:px-6">
+          <SectionHeading
+            kicker="Où nous sommes"
+            title={`Disponible dans ${countries.length} pays d'Afrique`}
+            text="Les pièces demandées, les villes et la diffusion de vos offres sont celles de votre pays ; votre formule se règle par mobile money, dans votre monnaie."
+          />
+          <ul className="flex flex-wrap gap-2">
+            {countries.map((c) => (
+              <li key={c.code} className="inline-flex items-center gap-2 rounded-full bg-card py-2 pr-4 pl-2 font-medium text-sm">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={flagUrl(c.code, 80)} alt="" className="size-6 rounded-full object-cover" />
+                {c.name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
       <TrustSection />
-      <AudiencesSection />
       <DemoBlock />
     </>
   );
