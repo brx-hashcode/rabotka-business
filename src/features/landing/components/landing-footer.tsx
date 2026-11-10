@@ -1,12 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { IconArrowRight, IconArrowUp, IconArrowUpRight, IconMail, IconMapPin, IconPhone } from "@tabler/icons-react";
+import {
+  IconArrowRight,
+  IconArrowUp,
+  IconArrowUpRight,
+  IconBrandFacebook,
+  IconBrandInstagram,
+  IconBrandLinkedin,
+  IconBrandTiktok,
+  IconBrandWhatsapp,
+  IconBrandX,
+  IconBrandYoutube,
+  IconMail,
+  IconMapPin,
+  IconPhone,
+  type Icon,
+} from "@tabler/icons-react";
 
 import { BrandLogo } from "#/components/brand-logo";
 import { useSupportContact } from "#/hooks/use-support-contact";
 import type { BusinessCountryName } from "#/lib/api/catalog-server";
-import type { SupportContact } from "#/lib/api/public-controller";
+import type { SocialNetwork, SupportContact } from "#/lib/api/public-controller";
 import { flagUrl } from "../globe/country-places";
 import {
   COMPANY_LINKS,
@@ -77,6 +92,17 @@ export function ContactCards({ title = "Besoin d'un accompagnement ?", text = "N
   );
 }
 
+/** Where to follow Rabotka: the networks admins set a link for, in the backend's order. */
+const SOCIALS: Record<SocialNetwork, { label: string; icon: Icon }> = {
+  facebook: { label: "Facebook", icon: IconBrandFacebook },
+  instagram: { label: "Instagram", icon: IconBrandInstagram },
+  linkedin: { label: "LinkedIn", icon: IconBrandLinkedin },
+  tiktok: { label: "TikTok", icon: IconBrandTiktok },
+  x: { label: "X", icon: IconBrandX },
+  youtube: { label: "YouTube", icon: IconBrandYoutube },
+  whatsapp: { label: "WhatsApp", icon: IconBrandWhatsapp },
+};
+
 /** Every link once; the demo block above every page asks for the demo. */
 const FOOTER_COLUMNS: { title: string; links: NavLink[] }[] = [
   { title: "Fonctionnalités", links: SOLUTION_LINKS },
@@ -97,12 +123,14 @@ const MAX_FLAGS = 7;
 
 /**
  * The footer, a dark panel set in the page: a statement with where Rabotka is
- * open and how to reach the team (as admins set it), the links in four
+ * open, how to reach the team and where to follow it (as admins set it), the links in four
  * columns, the legal line, then the name in large outlined capitals.
  */
 export function LandingFooter({ countries }: Readonly<{ countries: BusinessCountryName[] }>) {
   const { data: contact } = useSupportContact();
   const cards = contactCards(contact);
+  // Only networks this build knows an icon for.
+  const socials = (contact?.socials ?? []).filter((s) => s.network in SOCIALS);
   const flags = countries.slice(0, MAX_FLAGS);
   const more = countries.length - flags.length;
 
@@ -173,6 +201,27 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
                       </a>
                     </li>
                   ))}
+                </ul>
+              )}
+              {socials.length > 0 && (
+                <ul aria-label="Suivez Rabotka" className="flex flex-wrap items-center gap-2">
+                  {socials.map(({ network, url }) => {
+                    const { label, icon: Glyph } = SOCIALS[network];
+                    return (
+                      <li key={network}>
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noreferrer"
+                          aria-label={`Rabotka sur ${label}`}
+                          title={label}
+                          className="flex size-10 items-center justify-center rounded-full bg-white/6 text-white/80 transition-colors hover:bg-header hover:text-header-foreground"
+                        >
+                          <Glyph className="size-[18px]" stroke={1.75} />
+                        </a>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>
