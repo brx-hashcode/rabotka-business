@@ -16,7 +16,17 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconBriefcase, IconCalendarEvent, IconCheck, IconDots, IconWorld, IconX } from "@tabler/icons-react";
+import {
+  IconBriefcase,
+  IconCalendarEvent,
+  IconCheck,
+  IconChevronsLeft,
+  IconChevronsRight,
+  IconDots,
+  IconSearch,
+  IconWorld,
+  IconX,
+} from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
@@ -60,6 +70,23 @@ const COLUMNS: { key: Column; label: string }[] = [
   { key: "hired", label: "Retenues" },
   { key: "closed", label: "Refusées" },
 ];
+
+/** Cards a column shows at first, and adds with each « Voir plus ». */
+const PAGE = 20;
+
+const SCORE_FILTERS = [
+  { min: 0, label: "Tous" },
+  { min: 40, label: "40 et +" },
+  { min: 60, label: "60 et +" },
+  { min: 80, label: "80 et +" },
+];
+
+/** Lower case, no accents: « Élodie » is found by « elodie ». */
+const fold = (text: string) =>
+  text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
 
 /** Interviews that still stand: proposed, confirmed, or to move. */
 const LIVE = new Set(["PENDING", "CONFIRMED", "RESCHEDULE_REQUESTED"]);
@@ -117,8 +144,28 @@ export function OfferBoard({
     if (e.stage === "new" || e.stage === "viewed") return "review";
     return e.stage as Column;
   };
+  // Above the board: a name, a minimum fit, those failing a criterion out.
+  const [query, setQuery] = useState("");
+  const [minScore, setMinScore] = useState(0);
+  const [hideOut, setHideOut] = useState(false);
+  const words = fold(query).split(/\s+/).filter(Boolean);
+  const shownEntries = entries.filter(
+    (e) =>
+      (words.length === 0 || words.every((w) => fold(nameOf(e)).includes(w))) &&
+      (minScore === 0 || (e.score ?? 0) >= minScore) &&
+      !(hideOut && e.a.knockedOut),
+  );
+  const filtering = words.length > 0 || minScore > 0 || hideOut;
+  const outCount = entries.filter((e) => e.a.knockedOut).length;
+
   const byColumn = new Map<Column, BoardEntry[]>(COLUMNS.map((c) => [c.key, []]));
-  for (const e of entries) byColumn.get(columnOf(e))?.push(e);
+  for (const e of shownEntries) byColumn.get(columnOf(e))?.push(e);
+  // Each column shows its best PAGE first, then « Voir plus »: light with
+  // hundreds of candidates, the best fits on top.
+  const [limits, setLimits] = useState<Partial<Record<Column, number>>>({});
+  const limitOf = (c: Column) => limits[c] ?? PAGE;
+  // « Refusées » is folded to a strip: rarely worked on, and soon the longest.
+  const [closedOpen, setClosedOpen] = useState(false);
 
   const retainCareers = useMutation({
     mutationFn: (id: string) => retainExternalApplication(id),
@@ -176,11 +223,72 @@ export function OfferBoard({
         onDragEnd={onDragEnd}
         onDragCancel={() => setDragKey(null)}
       >
-        {/* Five equal columns across the page; on a narrow screen they scroll sideways. */}
-        <div className="-mx-1 grid snap-x auto-cols-[minmax(15rem,1fr)] grid-flow-col gap-2.5 overflow-x-auto px-1 pb-2">
-          {COLUMNS.map((c) => (
-            <BoardColumn key={c.key} column={c} entries={byColumn.get(c.key) ?? []}>
-              {(byColumn.get(c.key) ?? []).map((e) => (
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <div className="relative min-w-52 flex-1 sm:max-w-xs">
+            <IconSearch className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="search"
+              value={query}
+              onChange={(ev) => setQuery(ev.target.value)}
+              placeholder="Rechercher un candidat"
+              aria-label="Rechercher un candidat par son nom"
+              className="h-9 w-full rounded-full bg-page pr-3 pl-9 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-whatsapp/40"
+            />
+          </div>
+          <div role="group" aria-label="Adéquation minimale" className="flex gap-1 rounded-full bg-page p-1">
+            {SCORE_FILTERS.map((f) => (
+              <button
+                key={f.min}
+                type="button"
+                aria-pressed={minScore === f.min}
+                onClick={() => setMinScore(f.min)}
+                className={cn(
+                  "rounded-full px-3 py-1 font-medium text-xs transition-colors",
+                  minScore === f.min ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          {outCount > 0 && (
+            <button
+              type="button"
+              aria-pressed={hideOut}
+              onClick={() => setHideOut((v) => !v)}
+              className={cn(
+                "h-9 rounded-full px-3.5 font-medium text-xs transition-colors",
+                hideOut ? "bg-selected text-selected-foreground" : "bg-page text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Masquer hors critères ({outCount})
+            </button>
+          )}
+          {filtering && (
+            <span className="text-muted-foreground text-xs">
+              {shownEntries.length} sur {entries.length}
+            </span>
+          )}
+        </div>
+
+        {/* A fixed height, each column scrolling on its own under its title; on a narrow screen they scroll sideways. */}
+        <div className="-mx-1 flex h-[min(70vh,44rem)] min-h-[26rem] snap-x gap-2.5 overflow-x-auto px-1 pb-1">
+          {COLUMNS.map((c) => {
+            const all = byColumn.get(c.key) ?? [];
+            if (c.key === "closed" && !closedOpen) {
+              return <FoldedColumn key={c.key} column={c} count={all.length} onOpen={() => setClosedOpen(true)} />;
+            }
+            const shown = all.slice(0, limitOf(c.key));
+            return (
+            <BoardColumn
+              key={c.key}
+              column={c}
+              count={all.length}
+              more={all.length - shown.length}
+              onMore={() => setLimits((l) => ({ ...l, [c.key]: limitOf(c.key) + PAGE }))}
+              onFold={c.key === "closed" ? () => setClosedOpen(false) : undefined}
+            >
+              {shown.map((e) => (
                 <BoardCard
                   key={e.key}
                   entry={e}
@@ -192,7 +300,8 @@ export function OfferBoard({
                 />
               ))}
             </BoardColumn>
-          ))}
+            );
+          })}
         </div>
         <DragOverlay dropAnimation={null}>
           {dragged && (
@@ -288,31 +397,87 @@ export function OfferBoard({
 
 function BoardColumn({
   column,
-  entries,
+  count,
+  more,
+  onMore,
+  onFold,
   children,
-}: Readonly<{ column: (typeof COLUMNS)[number]; entries: BoardEntry[]; children: React.ReactNode }>) {
+}: Readonly<{
+  column: (typeof COLUMNS)[number];
+  count: number;
+  /** Cards not shown yet in this column. */
+  more: number;
+  onMore: () => void;
+  /** « Refusées » folds back to its strip. */
+  onFold?: () => void;
+  children: React.ReactNode;
+}>) {
   const { setNodeRef, isOver } = useDroppable({ id: column.key });
   return (
     <section
       ref={setNodeRef}
       aria-label={column.label}
       className={cn(
-        "flex snap-start flex-col gap-1.5 rounded-2xl bg-page p-2 transition-colors duration-200",
+        "flex min-w-60 flex-1 snap-start flex-col rounded-2xl bg-page transition-colors duration-200",
         isOver && "bg-brand-lime/40",
       )}
     >
-      <header className="flex items-center justify-between gap-2 px-2 pt-2 pb-1">
+      <header className="flex shrink-0 items-center justify-between gap-2 px-4 pt-3 pb-2">
         <span className="font-semibold text-sm">{column.label}</span>
-        <span className="rounded-full bg-card px-2 py-0.5 text-muted-foreground text-xs tabular-nums">{entries.length}</span>
+        <span className="flex items-center gap-1">
+          <span className="rounded-full bg-card px-2 py-0.5 text-muted-foreground text-xs tabular-nums">{count}</span>
+          {onFold && (
+            <button
+              type="button"
+              onClick={onFold}
+              aria-label={`Replier « ${column.label} »`}
+              className="flex size-6 items-center justify-center rounded-full text-muted-foreground hover:bg-card hover:text-foreground"
+            >
+              <IconChevronsRight className="size-4" />
+            </button>
+          )}
+        </span>
       </header>
-      <div className="flex min-h-32 flex-1 flex-col gap-1.5">
-        {entries.length === 0 ? (
+      <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-2 pb-2 [scrollbar-width:thin]">
+        {count === 0 ? (
           <p className="flex flex-1 items-center justify-center px-3 py-6 text-center text-muted-foreground/70 text-xs">Aucun candidat</p>
         ) : (
-          children
+          <>
+            {children}
+            {more > 0 && (
+              <button
+                type="button"
+                onClick={onMore}
+                className="mt-1 h-9 shrink-0 rounded-xl font-medium text-muted-foreground text-xs hover:bg-card hover:text-foreground"
+              >
+                Voir {Math.min(more, PAGE)} de plus · {more} restant{more > 1 ? "s" : ""}
+              </button>
+            )}
+          </>
         )}
       </div>
     </section>
+  );
+}
+
+/** « Refusées » while folded: its name and count on a strip, still a drop target. */
+function FoldedColumn({ column, count, onOpen }: Readonly<{ column: (typeof COLUMNS)[number]; count: number; onOpen: () => void }>) {
+  const { setNodeRef, isOver } = useDroppable({ id: column.key });
+  return (
+    <button
+      ref={setNodeRef}
+      type="button"
+      onClick={onOpen}
+      aria-label={`Afficher « ${column.label} » (${count})`}
+      className={cn(
+        "flex w-14 shrink-0 flex-col items-center gap-3 rounded-2xl bg-page py-3 text-muted-foreground transition-colors duration-200 hover:text-foreground",
+        isOver && "bg-brand-lime/40 text-foreground",
+      )}
+    >
+      <IconChevronsLeft className="size-4" />
+      <span className="rounded-full bg-card px-2 py-0.5 text-xs tabular-nums">{count}</span>
+      <span className="font-semibold text-sm [writing-mode:vertical-rl] rotate-180">{column.label}</span>
+    </button>
   );
 }
 

@@ -740,7 +740,7 @@ function ApplicantsCard({
           offerId={o.id}
           jobTitle={o.title}
           recruiting={open}
-          entries={all.filter((e) => !(hideOut && e.a.knockedOut)).sort(byFit)}
+          entries={[...all].sort(byFit)}
         />
         </div>
       ) : (
