@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+
+import { Illustration } from "#/components/illustration";import Link from "next/link";
 import { IconArrowRight, IconHelpCircle, IconPresentation } from "@tabler/icons-react";
 
 import { ContactCards } from "#/features/landing/components/landing-footer";
 import { PageHero } from "#/features/landing/components/page-hero";
 import { DEMO_HREF, SIGN_IN_HREF } from "#/features/landing/content";
 import { marketingMetadata } from "#/lib/seo/marketing";
+import { IconTile } from "#/features/landing/components/icon-tile";
 
 export function generateMetadata(): Promise<Metadata> {
   return marketingMetadata({
@@ -18,6 +20,7 @@ export function generateMetadata(): Promise<Metadata> {
 const WAYS = [
   {
     icon: IconPresentation,
+    illustration: "booked" as const,
     title: "Vous découvrez Rabotka Business",
     text: "Demandez une démo de 30 minutes : nous vous recontactons sous 24 h ouvrées pour vous montrer Rabotka sur vos postes.",
     href: DEMO_HREF,
@@ -26,6 +29,7 @@ const WAYS = [
   },
   {
     icon: IconHelpCircle,
+    illustration: "chat" as const,
     title: "Vous avez déjà un compte",
     text: "Connectez-vous et ouvrez « Aide » dans votre espace : votre demande arrive directement à nos équipes, avec son suivi.",
     href: SIGN_IN_HREF,
@@ -45,11 +49,12 @@ export default function ContactPage() {
       <section className="px-4 py-20 sm:px-6 md:py-28">
         <div className="mx-auto w-full max-w-7xl space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            {WAYS.map(({ icon: Icon, ...w }) => (
+            {WAYS.map(({ icon, ...w }) => (
               <div key={w.title} className="flex flex-col gap-4 rounded-3xl bg-card p-6 sm:p-8">
-                <span className="flex size-12 items-center justify-center rounded-2xl bg-chip-green text-chip-green-foreground">
-                  <Icon className="size-5" />
-                </span>
+                <div className="flex items-start justify-between gap-4">
+                  <IconTile icon={icon} size="lg" />
+                  <Illustration name={w.illustration} className="h-28 w-auto sm:h-32" />
+                </div>
                 <h2 className="font-semibold text-2xl tracking-tight">{w.title}</h2>
                 <p className="flex-1 text-muted-foreground">{w.text}</p>
                 <Link

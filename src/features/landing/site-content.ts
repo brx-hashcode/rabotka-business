@@ -3,10 +3,12 @@ import {
   IconCalendarStats,
   IconLayoutKanban,
   IconMapPin,
-  IconSparkles,
+  IconSortDescending,
   IconUsers,
   type Icon,
 } from "@tabler/icons-react";
+
+import type { IllustrationName } from "#/components/illustration";
 
 import type { MockupKey } from "./content";
 
@@ -33,7 +35,7 @@ export const ATS_PILLARS: Pillar[] = [
   {
     title: "Le tri fait pour vous",
     text: "Chaque candidature est lue et notée par rapport au poste, même un CV scanné ou pris en photo. Vous savez pourquoi un candidat est en tête, critère par critère.",
-    icon: IconSparkles,
+    icon: IconSortDescending,
   },
   {
     title: "Une offre, partout à la fois",
@@ -225,6 +227,7 @@ export const FEATURE_PAGES: Record<Exclude<MockupKey, "pipeline">, FeaturePage> 
 
 export type Guide = {
   slug: string;
+  illustration: IllustrationName;
   title: string;
   description: string;
   /** Reading time, in minutes. */
@@ -236,6 +239,7 @@ export type Guide = {
 export const GUIDES: Guide[] = [
   {
     slug: "rediger-une-offre-qui-attire",
+    illustration: "job-offers",
     title: "Rédiger une offre qui attire les bons candidats",
     description: "Intitulé, missions, conditions : ce qui fait qu'un candidat qualifié postule, et ce qui le fait fuir.",
     minutes: 5,
@@ -273,6 +277,7 @@ export const GUIDES: Guide[] = [
   },
   {
     slug: "trier-des-dizaines-de-cv",
+    illustration: "online-cv",
     title: "Trier des dizaines de CV sans y passer la journée",
     description: "Une méthode en trois temps pour passer d'une pile de CV à une liste courte, avec l'Analyse de CV.",
     minutes: 4,
@@ -304,6 +309,7 @@ export const GUIDES: Guide[] = [
   },
   {
     slug: "organiser-ses-entretiens",
+    illustration: "interview",
     title: "Organiser ses entretiens sans échanges sans fin",
     description: "Proposer un créneau, préparer ses questions, décider en équipe : un entretien qui sert vraiment la décision.",
     minutes: 4,

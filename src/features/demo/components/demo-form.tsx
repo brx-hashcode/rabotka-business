@@ -5,9 +5,10 @@ import Link from "next/link";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { IconCheck, IconCircleCheck } from "@tabler/icons-react";
+import { IconCheck } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
 
+import { Illustration } from "#/components/illustration";
 import { Button } from "#/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "#/components/ui/form";
 import { Textarea } from "#/components/ui/textarea";
@@ -23,8 +24,8 @@ import { DEMO_INTERESTS, DEMO_SIZES } from "../demo-options";
 const required = (message: string, max = 120) => z.string().trim().min(1, message).max(max);
 
 const schema = z.object({
-  firstName: required("Indiquez votre prénom.", 80),
   lastName: required("Indiquez votre nom.", 80),
+  firstName: required("Indiquez votre prénom.", 80),
   email: z.string().trim().email("Cet e-mail ne semble pas valide."),
   phone: z
     .string()
@@ -54,8 +55,8 @@ export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryNam
   const form = useForm<DemoValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      firstName: "",
       lastName: "",
+      firstName: "",
       email: "",
       phone: "",
       company: "",
@@ -92,8 +93,8 @@ export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryNam
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="relative space-y-5 rounded-3xl bg-card p-6 sm:p-8">
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextField control={form.control} name="firstName" label="Prénom" autoComplete="given-name" />
           <TextField control={form.control} name="lastName" label="Nom" autoComplete="family-name" />
+          <TextField control={form.control} name="firstName" label="Prénom" autoComplete="given-name" />
         </div>
         <TextField
           control={form.control}
@@ -264,9 +265,7 @@ export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryNam
 function DemoSent({ firstName, email }: Readonly<{ firstName: string; email: string }>) {
   return (
     <div role="status" className="space-y-5 rounded-3xl bg-card p-6 text-center sm:p-10">
-      <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-chip-green text-chip-green-foreground">
-        <IconCircleCheck className="size-7" />
-      </span>
+      <Illustration name="sent" className="mx-auto h-40 w-auto" />
       <h2 className="font-semibold text-2xl tracking-tight">Merci {firstName}, votre demande est envoyée</h2>
       <p className="text-muted-foreground">
         Un membre de notre équipe vous recontacte sous 24 h ouvrées pour convenir d&apos;un créneau. Une confirmation

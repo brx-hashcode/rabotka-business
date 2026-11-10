@@ -19,7 +19,7 @@ export async function DemoBlock({
 }: Readonly<{ title?: string; text?: string }>) {
   const countries = await businessCountriesServer();
   return (
-    <section id="demarrer" aria-labelledby="demarrer-titre" className="scroll-mt-20 px-4 py-20 sm:px-6 md:py-28">
+    <section id="demarrer" aria-labelledby="demarrer-titre" className="px-4 py-20 sm:px-6 md:py-28">
       <div className="mx-auto grid w-full max-w-7xl gap-10 rounded-[2rem] bg-header p-6 text-header-foreground sm:p-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14 lg:p-14">
         <div className="space-y-6 lg:pt-4">
           <p className="font-medium text-sm">Démarrer</p>

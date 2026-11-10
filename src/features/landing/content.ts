@@ -3,13 +3,12 @@ import {
   IconBrandLinkedin,
   IconBuildingBank,
   IconBuildingSkyscraper,
-  IconBuildingStore,
   IconCalendarEvent,
-  IconChartBar,
+  IconFileCertificate,
   IconFileSearch,
   IconHeartHandshake,
   IconHelpCircle,
-  IconListCheck,
+  IconLayoutKanban,
   IconLock,
   IconMailShare,
   IconSchool,
@@ -17,8 +16,8 @@ import {
   IconStethoscope,
   IconTrash,
   IconUsers,
-  IconUsersGroup,
-  IconWand,
+  IconUserSearch,
+  IconWriting,
   type Icon,
 } from "@tabler/icons-react";
 
@@ -49,7 +48,6 @@ export type NavLink = {
   description?: string;
   /** A small coloured tile in the Solutions menu. */
   icon?: Icon;
-  tone?: string;
 };
 
 export type MockupKey =
@@ -68,7 +66,6 @@ export type Feature = NavLink & {
   /** Its page: /fonctionnalites/<slug>. */
   slug: string;
   icon: Icon;
-  tone: string;
   title: string;
   text: string;
   points: string[];
@@ -83,7 +80,6 @@ export const FEATURES: Feature[] = [
     label: "Analyse de CV",
     description: "Les CV lus, notés et classés pour chaque poste.",
     icon: IconFileSearch,
-    tone: "bg-chip-green text-chip-green-foreground",
     title: "Des dizaines de CV, classés en quelques minutes",
     text: "Déposez les CV reçus pour un poste, ou choisissez-les directement dans votre messagerie Gmail. Rabotka lit chacun, même scanné ou pris en photo, et le note par rapport au poste.",
     points: [
@@ -99,8 +95,7 @@ export const FEATURES: Feature[] = [
     href: "/fonctionnalites/redaction-offres",
     label: "Offres rédigées pour vous",
     description: "Quelques mots suffisent : l'offre complète est prête.",
-    icon: IconWand,
-    tone: "bg-chip-violet text-chip-violet-foreground",
+    icon: IconWriting,
     title: "Une offre claire en quelques mots",
     text: "Décrivez votre besoin comme vous le diriez à un collègue : Rabotka rédige l'intitulé et la description, et propose le métier. Vous relisez, ajustez et publiez.",
     points: [
@@ -116,7 +111,6 @@ export const FEATURES: Feature[] = [
     label: "Publication sur LinkedIn",
     description: "Vos offres sur votre LinkedIn, sans copier-coller.",
     icon: IconBrandLinkedin,
-    tone: "bg-chip-sky text-chip-sky-foreground",
     title: "Vos offres sur LinkedIn, en un clic",
     text: "Connectez votre compte LinkedIn une fois : chaque offre s'y publie en carte, avec votre texte et votre image. Elle mène à votre page carrières, où les candidats postulent.",
     points: [
@@ -132,8 +126,7 @@ export const FEATURES: Feature[] = [
     href: "/fonctionnalites/suivi-candidatures",
     label: "Suivi des candidatures",
     description: "Les candidats les plus adaptés en tête de liste.",
-    icon: IconListCheck,
-    tone: "bg-chip-sky text-chip-sky-foreground",
+    icon: IconLayoutKanban,
     title: "Les meilleurs candidats en tête de liste",
     text: "Chaque candidature reçoit une note : métier, expérience, lieu et fiabilité. Vous voyez d'abord qui correspond, et pourquoi.",
     points: [
@@ -149,7 +142,6 @@ export const FEATURES: Feature[] = [
     label: "Entretiens",
     description: "Invitations, réponses et agenda synchronisé.",
     icon: IconCalendarEvent,
-    tone: "bg-chip-amber text-chip-amber-foreground",
     title: "Des entretiens organisés sans échanges sans fin",
     text: "Proposez un créneau : le candidat confirme, décline ou demande un autre moment, depuis l'e-mail qu'il reçoit. Vous suivez tout au même endroit.",
     points: [
@@ -164,8 +156,7 @@ export const FEATURES: Feature[] = [
     href: "/fonctionnalites/missions-et-suivi",
     label: "Missions et suivi",
     description: "Contrats, missions et rapport de recrutement.",
-    icon: IconChartBar,
-    tone: "bg-chip-green text-chip-green-foreground",
+    icon: IconFileCertificate,
     title: "Du contrat au bilan, tout reste au même endroit",
     text: "Le contrat est généré dès qu'un candidat est retenu, et s'ouvre dans votre espace. Vos missions, vos candidatures et vos recrutements se suivent sur un seul tableau de bord.",
     points: [
@@ -180,8 +171,7 @@ export const FEATURES: Feature[] = [
     href: "/fonctionnalites/recherche-de-profils",
     label: "Profils et agents",
     description: "Recherche de profils vérifiés et agents de terrain.",
-    icon: IconUsersGroup,
-    tone: "bg-chip-violet text-chip-violet-foreground",
+    icon: IconUserSearch,
     title: "Allez chercher les profils, en ligne et sur le terrain",
     text: "Recherchez parmi les profils vérifiés par métier, compétence ou ville, gardez les plus intéressants et obtenez leur contact. Nos agents de terrain mobilisent aussi les candidats absents des plateformes.",
     points: [
@@ -197,7 +187,6 @@ export const FEATURES: Feature[] = [
     label: "Recrutement en équipe",
     description: "Recruteurs, évaluateurs, avis et notes partagés.",
     icon: IconUsers,
-    tone: "bg-chip-amber text-chip-amber-foreground",
     title: "Décidez à plusieurs, sans perdre le fil",
     text: "Invitez vos collègues dans l'espace : chacun voit les candidats de ses offres, donne son avis et laisse ses notes. La décision se prend sur des faits, pas sur des e-mails éparpillés.",
     points: [
@@ -221,12 +210,11 @@ export const FEATURE_GROUPS: { step: string; text: string; ids: MockupKey[] }[] 
   { step: "Décider et suivre", text: "En équipe, jusqu'au contrat", ids: ["team", "tracking"] },
 ];
 
-export const SOLUTION_LINKS: NavLink[] = FEATURES.map(({ href, label, description, icon, tone }) => ({
+export const SOLUTION_LINKS: NavLink[] = FEATURES.map(({ href, label, description, icon }) => ({
   href,
   label,
   description,
   icon,
-  tone,
 }));
 
 export const RESOURCE_LINKS: NavLink[] = [
@@ -235,28 +223,18 @@ export const RESOURCE_LINKS: NavLink[] = [
     label: "Guides du recruteur",
     description: "Des méthodes concrètes pour recruter mieux, plus vite.",
     icon: IconBook,
-    tone: "bg-chip-green text-chip-green-foreground",
   },
   {
     href: "/#faq",
     label: "Questions fréquentes",
     description: "Pays, CV, données, compte : l'essentiel.",
     icon: IconHelpCircle,
-    tone: "bg-chip-sky text-chip-sky-foreground",
   },
   {
     href: "/a-propos#confiance",
     label: "Sécurité et confidentialité",
     description: "Ce qui est lu, gardé et supprimé.",
     icon: IconShieldCheck,
-    tone: "bg-chip-violet text-chip-violet-foreground",
-  },
-  {
-    href: "/carrieres",
-    label: "Ils recrutent",
-    description: "Les organisations qui recrutent avec Rabotka.",
-    icon: IconBuildingStore,
-    tone: "bg-chip-amber text-chip-amber-foreground",
   },
 ];
 
@@ -264,7 +242,6 @@ export const COMPANY_LINKS: NavLink[] = [
   { href: "/a-propos", label: "À propos" },
   { href: "/contact", label: "Contact" },
   { href: DEMO_HREF, label: "Demander une démo" },
-  { href: PUBLIC_SITE, label: "www.rabotka.work" },
 ];
 
 export type Trust = { title: string; text: string; icon: Icon };
@@ -293,38 +270,54 @@ export const TRUST: Trust[] = [
 ];
 
 
-export type Audience = { title: string; text: string; icon: Icon };
+/** A sector Rabotka serves: what it recruits, and a few posts it often fills. */
+export type Audience = { title: string; text: string; icon: Icon; roles: string[] };
 
 export const AUDIENCES: Audience[] = [
   {
     title: "Entreprises, PME et TPE",
     text: "Commerce, industrie, services, BTP : du renfort ponctuel au recrutement de collaborateurs permanents.",
     icon: IconBuildingSkyscraper,
+    roles: ["Commercial", "Comptable", "Chef de chantier", "Magasinier"],
   },
   {
     title: "Enseignement et formation",
     text: "Établissements privés, universités, centres de formation professionnelle : corps enseignant, encadrement et personnel administratif.",
     icon: IconSchool,
+    roles: ["Enseignant", "Formateur", "Surveillant", "Secrétaire"],
   },
   {
     title: "ONG et organisations internationales",
     text: "Chefs de projet, agents de terrain, consultants : des recrutements locaux pour vos programmes.",
     icon: IconHeartHandshake,
+    roles: ["Chef de projet", "Agent de terrain", "Consultant"],
   },
   {
     title: "Secteur public",
     text: "Ministères, collectivités locales, établissements publics : des profils qualifiés et un processus traçable.",
     icon: IconBuildingBank,
+    roles: ["Agent administratif", "Juriste", "Ingénieur"],
   },
   {
     title: "Santé",
     text: "Cliniques, cabinets médicaux, pharmacies, laboratoires : personnel soignant, technique et d'accueil.",
     icon: IconStethoscope,
+    roles: ["Infirmier", "Pharmacien", "Technicien de laboratoire"],
   },
 ];
 
-/** The photo beside the sectors: an office, not the product. */
+/** Behind « Votre secteur n'apparaît pas ? »: an office, not the product. */
 export const AUDIENCE_PHOTO = "/media/meeting-table.jpg";
+
+/** The questions the home page answers, in order: the few a business asks first. */
+export const FAQ_SHOWN = [
+  "Dans quels pays Rabotka Business est-il disponible ?",
+  "Quelles organisations peuvent ouvrir un compte entreprise ?",
+  "Comment fonctionne l'analyse de CV ?",
+  "Puis-je publier mes offres sur LinkedIn ?",
+  "Les entretiens apparaissent-ils dans mon agenda ?",
+  "Que fait Rabotka dans ma messagerie ?",
+];
 
 export const FAQ = [
   {

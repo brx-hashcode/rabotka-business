@@ -1,15 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { IconMail, IconMapPin, IconPhone } from "@tabler/icons-react";
+import { IconArrowRight, IconArrowUp, IconArrowUpRight, IconMail, IconMapPin, IconPhone } from "@tabler/icons-react";
 
 import { BrandLogo } from "#/components/brand-logo";
-import { Button } from "#/components/ui/button";
 import { useSupportContact } from "#/hooks/use-support-contact";
+import type { BusinessCountryName } from "#/lib/api/catalog-server";
 import type { SupportContact } from "#/lib/api/public-controller";
+import { flagUrl } from "../globe/country-places";
 import {
   COMPANY_LINKS,
-  DEMO_HREF,
   PUBLIC_SITE,
   RESOURCE_LINKS,
   SIGN_IN_HREF,
@@ -77,6 +77,7 @@ export function ContactCards({ title = "Besoin d'un accompagnement ?", text = "N
   );
 }
 
+/** Every link once; the demo block above every page asks for the demo. */
 const FOOTER_COLUMNS: { title: string; links: NavLink[] }[] = [
   { title: "Fonctionnalités", links: SOLUTION_LINKS },
   { title: "Ressources", links: RESOURCE_LINKS },
@@ -86,92 +87,170 @@ const FOOTER_COLUMNS: { title: string; links: NavLink[] }[] = [
     links: [
       { href: SIGN_UP_HREF, label: "Ouvrir un compte entreprise" },
       { href: SIGN_IN_HREF, label: "Se connecter" },
-      { href: `${PUBLIC_SITE}/terms`, label: "Conditions d'utilisation" },
-      { href: `${PUBLIC_SITE}/privacy`, label: "Politique de confidentialité" },
+      { href: PUBLIC_SITE, label: "Je cherche un emploi" },
     ],
   },
 ];
 
+/** Flags shown side by side before « +N ». */
+const MAX_FLAGS = 7;
+
 /**
- * The black footer: the brand with Rabotka's contact (as admins set it),
- * four columns of links, then the legal line.
+ * The footer, a dark panel set in the page: a statement with where Rabotka is
+ * open and how to reach the team (as admins set it), the links in four
+ * columns, the legal line, then the name in large outlined capitals.
  */
-export function LandingFooter() {
+export function LandingFooter({ countries }: Readonly<{ countries: BusinessCountryName[] }>) {
   const { data: contact } = useSupportContact();
   const cards = contactCards(contact);
+  const flags = countries.slice(0, MAX_FLAGS);
+  const more = countries.length - flags.length;
 
   return (
-    <footer className="bg-[#0b0f0c] text-white">
-      <div className="mx-auto w-full max-w-7xl px-4 pt-16 pb-10 sm:px-6 md:pt-20">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-[1.4fr_repeat(4,1fr)] lg:gap-8">
-          <div className="col-span-2 space-y-6 lg:col-span-1">
-            <Link href="/" aria-label="Rabotka Business — accueil" className="inline-flex items-center gap-3">
-              <BrandLogo tone="inverse" />
-              <span aria-hidden className="h-6 w-px bg-white/25" />
-              <span className="text-[17px]">Business</span>
-            </Link>
-            <p className="max-w-xs text-sm text-white/60">
-              L&apos;ATS nouvelle génération des entreprises, institutions et
-              organisations : diffusion d&apos;offres, tri des candidatures,
-              entretiens et décision en équipe, au même endroit.
-            </p>
-            {cards.length > 0 && (
-              <ul className="space-y-3 text-sm">
-                {cards.map((card) => (
-                  <li key={card.label}>
-                    <a
-                      href={card.href}
-                      {...(card.href.startsWith("https:") ? { target: "_blank", rel: "noreferrer" } : {})}
-                      className="inline-flex items-center gap-3 text-white/80 transition-colors hover:text-white"
-                    >
-                      <card.icon className="size-4 shrink-0 text-header" />
-                      {card.value}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <Button
-              variant="ghost"
-              render={<Link href={DEMO_HREF} />}
-              className="rounded-full bg-header px-5 text-header-foreground hover:bg-header/90"
-            >
-              Demander une démo
-            </Button>
+    <div className="bg-page px-2 pb-2 sm:px-3 sm:pb-3">
+      <footer className="relative isolate overflow-hidden rounded-[2rem] bg-[#0b0f0c] text-white sm:rounded-[2.5rem]">
+        {/* A low lime glow rising behind the name. */}
+        <div
+          aria-hidden
+          className="absolute inset-x-0 bottom-0 -z-10 h-112 bg-[radial-gradient(60%_70%_at_50%_100%,rgba(203,255,165,0.14),transparent_70%)]"
+        />
+
+        <div className="mx-auto w-full max-w-7xl px-5 pt-14 sm:px-8 md:pt-20">
+          <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-end lg:gap-16">
+            <div className="space-y-6">
+              <Link href="/" aria-label="Rabotka Business — accueil" className="inline-flex items-center gap-3">
+                <BrandLogo tone="inverse" />
+                <span aria-hidden className="h-6 w-px bg-white/25" />
+                <span className="text-[17px]">Business</span>
+              </Link>
+              <p className="max-w-xl font-semibold text-3xl leading-tight tracking-tight sm:text-4xl">
+                Publier, trier, recevoir, décider.{" "}
+                <span className="text-white/40">Tout votre recrutement, au même endroit.</span>
+              </p>
+            </div>
+
+            <div className="space-y-5 lg:justify-self-end">
+              {countries.length > 0 && (
+                <Link href="/#pays" className="group flex items-center gap-4">
+                  <span className="flex -space-x-2">
+                    {flags.map((c) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        key={c.code}
+                        src={flagUrl(c.code, 80)}
+                        alt=""
+                        title={c.name}
+                        loading="lazy"
+                        className="size-8 rounded-full object-cover ring-2 ring-[#0b0f0c]"
+                      />
+                    ))}
+                    {more > 0 && (
+                      <span className="flex size-8 items-center justify-center rounded-full bg-white/10 font-semibold text-[11px] ring-2 ring-[#0b0f0c]">
+                        +{more}
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-sm">
+                    <span className="block font-medium">Disponible dans {countries.length} pays</span>
+                    <span className="inline-flex items-center gap-1 text-white/50 transition-colors group-hover:text-white">
+                      Voir la carte
+                      <IconArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                    </span>
+                  </span>
+                </Link>
+              )}
+              {cards.length > 0 && (
+                <ul className="flex flex-wrap gap-2">
+                  {cards.map((card) => (
+                    <li key={card.label}>
+                      <a
+                        href={card.href}
+                        {...(card.href.startsWith("https:") ? { target: "_blank", rel: "noreferrer" } : {})}
+                        className="inline-flex items-center gap-2 rounded-full bg-white/6 px-4 py-2.5 text-sm text-white/80 transition-colors hover:bg-white/12 hover:text-white"
+                      >
+                        <card.icon className="size-4 text-header" />
+                        {card.value}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
 
-          {FOOTER_COLUMNS.map((column) => (
-            <nav key={column.title} aria-label={column.title} className="space-y-4">
-              <p className="font-semibold text-sm">{column.title}</p>
-              <ul className="space-y-3">
-                {column.links.map((link) => (
-                  <li key={link.label}>
-                    <SmartLink href={link.href} className="text-sm text-white/60 transition-colors hover:text-white">
-                      {link.label}
-                    </SmartLink>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          ))}
-        </div>
+          <div aria-hidden className="mt-14 h-px bg-white/10" />
 
-        <div aria-hidden className="mt-16 h-px bg-white/10" />
-        <div className="flex flex-col gap-4 pt-8 text-sm text-white/50 md:flex-row md:items-center md:justify-between">
-          <p>© {new Date().getFullYear()} Rabotka. Tous droits réservés.</p>
-          <div className="flex flex-wrap gap-x-6 gap-y-2">
-            <a href={`${PUBLIC_SITE}/terms`} className="hover:text-white">
-              Conditions d&apos;utilisation
-            </a>
-            <a href={`${PUBLIC_SITE}/privacy`} className="hover:text-white">
-              Confidentialité
-            </a>
-            <a href={PUBLIC_SITE} className="hover:text-white">
-              www.rabotka.work
-            </a>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 py-12 md:grid-cols-4">
+            {FOOTER_COLUMNS.map((group) => (
+              <nav key={group.title} aria-label={group.title} className="space-y-4">
+                <p className="font-medium text-[11px] text-white/40 uppercase tracking-[0.16em]">{group.title}</p>
+                <ul className="space-y-2.5">
+                  {group.links.map((link) => (
+                    <li key={link.label}>
+                      <SmartLink
+                        href={link.href}
+                        className="group inline-flex items-center gap-1 text-sm text-white/70 transition-colors hover:text-white"
+                      >
+                        {link.label}
+                        {link.href.startsWith("https:") && (
+                          <IconArrowUpRight className="size-3.5 opacity-50 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:opacity-100" />
+                        )}
+                      </SmartLink>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ))}
+          </div>
+
+          <div aria-hidden className="h-px bg-white/10" />
+          <div className="flex flex-col gap-4 py-6 text-sm text-white/50 md:flex-row md:items-center md:justify-between">
+            <p>© {new Date().getFullYear()} Rabotka. Tous droits réservés.</p>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              <a href={`${PUBLIC_SITE}/terms`} className="transition-colors hover:text-white">
+                Conditions d&apos;utilisation
+              </a>
+              <a href={`${PUBLIC_SITE}/privacy`} className="transition-colors hover:text-white">
+                Politique de confidentialité
+              </a>
+              <button
+                type="button"
+                onClick={() => window.scrollTo({ top: 0 })}
+                className="inline-flex items-center gap-1.5 rounded-full bg-white/6 py-1.5 pr-3 pl-2.5 text-white/70 transition-colors hover:bg-white/12 hover:text-white"
+              >
+                <IconArrowUp className="size-4" />
+                Haut de page
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </footer>
+
+        {/* The name in large capitals drawn with a dashed outline (SVG: CSS
+            cannot dash a text stroke), cut by and fading into the bottom edge.
+            textLength spreads it over the width whatever the font's metrics. */}
+        <svg
+          aria-hidden
+          viewBox="0 0 1000 160"
+          className="pointer-events-none mx-auto block w-full max-w-7xl select-none px-5 pt-2 mask-[linear-gradient(to_bottom,black_25%,transparent_95%)] sm:px-8"
+        >
+          <text
+            x="500"
+            y="172"
+            textAnchor="middle"
+            textLength="980"
+            lengthAdjust="spacing"
+            fontSize="200"
+            fontWeight="800"
+            className="fill-none stroke-white/30 font-sans"
+            strokeWidth="2.5"
+            strokeDasharray="8 6"
+            strokeLinecap="round"
+            vectorEffect="non-scaling-stroke"
+          >
+            RABOTKA
+          </text>
+        </svg>
+      </footer>
+    </div>
   );
 }
