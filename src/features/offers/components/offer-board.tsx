@@ -46,7 +46,7 @@ import type { OfferApplicant } from "#/lib/api/offer-controller";
 import type { Interview } from "#/lib/api/types";
 import { cn, getInitials } from "#/lib/utils";
 import type { ApplicationStage } from "../offer-labels";
-import { useShortlist } from "../use-shortlist";
+import { useConfirmedShortlist } from "../use-shortlist";
 import { ApplicationActions } from "./application-actions";
 import { BulkRefuseDialog } from "./bulk-refuse-dialog";
 import { BulkMessageDialog } from "#/features/messages/components/bulk-message-dialog";
@@ -139,7 +139,7 @@ export function OfferBoard({
   const hire = canHire(useMember().role);
   const queryClient = useQueryClient();
   const interviews = useQuery({ queryKey: [...interviewsKey, "upcoming"], queryFn: () => listInterviews({ scope: "upcoming" }) });
-  const shortlist = useShortlist(offerId);
+  const shortlist = useConfirmedShortlist(offerId);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor));
 
   const [scheduling, setScheduling] = useState<BoardEntry | null>(null);
@@ -207,8 +207,8 @@ export function OfferBoard({
       return;
     }
     const targets = entry.kind === "rabotka" ? { rabotka: [idOf(entry)], external: [] } : { rabotka: [], external: [idOf(entry)] };
-    if (to === "shortlisted") shortlist.mutate({ targets, shortlisted: true });
-    else if (to === "review") shortlist.mutate({ targets, shortlisted: false });
+    if (to === "shortlisted") shortlist.ask({ targets, shortlisted: true, who: nameOf(entry) });
+    else if (to === "review") shortlist.ask({ targets, shortlisted: false, who: nameOf(entry) });
     else if (to === "interview") setScheduling(entry);
     else if (to === "closed") setRefusing(entry);
     else if (to === "hired") setRetaining((prev) => ({ entry, nonce: (prev?.nonce ?? 0) + 1 }));
@@ -364,6 +364,8 @@ export function OfferBoard({
           )}
         </DialogContent>
       </Dialog>
+
+      {shortlist.dialog}
 
       <BulkMessageDialog
         open={!!writingTo}

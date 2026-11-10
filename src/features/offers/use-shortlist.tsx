@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { IconStar, IconStarOff } from "@tabler/icons-react";
 import { toast } from "sonner";
 
+import { ActionDialog } from "#/components/action-dialog";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { externalApplicationsKey } from "#/lib/api/careers-controller";
 import { offersKey, shortlistApplication, shortlistApplications } from "#/lib/api/offer-controller";
@@ -83,4 +86,55 @@ export function useShortlist(offerId: string) {
       void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
     },
   });
+}
+
+/** What « Présélectionner » is asked for: the cards, the way, and who (for the question). */
+type ShortlistAsk = {
+  targets: ShortlistTargets;
+  shortlisted: boolean;
+  /** A name for one candidate; none for several. */
+  who?: string;
+  onDone?: () => void;
+};
+
+/**
+ * `useShortlist` behind a confirmation, as every decision on a candidature
+ * is: `ask()` opens « Présélectionner Awa ? », `dialog` is to render once.
+ */
+export function useConfirmedShortlist(offerId: string) {
+  const shortlist = useShortlist(offerId);
+  const [asked, setAsked] = useState<ShortlistAsk | null>(null);
+  const count = asked ? asked.targets.rabotka.length + asked.targets.external.length : 0;
+  const several = count > 1 || !asked?.who;
+  const title = !asked
+    ? ""
+    : asked.shortlisted
+      ? several
+        ? `Présélectionner ${count} candidatures ?`
+        : `Présélectionner ${asked.who} ?`
+      : several
+        ? `Retirer ${count} candidatures de la présélection ?`
+        : `Retirer ${asked.who} de la présélection ?`;
+  const dialog = (
+    <ActionDialog
+      open={!!asked}
+      onOpenChange={(o) => !o && setAsked(null)}
+      icon={asked?.shortlisted === false ? <IconStarOff className="size-5" /> : <IconStar className="size-5" />}
+      title={title}
+      description={
+        asked?.shortlisted
+          ? "Une étape pour votre équipe avant de décider : le candidat n'en est pas prévenu."
+          : "La candidature revient à « À examiner ». Le candidat n'en est pas prévenu."
+      }
+      confirmLabel={asked?.shortlisted ? "Présélectionner" : "Retirer"}
+      pending={shortlist.isPending}
+      onConfirm={() => {
+        if (!asked) return;
+        const { targets, shortlisted, onDone } = asked;
+        shortlist.mutate({ targets, shortlisted }, { onSuccess: () => onDone?.() });
+        setAsked(null);
+      }}
+    />
+  );
+  return { ask: setAsked, dialog, isPending: shortlist.isPending };
 }

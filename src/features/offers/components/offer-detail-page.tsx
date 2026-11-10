@@ -102,7 +102,7 @@ import {
 import { failedLabel, KIND_LABEL } from "../offer-questions";
 import { ApplicationActions, useApplicationChat } from "./application-actions";
 import { MoreActionsMenu, opinionLabel, type MoreAction } from "./more-actions-menu";
-import { useShortlist } from "../use-shortlist";
+import { useConfirmedShortlist } from "../use-shortlist";
 import { BulkRefuseDialog } from "./bulk-refuse-dialog";
 import { BulkMessageDialog } from "#/features/messages/components/bulk-message-dialog";
 import { OfferBoard } from "./offer-board";
@@ -673,7 +673,7 @@ function ApplicantsCard({
   const refuseCount = refuseRabotka.length + refuseCareers.length;
   // « Présélectionner la sélection »: those waiting and not shortlisted yet;
   // when all picked already are, the button takes them off instead.
-  const shortlist = useShortlist(o.id);
+  const shortlist = useConfirmedShortlist(o.id);
   const waitingPicked = picked.filter((e) => e.refusable);
   const toShortlist = waitingPicked.filter((e) => e.stage !== "shortlisted");
   const shortlistAction = toShortlist.length > 0 ? "add" : waitingPicked.length > 0 ? "remove" : null;
@@ -850,13 +850,11 @@ function ApplicantsCard({
                     type="button"
                     disabled={shortlist.isPending}
                     onClick={() =>
-                      shortlist.mutate(
-                        {
-                          targets: shortlistTargets(shortlistAction === "add" ? toShortlist : waitingPicked),
-                          shortlisted: shortlistAction === "add",
-                        },
-                        { onSuccess: () => setSelected(new Set()) },
-                      )
+                      shortlist.ask({
+                        targets: shortlistTargets(shortlistAction === "add" ? toShortlist : waitingPicked),
+                        shortlisted: shortlistAction === "add",
+                        onDone: () => setSelected(new Set()),
+                      })
                     }
                     className="h-9 rounded-full bg-white/10 px-4 font-medium hover:bg-white/15 disabled:opacity-50"
                   >
@@ -873,6 +871,8 @@ function ApplicantsCard({
               </span>
             </div>
           )}
+
+          {shortlist.dialog}
 
           <BulkMessageDialog
             open={writing}
@@ -997,7 +997,7 @@ function ApplicantRow({
   const [panel, setPanel] = useState<"own-cv" | "rabotka-cv" | "opinion" | "interview" | null>(null);
   const chat = useApplicationChat(a);
   const hire = canHire(useMember().role);
-  const shortlist = useShortlist(offerId);
+  const shortlist = useConfirmedShortlist(offerId);
   const more: MoreAction[] = [
     ...(a.cv?.kind === "UPLOADED"
       ? [
@@ -1026,14 +1026,14 @@ function ApplicantRow({
                 key: "shortlist",
                 label: "Retirer de la présélection",
                 icon: IconStarOff,
-                onSelect: () => shortlist.mutate({ targets: { rabotka: [a.applicationId], external: [] }, shortlisted: false }),
+                onSelect: () => shortlist.ask({ targets: { rabotka: [a.applicationId], external: [] }, shortlisted: false, who: name }),
                 disabled: shortlist.isPending,
               }
             : {
                 key: "shortlist",
                 label: "Présélectionner",
                 icon: IconStar,
-                onSelect: () => shortlist.mutate({ targets: { rabotka: [a.applicationId], external: [] }, shortlisted: true }),
+                onSelect: () => shortlist.ask({ targets: { rabotka: [a.applicationId], external: [] }, shortlisted: true, who: name }),
                 disabled: shortlist.isPending,
               },
         ]
@@ -1075,6 +1075,7 @@ function ApplicantRow({
       id={`candidature-${a.applicationId}`}
       className={cn("scroll-mt-24 rounded-2xl bg-page p-3 pr-4", focused && "ring-2 ring-whatsapp-dark")}
     >
+      {shortlist.dialog}
       <div className="flex items-center gap-3">
         {/* No rank outside the ranked list (the board's window passes 0). */}
         {(rank > 0 || onToggle) && (
