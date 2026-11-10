@@ -16,6 +16,7 @@ import { sessionUserKey } from "#/hooks/use-session-user";
 import type { SessionUser } from "#/lib/api/types";
 import { OrganisationDocuments } from "./organisation-documents";
 import { OrganisationMailboxes } from "./organisation-mailboxes";
+import { MessageTemplatesCard } from "#/features/messages/components/message-templates-card";
 import { OrganisationLogo } from "./organisation-logo";
 import { OrganisationOwner } from "./organisation-owner";
 
@@ -162,6 +163,7 @@ export function OrganisationPage() {
               {business.owner && <OrganisationOwner owner={business.owner} />}
               <OrganisationDocuments business={business} catalog={catalog} onChange={setBusiness} />
               <OrganisationMailboxes />
+              <MessageTemplatesCard />
             </div>
           </div>
         </>

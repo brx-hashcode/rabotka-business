@@ -104,6 +104,7 @@ import { ApplicationActions, useApplicationChat } from "./application-actions";
 import { MoreActionsMenu, opinionLabel, type MoreAction } from "./more-actions-menu";
 import { useShortlist } from "../use-shortlist";
 import { BulkRefuseDialog } from "./bulk-refuse-dialog";
+import { BulkMessageDialog } from "#/features/messages/components/bulk-message-dialog";
 import { OfferBoard } from "./offer-board";
 import { OfferDescriptionCard } from "./offer-description-card";
 import { linkedinOffer } from "../linkedin-post";
@@ -676,6 +677,11 @@ function ApplicantsCard({
   const waitingPicked = picked.filter((e) => e.refusable);
   const toShortlist = waitingPicked.filter((e) => e.stage !== "shortlisted");
   const shortlistAction = toShortlist.length > 0 ? "add" : waitingPicked.length > 0 ? "remove" : null;
+  // « Écrire » to those picked, a template filled in for each.
+  const [writing, setWriting] = useState(false);
+  const { data: business } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
+  const firstName = (e: Entry | undefined) =>
+    !e ? "" : e.kind === "rabotka" ? (e.a as OfferApplicant).worker.firstName : (e.a as ExternalApplication).firstName;
   const shortlistTargets = (entries: Entry[]) => ({
     rabotka: entries.filter((e) => e.kind === "rabotka").map((e) => (e.a as OfferApplicant).applicationId),
     external: entries.filter((e) => e.kind === "careers").map((e) => (e.a as ExternalApplication).id),
@@ -830,6 +836,15 @@ function ApplicantsCard({
                 >
                   Comparer{picked.length > 1 ? ` (${picked.length})` : ""}
                 </button>
+                {hire && (
+                  <button
+                    type="button"
+                    onClick={() => setWriting(true)}
+                    className="h-9 rounded-full bg-white/10 px-4 font-medium hover:bg-white/15"
+                  >
+                    Écrire
+                  </button>
+                )}
                 {hire && shortlistAction && (
                   <button
                     type="button"
@@ -858,6 +873,16 @@ function ApplicantsCard({
               </span>
             </div>
           )}
+
+          <BulkMessageDialog
+            open={writing}
+            onOpenChange={setWriting}
+            offerId={o.id}
+            jobTitle={o.title}
+            businessName={business?.name ?? ""}
+            recipients={{ ...shortlistTargets(picked), firstName: firstName(picked[0]) }}
+            onSent={() => setSelected(new Set())}
+          />
 
           <BulkRefuseDialog
             // Remounted for each mode: the message starts from its template.
