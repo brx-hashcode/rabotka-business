@@ -32,7 +32,7 @@ import { ActionDialog } from "#/components/action-dialog";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
 import { ExternalApplicationCard } from "#/features/applications/components/external-application-card";
 import { CandidateProfile } from "#/features/candidates/components/candidate-profile";
-import { Avatar, AvatarFallback } from "#/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { band } from "#/features/cv-screening/components/cv-bits";
 import { ScheduleInterviewDialog } from "#/features/interviews/components/schedule-interview-dialog";
@@ -621,7 +621,11 @@ function CardFace({
             Critère
           </span>
         )}
+        {/* The photo of a Rabotka candidate; careers-page ones have none, initials then. */}
         <Avatar className="ml-auto size-6 shrink-0">
+          {e.kind === "rabotka" && e.a.worker.avatarUrl && (
+            <AvatarImage src={e.a.worker.avatarUrl} alt="" className="object-cover" draggable={false} />
+          )}
           <AvatarFallback className="text-[10px]">{getInitials(name)}</AvatarFallback>
         </Avatar>
       </div>
