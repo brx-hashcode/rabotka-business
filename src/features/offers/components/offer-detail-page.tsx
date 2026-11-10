@@ -20,11 +20,15 @@ import {
   IconFileSearch,
   IconFileText,
   IconInbox,
+  IconLayoutKanban,
+  IconList,
   IconLock,
   IconMapPin,
   IconMessageCircle,
   IconPencil,
   IconRefresh,
+  IconStar,
+  IconStarOff,
   IconTrash,
   IconUserCheck,
   IconUsers,
@@ -58,7 +62,6 @@ import { getMyBusiness, getMySubscription, myBusinessKey, mySubscriptionKey } fr
 import {
   analyseExternalApplications,
   externalApplicationsKey,
-  refuseExternalApplication,
   listExternalApplications,
   type ExternalApplication,
 } from "#/lib/api/careers-controller";
@@ -73,7 +76,6 @@ import {
   getOfferApplicants,
   getOfferAssessments,
   reanalyseApplicant,
-  refuseApplications,
   offersKey,
   confirmOfferHire,
   republishOffer,
@@ -82,7 +84,6 @@ import {
   type Offer,
   type OfferApplicant,
 } from "#/lib/api/offer-controller";
-import { showApplicationStatus, showExternalStatus } from "#/features/offers/application-cache";
 import { cn, getInitials } from "#/lib/utils";
 import {
   APPLICATION_STATUS,
@@ -94,14 +95,17 @@ import {
   closingTile,
   offerDate,
   PAYMENT_SUFFIX,
+  pillStatus,
   statusClass,
   type ApplicationStage,
 } from "../offer-labels";
 import { failedLabel, KIND_LABEL } from "../offer-questions";
 import { ApplicationActions, useApplicationChat } from "./application-actions";
 import { MoreActionsMenu, opinionLabel, type MoreAction } from "./more-actions-menu";
+import { useShortlist } from "../use-shortlist";
+import { BulkRefuseDialog } from "./bulk-refuse-dialog";
+import { OfferBoard } from "./offer-board";
 import { OfferDescriptionCard } from "./offer-description-card";
-import { REFUSAL_TEMPLATES, RefusalMessageField } from "./refusal-message";
 import { linkedinOffer } from "../linkedin-post";
 import { PublishedShareCard } from "./published-share-card";
 import { ShareOfferMenu } from "./share-offer-menu";
@@ -503,6 +507,7 @@ const TABS: { key: "all" | ApplicationStage; label: string }[] = [
   { key: "all", label: "Toutes" },
   { key: "new", label: "Nouvelles" },
   { key: "viewed", label: "Vues" },
+  { key: "shortlisted", label: "Présélectionnées" },
   { key: "hired", label: "Retenues" },
   { key: "closed", label: "Refusées ou annulées" },
 ];
@@ -531,11 +536,14 @@ function ApplicantsCard({
 }: Readonly<{ offer: Offer; applicants?: OfferApplicant[]; outsiders: ExternalApplication[]; loading: boolean }>) {
   // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
   const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS.map((t) => t.key)).withDefault("all"));
+  // The list, or the board (one column per step); in the URL too.
+  const [view, setView] = useQueryState("vue", parseAsStringLiteral(["liste", "tableau"] as const).withDefault("liste"));
   const list = applicants ?? [];
   const count = (k: (typeof TABS)[number]["key"]) =>
     k === "all"
       ? list.length + outsiders.length
-      : list.filter((a) => applicationStage(a.status) === k).length + outsiders.filter((a) => externalStage(a) === k).length;
+      : list.filter((a) => applicationStage(a.status, a.shortlistedAt) === k).length +
+        outsiders.filter((a) => externalStage(a) === k).length;
   // Opened from a notification on one candidature: show every stage, and
   // bring that candidate into view once the lists are in.
   const focusId = useSearchParams().get("candidature");
@@ -578,7 +586,7 @@ function ApplicantsCard({
         score: cvScore(a.analysis) ?? scores.get(a.applicationId)?.score ?? null,
         analysis: a.analysis ?? null,
         refusable: a.status === "PENDING" || a.status === "VIEWED",
-        stage: applicationStage(a.status),
+        stage: applicationStage(a.status, a.shortlistedAt),
       }),
     ),
     ...outsiders.map(
@@ -635,14 +643,54 @@ function ApplicantsCard({
   const refuseRabotka = picked.filter((e) => e.kind === "rabotka" && e.refusable).map((e) => (e.a as OfferApplicant).applicationId);
   const refuseCareers = picked.filter((e) => e.kind === "careers" && e.refusable).map((e) => (e.a as ExternalApplication).id);
   const refuseCount = refuseRabotka.length + refuseCareers.length;
+  // « Présélectionner la sélection »: those waiting and not shortlisted yet;
+  // when all picked already are, the button takes them off instead.
+  const shortlist = useShortlist(o.id);
+  const waitingPicked = picked.filter((e) => e.refusable);
+  const toShortlist = waitingPicked.filter((e) => e.stage !== "shortlisted");
+  const shortlistAction = toShortlist.length > 0 ? "add" : waitingPicked.length > 0 ? "remove" : null;
+  const shortlistTargets = (entries: Entry[]) => ({
+    rabotka: entries.filter((e) => e.kind === "rabotka").map((e) => (e.a as OfferApplicant).applicationId),
+    external: entries.filter((e) => e.kind === "careers").map((e) => (e.a as ExternalApplication).id),
+  });
   const asked = o.questions.length > 0;
   const open = o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED";
+  const hire = canHire(useMember().role);
 
   return (
     <section className="space-y-5 rounded-3xl bg-card p-6">
-      <div className="space-y-1">
-        <h2 className="font-semibold text-xl">Candidats</h2>
-        <p className="text-muted-foreground text-sm">Classés par adéquation avec l&apos;offre, qu&apos;ils aient postulé sur Rabotka ou sur votre page carrières.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-1">
+          <h2 className="font-semibold text-xl">Candidats</h2>
+          <p className="text-muted-foreground text-sm">
+            Classés par adéquation avec l&apos;offre, qu&apos;ils aient postulé sur Rabotka ou sur votre page carrières.
+          </p>
+        </div>
+        {list.length + outsiders.length > 0 && (
+          <div role="tablist" aria-label="Affichage" className="flex shrink-0 gap-1 rounded-full bg-page p-1">
+            {(
+              [
+                { key: "liste", label: "Liste", icon: IconList },
+                { key: "tableau", label: "Tableau", icon: IconLayoutKanban },
+              ] as const
+            ).map((v) => (
+              <button
+                key={v.key}
+                type="button"
+                role="tab"
+                aria-selected={view === v.key}
+                onClick={() => void setView(v.key)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-medium text-sm transition-colors",
+                  view === v.key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <v.icon className="size-4" />
+                {v.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {loading ? (
@@ -659,6 +707,13 @@ function ApplicantsCard({
               : "Cette offre n'a reçu aucune candidature."}
           </p>
         </div>
+      ) : view === "tableau" ? (
+        <OfferBoard
+          offerId={o.id}
+          jobTitle={o.title}
+          recruiting={open}
+          entries={all.filter((e) => !(hideOut && e.a.knockedOut)).sort(byFit)}
+        />
       ) : (
         <>
           <div role="tablist" aria-label="Étape" className="flex gap-1 overflow-x-auto rounded-full bg-page p-1">
@@ -728,6 +783,26 @@ function ApplicantsCard({
                 >
                   Comparer{picked.length > 1 ? ` (${picked.length})` : ""}
                 </button>
+                {hire && shortlistAction && (
+                  <button
+                    type="button"
+                    disabled={shortlist.isPending}
+                    onClick={() =>
+                      shortlist.mutate(
+                        {
+                          targets: shortlistTargets(shortlistAction === "add" ? toShortlist : waitingPicked),
+                          shortlisted: shortlistAction === "add",
+                        },
+                        { onSuccess: () => setSelected(new Set()) },
+                      )
+                    }
+                    className="h-9 rounded-full bg-white/10 px-4 font-medium hover:bg-white/15 disabled:opacity-50"
+                  >
+                    {shortlistAction === "add"
+                      ? `Présélectionner${toShortlist.length < selected.size ? ` (${toShortlist.length})` : ""}`
+                      : "Retirer de la présélection"}
+                  </button>
+                )}
                 {refuseCount > 0 && (
                   <button type="button" onClick={() => setBulk("selected")} className="h-9 rounded-full bg-white px-4 font-medium text-ink hover:bg-white/90">
                     Refuser la sélection{refuseCount < selected.size ? ` (${refuseCount})` : ""}
@@ -745,8 +820,6 @@ function ApplicantsCard({
             ids={refuseRabotka}
             selectedOutsiderIds={refuseCareers}
             count={bulk === "remaining" ? stillWaiting : refuseCount}
-            rabotkaWaiting={waiting.length}
-            outsiderIds={waitingOutsiders.map((a) => a.id)}
             onClose={() => setBulk(null)}
             onDone={() => setSelected(new Set())}
           />
@@ -804,114 +877,6 @@ function ApplicantsCard({
   );
 }
 
-/** « Refuser la sélection » / « Refuser les autres candidatures »: one message for all. */
-function BulkRefuseDialog({
-  offerId,
-  mode,
-  ids,
-  selectedOutsiderIds,
-  count,
-  rabotkaWaiting,
-  outsiderIds,
-  onClose,
-  onDone,
-}: Readonly<{
-  offerId: string;
-  mode: "selected" | "remaining" | null;
-  /** Rabotka applications picked. */
-  ids: string[];
-  /** Careers-page applications picked. */
-  selectedOutsiderIds: string[];
-  count: number;
-  rabotkaWaiting: number;
-  outsiderIds: string[];
-  onClose: () => void;
-  onDone: () => void;
-}>) {
-  const queryClient = useQueryClient();
-  const [message, setMessage] = useState<string>(mode === "remaining" ? REFUSAL_TEMPLATES[0].text : "");
-  const refuse = useMutation({
-    mutationFn: async () => {
-      const text = message.trim() || undefined;
-      const outside = mode === "remaining" ? outsiderIds : selectedOutsiderIds;
-      // Both at once. Each careers candidate on its own: one failure no
-      // longer reads as « none refused », and those already decided are not counted.
-      const [rabotka, results] = await Promise.all([
-        (mode === "remaining" && rabotkaWaiting === 0) || (mode === "selected" && ids.length === 0)
-          ? Promise.resolve({ refused: 0, skipped: 0 })
-          : refuseApplications(offerId, {
-              ...(mode === "remaining" ? { remaining: true } : { applicationIds: ids }),
-              ...(text ? { message: text } : {}),
-            }).catch(() => null),
-        Promise.allSettled(outside.map((id) => refuseExternalApplication(id, text))),
-      ]);
-      const outsideRefused = results.filter(
-        (r) => r.status === "fulfilled" && (r.value as { refused?: boolean } | undefined)?.refused !== false,
-      ).length;
-      const outsideFailed = results.filter((r) => r.status === "rejected").length;
-      // The Rabotka side failed as a whole: counted as failed, the careers side still reported.
-      const rabotkaFailed = rabotka ? 0 : mode === "remaining" ? rabotkaWaiting : ids.length;
-      return {
-        refused: (rabotka?.refused ?? 0) + outsideRefused,
-        skipped: (rabotka?.skipped ?? 0) + (outside.length - outsideRefused - outsideFailed),
-        failed: outsideFailed + rabotkaFailed,
-      };
-    },
-    onSuccess: ({ refused, skipped, failed }) => {
-      void queryClient.invalidateQueries({ queryKey: offersKey });
-      void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
-      void queryClient.invalidateQueries({ queryKey: ["business", "me", "stats"] });
-      toast.success(
-        `${refused === 1 ? "1 candidature refusée" : `${refused} candidatures refusées`}, les candidats en sont prévenus.` +
-          (skipped ? ` ${skipped} n'étai${skipped > 1 ? "ent" : "t"} plus en attente.` : ""),
-      );
-      if (failed) toast.error(`${failed} n'${failed > 1 ? "ont" : "a"} pas pu être refusée${failed > 1 ? "s" : ""} : réessayez.`);
-      onDone();
-      onClose();
-    },
-    // Picked cards change at once; « all the others » waits for the server,
-    // which knows who is still waiting.
-    onMutate: () => {
-      if (mode !== "selected") return { undo: () => {} };
-      const undos = [
-        ...ids.map((id) => showApplicationStatus(queryClient, id, "REJECTED")),
-        ...selectedOutsiderIds.map((id) => showExternalStatus(queryClient, id, "REFUSED")),
-      ];
-      return { undo: () => undos.reverse().forEach((u) => u()) };
-    },
-    onError: (err, _vars, ctx) => {
-      ctx?.undo();
-      void queryClient.invalidateQueries({ queryKey: offersKey });
-      void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
-      toast.error(friendlyError(err, "Les candidatures n'ont pas pu être refusées."));
-    },
-  });
-  return (
-    <ActionDialog
-      open={mode !== null}
-      onOpenChange={(o) => {
-        if (!o) onClose();
-        else setMessage(mode === "remaining" ? REFUSAL_TEMPLATES[0].text : "");
-      }}
-      tone="warning"
-      icon={<IconX className="size-5" />}
-      title={
-        mode === "remaining"
-          ? `Refuser les ${count} autres candidatures ?`
-          : count === 1
-            ? "Refuser la candidature sélectionnée ?"
-            : `Refuser les ${count} candidatures sélectionnées ?`
-      }
-      description="Chaque candidat est prévenu, avec ce message."
-      confirmLabel="Refuser"
-      pending={refuse.isPending}
-      onConfirm={() => refuse.mutate()}
-    >
-      <RefusalMessageField value={message} onChange={setMessage} />
-    </ActionDialog>
-  );
-}
-
 const APPLICANT_CRITERIA = [
   { key: "trade", label: "Métier" },
   { key: "experience", label: "Expérience" },
@@ -957,6 +922,7 @@ function ApplicantRow({
   const [panel, setPanel] = useState<"own-cv" | "rabotka-cv" | "opinion" | "interview" | null>(null);
   const chat = useApplicationChat(a);
   const hire = canHire(useMember().role);
+  const shortlist = useShortlist(offerId);
   const more: MoreAction[] = [
     ...(a.cv?.kind === "UPLOADED"
       ? [
@@ -976,6 +942,26 @@ function ApplicantRow({
     { key: "opinion", label: opinionLabel(opinions), icon: IconUsers, onSelect: () => setPanel("opinion") },
     ...(hire && chat.available
       ? [{ key: "message", label: "Message", icon: IconMessageCircle, onSelect: chat.open, disabled: chat.pending }]
+      : []),
+    // The business's own step before deciding; the candidate is not told.
+    ...(hire && recruiting && (a.status === "PENDING" || a.status === "VIEWED")
+      ? [
+          a.shortlistedAt
+            ? {
+                key: "shortlist",
+                label: "Retirer de la présélection",
+                icon: IconStarOff,
+                onSelect: () => shortlist.mutate({ targets: { rabotka: [a.applicationId], external: [] }, shortlisted: false }),
+                disabled: shortlist.isPending,
+              }
+            : {
+                key: "shortlist",
+                label: "Présélectionner",
+                icon: IconStar,
+                onSelect: () => shortlist.mutate({ targets: { rabotka: [a.applicationId], external: [] }, shortlisted: true }),
+                disabled: shortlist.isPending,
+              },
+        ]
       : []),
     // Invited by e-mail and in the app, as from « Candidatures ».
     ...(hire && recruiting && applicationStage(a.status) !== "closed"
@@ -1058,8 +1044,8 @@ function ApplicantRow({
             </span>
           </span>
         </Link>
-        <span className={cn("shrink-0 rounded-full px-2.5 py-1 font-medium text-xs", statusClass(a.status))}>
-          {APPLICATION_STATUS[a.status] ?? a.status}
+        <span className={cn("shrink-0 rounded-full px-2.5 py-1 font-medium text-xs", statusClass(pillStatus(a.status, a.shortlistedAt)))}>
+          {APPLICATION_STATUS[pillStatus(a.status, a.shortlistedAt)] ?? a.status}
         </span>
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">

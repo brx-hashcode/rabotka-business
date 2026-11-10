@@ -55,6 +55,8 @@ export function isRecruiting(status: OfferStatus) {
 export const APPLICATION_STATUS: Record<string, string> = {
   PENDING: "Nouvelle",
   VIEWED: "Vue",
+  /** Not a status: the business's « Présélectionnée » step (`pillStatus`). */
+  SHORTLISTED: "Présélectionnée",
   WAITING_PAYMENT: "En attente du candidat",
   ACCEPTED: "Retenue",
   STARTED: "En mission",
@@ -64,9 +66,15 @@ export const APPLICATION_STATUS: Record<string, string> = {
 };
 
 /** Where an application stands, for the pipeline's tabs and its pill colour. */
-export type ApplicationStage = "new" | "viewed" | "hired" | "closed";
+export type ApplicationStage = "new" | "viewed" | "shortlisted" | "hired" | "closed";
 
-export function applicationStage(status: string): ApplicationStage {
+/**
+ * « Présélectionnée » is the business's own step: a waiting application it
+ * set aside before deciding (the candidate is never told). Without
+ * `shortlistedAt` (the inbox, which does not carry it), it reads by status.
+ */
+export function applicationStage(status: string, shortlistedAt?: string | null): ApplicationStage {
+  if ((status === "PENDING" || status === "VIEWED") && shortlistedAt) return "shortlisted";
   if (status === "PENDING") return "new";
   if (status === "VIEWED") return "viewed";
   if (["ACCEPTED", "WAITING_PAYMENT", "STARTED", "END"].includes(status)) return "hired";
@@ -80,6 +88,7 @@ export function applicationStage(status: string): ApplicationStage {
 export const STATUS_CLASS: Record<string, string> = {
   PENDING: "bg-chip-amber text-chip-amber-foreground",
   VIEWED: "bg-card text-foreground",
+  SHORTLISTED: "bg-brand-lime text-ink",
   WAITING_PAYMENT: "bg-chip-amber text-chip-amber-foreground",
   ACCEPTED: "bg-chip-violet text-chip-violet-foreground",
   STARTED: "bg-chip-green text-chip-green-foreground",
@@ -87,6 +96,11 @@ export const STATUS_CLASS: Record<string, string> = {
   REJECTED: "bg-card text-muted-foreground",
   CANCELLED: "bg-card text-muted-foreground",
 };
+
+/** The pill an application shows: its status, or « Présélectionnée » while shortlisted. */
+export function pillStatus(status: string, shortlistedAt?: string | null): string {
+  return applicationStage(status, shortlistedAt) === "shortlisted" ? "SHORTLISTED" : status;
+}
 
 export const statusClass = (status: string) => STATUS_CLASS[status] ?? "bg-card text-muted-foreground";
 
