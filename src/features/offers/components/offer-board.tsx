@@ -74,11 +74,11 @@ const COLUMNS: { key: Column; label: string }[] = [
 /** Cards a column shows at first, and adds with each « Voir plus ». */
 const PAGE = 20;
 
+/** The fit labels the cards use (cv-bits `band`): « Adaptés » from 60, « Très adaptés » from 80. */
 const SCORE_FILTERS = [
-  { min: 0, label: "Tous" },
-  { min: 40, label: "40 et +" },
-  { min: 60, label: "60 et +" },
-  { min: 80, label: "80 et +" },
+  { min: 0, label: "Tous", hint: "Tous les candidats" },
+  { min: 60, label: "Adaptés", hint: "Adaptés ou très adaptés au poste (60 et plus)" },
+  { min: 80, label: "Très adaptés", hint: "Très adaptés au poste (80 et plus)" },
 ];
 
 /** Lower case, no accents: « Élodie » is found by « elodie ». */
@@ -235,11 +235,13 @@ export function OfferBoard({
               className="h-9 w-full rounded-full bg-page pr-3 pl-9 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-whatsapp/40"
             />
           </div>
-          <div role="group" aria-label="Adéquation minimale" className="flex gap-1 rounded-full bg-page p-1">
+          <div role="group" aria-label="Afficher selon l'adéquation au poste" className="flex items-center gap-1 rounded-full bg-page p-1">
+            <span className="pr-1 pl-2.5 text-muted-foreground text-xs">Afficher</span>
             {SCORE_FILTERS.map((f) => (
               <button
                 key={f.min}
                 type="button"
+                title={f.hint}
                 aria-pressed={minScore === f.min}
                 onClick={() => setMinScore(f.min)}
                 className={cn(
@@ -272,7 +274,7 @@ export function OfferBoard({
         </div>
 
         {/* A fixed height, each column scrolling on its own under its title; on a narrow screen they scroll sideways. */}
-        <div className="-mx-1 flex h-[min(70vh,44rem)] min-h-[26rem] snap-x gap-2.5 overflow-x-auto px-1 pb-1">
+        <div className="-mx-1 flex snap-x items-start gap-2.5 overflow-x-auto px-1 pb-2">
           {COLUMNS.map((c) => {
             const all = byColumn.get(c.key) ?? [];
             if (c.key === "closed" && !closedOpen) {
@@ -418,7 +420,7 @@ function BoardColumn({
       ref={setNodeRef}
       aria-label={column.label}
       className={cn(
-        "flex min-w-60 flex-1 snap-start flex-col rounded-2xl bg-page transition-colors duration-200",
+        "flex w-72 shrink-0 snap-start flex-col rounded-2xl bg-page transition-colors duration-200",
         isOver && "bg-brand-lime/40",
       )}
     >
@@ -438,9 +440,12 @@ function BoardColumn({
           )}
         </span>
       </header>
-      <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-2 pb-2 [scrollbar-width:thin]">
+      {/* As tall as its cards, up to a ceiling; past it, it scrolls on its own. */}
+      <div className="flex max-h-[min(65vh,40rem)] min-h-24 flex-col gap-1.5 overflow-y-auto px-2 pb-2 [scrollbar-width:thin]">
         {count === 0 ? (
-          <p className="flex flex-1 items-center justify-center px-3 py-6 text-center text-muted-foreground/70 text-xs">Aucun candidat</p>
+          <p className="flex flex-1 items-center justify-center rounded-xl px-3 py-6 text-center text-muted-foreground/70 text-xs">
+            Aucun candidat
+          </p>
         ) : (
           <>
             {children}
@@ -470,7 +475,7 @@ function FoldedColumn({ column, count, onOpen }: Readonly<{ column: (typeof COLU
       onClick={onOpen}
       aria-label={`Afficher « ${column.label} » (${count})`}
       className={cn(
-        "flex w-14 shrink-0 flex-col items-center gap-3 rounded-2xl bg-page py-3 text-muted-foreground transition-colors duration-200 hover:text-foreground",
+        "flex min-h-40 w-14 shrink-0 flex-col items-center gap-3 self-stretch rounded-2xl bg-page py-3 text-muted-foreground transition-colors duration-200 hover:text-foreground",
         isOver && "bg-brand-lime/40 text-foreground",
       )}
     >
