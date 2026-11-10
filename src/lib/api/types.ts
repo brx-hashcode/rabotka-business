@@ -487,7 +487,9 @@ export type InterviewStatus = "PENDING" | "CONFIRMED" | "DECLINED" | "RESCHEDULE
 export type InterviewAnswer = "CONFIRMED" | "DECLINED" | "RESCHEDULE_REQUESTED";
 
 export type InterviewSlot = {
-  startsAt: string;
+  /** One time; or `options`, 2 or 3 times for the candidate to choose from. */
+  startsAt?: string;
+  options?: string[];
   durationMinutes: number;
   mode: InterviewMode;
   /** The address, the video link, or the number to call. */
@@ -524,6 +526,8 @@ export type Interview = {
   responseNote: string | null;
   respondedAt: string | null;
   createdAt: string;
+  /** Times still to choose from (several offered); empty once the candidate chose. */
+  options?: { id: string; startsAt: string }[];
 };
 
 /** What the candidate sees behind their private link. */
@@ -539,6 +543,8 @@ export type InterviewInvitation = {
   message: string | null;
   status: InterviewStatus;
   responseNote: string | null;
+  /** Times to choose from; empty for one time, or once chosen. */
+  options?: { id: string; startsAt: string }[];
   past: boolean;
 };
 
