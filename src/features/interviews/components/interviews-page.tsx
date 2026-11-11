@@ -11,6 +11,7 @@ import {
   IconCircleCheck,
   IconExternalLink,
   IconHourglass,
+  IconFileText,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 
@@ -24,6 +25,7 @@ import { cn } from "#/lib/utils";
 import { MODES, StatusChip, modeLabel } from "./interview-bits";
 import { CalendarLinkDialog } from "./calendar-link-dialog";
 import { ScheduleInterviewDialog } from "./schedule-interview-dialog";
+import { InterviewReportDialog } from "./interview-report-panel";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
 
@@ -163,6 +165,7 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
   // Moving or cancelling is the hiring side's: an Évaluateur only reads.
   const hire = canHire(useMember().role);
   const [confirm, setConfirm] = useState(false);
+  const [reporting, setReporting] = useState(false);
   const cancel = useMutation({
     mutationFn: () => cancelInterview(i.id),
     onSuccess: () => {
@@ -262,6 +265,21 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
         )}
       </div>
 
+      {!cancelled && (
+        <button
+          type="button"
+          onClick={() => setReporting(true)}
+          className={cn(
+            "flex h-10 items-center justify-center gap-2 rounded-full font-medium text-sm",
+            i.hasReport ? "bg-brand-lime/60 text-ink hover:bg-brand-lime/80" : "bg-page hover:bg-page/70",
+            !(hire && !past) && "mt-auto",
+          )}
+        >
+          <IconFileText className="size-4" />
+          {i.hasReport ? "Voir le compte rendu" : "Compte rendu"}
+        </button>
+      )}
+
       {hire && !past && !cancelled && (
         <div className="mt-auto flex gap-2">
           <button type="button" onClick={() => setMoving(true)} className="h-10 flex-1 rounded-full bg-page font-medium text-sm hover:bg-page/70">
@@ -284,6 +302,16 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
           candidate={{ name: i.candidateName, cvResumeId: i.cvResumeId ?? undefined, applicationId: i.applicationId ?? undefined }}
           jobTitle={i.jobTitle}
           existing={i}
+        />
+      )}
+      {reporting && (
+        <InterviewReportDialog
+          open={reporting}
+          onOpenChange={setReporting}
+          interviewId={i.id}
+          candidateName={i.candidateName}
+          jobTitle={i.jobTitle}
+          startsAt={i.startsAt}
         />
       )}
       <ActionDialog

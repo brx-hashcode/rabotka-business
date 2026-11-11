@@ -27,6 +27,12 @@ export function timelineLabel(e: TimelineEvent): string {
         ? `Entretien proposé pour le ${at.toLocaleDateString("fr-FR", { day: "numeric", month: "long" })} à ${at.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`
         : "Entretien proposé";
     }
+    case "REPORT": {
+      const at = e.interview ? new Date(e.interview.startsAt) : null;
+      return at
+        ? `Compte rendu de l'entretien du ${at.toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}`
+        : "Compte rendu d'entretien rédigé";
+    }
     case "NOTE":
       return who ? `Note de ${who}` : "Note d'un ancien membre";
     case "OPINION":
