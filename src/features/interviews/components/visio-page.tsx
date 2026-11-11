@@ -17,10 +17,9 @@ import { InterviewReportDialog } from "./interview-report-panel";
 
 /**
  * The visible screen under the status-bar strip of the root layout: `dvh`
- * follows the browser's own bars on phones, where `svh` lets the bottom of
- * the call slide under them.
+ * follows the browser's own bars on phones, where `svh` lets content slide
+ * under them.
  */
-const SCREEN = "h-[calc(100dvh-env(safe-area-inset-top))]";
 const SCREEN_MIN = "min-h-[calc(100dvh-env(safe-area-inset-top))]";
 
 const when = (iso: string) =>
@@ -219,7 +218,8 @@ export function VisioPage({ room }: Readonly<{ room: string }>) {
 
   if (v?.provider === "jaas" && !left) {
     return (
-      <main className={cn(SCREEN, "flex flex-col overflow-hidden bg-page")}>
+      // Pinned to the screen: nothing scrolls, so the browser's bars never push the call around.
+      <main className="fixed inset-x-0 top-[env(safe-area-inset-top)] bottom-0 z-40 flex flex-col overflow-hidden overscroll-none bg-page">
         <header className="flex shrink-0 items-center justify-between gap-3 px-4 py-2.5 sm:px-6 sm:py-3">
           <div className="min-w-0">
             <p className="truncate font-semibold text-sm">{v.jobTitle}</p>
