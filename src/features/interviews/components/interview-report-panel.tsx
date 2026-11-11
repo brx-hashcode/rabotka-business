@@ -124,13 +124,23 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle, sta
           placeholder="Ce qu'il a dit de son expérience, ses disponibilités, ses prétentions, votre impression…"
           className={cn("resize-y rounded-2xl border-0 bg-page", compact ? "min-h-56" : "min-h-40")}
         />
+        {dictation.listening && (
+          <div className="flex items-center gap-3 rounded-2xl bg-page px-3 py-2" role="status" aria-live="polite">
+            <span className="relative flex size-2.5 shrink-0">
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive/60" />
+              <span className="relative inline-flex size-2.5 rounded-full bg-destructive" />
+            </span>
+            <VoiceMeter analyser={dictation.analyser} />
+            <p className="min-w-0 flex-1 truncate text-muted-foreground text-sm italic">{dictation.interim || "Je vous écoute…"}</p>
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-2">
           {dictation.supported && (
             <Button
               type="button"
               variant="ghost"
               className={cn("h-9 rounded-full bg-page px-3.5 text-sm", dictation.listening && "text-destructive")}
-              onClick={dictation.listening ? dictation.stop : dictation.start}
+              onClick={dictation.listening ? dictation.stop : () => void dictation.start()}
             >
               {dictation.listening ? <IconPlayerStopFilled className="size-4" /> : <IconMicrophone className="size-4" />}
               {dictation.listening ? "Arrêter la dictée" : "Dicter"}
@@ -418,40 +428,143 @@ const noSubscribe = () => () => {};
 function useDictation(onText: (text: string) => void) {
   const supported = useSyncExternalStore(noSubscribe, () => recognitionClass() !== null, () => false);
   const [listening, setListening] = useState(false);
+  /** The words heard so far, not yet final: shown in grey under the notes. */
+  const [interim, setInterim] = useState("");
+  /** The microphone's level, for the meter; the recognition has no level of its own. */
+  const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const ref = useRef<Recognition | null>(null);
+  const wanted = useRef(false);
+  const audio = useRef<{ stream: MediaStream; context: AudioContext } | null>(null);
   const handler = useRef(onText);
   useEffect(() => {
     handler.current = onText;
   });
-  useEffect(() => () => ref.current?.stop(), []);
 
-  const start = () => {
-    const Klass = recognitionClass();
-    if (!Klass) return;
+  const release = () => {
+    audio.current?.stream.getTracks().forEach((t) => t.stop());
+    void audio.current?.context.close();
+    audio.current = null;
+    setAnalyser(null);
+  };
+  useEffect(
+    () => () => {
+      wanted.current = false;
+      ref.current?.stop();
+      audio.current?.stream.getTracks().forEach((t) => t.stop());
+      void audio.current?.context.close();
+    },
+    [],
+  );
+
+  const listen = (Klass: new () => Recognition) => {
     const r = new Klass();
     r.lang = "fr-FR";
     r.continuous = true;
-    r.interimResults = false;
+    r.interimResults = true;
     r.onresult = (e) => {
+      let pending = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const res = e.results[i];
-        if (res?.isFinal) handler.current(res[0].transcript);
+        if (!res) continue;
+        if (res.isFinal) handler.current(res[0].transcript);
+        else pending += res[0].transcript;
       }
+      setInterim(pending);
     };
-    r.onend = () => setListening(false);
-    r.onerror = (e) => {
+    // The browser ends a dictation after a silence: picked up again until « Arrêter ».
+    r.onend = () => {
+      setInterim("");
+      if (wanted.current) {
+        try {
+          r.start();
+          return;
+        } catch {
+          /* already restarting */
+        }
+      }
       setListening(false);
+      release();
+    };
+    r.onerror = (e) => {
+      if (e.error === "no-speech" || e.error === "aborted") return;
+      wanted.current = false;
       if (e.error === "not-allowed") toast.error("Autorisez le micro dans votre navigateur pour dicter.");
     };
     ref.current = r;
     r.start();
+  };
+
+  const start = async () => {
+    const Klass = recognitionClass();
+    if (!Klass) return;
+    wanted.current = true;
     setListening(true);
+    listen(Klass);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const context = new AudioContext();
+      const node = context.createAnalyser();
+      node.fftSize = 64;
+      node.smoothingTimeConstant = 0.7;
+      context.createMediaStreamSource(stream).connect(node);
+      audio.current = { stream, context };
+      setAnalyser(node);
+    } catch {
+      // No meter without the microphone's stream; the dictation itself may still run.
+    }
   };
   const stop = () => {
+    wanted.current = false;
     ref.current?.stop();
     setListening(false);
+    setInterim("");
+    release();
   };
-  return { supported, listening, start, stop };
+  return { supported, listening, interim, analyser, start, stop };
+}
+
+const BARS = 24;
+
+/**
+ * The voice as it comes in: bars that rise with the microphone's level,
+ * moved straight in the DOM each frame (no render per frame).
+ */
+function VoiceMeter({ analyser }: Readonly<{ analyser: AnalyserNode | null }>) {
+  const bars = useRef<(HTMLSpanElement | null)[]>([]);
+  useEffect(() => {
+    if (!analyser) return;
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    let frame = 0;
+    const draw = () => {
+      analyser.getByteFrequencyData(data);
+      for (let i = 0; i < BARS; i++) {
+        // The voice sits in the low bins: spread them across the bars, mirrored.
+        const v = data[Math.min(data.length - 1, Math.floor((Math.abs(i - BARS / 2) / (BARS / 2)) * data.length * 0.6))] ?? 0;
+        const el = bars.current[i];
+        if (el) el.style.transform = `scaleY(${Math.max(0.12, v / 255)})`;
+      }
+      frame = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => cancelAnimationFrame(frame);
+  }, [analyser]);
+  return (
+    <span aria-hidden className="flex h-7 items-center gap-[3px]">
+      {Array.from({ length: BARS }, (_, i) => (
+        <span
+          key={i}
+          ref={(el) => {
+            bars.current[i] = el;
+          }}
+          className={cn(
+            "h-full w-[3px] origin-center rounded-full bg-whatsapp transition-transform duration-75",
+            !analyser && "animate-pulse",
+          )}
+          style={{ transform: "scaleY(0.12)" }}
+        />
+      ))}
+    </span>
+  );
 }
 
 /** A clean page with the report only, printed or saved as PDF by the browser. */

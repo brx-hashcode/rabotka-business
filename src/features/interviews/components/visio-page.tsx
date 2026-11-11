@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { JaaSMeeting } from "@jitsi/react-sdk";
-import { IconArrowLeft, IconExternalLink, IconNotes, IconVideo } from "@tabler/icons-react";
+import { IconArrowLeft, IconExternalLink, IconNotes, IconVideo, IconVideoOff } from "@tabler/icons-react";
 
 import { BusinessLockup } from "#/components/business-lockup";
 import { Bone } from "#/components/page-skeletons";
@@ -107,6 +107,12 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
   const [attempt, setAttempt] = useState(0);
   const query = useQuery(visioQuery(room, true));
   const v = query.data;
+  // The call over (hung up in JaaS): the page turns to the « Compte rendu ».
+  const ended = left && v?.provider === "jaas" && !!v.interviewId;
+  const rejoin = () => {
+    setAttempt((n) => n + 1);
+    setLeft(false);
+  };
 
   return (
     <div className="space-y-4">
@@ -132,7 +138,7 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
             <h1 className="font-semibold text-lg">Visio</h1>
           )}
         </div>
-        {v?.interviewId && (
+        {v?.interviewId && !ended && (
           <Button
             type="button"
             variant="ghost"
@@ -145,47 +151,50 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
         )}
       </div>
 
-      <div className={cn("grid gap-4", notesOpen && v?.interviewId && "lg:grid-cols-[minmax(0,1fr)_24rem]")}>
-      <section className="h-[calc(100svh-12rem)] min-h-[28rem] overflow-hidden rounded-3xl bg-card">
-        {query.isLoading ? (
-          <Bone className="size-full rounded-none" />
-        ) : !v ? (
-          <div className="flex size-full items-center justify-center p-6">
-            <div className="max-w-sm space-y-2 text-center">
-              <p className="font-semibold">Visio indisponible</p>
-              <p className="text-muted-foreground text-sm">
-                {friendlyError(query.error, "Cette visio n'appartient pas à un entretien de votre organisation.")}
-              </p>
-              <Link href={`/visio/${encodeURIComponent(room)}?invite=1`} className="inline-block pt-2 font-medium text-sm underline underline-offset-2">
-                Rejoindre en invité
-              </Link>
-            </div>
+      {ended && v?.interviewId ? (
+        // Hung up: the « Compte rendu » takes the call's place, notes kept.
+        <section className="mx-auto w-full max-w-4xl space-y-5 rounded-3xl bg-card p-5 sm:p-7">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-page px-4 py-3">
+            <p className="flex items-center gap-2 font-medium text-sm">
+              <IconVideoOff className="size-4 text-muted-foreground" />
+              Visio terminée : rédigez le compte rendu tant que l&apos;entretien est frais.
+            </p>
+            <button type="button" onClick={rejoin} className="font-medium text-sm underline underline-offset-2">
+              Revenir dans la visio
+            </button>
           </div>
-        ) : v.provider === "jaas" && !left ? (
-          // Hung up: the page stays, for the notes and the « Compte rendu ».
-          <Call v={v} attempt={attempt} onLeave={() => setLeft(true)} />
-        ) : (
-          <Notice
-            v={v}
-            onRejoin={() => {
-              setAttempt((n) => n + 1);
-              setLeft(false);
-            }}
-          />
-        )}
-      </section>
-      {notesOpen && v?.interviewId && (
-        <aside className="rounded-3xl bg-card p-4 sm:p-5 lg:h-[calc(100svh-12rem)] lg:min-h-[28rem] lg:overflow-y-auto">
-          <InterviewReportPanel
-            compact
-            interviewId={v.interviewId}
-            candidateName={v.candidateName}
-            jobTitle={v.jobTitle}
-            startsAt={v.startsAt}
-          />
-        </aside>
+          <InterviewReportPanel interviewId={v.interviewId} candidateName={v.candidateName} jobTitle={v.jobTitle} startsAt={v.startsAt} />
+        </section>
+      ) : (
+        <div className={cn("grid gap-4", notesOpen && v?.interviewId && "lg:grid-cols-[minmax(0,1fr)_24rem]")}>
+          <section className="h-[calc(100svh-12rem)] min-h-[28rem] overflow-hidden rounded-3xl bg-card">
+            {query.isLoading ? (
+              <Bone className="size-full rounded-none" />
+            ) : !v ? (
+              <div className="flex size-full items-center justify-center p-6">
+                <div className="max-w-sm space-y-2 text-center">
+                  <p className="font-semibold">Visio indisponible</p>
+                  <p className="text-muted-foreground text-sm">
+                    {friendlyError(query.error, "Cette visio n'appartient pas à un entretien de votre organisation.")}
+                  </p>
+                  <Link href={`/visio/${encodeURIComponent(room)}?invite=1`} className="inline-block pt-2 font-medium text-sm underline underline-offset-2">
+                    Rejoindre en invité
+                  </Link>
+                </div>
+              </div>
+            ) : v.provider === "jaas" && !left ? (
+              <Call v={v} attempt={attempt} onLeave={() => setLeft(true)} />
+            ) : (
+              <Notice v={v} onRejoin={rejoin} />
+            )}
+          </section>
+          {notesOpen && v?.interviewId && (
+            <aside className="rounded-3xl bg-card p-4 sm:p-5 lg:h-[calc(100svh-12rem)] lg:min-h-[28rem] lg:overflow-y-auto">
+              <InterviewReportPanel compact interviewId={v.interviewId} candidateName={v.candidateName} jobTitle={v.jobTitle} startsAt={v.startsAt} />
+            </aside>
+          )}
+        </div>
       )}
-      </div>
     </div>
   );
 }
