@@ -595,7 +595,7 @@ ${list("Infos pratiques", practical(r))}${r.avisRecruteur ? `<h2>Avis du recrute
 export function InterviewReportDialog({ open, onOpenChange, ...props }: Readonly<Props & { open: boolean; onOpenChange: (o: boolean) => void }>) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90svh] w-[calc(100vw-2rem)] overflow-y-auto rounded-3xl border-0 bg-card p-5 shadow-soft sm:max-w-3xl sm:p-6">
+      <DialogContent className="max-h-[92svh] w-[calc(100vw-2rem)] overflow-y-auto rounded-3xl border-0 bg-card p-5 shadow-soft sm:max-w-5xl sm:p-8">
         <DialogTitle>Compte rendu · {props.candidateName}</DialogTitle>
         <DialogDescription>
           {props.jobTitle} · {new Date(props.startsAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}

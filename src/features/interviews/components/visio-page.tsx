@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { JaaSMeeting } from "@jitsi/react-sdk";
-import { IconArrowLeft, IconExternalLink, IconNotes, IconVideo, IconVideoOff } from "@tabler/icons-react";
+import { IconArrowLeft, IconExternalLink, IconFileText, IconNotes, IconVideo } from "@tabler/icons-react";
 
 import { BusinessLockup } from "#/components/business-lockup";
 import { Bone } from "#/components/page-skeletons";
@@ -13,7 +13,7 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import { joinVisioAsGuest, joinVisioAsHost } from "#/lib/api/interview-controller";
 import type { VisioJoin } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
-import { InterviewReportPanel } from "./interview-report-panel";
+import { InterviewReportDialog, InterviewReportPanel } from "./interview-report-panel";
 
 const when = (iso: string) =>
   new Date(iso).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
@@ -69,7 +69,8 @@ function Call({ v, attempt, onLeave }: Readonly<{ v: Extract<VisioJoin, { provid
 function Notice({
   v,
   onRejoin,
-}: Readonly<{ v: VisioJoin; onRejoin: () => void }>) {
+  onReport,
+}: Readonly<{ v: VisioJoin; onRejoin: () => void; onReport?: () => void }>) {
   return (
     <div className="flex size-full items-center justify-center p-6">
       <div className="w-full max-w-sm space-y-5 text-center">
@@ -87,7 +88,13 @@ function Notice({
         ) : (
           <>
             <p className="font-medium">Vous avez quitté la visio.</p>
-            <Button className="w-full rounded-full" onClick={onRejoin}>
+            {onReport && (
+              <Button className="w-full rounded-full" onClick={onReport}>
+                <IconFileText className="size-4" />
+                Ouvrir le compte rendu
+              </Button>
+            )}
+            <Button variant="ghost" className="w-full rounded-full bg-page" onClick={onRejoin}>
               Revenir dans la visio
             </Button>
           </>
@@ -107,9 +114,11 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
   const [attempt, setAttempt] = useState(0);
   const query = useQuery(visioQuery(room, true));
   const v = query.data;
-  // The call over (hung up in JaaS): the page turns to the « Compte rendu ».
+  // The call over (hung up in JaaS): the « Compte rendu » opens, notes kept.
+  const [reportOpen, setReportOpen] = useState(false);
   const ended = left && v?.provider === "jaas" && !!v.interviewId;
   const rejoin = () => {
+    setReportOpen(false);
     setAttempt((n) => n + 1);
     setLeft(false);
   };
@@ -151,22 +160,7 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
         )}
       </div>
 
-      {ended && v?.interviewId ? (
-        // Hung up: the « Compte rendu » takes the call's place, notes kept.
-        <section className="mx-auto w-full max-w-4xl space-y-5 rounded-3xl bg-card p-5 sm:p-7">
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-page px-4 py-3">
-            <p className="flex items-center gap-2 font-medium text-sm">
-              <IconVideoOff className="size-4 text-muted-foreground" />
-              Visio terminée : rédigez le compte rendu tant que l&apos;entretien est frais.
-            </p>
-            <button type="button" onClick={rejoin} className="font-medium text-sm underline underline-offset-2">
-              Revenir dans la visio
-            </button>
-          </div>
-          <InterviewReportPanel interviewId={v.interviewId} candidateName={v.candidateName} jobTitle={v.jobTitle} startsAt={v.startsAt} />
-        </section>
-      ) : (
-        <div className={cn("grid gap-4", notesOpen && v?.interviewId && "lg:grid-cols-[minmax(0,1fr)_24rem]")}>
+        <div className={cn("grid gap-4", notesOpen && v?.interviewId && !ended && "lg:grid-cols-[minmax(0,1fr)_24rem]")}>
           <section className="h-[calc(100svh-12rem)] min-h-[28rem] overflow-hidden rounded-3xl bg-card">
             {query.isLoading ? (
               <Bone className="size-full rounded-none" />
@@ -183,17 +177,33 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
                 </div>
               </div>
             ) : v.provider === "jaas" && !left ? (
-              <Call v={v} attempt={attempt} onLeave={() => setLeft(true)} />
+              <Call
+                v={v}
+                attempt={attempt}
+                onLeave={() => {
+                  setLeft(true);
+                  if (v.interviewId) setReportOpen(true);
+                }}
+              />
             ) : (
-              <Notice v={v} onRejoin={rejoin} />
+              <Notice v={v} onRejoin={rejoin} onReport={v.interviewId ? () => setReportOpen(true) : undefined} />
             )}
           </section>
-          {notesOpen && v?.interviewId && (
+          {notesOpen && v?.interviewId && !ended && (
             <aside className="rounded-3xl bg-card p-4 sm:p-5 lg:h-[calc(100svh-12rem)] lg:min-h-[28rem] lg:overflow-y-auto">
               <InterviewReportPanel compact interviewId={v.interviewId} candidateName={v.candidateName} jobTitle={v.jobTitle} startsAt={v.startsAt} />
             </aside>
           )}
         </div>
+      {reportOpen && v?.interviewId && (
+        <InterviewReportDialog
+          open={reportOpen}
+          onOpenChange={setReportOpen}
+          interviewId={v.interviewId}
+          candidateName={v.candidateName}
+          jobTitle={v.jobTitle}
+          startsAt={v.startsAt}
+        />
       )}
     </div>
   );
