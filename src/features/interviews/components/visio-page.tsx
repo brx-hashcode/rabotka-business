@@ -12,8 +12,7 @@ import { Button } from "#/components/ui/button";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { joinVisioAsGuest, joinVisioAsHost } from "#/lib/api/interview-controller";
 import type { VisioJoin } from "#/lib/api/types";
-import { cn } from "#/lib/utils";
-import { InterviewReportDialog, InterviewReportPanel } from "./interview-report-panel";
+import { InterviewReportDialog } from "./interview-report-panel";
 
 const when = (iso: string) =>
   new Date(iso).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
@@ -110,13 +109,11 @@ function Notice({
  */
 export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
   const [left, setLeft] = useState(false);
-  const [notesOpen, setNotesOpen] = useState(true);
   const [attempt, setAttempt] = useState(0);
   const query = useQuery(visioQuery(room, true));
   const v = query.data;
   // The call over (hung up in JaaS): the « Compte rendu » opens, notes kept.
   const [reportOpen, setReportOpen] = useState(false);
-  const ended = left && v?.provider === "jaas" && !!v.interviewId;
   const rejoin = () => {
     setReportOpen(false);
     setAttempt((n) => n + 1);
@@ -147,20 +144,15 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
             <h1 className="font-semibold text-lg">Visio</h1>
           )}
         </div>
-        {v?.interviewId && !ended && (
-          <Button
-            type="button"
-            variant="ghost"
-            className={cn("ml-auto h-10 shrink-0 rounded-full px-4 text-sm", notesOpen ? "bg-brand-lime/60 text-ink" : "bg-card")}
-            onClick={() => setNotesOpen((o) => !o)}
-          >
+        {v?.interviewId && (
+          <Button type="button" className="ml-auto h-10 shrink-0 rounded-full px-4 text-sm" onClick={() => setReportOpen(true)}>
             <IconNotes className="size-4" />
-            {notesOpen ? "Masquer les notes" : "Notes et compte rendu"}
+            Notes et compte rendu
           </Button>
         )}
       </div>
 
-        <div className={cn("grid gap-4", notesOpen && v?.interviewId && !ended && "lg:grid-cols-[minmax(0,1fr)_24rem]")}>
+        <div>
           <section className="h-[calc(100svh-12rem)] min-h-[28rem] overflow-hidden rounded-3xl bg-card">
             {query.isLoading ? (
               <Bone className="size-full rounded-none" />
@@ -189,11 +181,6 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
               <Notice v={v} onRejoin={rejoin} onReport={v.interviewId ? () => setReportOpen(true) : undefined} />
             )}
           </section>
-          {notesOpen && v?.interviewId && !ended && (
-            <aside className="rounded-3xl bg-card p-4 sm:p-5 lg:h-[calc(100svh-12rem)] lg:min-h-[28rem] lg:overflow-y-auto">
-              <InterviewReportPanel compact interviewId={v.interviewId} candidateName={v.candidateName} jobTitle={v.jobTitle} startsAt={v.startsAt} />
-            </aside>
-          )}
         </div>
       {reportOpen && v?.interviewId && (
         <InterviewReportDialog
