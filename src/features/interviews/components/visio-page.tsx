@@ -12,7 +12,16 @@ import { Button } from "#/components/ui/button";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { joinVisioAsGuest, joinVisioAsHost } from "#/lib/api/interview-controller";
 import type { VisioJoin } from "#/lib/api/types";
+import { cn } from "#/lib/utils";
 import { InterviewReportDialog } from "./interview-report-panel";
+
+/**
+ * The visible screen under the status-bar strip of the root layout: `dvh`
+ * follows the browser's own bars on phones, where `svh` lets the bottom of
+ * the call slide under them.
+ */
+const SCREEN = "h-[calc(100dvh-env(safe-area-inset-top))]";
+const SCREEN_MIN = "min-h-[calc(100dvh-env(safe-area-inset-top))]";
 
 const when = (iso: string) =>
   new Date(iso).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
@@ -153,7 +162,7 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
       </div>
 
         <div>
-          <section className="h-[calc(100svh-12rem)] min-h-[28rem] overflow-hidden rounded-3xl bg-card">
+          <section className="h-[calc(100dvh-12rem-env(safe-area-inset-top))] min-h-[24rem] overflow-hidden rounded-2xl bg-card sm:rounded-3xl">
             {query.isLoading ? (
               <Bone className="size-full rounded-none" />
             ) : !v ? (
@@ -202,11 +211,16 @@ export function VisioPage({ room }: Readonly<{ room: string }>) {
   const [attempt, setAttempt] = useState(0);
   const query = useQuery(visioQuery(room, false));
   const v = query.data;
+  // Back to the top: the card below is read from its start, not where the call left the page.
+  const leave = () => {
+    setLeft(true);
+    window.scrollTo(0, 0);
+  };
 
   if (v?.provider === "jaas" && !left) {
     return (
-      <main className="flex h-svh flex-col bg-page">
-        <header className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
+      <main className={cn(SCREEN, "flex flex-col overflow-hidden bg-page")}>
+        <header className="flex shrink-0 items-center justify-between gap-3 px-4 py-2.5 sm:px-6 sm:py-3">
           <div className="min-w-0">
             <p className="truncate font-semibold text-sm">{v.jobTitle}</p>
             <p className="truncate text-muted-foreground text-xs">
@@ -217,9 +231,9 @@ export function VisioPage({ room }: Readonly<{ room: string }>) {
             <BusinessLockup compact />
           </span>
         </header>
-        <div className="min-h-0 flex-1 px-2 pb-2 sm:px-4 sm:pb-4">
-          <div className="size-full overflow-hidden rounded-3xl bg-card">
-            <Call v={v} attempt={attempt} onLeave={() => setLeft(true)} />
+        <div className="min-h-0 flex-1 px-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] sm:px-4 sm:pb-4">
+          <div className="size-full overflow-hidden rounded-2xl bg-card sm:rounded-3xl">
+            <Call v={v} attempt={attempt} onLeave={leave} />
           </div>
         </div>
       </main>
@@ -227,7 +241,7 @@ export function VisioPage({ room }: Readonly<{ room: string }>) {
   }
 
   return (
-    <main className="min-h-svh bg-page px-4 py-8 sm:py-14">
+    <main className={cn(SCREEN_MIN, "bg-page px-4 py-8 sm:py-14")}>
       <div className="mx-auto w-full max-w-lg space-y-6">
         <div className="flex justify-center">
           <BusinessLockup />
