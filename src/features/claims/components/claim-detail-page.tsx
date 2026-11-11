@@ -1,12 +1,12 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconArrowLeft, IconHeadset, IconLock, IconSend2 } from "@tabler/icons-react";
+import { IconHeadset, IconLock, IconSend2 } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ImageGallerySheet } from "#/components/image-gallery-sheet";
+import { BackLink } from "#/components/back-link";
 import { SafeImage } from "#/components/safe-image";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Bone, ThreadSkeleton } from "#/components/page-skeletons";
@@ -63,10 +63,7 @@ export function ClaimDetailPage({ id }: Readonly<{ id: string }>) {
 
   return (
     <div className="w-full space-y-6 pt-2">
-      <Link href="/espace/reclamations" className="inline-flex items-center gap-1.5 text-muted-foreground text-sm hover:text-foreground">
-        <IconArrowLeft className="size-4" />
-        Aide
-      </Link>
+      <BackLink href="/espace/reclamations" label="Aide" current={c?.title} />
 
       {claim.isLoading ? (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">

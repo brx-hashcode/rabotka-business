@@ -1,13 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, useWatch, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  IconArrowLeft,
   IconBell,
   IconBriefcase,
   IconCircleCheckFilled,
@@ -21,6 +19,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { Form, FormControl, FormField, FormItem, FormMessage } from "#/components/ui/form";
+import { BackLink } from "#/components/back-link";
 import { Textarea } from "#/components/ui/textarea";
 import { Combobox } from "#/features/sign-up/components/combobox";
 import { FieldLabel, StepActions, TextField } from "#/features/sign-up/components/form-bits";
@@ -109,10 +108,7 @@ export function NewClaimPage() {
 
   return (
     <div className="w-full space-y-6 pt-2">
-      <Link href="/espace/reclamations" className="inline-flex items-center gap-1.5 text-muted-foreground text-sm hover:text-foreground">
-        <IconArrowLeft className="size-4" />
-        Aide
-      </Link>
+      <BackLink href="/espace/reclamations" label="Aide" current={"Nouvelle demande"} />
       <div className="space-y-1.5">
         <h1 className="font-semibold text-3xl tracking-tight">Nouvelle demande</h1>
         <p className="text-muted-foreground">Dites-nous ce qui ne va pas : l&apos;équipe Rabotka vous répond dans votre espace.</p>

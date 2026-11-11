@@ -14,7 +14,7 @@ export type Opinions = {
 };
 export type TimelineEvent = {
   at: string;
-  kind: "APPLIED" | "VIEWED" | "RETAINED" | "REFUSED" | "WITHDRAWN" | "INTERVIEW" | "NOTE" | "OPINION";
+  kind: "APPLIED" | "VIEWED" | "RETAINED" | "REFUSED" | "WITHDRAWN" | "INTERVIEW" | "REPORT" | "NOTE" | "OPINION";
   member?: Author | null;
   verdict?: Verdict;
   interview?: { startsAt: string; status: string };

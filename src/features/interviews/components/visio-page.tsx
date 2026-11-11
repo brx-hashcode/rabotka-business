@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { JaaSMeeting } from "@jitsi/react-sdk";
-import { IconArrowLeft, IconExternalLink, IconVideo } from "@tabler/icons-react";
+import { IconArrowLeft, IconExternalLink, IconFileText, IconNotes, IconVideo } from "@tabler/icons-react";
 
 import { BusinessLockup } from "#/components/business-lockup";
 import { Bone } from "#/components/page-skeletons";
@@ -13,6 +12,7 @@ import { Button } from "#/components/ui/button";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { joinVisioAsGuest, joinVisioAsHost } from "#/lib/api/interview-controller";
 import type { VisioJoin } from "#/lib/api/types";
+import { InterviewReportDialog } from "./interview-report-panel";
 
 const when = (iso: string) =>
   new Date(iso).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
@@ -68,7 +68,8 @@ function Call({ v, attempt, onLeave }: Readonly<{ v: Extract<VisioJoin, { provid
 function Notice({
   v,
   onRejoin,
-}: Readonly<{ v: VisioJoin; onRejoin: () => void }>) {
+  onReport,
+}: Readonly<{ v: VisioJoin; onRejoin: () => void; onReport?: () => void }>) {
   return (
     <div className="flex size-full items-center justify-center p-6">
       <div className="w-full max-w-sm space-y-5 text-center">
@@ -86,7 +87,13 @@ function Notice({
         ) : (
           <>
             <p className="font-medium">Vous avez quitté la visio.</p>
-            <Button className="w-full rounded-full" onClick={onRejoin}>
+            {onReport && (
+              <Button className="w-full rounded-full" onClick={onReport}>
+                <IconFileText className="size-4" />
+                Ouvrir le compte rendu
+              </Button>
+            )}
+            <Button variant="ghost" className="w-full rounded-full bg-page" onClick={onRejoin}>
               Revenir dans la visio
             </Button>
           </>
@@ -101,11 +108,17 @@ function Notice({
  * the call fills the page under the interview's line.
  */
 export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
-  const router = useRouter();
   const [left, setLeft] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const query = useQuery(visioQuery(room, true));
   const v = query.data;
+  // The call over (hung up in JaaS): the « Compte rendu » opens, notes kept.
+  const [reportOpen, setReportOpen] = useState(false);
+  const rejoin = () => {
+    setReportOpen(false);
+    setAttempt((n) => n + 1);
+    setLeft(false);
+  };
 
   return (
     <div className="space-y-4">
@@ -131,35 +144,54 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
             <h1 className="font-semibold text-lg">Visio</h1>
           )}
         </div>
+        {v?.interviewId && (
+          <Button type="button" className="ml-auto h-10 shrink-0 rounded-full px-4 text-sm" onClick={() => setReportOpen(true)}>
+            <IconNotes className="size-4" />
+            Notes et compte rendu
+          </Button>
+        )}
       </div>
 
-      <section className="h-[calc(100svh-12rem)] min-h-[28rem] overflow-hidden rounded-3xl bg-card">
-        {query.isLoading ? (
-          <Bone className="size-full rounded-none" />
-        ) : !v ? (
-          <div className="flex size-full items-center justify-center p-6">
-            <div className="max-w-sm space-y-2 text-center">
-              <p className="font-semibold">Visio indisponible</p>
-              <p className="text-muted-foreground text-sm">
-                {friendlyError(query.error, "Cette visio n'appartient pas à un entretien de votre organisation.")}
-              </p>
-              <Link href={`/visio/${encodeURIComponent(room)}?invite=1`} className="inline-block pt-2 font-medium text-sm underline underline-offset-2">
-                Rejoindre en invité
-              </Link>
-            </div>
-          </div>
-        ) : v.provider === "jaas" && !left ? (
-          <Call v={v} attempt={attempt} onLeave={() => router.push("/espace/entretiens")} />
-        ) : (
-          <Notice
-            v={v}
-            onRejoin={() => {
-              setAttempt((n) => n + 1);
-              setLeft(false);
-            }}
-          />
-        )}
-      </section>
+        <div>
+          <section className="h-[calc(100svh-12rem)] min-h-[28rem] overflow-hidden rounded-3xl bg-card">
+            {query.isLoading ? (
+              <Bone className="size-full rounded-none" />
+            ) : !v ? (
+              <div className="flex size-full items-center justify-center p-6">
+                <div className="max-w-sm space-y-2 text-center">
+                  <p className="font-semibold">Visio indisponible</p>
+                  <p className="text-muted-foreground text-sm">
+                    {friendlyError(query.error, "Cette visio n'appartient pas à un entretien de votre organisation.")}
+                  </p>
+                  <Link href={`/visio/${encodeURIComponent(room)}?invite=1`} className="inline-block pt-2 font-medium text-sm underline underline-offset-2">
+                    Rejoindre en invité
+                  </Link>
+                </div>
+              </div>
+            ) : v.provider === "jaas" && !left ? (
+              <Call
+                v={v}
+                attempt={attempt}
+                onLeave={() => {
+                  setLeft(true);
+                  if (v.interviewId) setReportOpen(true);
+                }}
+              />
+            ) : (
+              <Notice v={v} onRejoin={rejoin} onReport={v.interviewId ? () => setReportOpen(true) : undefined} />
+            )}
+          </section>
+        </div>
+      {reportOpen && v?.interviewId && (
+        <InterviewReportDialog
+          open={reportOpen}
+          onOpenChange={setReportOpen}
+          interviewId={v.interviewId}
+          candidateName={v.candidateName}
+          jobTitle={v.jobTitle}
+          startsAt={v.startsAt}
+        />
+      )}
     </div>
   );
 }

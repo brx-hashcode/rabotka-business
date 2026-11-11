@@ -528,6 +528,28 @@ export type Interview = {
   createdAt: string;
   /** Times still to choose from (several offered); empty once the candidate chose. */
   options?: { id: string; startsAt: string }[];
+  /** « Compte rendu »: notes taken or a report written. Absent from an older backend. */
+  hasReport?: boolean;
+};
+
+/** The report the AI wrote from the team's notes, as the team edited it. */
+export type InterviewReportBody = {
+  resume: string;
+  pointsForts: string[];
+  pointsDeVigilance: string[];
+  reponsesCles: { question: string; reponse: string }[];
+  infosPratiques: { disponibilite: string; pretentions: string; mobilite: string };
+  avisRecruteur: string;
+  prochainesEtapes: string[];
+};
+
+/** An interview's « Compte rendu »: the notes, and the report once written. */
+export type InterviewReport = {
+  notes: string;
+  report: InterviewReportBody | null;
+  generatedAt: string | null;
+  sentAt: string | null;
+  updatedAt: string | null;
 };
 
 /** What the candidate sees behind their private link. */
@@ -540,6 +562,8 @@ export type VisioJoin = {
   durationMinutes: number;
   displayName: string;
   host: boolean;
+  /** The host only: the « Compte rendu » beside the call. */
+  interviewId?: string;
 } & ({ provider: "jaas"; appId: string; roomName: string; jwt: string } | { provider: "jitsi"; url: string });
 
 export type InterviewInvitation = {
