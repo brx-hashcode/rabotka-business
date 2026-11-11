@@ -9,13 +9,18 @@ import {
   IconCalendarPlus,
   IconCalendarRepeat,
   IconCircleCheck,
+  IconDots,
   IconExternalLink,
   IconHourglass,
   IconFileText,
+  IconPencil,
+  IconVideo,
+  IconX,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { CardGridSkeleton, TilesSkeleton } from "#/components/page-skeletons";
 import { StatTile } from "#/features/home/components/stat-tile";
 import { friendlyError } from "#/lib/api/friendly-error";
@@ -177,6 +182,14 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
   });
   const Mode = MODES.find((m) => m.key === i.mode)?.icon ?? IconCalendarEvent;
   const cancelled = i.status === "CANCELLED";
+  // Changing or cancelling is the hiring side's, and only before it happens.
+  const editable = hire && !past && !cancelled;
+  const join =
+    !past && !cancelled && i.mode === "VIDEO" && i.location
+      ? isRabotkaVisio(i.location)
+        ? { href: `/espace/entretiens${new URL(i.location).pathname}`, internal: true }
+        : { href: i.location, internal: false }
+      : null;
   const at = new Date(i.startsAt);
   // Several times offered and none chosen yet: the earliest shows, the rest below.
   const options = i.options ?? [];
@@ -228,25 +241,28 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
       </div>
 
       <div className="space-y-2 rounded-2xl bg-page p-3 text-sm">
-        <p className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-card">
             <Mode className="size-4 text-muted-foreground" />
           </span>
-          {i.mode === "VIDEO" && i.location ? (
-            isRabotkaVisio(i.location) ? (
-              <Link href={`/espace/entretiens${new URL(i.location).pathname}`} className="inline-flex min-w-0 items-center gap-1 font-medium hover:underline">
-                <span className="truncate">Rejoindre la visio</span>
+          <span className="min-w-0 flex-1 truncate">
+            {i.mode === "VIDEO" && i.location ? (isRabotkaVisio(i.location) ? "Visio dans Rabotka" : "Visio · lien externe") : modeLabel(i)}
+          </span>
+          {/* The call, where the format is said: the one thing to do on the day. */}
+          {join &&
+            (join.internal ? (
+              <Link href={join.href} className={JOIN}>
+                <IconVideo className="size-4" />
+                Rejoindre
               </Link>
             ) : (
-              <a href={i.location} target="_blank" rel="noreferrer" className="inline-flex min-w-0 items-center gap-1 font-medium hover:underline">
-                <span className="truncate">Rejoindre la visio</span>
-                <IconExternalLink className="size-3.5 shrink-0" />
+              <a href={join.href} target="_blank" rel="noreferrer" className={JOIN}>
+                <IconVideo className="size-4" />
+                Rejoindre
+                <IconExternalLink className="size-3.5" />
               </a>
-            )
-          ) : (
-            <span className="min-w-0 truncate">{modeLabel(i)}</span>
-          )}
-        </p>
+            ))}
+        </div>
         {options.length > 0 && (
           <ul className="space-y-1 rounded-xl bg-card px-3 py-2">
             <li className="text-muted-foreground text-xs">En attente du choix du candidat :</li>
@@ -266,32 +282,43 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
       </div>
 
       {!cancelled && (
-        <button
-          type="button"
-          onClick={() => setReporting(true)}
-          className={cn(
-            "flex h-10 items-center justify-center gap-2 rounded-full font-medium text-sm",
-            i.hasReport ? "bg-brand-lime text-[#0f2414] hover:bg-brand-lime/90" : "bg-page hover:bg-page/70",
-            !(hire && !past) && "mt-auto",
-          )}
-        >
-          <IconFileText className="size-4" />
-          {i.hasReport ? "Voir le compte rendu" : "Compte rendu"}
-        </button>
-      )}
-
-      {hire && !past && !cancelled && (
-        <div className="mt-auto flex gap-2">
-          <button type="button" onClick={() => setMoving(true)} className="h-10 flex-1 rounded-full bg-page font-medium text-sm hover:bg-page/70">
-            Déplacer
-          </button>
-          <button
-            type="button"
-            onClick={() => setConfirm(true)}
-            className="h-10 flex-1 rounded-full bg-page font-medium text-muted-foreground text-sm hover:bg-page/70 hover:text-destructive"
-          >
-            Annuler
-          </button>
+        <div className="mt-auto">
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setReporting(true)}
+              className="flex h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-page px-3 font-medium text-sm hover:bg-page/70"
+            >
+              <IconFileText className="size-4 shrink-0 text-muted-foreground" />
+              <span className="truncate">Compte rendu</span>
+            </button>
+            {editable && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setMoving(true)}
+                  className="flex h-10 items-center justify-center gap-2 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70"
+                >
+                  <IconPencil className="size-4 text-muted-foreground" />
+                  Modifier
+                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    aria-label="Plus d'actions"
+                    className="flex size-10 shrink-0 items-center justify-center rounded-full bg-page text-muted-foreground outline-none hover:bg-page/70 hover:text-foreground"
+                  >
+                    <IconDots className="size-4" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 rounded-2xl border-0 bg-card p-1.5 shadow-soft">
+                    <DropdownMenuItem onSelect={() => setConfirm(true)} className="gap-2 rounded-xl px-3 py-2 text-destructive focus:text-destructive">
+                      <IconX className="size-4" />
+                      Annuler l&apos;entretien
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            )}
+          </div>
         </div>
       )}
 
@@ -327,6 +354,9 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
     </li>
   );
 }
+
+const JOIN =
+  "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-primary px-3 font-medium text-primary-foreground text-xs transition-colors hover:bg-primary/90";
 
 /** A room made by « Créer un lien de visio »: opened here, not in a new tab. */
 function isRabotkaVisio(location: string): boolean {

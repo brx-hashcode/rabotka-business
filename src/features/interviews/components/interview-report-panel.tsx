@@ -43,8 +43,6 @@ type Props = {
   candidateName: string;
   jobTitle: string;
   startsAt: string;
-  /** Beside the call: notes first, the report below them. */
-  compact?: boolean;
 };
 
 /**
@@ -52,7 +50,7 @@ type Props = {
  * saved as they go), then the report the AI writes from them, which the
  * team edits, sends to itself by e-mail, or prints.
  */
-export function InterviewReportPanel({ interviewId, candidateName, jobTitle, compact = false }: Readonly<Props>) {
+export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: Readonly<Props>) {
   const queryClient = useQueryClient();
   const key = interviewReportKey(interviewId);
   const query = useQuery({ queryKey: key, queryFn: () => getInterviewReport(interviewId) });
@@ -105,105 +103,138 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle, com
 
   if (query.isLoading) {
     return (
-      <div className="space-y-3">
-        <Bone className="h-5 w-1/3" />
-        <Bone className="h-40 w-full rounded-2xl" />
+      <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+        <Bone className="h-64 w-full rounded-2xl" />
+        <Bone className="h-64 w-full rounded-2xl" />
       </div>
     );
   }
 
+  const status = save.isPending ? "Enregistrement…" : draft !== null && draft !== saved?.notes ? "Modifié" : saved?.updatedAt ? "Enregistré" : "";
+
   return (
-    <div className="space-y-5">
-      <section className="space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="font-semibold text-sm">Notes d&apos;entretien</h3>
-          <span className="text-muted-foreground text-xs">
-            {save.isPending ? "Enregistrement…" : draft !== null && draft !== saved?.notes ? "" : saved?.updatedAt ? "Enregistré" : ""}
-          </span>
-        </div>
-        <Textarea
-          value={notes}
-          onChange={(e) => setDraft(e.target.value.slice(0, MAX_NOTES))}
-          placeholder="Ce qu'il a dit de son expérience, ses disponibilités, ses prétentions, votre impression…"
-          className={cn("resize-y rounded-2xl border-0 bg-page", compact ? "min-h-56" : "min-h-40")}
-        />
-        {dictation.listening && (
-          <div className="space-y-2 rounded-2xl bg-page px-4 py-3" role="status" aria-live="polite">
-            <div className="flex items-center gap-3">
-              <span className="relative flex size-2.5 shrink-0">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive/60" />
-                <span className="relative inline-flex size-2.5 rounded-full bg-destructive" />
-              </span>
-              <Elapsed since={dictation.startedAt} />
-              <LiveWaveform analyser={dictation.analyser} />
-              <button
-                type="button"
-                aria-label="Arrêter la dictée"
-                title="Arrêter la dictée"
-                onClick={dictation.stop}
-                className="flex size-9 shrink-0 items-center justify-center rounded-full bg-destructive text-white transition-transform hover:scale-105"
-              >
-                <IconPlayerStopFilled className="size-3.5" />
-              </button>
-            </div>
-            <p className={cn("line-clamp-2 min-h-5 text-sm", dictation.interim ? "text-foreground/70" : "text-muted-foreground italic")}>
-              {dictation.interim || "Je vous écoute… parlez normalement, vos phrases s'ajoutent aux notes."}
-            </p>
+    <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+      {/* Left: the team's notes, the source of the report. */}
+      <section className="flex min-h-0 flex-col gap-3 lg:overflow-y-auto">
+        <div className="flex min-h-72 flex-1 flex-col rounded-2xl bg-page">
+          <div className="flex items-center justify-between gap-2 px-4 pt-3">
+            <h3 className="font-semibold text-sm">Vos notes</h3>
+            <span className="flex items-center gap-1 text-muted-foreground text-xs" aria-live="polite">
+              {status === "Enregistré" && <IconCheck className="size-3.5" />}
+              {status}
+            </span>
           </div>
-        )}
-        <div className="flex flex-wrap items-center gap-2">
-          {dictation.supported && !dictation.listening && (
-            <Button type="button" variant="ghost" className="h-9 rounded-full bg-page px-3.5 text-sm" onClick={() => void dictation.start()}>
-              <IconMicrophone className="size-4" />
-              Dicter
-            </Button>
+          <Textarea
+            value={notes}
+            onChange={(e) => setDraft(e.target.value.slice(0, MAX_NOTES))}
+            placeholder="Ce qu'il a dit de son expérience, ses disponibilités, ses prétentions, votre impression…"
+            className="min-h-48 flex-1 resize-none rounded-none border-0 bg-transparent px-4 shadow-none focus-visible:ring-0 dark:bg-transparent"
+          />
+          {dictation.listening ? (
+            <div className="space-y-2 px-4 pb-3" role="status" aria-live="polite">
+              <div className="flex items-center gap-3 rounded-full bg-card py-1 pr-1 pl-3">
+                <span className="relative flex size-2.5 shrink-0">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive/60" />
+                  <span className="relative inline-flex size-2.5 rounded-full bg-destructive" />
+                </span>
+                <Elapsed since={dictation.startedAt} />
+                <LiveWaveform analyser={dictation.analyser} />
+                <button
+                  type="button"
+                  aria-label="Arrêter la dictée"
+                  title="Arrêter la dictée"
+                  onClick={dictation.stop}
+                  className="flex size-9 shrink-0 items-center justify-center rounded-full bg-destructive text-white transition-transform hover:scale-105"
+                >
+                  <IconPlayerStopFilled className="size-3.5" />
+                </button>
+              </div>
+              <p className={cn("line-clamp-2 min-h-5 text-sm", dictation.interim ? "text-foreground/70" : "text-muted-foreground italic")}>
+                {dictation.interim || "Je vous écoute… vos phrases s'ajoutent aux notes."}
+              </p>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-2 px-3 pb-3">
+              {dictation.supported ? (
+                <Button type="button" variant="ghost" className="h-9 rounded-full bg-card px-3.5 text-sm" onClick={() => void dictation.start()}>
+                  <IconMicrophone className="size-4" />
+                  Dicter
+                </Button>
+              ) : (
+                <span />
+              )}
+              <span className="text-muted-foreground text-xs tabular-nums">
+                {notes.length > MAX_NOTES * 0.8 ? `${notes.length} / ${MAX_NOTES}` : ""}
+              </span>
+            </div>
           )}
-          <Button type="button" className="h-9 rounded-full px-4 text-sm" disabled={!enough} loading={write.isPending} onClick={() => write.mutate()}>
-            {report ? <IconRefresh className="size-4" /> : <IconFileText className="size-4" />}
-            {report ? "Réécrire le compte rendu" : "Rédiger le compte rendu"}
-          </Button>
         </div>
-        <p className="text-muted-foreground text-xs">
-          {enough ? "Le compte rendu est rédigé par IA à partir de vos notes : relisez-le avant de l'envoyer." : "Quelques lignes de notes suffisent pour rédiger le compte rendu."}
+        <Button type="button" className="h-11 w-full rounded-full text-sm" disabled={!enough} loading={write.isPending} onClick={() => write.mutate()}>
+          {report ? <IconRefresh className="size-4" /> : <IconFileText className="size-4" />}
+          {report ? "Réécrire le compte rendu" : "Rédiger le compte rendu"}
+        </Button>
+        <p className="text-center text-muted-foreground text-xs">
+          {enough ? "Rédigé par IA à partir de vos notes : relisez-le avant de l'envoyer." : "Quelques lignes de notes suffisent pour rédiger le compte rendu."}
           {dictation.supported && " La dictée passe par le service vocal de votre navigateur."}
         </p>
       </section>
 
-      {write.isPending && !report && <Bone className="h-48 w-full rounded-2xl" />}
-
-      {report && (
-        <section className="space-y-4 rounded-2xl bg-page p-4 sm:p-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h3 className="font-semibold">Compte rendu</h3>
+      {/* Right: the report, read, edited, sent or printed. */}
+      <section className="flex min-h-0 flex-col rounded-2xl bg-page lg:overflow-hidden">
+        {write.isPending && !report ? (
+          <div className="space-y-3 p-5">
+            <Bone className="h-5 w-1/3" />
+            <Bone className="h-24 w-full rounded-xl" />
+            <Bone className="h-16 w-full rounded-xl" />
+          </div>
+        ) : !report ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
+            <span className="flex size-12 items-center justify-center rounded-2xl bg-card">
+              <IconFileText className="size-5 text-muted-foreground" />
+            </span>
+            <div className="max-w-xs space-y-1">
+              <p className="font-medium text-sm">Le compte rendu apparaîtra ici</p>
               <p className="text-muted-foreground text-xs">
-                {candidateName} · {jobTitle}
-                {saved?.sentAt ? ` · envoyé le ${new Date(saved.sentAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}` : ""}
+                Prenez vos notes pendant ou après l&apos;entretien, puis « Rédiger le compte rendu » : résumé, points forts, points de vigilance et prochaines étapes.
               </p>
             </div>
-            {!editing && (
-              <div className="flex flex-wrap gap-1.5">
-                <IconAction label="Modifier" onClick={() => setEditing(report)}>
-                  <IconPencil className="size-4" />
-                </IconAction>
-                <IconAction label="Aperçu PDF" onClick={() => setPreview(true)}>
-                  <IconFileTypePdf className="size-4" />
-                </IconAction>
-                <Button type="button" className="h-9 rounded-full px-3.5 text-sm" onClick={() => setSending(true)}>
-                  <IconMail className="size-4" />
-                  Envoyer à l&apos;équipe
-                </Button>
-              </div>
-            )}
           </div>
-
-          {editing ? (
-            <ReportEditor value={editing} onChange={setEditing} onCancel={() => setEditing(null)} onSave={() => edit.mutate(editing)} pending={edit.isPending} />
-          ) : (
-            <ReportView report={report} />
-          )}
-        </section>
-      )}
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-4 pb-3">
+              <div className="min-w-0">
+                <h3 className="font-semibold">Compte rendu</h3>
+                <p className="text-muted-foreground text-xs">
+                  {saved?.sentAt
+                    ? `Envoyé à l'équipe le ${new Date(saved.sentAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}`
+                    : "Pas encore envoyé"}
+                </p>
+              </div>
+              {!editing && (
+                <div className="flex items-center gap-1.5">
+                  <IconAction label="Modifier" onClick={() => setEditing(report)}>
+                    <IconPencil className="size-4" />
+                  </IconAction>
+                  <IconAction label="Aperçu PDF" onClick={() => setPreview(true)}>
+                    <IconFileTypePdf className="size-4" />
+                  </IconAction>
+                  <Button type="button" className="h-9 rounded-full px-3.5 text-sm" onClick={() => setSending(true)}>
+                    <IconMail className="size-4" />
+                    {saved?.sentAt ? "Renvoyer" : "Envoyer à l'équipe"}
+                  </Button>
+                </div>
+              )}
+            </div>
+            <div className={cn("min-h-0 flex-1 px-5 pb-5 lg:overflow-y-auto", write.isPending && "pointer-events-none opacity-50")}>
+              {editing ? (
+                <ReportEditor value={editing} onChange={setEditing} onCancel={() => setEditing(null)} onSave={() => edit.mutate(editing)} pending={edit.isPending} />
+              ) : (
+                <ReportView report={report} />
+              )}
+            </div>
+          </>
+        )}
+      </section>
 
       {/* The Rabotka document, read, downloaded or printed from the panel; a new version after each change. */}
       {report && (
@@ -251,11 +282,14 @@ function practical(r: InterviewReportBody): string[] {
   ].filter((x): x is string => Boolean(x));
 }
 
-function Block({ title, items }: Readonly<{ title: string; items: string[] }>) {
+function Block({ title, items, tone }: Readonly<{ title: string; items: string[]; tone?: "good" | "warn" }>) {
   if (!items.length) return null;
   return (
-    <div className="space-y-1.5">
-      <p className="font-medium text-sm">{title}</p>
+    <div className={cn("space-y-1.5", tone && "rounded-xl bg-card p-3")}>
+      <p className="flex items-center gap-2 font-medium text-sm">
+        {tone && <span className={cn("size-2 rounded-full", tone === "good" ? "bg-whatsapp" : "bg-amber-500")} />}
+        {title}
+      </p>
       <ul className="list-disc space-y-1 pl-5 text-sm">
         {items.map((x) => (
           <li key={x}>{x}</li>
@@ -269,10 +303,12 @@ export function ReportView({ report: r }: Readonly<{ report: InterviewReportBody
   return (
     <div className="space-y-4">
       <p className="text-sm leading-relaxed">{r.resume}</p>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Block title="Points forts" items={r.pointsForts} />
-        <Block title="Points de vigilance" items={r.pointsDeVigilance} />
-      </div>
+      {(r.pointsForts.length > 0 || r.pointsDeVigilance.length > 0) && (
+        <div className={cn("grid gap-3", r.pointsForts.length > 0 && r.pointsDeVigilance.length > 0 && "sm:grid-cols-2")}>
+          <Block title="Points forts" items={r.pointsForts} tone="good" />
+          <Block title="Points de vigilance" items={r.pointsDeVigilance} tone="warn" />
+        </div>
+      )}
       {r.reponsesCles.length > 0 && (
         <div className="space-y-1.5">
           <p className="font-medium text-sm">Réponses clés</p>
@@ -290,7 +326,7 @@ export function ReportView({ report: r }: Readonly<{ report: InterviewReportBody
       {r.avisRecruteur && (
         <div className="space-y-1.5">
           <p className="font-medium text-sm">Avis du recruteur</p>
-          <p className="text-sm">{r.avisRecruteur}</p>
+          <blockquote className="border-muted-foreground/30 border-l-2 pl-3 text-muted-foreground text-sm italic">{r.avisRecruteur}</blockquote>
         </div>
       )}
       <Block title="Prochaines étapes" items={r.prochainesEtapes} />
@@ -663,12 +699,14 @@ export function InterviewReportDialog({ open, onOpenChange, ...props }: Readonly
         onInteractOutside={(ev) => {
           if ((ev.target as HTMLElement | null)?.closest("[data-preview-sheet]")) ev.preventDefault();
         }}
-        className="max-h-[92svh] w-[calc(100vw-2rem)] overflow-y-auto rounded-3xl border-0 bg-card p-5 shadow-soft sm:max-w-5xl sm:p-8"
+        className="flex max-h-[92svh] w-[calc(100vw-2rem)] flex-col gap-4 overflow-y-auto rounded-3xl border-0 bg-card p-5 shadow-soft sm:max-w-6xl sm:p-6 lg:h-[86svh] lg:overflow-hidden"
       >
-        <DialogTitle>Compte rendu · {props.candidateName}</DialogTitle>
-        <DialogDescription>
-          {props.jobTitle} · {new Date(props.startsAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}
-        </DialogDescription>
+        <div className="space-y-1 pr-8">
+          <DialogTitle className="text-lg">Compte rendu · {props.candidateName}</DialogTitle>
+          <DialogDescription>
+            {props.jobTitle} · {new Date(props.startsAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}
+          </DialogDescription>
+        </div>
         <InterviewReportPanel {...props} />
       </DialogContent>
     </Dialog>

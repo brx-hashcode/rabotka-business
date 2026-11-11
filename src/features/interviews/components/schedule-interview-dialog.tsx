@@ -133,7 +133,7 @@ export function ScheduleInterviewDialog({
       <DialogContent className="w-[calc(100vw-2rem)] max-w-lg gap-0 overflow-hidden rounded-3xl border-0 bg-card p-0 shadow-soft">
         <div className="max-h-[85svh] space-y-5 overflow-y-auto px-6 pt-6 pb-2">
           <div className="space-y-1">
-            <DialogTitle className="font-semibold text-xl">{existing ? "Déplacer l'entretien" : "Planifier un entretien"}</DialogTitle>
+            <DialogTitle className="font-semibold text-xl">{existing ? "Modifier l'entretien" : "Planifier un entretien"}</DialogTitle>
             <DialogDescription className="text-muted-foreground text-sm">
               {candidate.name} · {jobTitle}
             </DialogDescription>
@@ -289,7 +289,7 @@ export function ScheduleInterviewDialog({
             disabled={save.isPending || !complete}
             className="h-12 flex-[2] rounded-full bg-ink font-medium text-white hover:bg-ink/90 disabled:opacity-40"
           >
-            {save.isPending ? "Envoi…" : existing ? "Déplacer et prévenir" : "Envoyer l'invitation"}
+            {save.isPending ? "Envoi…" : existing ? "Enregistrer et prévenir" : "Envoyer l'invitation"}
           </button>
         </div>
       </DialogContent>
