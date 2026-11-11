@@ -231,9 +231,9 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
           </span>
           {i.mode === "VIDEO" && i.location ? (
             isRabotkaVisio(i.location) ? (
-              <a href={i.location} className="inline-flex min-w-0 items-center gap-1 font-medium hover:underline">
+              <Link href={`/espace/entretiens${new URL(i.location).pathname}`} className="inline-flex min-w-0 items-center gap-1 font-medium hover:underline">
                 <span className="truncate">Rejoindre la visio</span>
-              </a>
+              </Link>
             ) : (
               <a href={i.location} target="_blank" rel="noreferrer" className="inline-flex min-w-0 items-center gap-1 font-medium hover:underline">
                 <span className="truncate">Rejoindre la visio</span>
