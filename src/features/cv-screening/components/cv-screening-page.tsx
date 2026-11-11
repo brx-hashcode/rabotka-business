@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  IconArrowLeft,
   IconBriefcase,
   IconCalendarEvent,
   IconCheck,
@@ -28,6 +27,7 @@ import {
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
+import { BackLink } from "#/components/back-link";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Bone, ClaimDetailSkeleton } from "#/components/page-skeletons";
 import { PreviewSheet, previewKindOf } from "#/components/preview-sheet";
@@ -100,10 +100,7 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
 
   return (
     <div className="w-full space-y-6 pt-2">
-      <Link href="/espace/analyse-cv" className="inline-flex items-center gap-1.5 text-muted-foreground text-sm hover:text-foreground">
-        <IconArrowLeft className="size-4" />
-        Analyse de CV
-      </Link>
+      <BackLink href="/espace/analyse-cv" label="Analyse de CV" current={s.jobTitle} />
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="min-w-0 break-words font-semibold text-3xl tracking-tight">{s.jobTitle}</h1>

@@ -9,7 +9,6 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IconAlertTriangle,
-  IconArrowLeft,
   IconBell,
   IconClock,
   IconFileText,
@@ -25,6 +24,7 @@ import {
 import { toast } from "sonner";
 
 import { FormPageSkeleton } from "#/components/page-skeletons";
+import { BackLink } from "#/components/back-link";
 import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { Combobox } from "#/features/sign-up/components/combobox";
@@ -144,10 +144,7 @@ export function NewCvScreeningPage() {
 
   return (
     <div className="w-full space-y-6 pt-2">
-      <Link href="/espace/analyse-cv" className="inline-flex items-center gap-1.5 text-muted-foreground text-sm hover:text-foreground">
-        <IconArrowLeft className="size-4" />
-        Analyse de CV
-      </Link>
+      <BackLink href="/espace/analyse-cv" label="Analyse de CV" current={"Nouvelle analyse"} />
       <div className="space-y-1.5">
         <h1 className="font-semibold text-3xl tracking-tight">Nouvelle analyse</h1>
         <p className="text-muted-foreground">Le poste, puis les CV : Rabotka lit chacun et le note par rapport au poste.</p>

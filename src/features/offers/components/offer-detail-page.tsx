@@ -8,7 +8,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IconCalendarPlus,
-  IconArrowLeft,
   IconBriefcase,
   IconCalendarEvent,
   IconCash,
@@ -43,6 +42,7 @@ import { appConfig } from "#/config";
 import { downloadFile } from "#/lib/api/download";
 
 import { ActionDialog } from "#/components/action-dialog";
+import { BackLink } from "#/components/back-link";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Input } from "#/components/ui/input";
 import { Skeleton } from "#/components/ui/skeleton";
@@ -224,10 +224,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
 
   return (
     <div className="w-full space-y-6 pt-2">
-      <Link href="/espace/offres" className="inline-flex items-center gap-1.5 text-muted-foreground text-sm hover:text-foreground">
-        <IconArrowLeft className="size-4" />
-        Offres
-      </Link>
+      <BackLink href="/espace/offres" label="Offres" current={o?.title} />
 
       {offer.isLoading ? (
         <>

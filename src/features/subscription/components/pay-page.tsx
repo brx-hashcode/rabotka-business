@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IconAlertTriangle,
-  IconArrowLeft,
   IconCheck,
   IconCircleCheckFilled,
   IconDeviceMobile,
@@ -19,6 +18,7 @@ import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
 import { Bone } from "#/components/page-skeletons";
+import { BackLink } from "#/components/back-link";
 import { getMyPacks, getMySubscription, myBusinessKey, myPacksKey, mySubscriptionKey } from "#/lib/api/business-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { getPaymentByToken, getPaymentGateways, initiatePayment } from "#/lib/api/payment-controller";
@@ -220,10 +220,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
 
   return (
     <div className="w-full space-y-6 pt-2">
-      <Link href="/espace/abonnement" className="inline-flex items-center gap-1.5 text-muted-foreground text-sm hover:text-foreground">
-        <IconArrowLeft className="size-4" />
-        Abonnement
-      </Link>
+      <BackLink href="/espace/abonnement" label="Abonnement" current={"Paiement"} />
       <div className="space-y-1.5">
         <h1 className="font-semibold text-3xl tracking-tight">Paiement</h1>
         <p className="text-muted-foreground">
