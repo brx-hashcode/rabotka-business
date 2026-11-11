@@ -271,7 +271,7 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
           onClick={() => setReporting(true)}
           className={cn(
             "flex h-10 items-center justify-center gap-2 rounded-full font-medium text-sm",
-            i.hasReport ? "bg-brand-lime/60 text-ink hover:bg-brand-lime/80" : "bg-page hover:bg-page/70",
+            i.hasReport ? "bg-brand-lime text-[#0f2414] hover:bg-brand-lime/90" : "bg-page hover:bg-page/70",
             !(hire && !past) && "mt-auto",
           )}
         >

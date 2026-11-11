@@ -10,11 +10,13 @@ import {
   IconMicrophone,
   IconPencil,
   IconPlayerStopFilled,
-  IconPrinter,
+  IconFileTypePdf,
   IconRefresh,
 } from "@tabler/icons-react";
 
 import { Bone } from "#/components/page-skeletons";
+import { PreviewSheet } from "#/components/preview-sheet";
+import { appConfig } from "#/config";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
@@ -50,7 +52,7 @@ type Props = {
  * saved as they go), then the report the AI writes from them, which the
  * team edits, sends to itself by e-mail, or prints.
  */
-export function InterviewReportPanel({ interviewId, candidateName, jobTitle, startsAt, compact = false }: Readonly<Props>) {
+export function InterviewReportPanel({ interviewId, candidateName, jobTitle, compact = false }: Readonly<Props>) {
   const queryClient = useQueryClient();
   const key = interviewReportKey(interviewId);
   const query = useQuery({ queryKey: key, queryFn: () => getInterviewReport(interviewId) });
@@ -59,6 +61,7 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle, sta
   const notes = draft ?? saved?.notes ?? "";
   const [editing, setEditing] = useState<InterviewReportBody | null>(null);
   const [sending, setSending] = useState(false);
+  const [preview, setPreview] = useState(false);
 
   const store = (data: InterviewReport) => {
     queryClient.setQueryData(key, data);
@@ -125,25 +128,34 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle, sta
           className={cn("resize-y rounded-2xl border-0 bg-page", compact ? "min-h-56" : "min-h-40")}
         />
         {dictation.listening && (
-          <div className="flex items-center gap-3 rounded-2xl bg-page px-3 py-2" role="status" aria-live="polite">
-            <span className="relative flex size-2.5 shrink-0">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive/60" />
-              <span className="relative inline-flex size-2.5 rounded-full bg-destructive" />
-            </span>
-            <VoiceMeter analyser={dictation.analyser} />
-            <p className="min-w-0 flex-1 truncate text-muted-foreground text-sm italic">{dictation.interim || "Je vous écoute…"}</p>
+          <div className="space-y-2 rounded-2xl bg-page px-4 py-3" role="status" aria-live="polite">
+            <div className="flex items-center gap-3">
+              <span className="relative flex size-2.5 shrink-0">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive/60" />
+                <span className="relative inline-flex size-2.5 rounded-full bg-destructive" />
+              </span>
+              <Elapsed since={dictation.startedAt} />
+              <LiveWaveform analyser={dictation.analyser} />
+              <button
+                type="button"
+                aria-label="Arrêter la dictée"
+                title="Arrêter la dictée"
+                onClick={dictation.stop}
+                className="flex size-9 shrink-0 items-center justify-center rounded-full bg-destructive text-white transition-transform hover:scale-105"
+              >
+                <IconPlayerStopFilled className="size-3.5" />
+              </button>
+            </div>
+            <p className={cn("line-clamp-2 min-h-5 text-sm", dictation.interim ? "text-foreground/70" : "text-muted-foreground italic")}>
+              {dictation.interim || "Je vous écoute… parlez normalement, vos phrases s'ajoutent aux notes."}
+            </p>
           </div>
         )}
         <div className="flex flex-wrap items-center gap-2">
-          {dictation.supported && (
-            <Button
-              type="button"
-              variant="ghost"
-              className={cn("h-9 rounded-full bg-page px-3.5 text-sm", dictation.listening && "text-destructive")}
-              onClick={dictation.listening ? dictation.stop : () => void dictation.start()}
-            >
-              {dictation.listening ? <IconPlayerStopFilled className="size-4" /> : <IconMicrophone className="size-4" />}
-              {dictation.listening ? "Arrêter la dictée" : "Dicter"}
+          {dictation.supported && !dictation.listening && (
+            <Button type="button" variant="ghost" className="h-9 rounded-full bg-page px-3.5 text-sm" onClick={() => void dictation.start()}>
+              <IconMicrophone className="size-4" />
+              Dicter
             </Button>
           )}
           <Button type="button" className="h-9 rounded-full px-4 text-sm" disabled={!enough} loading={write.isPending} onClick={() => write.mutate()}>
@@ -174,8 +186,8 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle, sta
                 <IconAction label="Modifier" onClick={() => setEditing(report)}>
                   <IconPencil className="size-4" />
                 </IconAction>
-                <IconAction label="Imprimer / PDF" onClick={() => printReport(report, { candidateName, jobTitle, startsAt })}>
-                  <IconPrinter className="size-4" />
+                <IconAction label="Aperçu PDF" onClick={() => setPreview(true)}>
+                  <IconFileTypePdf className="size-4" />
                 </IconAction>
                 <Button type="button" className="h-9 rounded-full px-3.5 text-sm" onClick={() => setSending(true)}>
                   <IconMail className="size-4" />
@@ -193,6 +205,19 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle, sta
         </section>
       )}
 
+      {/* The Rabotka document, read, downloaded or printed from the panel; a new version after each change. */}
+      {report && (
+        <PreviewSheet
+          open={preview}
+          onOpenChange={setPreview}
+          title="Compte rendu d'entretien"
+          subtitle={`${candidateName} · ${jobTitle}`}
+          src={`${appConfig.apiUrl}/business/me/interviews/${encodeURIComponent(interviewId)}/report.pdf?v=${encodeURIComponent(saved?.updatedAt ?? "")}`}
+          kind="pdf"
+          fileName={`compte-rendu-${slug(candidateName)}.pdf`}
+          unavailable="Le document n'a pas pu être créé. Réessayez dans un instant."
+        />
+      )}
       {sending && <SendDialog interviewId={interviewId} onClose={() => setSending(false)} onSent={store} />}
     </div>
   );
@@ -432,6 +457,7 @@ function useDictation(onText: (text: string) => void) {
   const [interim, setInterim] = useState("");
   /** The microphone's level, for the meter; the recognition has no level of its own. */
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
+  const [startedAt, setStartedAt] = useState(0);
   const ref = useRef<Recognition | null>(null);
   const wanted = useRef(false);
   const audio = useRef<{ stream: MediaStream; context: AudioContext } | null>(null);
@@ -499,13 +525,14 @@ function useDictation(onText: (text: string) => void) {
     if (!Klass) return;
     wanted.current = true;
     setListening(true);
+    setStartedAt(Date.now());
     listen(Klass);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const context = new AudioContext();
       const node = context.createAnalyser();
-      node.fftSize = 64;
-      node.smoothingTimeConstant = 0.7;
+      node.fftSize = 1024;
+      node.smoothingTimeConstant = 0.6;
       context.createMediaStreamSource(stream).connect(node);
       audio.current = { stream, context };
       setAnalyser(node);
@@ -520,82 +547,124 @@ function useDictation(onText: (text: string) => void) {
     setInterim("");
     release();
   };
-  return { supported, listening, interim, analyser, start, stop };
+  return { supported, listening, interim, analyser, startedAt, start, stop };
 }
 
-const BARS = 24;
+const BAR = 3;
+const GAP = 2;
+const STEP = BAR + GAP;
+/** A new bar every this many ms: the waveform's scrolling speed. */
+const TICK = 50;
 
 /**
- * The voice as it comes in: bars that rise with the microphone's level,
- * moved straight in the DOM each frame (no render per frame).
+ * The voice as a live waveform (as on ElevenLabs): rounded bars scrolling
+ * right to left, as tall as the microphone's level, fading out on the left.
+ * Drawn on a canvas each frame, with no render per frame.
  */
-function VoiceMeter({ analyser }: Readonly<{ analyser: AnalyserNode | null }>) {
-  const bars = useRef<(HTMLSpanElement | null)[]>([]);
+function LiveWaveform({ analyser }: Readonly<{ analyser: AnalyserNode | null }>) {
+  const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
-    if (!analyser) return;
-    const data = new Uint8Array(analyser.frequencyBinCount);
+    const canvas = ref.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.round(canvas.clientWidth * dpr);
+      canvas.height = Math.round(canvas.clientHeight * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+    const observer = new ResizeObserver(resize);
+    observer.observe(canvas);
+    const color = getComputedStyle(canvas).color;
+    const samples = analyser ? new Uint8Array(analyser.fftSize) : null;
+    const levels: number[] = [];
+    let smooth = 0;
+    let last = performance.now();
     let frame = 0;
-    const draw = () => {
-      analyser.getByteFrequencyData(data);
-      for (let i = 0; i < BARS; i++) {
-        // The voice sits in the low bins: spread them across the bars, mirrored.
-        const v = data[Math.min(data.length - 1, Math.floor((Math.abs(i - BARS / 2) / (BARS / 2)) * data.length * 0.6))] ?? 0;
-        const el = bars.current[i];
-        if (el) el.style.transform = `scaleY(${Math.max(0.12, v / 255)})`;
+
+    const level = (t: number) => {
+      if (!analyser || !samples) return 0.05 + 0.04 * Math.sin(t / 260);
+      analyser.getByteTimeDomainData(samples);
+      let sum = 0;
+      for (const v of samples) {
+        const x = (v - 128) / 128;
+        sum += x * x;
       }
+      // Speech is quiet in RMS terms: lifted, then eased so bars don't flicker.
+      const raw = Math.min(1, Math.sqrt(sum / samples.length) * 5);
+      smooth = smooth * 0.35 + raw * 0.65;
+      return smooth;
+    };
+
+    const draw = (t: number) => {
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      while (t - last >= TICK) {
+        last += TICK;
+        levels.push(level(t));
+        const max = Math.ceil(w / STEP) + 2;
+        if (levels.length > max) levels.splice(0, levels.length - max);
+      }
+      const shift = ((t - last) / TICK) * STEP;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = color;
+      for (let i = 0; i < levels.length; i++) {
+        const x = w - (levels.length - i) * STEP - shift;
+        if (x < -BAR) continue;
+        const v = levels[i] ?? 0;
+        const bh = Math.max(BAR, v * (h - 2));
+        // Faded on the left quarter, full on the right where the voice comes in.
+        ctx.globalAlpha = Math.max(0, Math.min(1, x / (w * 0.3))) * (v < 0.06 ? 0.45 : 1);
+        ctx.beginPath();
+        ctx.roundRect(x, (h - bh) / 2, BAR, bh, BAR / 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
       frame = requestAnimationFrame(draw);
     };
-    draw();
-    return () => cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(draw);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
   }, [analyser]);
-  return (
-    <span aria-hidden className="flex h-7 items-center gap-[3px]">
-      {Array.from({ length: BARS }, (_, i) => (
-        <span
-          key={i}
-          ref={(el) => {
-            bars.current[i] = el;
-          }}
-          className={cn(
-            "h-full w-[3px] origin-center rounded-full bg-whatsapp transition-transform duration-75",
-            !analyser && "animate-pulse",
-          )}
-          style={{ transform: "scaleY(0.12)" }}
-        />
-      ))}
-    </span>
-  );
+  return <canvas ref={ref} aria-hidden className="h-9 min-w-0 flex-1 text-whatsapp" />;
 }
 
-/** A clean page with the report only, printed or saved as PDF by the browser. */
-function printReport(r: InterviewReportBody, i: { candidateName: string; jobTitle: string; startsAt: string }) {
-  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
-  const list = (title: string, items: string[]) =>
-    items.length ? `<h2>${title}</h2><ul>${items.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "";
-  const when = new Date(i.startsAt).toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" });
-  const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Compte rendu — ${esc(i.candidateName)}</title>
-<style>body{font:14px/1.55 system-ui,sans-serif;color:#111;max-width:720px;margin:32px auto;padding:0 24px}h1{font-size:20px;margin:0}h2{font-size:15px;margin:22px 0 6px}p.meta{color:#555;margin:4px 0 18px}ul{padding-left:20px;margin:0}dt{color:#555;font-size:12px;margin-top:8px}dd{margin:0}footer{margin-top:28px;color:#777;font-size:12px}</style>
-</head><body><h1>Compte rendu d'entretien — ${esc(i.candidateName)}</h1><p class="meta">${esc(i.jobTitle)} · ${esc(when)}</p>
-<p>${esc(r.resume)}</p>${list("Points forts", r.pointsForts)}${list("Points de vigilance", r.pointsDeVigilance)}
-${r.reponsesCles.length ? `<h2>Réponses clés</h2><dl>${r.reponsesCles.map((x) => `<dt>${esc(x.question)}</dt><dd>${esc(x.reponse)}</dd>`).join("")}</dl>` : ""}
-${list("Infos pratiques", practical(r))}${r.avisRecruteur ? `<h2>Avis du recruteur</h2><p>${esc(r.avisRecruteur)}</p>` : ""}${list("Prochaines étapes", r.prochainesEtapes)}
-<footer>Rédigé avec Rabotka Business à partir des notes de l'équipe.</footer></body></html>`;
-  const w = window.open("", "_blank");
-  if (!w) {
-    toast.error("Autorisez les fenêtres pour imprimer le compte rendu.");
-    return;
-  }
-  w.document.write(html);
-  w.document.close();
-  w.focus();
-  w.print();
+/** How long the dictation has been running, as 0:42. */
+function Elapsed({ since }: Readonly<{ since: number }>) {
+  const [now, setNow] = useState(since);
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(timer);
+  }, []);
+  const s = Math.max(0, Math.floor((now - since) / 1000));
+  return <span className="w-10 shrink-0 font-medium text-sm tabular-nums">{`${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`}</span>;
+}
+
+function slug(name: string): string {
+  return (
+    name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") || "candidat"
+  );
 }
 
 /** The panel in a large window, from an interview's card on « Entretiens ». */
 export function InterviewReportDialog({ open, onOpenChange, ...props }: Readonly<Props & { open: boolean; onOpenChange: (o: boolean) => void }>) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92svh] w-[calc(100vw-2rem)] overflow-y-auto rounded-3xl border-0 bg-card p-5 shadow-soft sm:max-w-5xl sm:p-8">
+      <DialogContent
+        // The PDF opens in a panel portalled outside: a click there is not « outside ».
+        onInteractOutside={(ev) => {
+          if ((ev.target as HTMLElement | null)?.closest("[data-preview-sheet]")) ev.preventDefault();
+        }}
+        className="max-h-[92svh] w-[calc(100vw-2rem)] overflow-y-auto rounded-3xl border-0 bg-card p-5 shadow-soft sm:max-w-5xl sm:p-8"
+      >
         <DialogTitle>Compte rendu · {props.candidateName}</DialogTitle>
         <DialogDescription>
           {props.jobTitle} · {new Date(props.startsAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}
