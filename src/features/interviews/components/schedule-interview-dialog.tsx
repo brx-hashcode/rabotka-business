@@ -35,11 +35,11 @@ const timeValue = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 /** Times a business may offer for one interview (the server's limit). */
 const MAX_SLOTS = 3;
 
-/** A free Jitsi room, hard to guess: nobody needs an account to join. */
+/** A video room inside Rabotka, hard to guess: the candidate joins by its link, without an account. */
 function jitsiLink(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(8));
+  const bytes = crypto.getRandomValues(new Uint8Array(10));
   const id = Array.from(bytes, (b) => "abcdefghijkmnpqrstuvwxyz23456789"[b % 32]).join("");
-  return `https://meet.jit.si/Rabotka-${id}`;
+  return `${window.location.origin}/visio/Rabotka-${id}`;
 }
 
 const LOCATION: Record<InterviewMode, { label: string; placeholder: string; optional?: boolean }> = {
@@ -133,7 +133,7 @@ export function ScheduleInterviewDialog({
       <DialogContent className="w-[calc(100vw-2rem)] max-w-lg gap-0 overflow-hidden rounded-3xl border-0 bg-card p-0 shadow-soft">
         <div className="max-h-[85svh] space-y-5 overflow-y-auto px-6 pt-6 pb-2">
           <div className="space-y-1">
-            <DialogTitle className="font-semibold text-xl">{existing ? "Déplacer l'entretien" : "Planifier un entretien"}</DialogTitle>
+            <DialogTitle className="font-semibold text-xl">{existing ? "Modifier l'entretien" : "Planifier un entretien"}</DialogTitle>
             <DialogDescription className="text-muted-foreground text-sm">
               {candidate.name} · {jobTitle}
             </DialogDescription>
@@ -247,7 +247,7 @@ export function ScheduleInterviewDialog({
               >
                 <IconVideo className="size-4" />
                 Créer un lien de visio
-                <span className="font-normal text-muted-foreground">(Jitsi, gratuit, sans compte)</span>
+                <span className="font-normal text-muted-foreground">(dans Rabotka, sans compte)</span>
               </button>
             )}
           </label>
@@ -289,7 +289,7 @@ export function ScheduleInterviewDialog({
             disabled={save.isPending || !complete}
             className="h-12 flex-[2] rounded-full bg-ink font-medium text-white hover:bg-ink/90 disabled:opacity-40"
           >
-            {save.isPending ? "Envoi…" : existing ? "Déplacer et prévenir" : "Envoyer l'invitation"}
+            {save.isPending ? "Envoi…" : existing ? "Enregistrer et prévenir" : "Envoyer l'invitation"}
           </button>
         </div>
       </DialogContent>

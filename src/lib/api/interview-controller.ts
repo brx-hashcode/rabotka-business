@@ -1,5 +1,14 @@
 import { BusinessBaseController } from "./base-controller";
-import type { Interview, InterviewAnswer, InterviewInput, InterviewInvitation, InterviewSlot } from "./types";
+import type {
+  Interview,
+  InterviewAnswer,
+  InterviewInput,
+  InterviewInvitation,
+  InterviewReport,
+  InterviewReportBody,
+  InterviewSlot,
+  VisioJoin,
+} from "./types";
 
 /** « Entretiens »: interviews with candidates, and the candidate's side of one. */
 class InterviewController extends BusinessBaseController {
@@ -32,6 +41,39 @@ class InterviewController extends BusinessBaseController {
   }
 
 
+  /** « Compte rendu »: the team's notes and the report written from them. */
+  report(id: string): Promise<InterviewReport> {
+    return this.get(`/business/me/interviews/${encodeURIComponent(id)}/report`);
+  }
+
+  saveNotes(id: string, notes: string): Promise<InterviewReport> {
+    return this.put(`/business/me/interviews/${encodeURIComponent(id)}/report/notes`, { notes });
+  }
+
+  /** Writes (again) the report from the notes saved: the AI, a few seconds. */
+  writeReport(id: string): Promise<InterviewReport> {
+    return this.post(`/business/me/interviews/${encodeURIComponent(id)}/report/write`);
+  }
+
+  editReport(id: string, report: InterviewReportBody): Promise<InterviewReport> {
+    return this.patch(`/business/me/interviews/${encodeURIComponent(id)}/report`, { report });
+  }
+
+  /** By e-mail to the team: those chosen, or the members who get the hiring e-mails. */
+  sendReport(id: string, memberIds?: string[]): Promise<InterviewReport & { sentTo: number }> {
+    return this.post(`/business/me/interviews/${encodeURIComponent(id)}/report/send`, memberIds?.length ? { memberIds } : {});
+  }
+
+  /** Joining an interview's video call as the business: its host. */
+  visioAsHost(room: string): Promise<VisioJoin> {
+    return this.get(`/business/me/interviews/visio/${encodeURIComponent(room)}`);
+  }
+
+  /** Joining it by its link, signed out: the candidate. */
+  visioAsGuest(room: string): Promise<VisioJoin> {
+    return this.get(`/public/interviews/visio/${encodeURIComponent(room)}`);
+  }
+
   invitation(token: string): Promise<InterviewInvitation> {
     return this.get(`/public/interviews/${encodeURIComponent(token)}`);
   }
@@ -55,6 +97,14 @@ export const cancelInterview = controller.cancel.bind(controller);
 export const getInterviewCalendar = controller.calendar.bind(controller);
 export const resetInterviewCalendar = controller.resetCalendar.bind(controller);
 export const getInvitation = controller.invitation.bind(controller);
+export const getInterviewReport = controller.report.bind(controller);
+export const saveInterviewNotes = controller.saveNotes.bind(controller);
+export const writeInterviewReport = controller.writeReport.bind(controller);
+export const editInterviewReport = controller.editReport.bind(controller);
+export const sendInterviewReport = controller.sendReport.bind(controller);
+export const interviewReportKey = (id: string) => ["interview-report", id] as const;
+export const joinVisioAsHost = controller.visioAsHost.bind(controller);
+export const joinVisioAsGuest = controller.visioAsGuest.bind(controller);
 export const answerInvitation = controller.answer.bind(controller);
 
 export const interviewsKey = ["interviews"] as const;
