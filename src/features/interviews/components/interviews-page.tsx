@@ -230,10 +230,16 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
             <Mode className="size-4 text-muted-foreground" />
           </span>
           {i.mode === "VIDEO" && i.location ? (
-            <a href={i.location} target="_blank" rel="noreferrer" className="inline-flex min-w-0 items-center gap-1 font-medium hover:underline">
-              <span className="truncate">Rejoindre la visio</span>
-              <IconExternalLink className="size-3.5 shrink-0" />
-            </a>
+            isRabotkaVisio(i.location) ? (
+              <a href={i.location} className="inline-flex min-w-0 items-center gap-1 font-medium hover:underline">
+                <span className="truncate">Rejoindre la visio</span>
+              </a>
+            ) : (
+              <a href={i.location} target="_blank" rel="noreferrer" className="inline-flex min-w-0 items-center gap-1 font-medium hover:underline">
+                <span className="truncate">Rejoindre la visio</span>
+                <IconExternalLink className="size-3.5 shrink-0" />
+              </a>
+            )
           ) : (
             <span className="min-w-0 truncate">{modeLabel(i)}</span>
           )}
@@ -292,4 +298,13 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
       />
     </li>
   );
+}
+
+/** A room made by « Créer un lien de visio »: opened here, not in a new tab. */
+function isRabotkaVisio(location: string): boolean {
+  try {
+    return new URL(location).pathname.startsWith("/visio/Rabotka-");
+  } catch {
+    return false;
+  }
 }

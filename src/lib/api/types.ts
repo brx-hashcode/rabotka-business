@@ -531,6 +531,17 @@ export type Interview = {
 };
 
 /** What the candidate sees behind their private link. */
+/** An interview's video call, inside the app (8x8 JaaS), or the public Jitsi room without its keys. */
+export type VisioJoin = {
+  jobTitle: string;
+  businessName: string;
+  candidateName: string;
+  startsAt: string;
+  durationMinutes: number;
+  displayName: string;
+  host: boolean;
+} & ({ provider: "jaas"; appId: string; roomName: string; jwt: string } | { provider: "jitsi"; url: string });
+
 export type InterviewInvitation = {
   businessName: string;
   businessLogoUrl: string | null;

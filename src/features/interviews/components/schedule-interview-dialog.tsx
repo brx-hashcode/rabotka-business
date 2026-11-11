@@ -35,11 +35,11 @@ const timeValue = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 /** Times a business may offer for one interview (the server's limit). */
 const MAX_SLOTS = 3;
 
-/** A free Jitsi room, hard to guess: nobody needs an account to join. */
+/** A video room inside Rabotka, hard to guess: the candidate joins by its link, without an account. */
 function jitsiLink(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(8));
+  const bytes = crypto.getRandomValues(new Uint8Array(10));
   const id = Array.from(bytes, (b) => "abcdefghijkmnpqrstuvwxyz23456789"[b % 32]).join("");
-  return `https://meet.jit.si/Rabotka-${id}`;
+  return `${window.location.origin}/visio/Rabotka-${id}`;
 }
 
 const LOCATION: Record<InterviewMode, { label: string; placeholder: string; optional?: boolean }> = {
@@ -247,7 +247,7 @@ export function ScheduleInterviewDialog({
               >
                 <IconVideo className="size-4" />
                 Créer un lien de visio
-                <span className="font-normal text-muted-foreground">(Jitsi, gratuit, sans compte)</span>
+                <span className="font-normal text-muted-foreground">(dans Rabotka, sans compte)</span>
               </button>
             )}
           </label>
