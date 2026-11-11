@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconAlertTriangle, IconArrowBackUp, IconCalendarPlus, IconCheck, IconChevronDown, IconDownload, IconFileText, IconMail, IconPhone, IconUsers, IconX } from "@tabler/icons-react";
+import { IconAlertTriangle, IconArrowBackUp, IconCalendarPlus, IconCheck, IconChevronDown, IconDownload, IconFileText, IconMail, IconPhone, IconStar, IconStarOff, IconUsers, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
@@ -28,7 +28,8 @@ import {
 import { cvScreeningsKey, getCvScreening } from "#/lib/api/cv-screening-controller";
 import { sourceLabel } from "#/features/careers/candidate-source";
 import { showExternalStatus } from "#/features/offers/application-cache";
-import { APPLICATION_STATUS, statusClass } from "#/features/offers/offer-labels";
+import { useConfirmedShortlist } from "#/features/offers/use-shortlist";
+import { APPLICATION_STATUS, statusClass, type ApplicationStage } from "#/features/offers/offer-labels";
 import { DescriptionText } from "#/features/careers/components/description-text";
 import { canSchedule } from "#/features/applications/can-schedule";
 import { downloadFile } from "#/lib/api/download";
@@ -52,12 +53,13 @@ export function recruiting(a: Pick<ExternalApplication, "offer">) {
 }
 
 /** A careers-page stage, as the Rabotka status that reads the same. */
-const STAGE_STATUS = { new: "PENDING", viewed: "VIEWED", hired: "ACCEPTED", closed: "REJECTED" } as const;
+const STAGE_STATUS = { new: "PENDING", viewed: "VIEWED", shortlisted: "SHORTLISTED", hired: "ACCEPTED", closed: "REJECTED" } as const;
 
 /** Where an application from the public careers page sits among the tabs. */
-export function externalStage(a: Pick<ExternalApplication, "status" | "viewedAt">) {
+export function externalStage(a: Pick<ExternalApplication, "status" | "viewedAt" | "shortlistedAt">): ApplicationStage {
   if (a.status === "REFUSED") return "closed";
   if (a.status === "RETAINED") return "hired";
+  if (a.shortlistedAt) return "shortlisted";
   return a.viewedAt ? "viewed" : "new";
 }
 
@@ -68,6 +70,7 @@ export function ExternalApplicationCard({
   opinions,
   focused,
   onOfferPage = false,
+  detailsOpen = false,
 }: Readonly<{
   application: ExternalApplication;
   /** On an offer's page: its box in the page's one selection (compare, refuse). */
@@ -78,16 +81,19 @@ export function ExternalApplicationCard({
   focused?: boolean;
   /** On the offer's own page: « Pour l'offre » would only repeat it. */
   onOfferPage?: boolean;
+  /** The analysis and answers shown from the start (the board's window). */
+  detailsOpen?: boolean;
 }>) {
   const queryClient = useQueryClient();
   const name = `${a.firstName} ${a.lastName}`;
   // Deciding is for those who hire; an Évaluateur reads and gives its opinion.
   const hire = canHire(useMember().role);
+  const shortlist = useConfirmedShortlist(a.offer.id);
   const [refusing, setRefusing] = useState(false);
   const [retaining, setRetaining] = useState(false);
   const [unretaining, setUnretaining] = useState(false);
   // One toggle for its analysis and its answers, as on a Rabotka applicant's card.
-  const [showDetails, setShowDetails] = useState(false);
+  const [showDetails, setShowDetails] = useState(detailsOpen);
   const [opinionOpen, setOpinionOpen] = useState(false);
   const [analysing, setAnalysing] = useState(false);
   const [scheduling, setScheduling] = useState(false);
@@ -122,6 +128,18 @@ export function ExternalApplicationCard({
         ]
       : []),
     { key: "opinion", label: opinionLabel(opinions), icon: IconUsers, onSelect: () => setOpinionOpen(true) },
+    // The business's own step before deciding; the candidate is not told.
+    ...(hire && a.status === "PENDING" && recruiting(a)
+      ? [
+          {
+            key: "shortlist",
+            label: a.shortlistedAt ? "Retirer de la présélection" : "Présélectionner",
+            icon: a.shortlistedAt ? IconStarOff : IconStar,
+            onSelect: () => shortlist.ask({ targets: { rabotka: [], external: [a.id] }, shortlisted: !a.shortlistedAt, who: name }),
+            disabled: shortlist.isPending,
+          },
+        ]
+      : []),
     // With or without a CV analysis: the address they applied with is enough.
     ...(hire && canSchedule(a)
       ? [{ key: "interview", label: "Planifier un entretien", icon: IconCalendarPlus, onSelect: () => setScheduling(true) }]
@@ -197,6 +215,7 @@ export function ExternalApplicationCard({
       id={`candidature-${a.id}`}
       className={cn("flex scroll-mt-24 flex-col gap-3 rounded-3xl bg-page p-5", focused && "ring-2 ring-whatsapp-dark")}
     >
+      {shortlist.dialog}
       <div className="flex items-start gap-3.5">
         {compare && (
           <label className="flex w-6 shrink-0 cursor-pointer flex-col items-center pt-4">

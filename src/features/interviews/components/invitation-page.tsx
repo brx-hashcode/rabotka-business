@@ -36,8 +36,11 @@ export function InvitationPage({ token }: Readonly<{ token: string }>) {
   const query = useQuery({ queryKey: key, queryFn: () => getInvitation(token), retry: false });
   const [other, setOther] = useState(false);
   const [note, setNote] = useState("");
+  // Several times offered: the one picked (the first until another is).
+  const [picked, setPicked] = useState<string | null>(null);
   const answer = useMutation({
-    mutationFn: (a: InterviewAnswer) => answerInvitation(token, a, note.trim() || undefined),
+    mutationFn: (a: InterviewAnswer) =>
+      answerInvitation(token, a, note.trim() || undefined, a === "CONFIRMED" && options.length > 0 ? (picked ?? options[0]?.id) : undefined),
     onSuccess: (data) => {
       queryClient.setQueryData(key, data);
       setOther(false);
@@ -45,6 +48,9 @@ export function InvitationPage({ token }: Readonly<{ token: string }>) {
   });
 
   const i = query.data;
+  const options = i?.options ?? [];
+  const choosing = options.length > 0;
+  const confirmLabel = choosing ? "Je choisis ce créneau" : "Je serai présent";
   const Mode = MODES.find((m) => m.key === i?.mode)?.icon ?? IconCalendarEvent;
   const done = i ? ANSWERED[i.status] : undefined;
 
@@ -90,7 +96,9 @@ export function InvitationPage({ token }: Readonly<{ token: string }>) {
               <dl className="space-y-3 rounded-2xl bg-page p-4 text-sm">
                 <div className="flex gap-3">
                   <IconCalendarEvent className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                  <dd className="font-medium">{longWhen(i.startsAt)}</dd>
+                  <dd className="font-medium">
+                    {choosing ? `${options.length} créneaux au choix : choisissez celui qui vous convient` : longWhen(i.startsAt)}
+                  </dd>
                 </div>
                 <div className="flex gap-3">
                   <IconClock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
@@ -111,6 +119,37 @@ export function InvitationPage({ token }: Readonly<{ token: string }>) {
                   </dd>
                 </div>
               </dl>
+
+              {choosing && !i.past && i.status !== "CANCELLED" && (
+                <div role="radiogroup" aria-label="Créneaux proposés" className="space-y-2">
+                  {options.map((o) => {
+                    const on = (picked ?? options[0]?.id) === o.id;
+                    return (
+                      <button
+                        key={o.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={on}
+                        onClick={() => setPicked(o.id)}
+                        className={cn(
+                          "flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm transition-colors",
+                          on ? "bg-ink text-white" : "bg-page hover:bg-page/70",
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "flex size-5 shrink-0 items-center justify-center rounded-full",
+                            on ? "bg-brand-lime text-[#0f2414]" : "bg-card",
+                          )}
+                        >
+                          {on && <IconCheck className="size-3.5" />}
+                        </span>
+                        <span className="font-medium">{longWhen(o.startsAt)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               {i.message && <p className="whitespace-pre-line text-sm leading-relaxed">{i.message}</p>}
 
@@ -164,7 +203,7 @@ export function InvitationPage({ token }: Readonly<{ token: string }>) {
                       {done && (
                         <div className="flex gap-2 pt-1">
                           <button type="button" disabled={answer.isPending} onClick={() => answer.mutate("CONFIRMED")} className="h-11 flex-1 rounded-full bg-page font-medium text-sm hover:bg-page/70">
-                            Je serai présent
+                            {confirmLabel}
                           </button>
                           <button type="button" disabled={answer.isPending} onClick={() => answer.mutate("DECLINED")} className="h-11 flex-1 rounded-full bg-page font-medium text-sm hover:bg-page/70">
                             Je décline
@@ -180,11 +219,11 @@ export function InvitationPage({ token }: Readonly<{ token: string }>) {
                         onClick={() => answer.mutate("CONFIRMED")}
                         className="h-12 w-full rounded-full bg-ink font-medium text-white hover:bg-ink/90 disabled:opacity-40"
                       >
-                        Je serai présent
+                        {confirmLabel}
                       </button>
                       <div className="flex gap-2">
                         <button type="button" onClick={() => setOther(true)} className="h-12 flex-1 rounded-full bg-page font-medium hover:bg-page/70">
-                          Autre moment
+                          {choosing ? "Aucun ne me convient" : "Autre moment"}
                         </button>
                         <button
                           type="button"

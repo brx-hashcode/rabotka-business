@@ -1,9 +1,12 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
+
 import { Textarea } from "#/components/ui/textarea";
+import { listMessageTemplates, messageTemplatesKey } from "#/lib/api/message-templates-controller";
 import { cn } from "#/lib/utils";
 
-/** Ready words for a refusal: picked, then edited if need be. */
+/** Ready words for a refusal while the team's own templates load (the server offers the same). */
 export const REFUSAL_TEMPLATES = [
   {
     label: "Poste pourvu",
@@ -25,10 +28,11 @@ export const REFUSAL_TEMPLATES = [
  * server (a refusal is no way round « obtenir le contact »).
  */
 export function RefusalMessageField({ value, onChange }: Readonly<{ value: string; onChange: (v: string) => void }>) {
+  const templates = useRefusalTemplates();
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
-        {REFUSAL_TEMPLATES.map((t) => (
+        {templates.map((t) => (
           <button
             key={t.label}
             type="button"
@@ -53,4 +57,16 @@ export function RefusalMessageField({ value, onChange }: Readonly<{ value: strin
       <p className="text-muted-foreground text-xs">Le candidat lit ce message dans sa notification. Pas de téléphone, d&apos;e-mail ni de lien.</p>
     </div>
   );
+}
+
+/**
+ * The refusal words to pick from: the team's own « Refus » templates
+ * (Organisation → Modèles de messages), else the ready-made ones.
+ */
+export function useRefusalTemplates(): { label: string; text: string }[] {
+  const { data } = useQuery({ queryKey: messageTemplatesKey, queryFn: listMessageTemplates, staleTime: 60_000 });
+  if (!data) return [...REFUSAL_TEMPLATES];
+  const own = data.templates.filter((t) => t.kind === "REFUSAL").map((t) => ({ label: t.title, text: t.body }));
+  if (own.length > 0) return own;
+  return data.suggested.filter((t) => t.kind === "REFUSAL").map((t) => ({ label: t.title, text: t.body }));
 }

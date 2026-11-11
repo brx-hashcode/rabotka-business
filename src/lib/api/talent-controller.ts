@@ -50,3 +50,57 @@ export const saveTalent = controller.save.bind(controller);
 export const removeTalent = controller.remove.bind(controller);
 export const inviteTalent = controller.invite.bind(controller);
 export const talentsKey = ["business", "me", "talents"] as const;
+
+/** Beyond Rabotka workers: a careers-page candidature kept with consent, or a CV the business analysed. */
+export type PoolKind = "external" | "cv";
+
+export type PoolCandidate = {
+  kind: PoolKind;
+  id: string;
+  /** A CV's screening, to open its analysis. */
+  screeningId?: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  currentTitle: string | null;
+  city: string | null;
+  score: number | null;
+  summary: string | null;
+  /** The offer they applied to, or the post the CV was analysed for. */
+  appliedFor: { id: string | null; title: string };
+  addedAt: string;
+  /** Until when it may be kept and found: the candidate's consent, or the plan's retention. */
+  keptUntil: string | null;
+  kept: boolean;
+  note: string | null;
+  tags: string[];
+};
+
+class PoolController extends BusinessBaseController {
+  search(params: { source: PoolKind; q?: string; kept?: boolean; page?: number }): Promise<{ items: PoolCandidate[]; page: number; hasMore: boolean }> {
+    const qs = new URLSearchParams({ source: params.source });
+    if (params.q?.trim()) qs.set("q", params.q.trim());
+    if (params.kept) qs.set("kept", "true");
+    if (params.page && params.page > 1) qs.set("page", String(params.page));
+    return this.get(`/business/me/talents/candidates?${qs}`);
+  }
+
+  save(kind: PoolKind, id: string, body: { note?: string | null; tags?: string[] }): Promise<{ kept: boolean; note: string | null; tags: string[] }> {
+    return this.put(`/business/me/talents/candidates/${kind}/${encodeURIComponent(id)}`, body);
+  }
+
+  remove(kind: PoolKind, id: string): Promise<{ kept: boolean }> {
+    return this.delete(`/business/me/talents/candidates/${kind}/${encodeURIComponent(id)}`);
+  }
+
+  invite(kind: PoolKind, id: string, offerId: string): Promise<{ invited: boolean }> {
+    return this.post(`/business/me/talents/candidates/${kind}/${encodeURIComponent(id)}/invite`, { offerId });
+  }
+}
+
+const pool = new PoolController();
+export const searchPoolCandidates = pool.search.bind(pool);
+export const keepPoolCandidate = pool.save.bind(pool);
+export const dropPoolCandidate = pool.remove.bind(pool);
+export const invitePoolCandidate = pool.invite.bind(pool);
+export const poolKey = ["talents", "pool"] as const;
