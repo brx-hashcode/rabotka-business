@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
+import { IconCheck } from "@tabler/icons-react";
 
 import { DemoBlock } from "#/features/landing/components/demo-block";
 import { PipelinePosition } from "#/features/landing/components/feature-stages";
@@ -41,6 +43,39 @@ export default async function FeaturePage({ params }: PageProps<"/fonctionnalite
   return (
     <>
       <PageHero title={page.heading} text={page.intro} aside={<FeatureMockup id={feature.id} />} />
+
+      {page.steps && (
+        <section className="py-20 md:py-28">
+          <div className="mx-auto w-full max-w-7xl space-y-14 px-4 sm:px-6">
+            <SectionHeading kicker={feature.label} title="Comment ça se passe" />
+            <ol className="space-y-16 md:space-y-24">
+              {page.steps.map((s, n) => (
+                <li key={s.title} className="grid items-center gap-8 md:grid-cols-2 md:gap-14">
+                  {/* Photo and text alternate sides, step after step. */}
+                  <div className={`relative aspect-[4/3] overflow-hidden rounded-3xl bg-card ${n % 2 === 1 ? "md:order-2" : ""}`}>
+                    <Image src={s.photo} alt={s.alt} fill sizes="(min-width: 768px) 45vw, 100vw" className="object-cover" />
+                  </div>
+                  <div className="space-y-4">
+                    <p className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">
+                      {String(n + 1).padStart(2, "0")} · {s.kicker}
+                    </p>
+                    <h3 className="font-semibold text-2xl tracking-tight sm:text-3xl">{s.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed">{s.text}</p>
+                    <ul className="space-y-2">
+                      {s.points.map((x) => (
+                        <li key={x} className="flex items-start gap-2.5 text-[15px]">
+                          <IconCheck className="mt-0.5 size-4 shrink-0 text-whatsapp-dark" />
+                          {x}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+      )}
 
       <section className="bg-card py-20 md:py-28">
         <div className="mx-auto w-full max-w-7xl space-y-14 px-4 sm:px-6">
