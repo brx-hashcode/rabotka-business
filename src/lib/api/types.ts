@@ -562,6 +562,8 @@ export type VisioJoin = {
   durationMinutes: number;
   displayName: string;
   host: boolean;
+  /** Ended by the business (« Terminer l'entretien »): the page shows it over. */
+  endedAt?: string | null;
   /** The host only: the « Compte rendu » beside the call. */
   interviewId?: string;
 } & ({ provider: "jaas"; appId: string; roomName: string; jwt: string } | { provider: "jitsi"; url: string });

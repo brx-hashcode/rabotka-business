@@ -27,6 +27,11 @@ class InterviewController extends BusinessBaseController {
     return this.patch(`/business/me/interviews/${encodeURIComponent(id)}`, slot);
   }
 
+  /** « Terminer l'entretien »: its link stops opening the call; it counts as past. */
+  end(id: string): Promise<Interview> {
+    return this.post(`/business/me/interviews/${encodeURIComponent(id)}/end`);
+  }
+
   cancel(id: string): Promise<Interview> {
     return this.post(`/business/me/interviews/${encodeURIComponent(id)}/cancel`);
   }
@@ -138,6 +143,7 @@ export const listInterviews = controller.list.bind(controller);
 export const createInterview = controller.create.bind(controller);
 export const rescheduleInterview = controller.reschedule.bind(controller);
 export const cancelInterview = controller.cancel.bind(controller);
+export const endInterview = controller.end.bind(controller);
 export const getInterviewCalendar = controller.calendar.bind(controller);
 export const resetInterviewCalendar = controller.resetCalendar.bind(controller);
 export const getInvitation = controller.invitation.bind(controller);
