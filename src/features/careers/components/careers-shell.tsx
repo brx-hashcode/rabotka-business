@@ -20,11 +20,17 @@ export function CareersShell({ children }: Readonly<{ children: ReactNode }>) {
   );
 }
 
-export function CompanyLogo({ company }: Readonly<{ company: Pick<CareersCompany, "name" | "logoUrl"> }>) {
+export function CompanyLogo({
+  company,
+  size = "md",
+}: Readonly<{ company: Pick<CareersCompany, "name" | "logoUrl">; size?: "sm" | "md" }>) {
+  const box = size === "sm" ? "size-8 rounded-lg" : "size-16 rounded-2xl";
   return (
-    <Avatar className="size-16 shrink-0 rounded-2xl">
+    <Avatar className={`shrink-0 ${box}`}>
       {company.logoUrl && <AvatarImage src={company.logoUrl} alt="" className="object-cover" />}
-      <AvatarFallback className="rounded-2xl bg-brand-lime font-semibold text-[#0f2414]">{getInitials(company.name)}</AvatarFallback>
+      <AvatarFallback className={`bg-brand-lime font-semibold text-[#0f2414] ${size === "sm" ? "rounded-lg text-xs" : "rounded-2xl"}`}>
+        {getInitials(company.name)}
+      </AvatarFallback>
     </Avatar>
   );
 }
