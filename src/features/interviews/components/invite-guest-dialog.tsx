@@ -135,9 +135,9 @@ export function InviteGuestDialog({
                 placeholder="Son nom, tel qu'il s'affichera dans l'appel"
                 aria-label="Nom"
                 maxLength={80}
-                className="h-11 flex-1 rounded-2xl border-0 bg-page px-4"
+                className="h-12 flex-1 rounded-2xl border-0 bg-page px-4"
               />
-              <Button type="submit" className="h-11 rounded-full px-5" disabled={!name.trim() || full} loading={invite.isPending}>
+              <Button type="submit" className="h-12 rounded-full px-6 sm:h-12" disabled={!name.trim() || full} loading={invite.isPending}>
                 {again ? "Renvoyer" : "Envoyer"}
               </Button>
             </div>
@@ -188,11 +188,11 @@ export function InviteGuestDialog({
         </section>
 
         <div className="flex items-center justify-between gap-3">
-          <Button type="button" variant="ghost" className="h-11 rounded-full bg-page px-5" onClick={() => void copy()} disabled={!i.location}>
+          <Button type="button" variant="ghost" className="h-11 rounded-full bg-page px-5 sm:h-11" onClick={() => void copy()} disabled={!i.location}>
             <IconLink className="size-4" />
             Copier le lien
           </Button>
-          <Button type="button" className="h-11 rounded-full px-7" onClick={() => onOpenChange(false)}>
+          <Button type="button" className="h-11 rounded-full px-7 sm:h-11" onClick={() => onOpenChange(false)}>
             OK
           </Button>
         </div>
