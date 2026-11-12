@@ -1,4 +1,6 @@
-import { IconArrowRight } from "@tabler/icons-react";
+import { IconArrowRight, IconWorld } from "@tabler/icons-react";
+
+import { GoogleLogo, LinkedInLogo } from "#/components/brand-logos";
 
 import type { BusinessCountryName } from "#/lib/api/catalog-server";
 import { DemoButton, SignUpButton } from "./demo-button";
@@ -25,6 +27,22 @@ export function LandingHero({ countries }: Readonly<{ countries: BusinessCountry
           <div className="flex flex-wrap items-center gap-3">
             <DemoButton />
             <SignUpButton />
+          </div>
+          {/* Where the offers go: the brands a business recognises at a glance. */}
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <span className="mr-1 font-medium text-header-muted text-sm">Vos offres publiées sur</span>
+            <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 font-semibold text-[#1f1f1f] text-sm shadow-[0_1px_0_rgba(0,0,0,0.04)]">
+              <GoogleLogo className="size-[18px]" />
+              Google
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 font-semibold text-[#1f1f1f] text-sm shadow-[0_1px_0_rgba(0,0,0,0.04)]">
+              <LinkedInLogo className="size-[18px]" />
+              LinkedIn
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 font-semibold text-[#1f1f1f] text-sm shadow-[0_1px_0_rgba(0,0,0,0.04)]">
+              <IconWorld className="size-[18px] text-whatsapp-dark" />
+              Votre page carrières
+            </span>
           </div>
           {/* Where it is open, from the backend's list: not one country's tool. The map is further down. */}
           <a href="#pays" className="group inline-flex items-center gap-3 pt-2">
