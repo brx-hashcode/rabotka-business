@@ -1,20 +1,23 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   IconCheck,
+  IconCopy,
   IconFileText,
   IconMail,
   IconMicrophone,
   IconPencil,
+  IconPlus,
   IconPlayerStopFilled,
   IconFileTypePdf,
   IconRefresh,
 } from "@tabler/icons-react";
 
 import { Bone } from "#/components/page-skeletons";
+import { useDictation } from "#/features/interviews/use-dictation";
 import { PreviewSheet } from "#/components/preview-sheet";
 import { appConfig } from "#/config";
 import { Button } from "#/components/ui/button";
@@ -25,7 +28,10 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import {
   editInterviewReport,
   getInterviewReport,
+  getInterviewTranscript,
   interviewReportKey,
+  interviewTranscriptKey,
+  type InterviewTranscript,
   interviewsKey,
   saveInterviewNotes,
   sendInterviewReport,
@@ -99,7 +105,21 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
 
   const dictation = useDictation((text) => setDraft((d) => joinText(d ?? saved?.notes ?? "", text).slice(0, MAX_NOTES)));
   const report = saved?.report ?? null;
-  const enough = notes.trim().length >= MIN_NOTES;
+  // Both sides' speech, merged by time, when the interview was transcribed.
+  const transcript = useQuery({
+    queryKey: interviewTranscriptKey(interviewId),
+    queryFn: () => getInterviewTranscript(interviewId),
+    refetchInterval: (q) => (q.state.data?.transcribe ? 8000 : false),
+  });
+  const lines = transcript.data?.lines ?? [];
+  const spoken = lines.reduce((n, l) => n + l.text.length, 0);
+  const live = transcript.data?.transcribe ?? false;
+  const hasTranscript = lines.length > 0 || live;
+  const turns = toTurns(lines);
+  // Opens on the transcription once there is one; the tab chosen after that stays.
+  const [tabChoice, setTab] = useState<"transcript" | "notes" | null>(null);
+  const tab = hasTranscript ? (tabChoice ?? (lines.length > 0 ? "transcript" : "notes")) : "notes";
+  const enough = notes.trim().length >= MIN_NOTES || spoken >= MIN_NOTES;
 
   if (query.isLoading) {
     return (
@@ -114,16 +134,48 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
 
   return (
     <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-      {/* Left: the team's notes, the source of the report. */}
-      <section className="flex min-h-0 flex-col gap-3 lg:overflow-y-auto">
-        <div className="flex min-h-72 flex-1 flex-col rounded-2xl bg-page">
-          <div className="flex items-center justify-between gap-2 px-4 pt-3">
-            <h3 className="font-semibold text-sm">Vos notes</h3>
-            <span className="flex items-center gap-1 text-muted-foreground text-xs" aria-live="polite">
-              {status === "Enregistré" && <IconCheck className="size-3.5" />}
-              {status}
+      {/* Left: what the report is written from: the transcription, and the team's notes. */}
+      <section className="flex min-h-0 flex-col gap-3">
+        <div className="flex min-h-80 flex-1 flex-col overflow-hidden rounded-2xl bg-page">
+          <div className="flex items-center gap-1 px-2 pt-2">
+            {hasTranscript ? (
+              <>
+                <TabButton on={tab === "transcript"} onClick={() => setTab("transcript")} label="Transcription" count={turns.length} />
+                <TabButton on={tab === "notes"} onClick={() => setTab("notes")} label="Vos notes" />
+              </>
+            ) : (
+              <h3 className="px-2 py-1.5 font-semibold text-sm">Vos notes</h3>
+            )}
+            <span className="ml-auto flex items-center gap-1.5 px-2 text-muted-foreground text-xs" aria-live="polite">
+              {tab === "transcript" ? (
+                live ? (
+                  <>
+                    <span className="size-2 rounded-full bg-destructive" />
+                    En cours
+                  </>
+                ) : (
+                  "Automatique"
+                )
+              ) : (
+                <>
+                  {status === "Enregistré" && <IconCheck className="size-3.5" />}
+                  {status}
+                </>
+              )}
             </span>
           </div>
+          {tab === "transcript" ? (
+            <Conversation
+              turns={turns}
+              live={live}
+              consent={transcript.data?.consent ?? null}
+              onAdd={(t) => {
+                setDraft(joinText(notes, `${t.speaker} : ${t.text}`).slice(0, MAX_NOTES));
+                toast.success("Ajouté à vos notes.");
+              }}
+            />
+          ) : (
+            <>
           <Textarea
             value={notes}
             onChange={(e) => setDraft(e.target.value.slice(0, MAX_NOTES))}
@@ -168,14 +220,28 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
               </span>
             </div>
           )}
+            </>
+          )}
         </div>
-        <Button type="button" className="h-11 w-full rounded-full text-sm" disabled={!enough} loading={write.isPending} onClick={() => write.mutate()}>
-          {report ? <IconRefresh className="size-4" /> : <IconFileText className="size-4" />}
-          {report ? "Réécrire le compte rendu" : "Rédiger le compte rendu"}
-        </Button>
+        <div className="flex gap-2">
+          {tab === "transcript" && turns.length > 0 && (
+            <Button type="button" variant="ghost" className="h-11 shrink-0 rounded-full bg-page px-4 text-sm sm:h-11" onClick={() => void copyTranscript(turns)}>
+              <IconCopy className="size-4" />
+              Copier
+            </Button>
+          )}
+          <Button type="button" className="h-11 flex-1 rounded-full text-sm sm:h-11" disabled={!enough} loading={write.isPending} onClick={() => write.mutate()}>
+            {report ? <IconRefresh className="size-4" /> : <IconFileText className="size-4" />}
+            {report ? "Réécrire le compte rendu" : "Rédiger le compte rendu"}
+          </Button>
+        </div>
         <p className="text-center text-muted-foreground text-xs">
-          {enough ? "Rédigé par IA à partir de vos notes : relisez-le avant de l'envoyer." : "Quelques lignes de notes suffisent pour rédiger le compte rendu."}
-          {dictation.supported && " La dictée passe par le service vocal de votre navigateur."}
+          {enough
+            ? lines.length > 0
+              ? "Rédigé par IA à partir de la transcription et de vos notes : relisez-le avant de l'envoyer."
+              : "Rédigé par IA à partir de vos notes : relisez-le avant de l'envoyer."
+            : "Quelques lignes de notes, ou la transcription de l'entretien, suffisent pour rédiger le compte rendu."}
+          {tab === "notes" && dictation.supported && " La dictée passe par le service vocal de votre navigateur."}
         </p>
       </section>
 
@@ -251,6 +317,121 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
       )}
       {sending && <SendDialog interviewId={interviewId} onClose={() => setSending(false)} onSent={store} />}
     </div>
+  );
+}
+
+type Turn = { key: string; at: string; speaker: string; role: InterviewTranscript["lines"][number]["role"]; text: string };
+
+/** The rows of the transcription, in the order spoken. */
+function toTurns(lines: InterviewTranscript["lines"]): Turn[] {
+  const turns: Turn[] = [];
+  for (const l of lines) {
+    const last = turns.at(-1);
+    // One row per sentence, as recognised; only an exact repeat is dropped.
+    if (last && last.speaker === l.speaker && last.text === l.text) continue;
+    turns.push({ key: `${l.at}-${turns.length}`, at: l.at, speaker: l.speaker, role: l.role, text: l.text });
+  }
+  return turns;
+}
+
+const hhmm = (iso: string) => new Date(iso).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+
+async function copyTranscript(turns: Turn[]) {
+  try {
+    await navigator.clipboard.writeText(turns.map((t) => `[${hhmm(t.at)}] ${t.speaker} : ${t.text}`).join("\n"));
+    toast.success("Transcription copiée.");
+  } catch {
+    toast.error("La transcription n'a pas pu être copiée.");
+  }
+}
+
+/** Who spoke, at a glance: the candidate in green, an invited person in violet. */
+const SPEAKER_TONE: Record<Turn["role"], string> = {
+  HOST: "text-foreground",
+  CANDIDATE: "text-whatsapp-dark dark:text-whatsapp",
+  GUEST: "text-chip-violet-foreground",
+};
+
+const CONSENT_LINE: Record<string, string> = {
+  ACCEPTED: "Le candidat a accepté la transcription.",
+  DECLINED: "Le candidat a refusé : seule la voix de votre équipe est transcrite.",
+};
+
+function TabButton({ on, onClick, label, count }: Readonly<{ on: boolean; onClick: () => void; label: string; count?: number }>) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={on}
+      className={cn("rounded-full px-3.5 py-1.5 text-sm transition-colors", on ? "bg-card font-semibold" : "text-muted-foreground hover:text-foreground")}
+    >
+      {label}
+      {count !== undefined && count > 0 && <span className="ml-1.5 font-normal text-muted-foreground tabular-nums">{count}</span>}
+    </button>
+  );
+}
+
+/**
+ * The transcription, one line per sentence: time, who, what. While the call
+ * runs it follows the newest line, unless the reader scrolled up.
+ */
+function Conversation({
+  turns,
+  live,
+  consent,
+  onAdd,
+}: Readonly<{ turns: Turn[]; live: boolean; consent: string | null; onAdd: (t: Turn) => void }>) {
+  const box = useRef<HTMLOListElement>(null);
+  const pinned = useRef(true);
+  const count = turns.length;
+  useEffect(() => {
+    const el = box.current;
+    if (el && pinned.current) el.scrollTop = el.scrollHeight;
+  }, [count]);
+
+  if (turns.length === 0) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center">
+        <IconMicrophone className="size-5 text-muted-foreground" />
+        <p className="max-w-xs text-muted-foreground text-sm">La transcription s&apos;affiche ici pendant l&apos;appel, phrase après phrase.</p>
+      </div>
+    );
+  }
+  return (
+    <>
+      <ol
+        ref={box}
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          pinned.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+        }}
+        className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-2"
+      >
+        {turns.map((t) => (
+          <li key={t.key} className="group flex items-start gap-2 rounded-lg px-1 py-0.5 hover:bg-card/60">
+            <span className="w-11 shrink-0 pt-px font-mono text-muted-foreground text-xs tabular-nums">{hhmm(t.at)}</span>
+            <p className="min-w-0 flex-1 text-sm leading-relaxed">
+              <span className={cn("font-medium", SPEAKER_TONE[t.role])}>{t.speaker}</span>
+              <span className="text-muted-foreground"> : </span>
+              {t.text}
+            </p>
+            <button
+              type="button"
+              aria-label="Ajouter aux notes"
+              title="Ajouter aux notes"
+              onClick={() => onAdd(t)}
+              className="flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-opacity hover:bg-card hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+            >
+              <IconPlus className="size-3.5" />
+            </button>
+          </li>
+        ))}
+      </ol>
+      <p className="px-4 pb-3 text-muted-foreground text-xs">
+        Reconnue par le navigateur de chacun : elle peut contenir des erreurs.
+        {consent ? ` ${CONSENT_LINE[consent] ?? ""}` : live ? " Le candidat n'a pas encore répondu." : ""}
+      </p>
+    </>
   );
 }
 
@@ -466,125 +647,6 @@ function joinText(before: string, added: string): string {
   return `${before.replace(/\s+$/, "")}${/[.!?]$/.test(before.trim()) ? " " : ". "}${a.charAt(0).toUpperCase()}${a.slice(1)}`;
 }
 
-type Recognition = {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  onresult: ((e: { resultIndex: number; results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null;
-  onend: (() => void) | null;
-  onerror: ((e: { error: string }) => void) | null;
-  start: () => void;
-  stop: () => void;
-};
-
-function recognitionClass(): (new () => Recognition) | null {
-  if (typeof window === "undefined") return null;
-  const w = window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition };
-  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
-}
-
-const noSubscribe = () => () => {};
-
-/** The browser's own dictation (Chrome, Edge, Safari), in French; absent elsewhere. */
-function useDictation(onText: (text: string) => void) {
-  const supported = useSyncExternalStore(noSubscribe, () => recognitionClass() !== null, () => false);
-  const [listening, setListening] = useState(false);
-  /** The words heard so far, not yet final: shown in grey under the notes. */
-  const [interim, setInterim] = useState("");
-  /** The microphone's level, for the meter; the recognition has no level of its own. */
-  const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
-  const [startedAt, setStartedAt] = useState(0);
-  const ref = useRef<Recognition | null>(null);
-  const wanted = useRef(false);
-  const audio = useRef<{ stream: MediaStream; context: AudioContext } | null>(null);
-  const handler = useRef(onText);
-  useEffect(() => {
-    handler.current = onText;
-  });
-
-  const release = () => {
-    audio.current?.stream.getTracks().forEach((t) => t.stop());
-    void audio.current?.context.close();
-    audio.current = null;
-    setAnalyser(null);
-  };
-  useEffect(
-    () => () => {
-      wanted.current = false;
-      ref.current?.stop();
-      audio.current?.stream.getTracks().forEach((t) => t.stop());
-      void audio.current?.context.close();
-    },
-    [],
-  );
-
-  const listen = (Klass: new () => Recognition) => {
-    const r = new Klass();
-    r.lang = "fr-FR";
-    r.continuous = true;
-    r.interimResults = true;
-    r.onresult = (e) => {
-      let pending = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const res = e.results[i];
-        if (!res) continue;
-        if (res.isFinal) handler.current(res[0].transcript);
-        else pending += res[0].transcript;
-      }
-      setInterim(pending);
-    };
-    // The browser ends a dictation after a silence: picked up again until « Arrêter ».
-    r.onend = () => {
-      setInterim("");
-      if (wanted.current) {
-        try {
-          r.start();
-          return;
-        } catch {
-          /* already restarting */
-        }
-      }
-      setListening(false);
-      release();
-    };
-    r.onerror = (e) => {
-      if (e.error === "no-speech" || e.error === "aborted") return;
-      wanted.current = false;
-      if (e.error === "not-allowed") toast.error("Autorisez le micro dans votre navigateur pour dicter.");
-    };
-    ref.current = r;
-    r.start();
-  };
-
-  const start = async () => {
-    const Klass = recognitionClass();
-    if (!Klass) return;
-    wanted.current = true;
-    setListening(true);
-    setStartedAt(Date.now());
-    listen(Klass);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const context = new AudioContext();
-      const node = context.createAnalyser();
-      node.fftSize = 1024;
-      node.smoothingTimeConstant = 0.6;
-      context.createMediaStreamSource(stream).connect(node);
-      audio.current = { stream, context };
-      setAnalyser(node);
-    } catch {
-      // No meter without the microphone's stream; the dictation itself may still run.
-    }
-  };
-  const stop = () => {
-    wanted.current = false;
-    ref.current?.stop();
-    setListening(false);
-    setInterim("");
-    release();
-  };
-  return { supported, listening, interim, analyser, startedAt, start, stop };
-}
 
 const BAR = 3;
 const GAP = 2;

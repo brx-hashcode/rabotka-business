@@ -1,19 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { JaaSMeeting } from "@jitsi/react-sdk";
-import { IconArrowLeft, IconExternalLink, IconFileText, IconNotes, IconVideo } from "@tabler/icons-react";
+import { IconArrowLeft, IconExternalLink, IconFileText, IconNotes, IconPlayerStop, IconUserPlus, IconVideo } from "@tabler/icons-react";
 
+import { ActionDialog } from "#/components/action-dialog";
 import { BusinessLockup } from "#/components/business-lockup";
 import { Bone } from "#/components/page-skeletons";
 import { Button } from "#/components/ui/button";
 import { friendlyError } from "#/lib/api/friendly-error";
-import { joinVisioAsGuest, joinVisioAsHost } from "#/lib/api/interview-controller";
+import { endInterview, interviewsKey, joinVisioAsGuest, joinVisioAsHost } from "#/lib/api/interview-controller";
 import type { VisioJoin } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { InterviewReportDialog } from "./interview-report-panel";
+import { GuestTranscription, HostTranscription } from "./call-transcription";
+import { InviteGuestDialog } from "./invite-guest-dialog";
 
 /**
  * The visible screen under the status-bar strip of the root layout: `dvh`
@@ -22,11 +26,14 @@ import { InterviewReportDialog } from "./interview-report-panel";
  */
 const SCREEN_MIN = "min-h-[calc(100dvh-env(safe-area-inset-top))]";
 
+/** The room's link as the candidate received it: this site's /visio/<room>. */
+const visioLink = (room: string) => `${window.location.origin}/visio/${encodeURIComponent(room)}`;
+
 const when = (iso: string) =>
   new Date(iso).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
 
 /** What a recruiter and a candidate need in the call, and nothing to invite, stream or dial. */
-const TOOLBAR = ["microphone", "camera", "desktop", "chat", "raisehand", "tileview", "select-background", "settings", "fullscreen", "hangup"];
+const TOOLBAR = ["microphone", "camera", "desktop", "chat", "raisehand", "tileview", "settings", "fullscreen", "hangup"];
 
 const visioQuery = (room: string, host: boolean, guestToken?: string) => ({
   queryKey: ["visio", room, host, guestToken ?? null],
@@ -38,9 +45,15 @@ const visioQuery = (room: string, host: boolean, guestToken?: string) => ({
 });
 
 /** The JaaS call itself, filling its parent. */
-function Call({ v, attempt, onLeave }: Readonly<{ v: Extract<VisioJoin, { provider: "jaas" }>; attempt: number; onLeave: () => void }>) {
+function Call({
+  v,
+  attempt,
+  onLeave,
+  onApi,
+}: Readonly<{ v: Extract<VisioJoin, { provider: "jaas" }>; attempt: number; onLeave: () => void; onApi?: (api: CallApi) => void }>) {
   return (
     <JaaSMeeting
+      onApiReady={(api) => onApi?.(api as unknown as CallApi)}
       key={attempt}
       appId={v.appId}
       roomName={v.roomName}
@@ -59,6 +72,9 @@ function Call({ v, attempt, onLeave }: Readonly<{ v: Extract<VisioJoin, { provid
         enableClosePage: false,
         hideConferenceTimer: false,
         disableThirdPartyRequests: true,
+        // A background effect the browser cannot run sends a black video while
+        // the call goes on: none offered, on either side.
+        disableVirtualBackground: true,
         notifications: [],
       }}
       interfaceConfigOverwrite={{ SHOW_PROMOTIONAL_CLOSE_PAGE: false, MOBILE_APP_PROMO: false, SHOW_CHROME_EXTENSION_BANNER: false }}
@@ -72,12 +88,17 @@ function Call({ v, attempt, onLeave }: Readonly<{ v: Extract<VisioJoin, { provid
   );
 }
 
-/** Left, or the public Jitsi fallback: a small card instead of the call. */
+/** What the page asks of the running call: only to end it for everyone. */
+type CallApi = { executeCommand: (command: string) => void };
+
+/** Left, ended, or the public Jitsi fallback: a small card instead of the call. */
 function Notice({
   v,
   onRejoin,
   onReport,
-}: Readonly<{ v: VisioJoin; onRejoin: () => void; onReport?: () => void }>) {
+  onEnd,
+  ended = false,
+}: Readonly<{ v: VisioJoin; onRejoin: () => void; onReport?: () => void; onEnd?: () => void; ended?: boolean }>) {
   return (
     <div className="flex size-full items-center justify-center p-6">
       <div className="w-full max-w-sm space-y-5 text-center">
@@ -94,16 +115,27 @@ function Notice({
           </>
         ) : (
           <>
-            <p className="font-medium">Vous avez quitté la visio.</p>
+            <div className="space-y-1">
+              <p className="font-medium">{ended ? "Entretien terminé." : "Vous avez quitté la visio."}</p>
+              {ended && <p className="text-muted-foreground text-sm">Son lien n&apos;ouvre plus la visio.</p>}
+            </div>
             {onReport && (
               <Button className="w-full rounded-full" onClick={onReport}>
                 <IconFileText className="size-4" />
                 Ouvrir le compte rendu
               </Button>
             )}
-            <Button variant="ghost" className="w-full rounded-full bg-page" onClick={onRejoin}>
-              Revenir dans la visio
-            </Button>
+            {!ended && (
+              <Button variant="ghost" className="w-full rounded-full bg-page" onClick={onRejoin}>
+                Revenir dans la visio
+              </Button>
+            )}
+            {!ended && onEnd && (
+              <Button variant="ghost" className="w-full rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={onEnd}>
+                <IconPlayerStop className="size-4" />
+                Terminer l&apos;entretien
+              </Button>
+            )}
           </>
         )}
       </div>
@@ -122,6 +154,29 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
   const v = query.data;
   // The call over (hung up in JaaS): the « Compte rendu » opens, notes kept.
   const [reportOpen, setReportOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const api = useRef<CallApi | null>(null);
+  const [confirmEnd, setConfirmEnd] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [endedNow, setEndedNow] = useState(false);
+  const ended = endedNow || Boolean(v?.endedAt);
+  const end = useMutation({
+    mutationFn: () => endInterview(v?.interviewId ?? ""),
+    onSuccess: () => {
+      // Everyone out of the call, then the compte rendu.
+      try {
+        api.current?.executeCommand("endConference");
+      } catch {
+        /* already gone */
+      }
+      setEndedNow(true);
+      setLeft(true);
+      setConfirmEnd(false);
+      void queryClient.invalidateQueries({ queryKey: interviewsKey });
+      setReportOpen(true);
+    },
+    onError: (err) => toast.error(friendlyError(err, "L'entretien n'a pas pu être terminé.")),
+  });
   const rejoin = () => {
     setReportOpen(false);
     setAttempt((n) => n + 1);
@@ -152,8 +207,36 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
             <h1 className="font-semibold text-lg">Visio</h1>
           )}
         </div>
-        {v?.interviewId && (
-          <Button type="button" className="ml-auto h-10 shrink-0 rounded-full px-4 text-sm" onClick={() => setReportOpen(true)}>
+        {v?.interviewId && !ended && (
+          <div className="ml-auto flex min-w-0 items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-10 shrink-0 rounded-full bg-card px-4 text-sm sm:h-10"
+              aria-label="Partager la visio"
+              title="Partager la visio"
+              onClick={() => setSharing(true)}
+            >
+              <IconUserPlus className="size-4" />
+              <span className="hidden lg:inline">Partager</span>
+            </Button>
+            <HostTranscription interviewId={v.interviewId} inCall={v.provider === "jaas" && !left} />
+            {v.provider === "jaas" && !left && (
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-10 shrink-0 rounded-full bg-card px-4 text-destructive text-sm hover:bg-destructive/10 hover:text-destructive sm:h-10"
+                onClick={() => setConfirmEnd(true)}
+              >
+                <IconPlayerStop className="size-4" />
+                <span className="hidden lg:inline">Terminer</span>
+              </Button>
+            )}
+          </div>
+        )}
+        {/* Ended: « Ouvrir le compte rendu » below says the same. */}
+        {v?.interviewId && !ended && (
+          <Button type="button" className="h-10 shrink-0 rounded-full px-4 text-sm" onClick={() => setReportOpen(true)}>
             <IconNotes className="size-4" />
             Notes et compte rendu
           </Button>
@@ -176,20 +259,46 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
                   </Link>
                 </div>
               </div>
-            ) : v.provider === "jaas" && !left ? (
+            ) : v.provider === "jaas" && !left && !ended ? (
               <Call
                 v={v}
                 attempt={attempt}
+                onApi={(a) => {
+                  api.current = a;
+                }}
                 onLeave={() => {
                   setLeft(true);
                   if (v.interviewId) setReportOpen(true);
                 }}
               />
             ) : (
-              <Notice v={v} onRejoin={rejoin} onReport={v.interviewId ? () => setReportOpen(true) : undefined} />
+              <Notice
+                v={v}
+                ended={ended}
+                onRejoin={rejoin}
+                onReport={v.interviewId ? () => setReportOpen(true) : undefined}
+                onEnd={v.interviewId ? () => setConfirmEnd(true) : undefined}
+              />
             )}
           </section>
         </div>
+      {sharing && v?.interviewId && (
+        <InviteGuestDialog
+          interview={{ id: v.interviewId, candidateName: v.candidateName, jobTitle: v.jobTitle, location: visioLink(room) }}
+          open={sharing}
+          onOpenChange={setSharing}
+        />
+      )}
+      <ActionDialog
+        open={confirmEnd}
+        onOpenChange={setConfirmEnd}
+        tone="warning"
+        title="Terminer l'entretien ?"
+        description="La visio se ferme pour tout le monde : son lien ne l'ouvrira plus, et la transcription s'arrête. Le compte rendu s'ouvre ensuite."
+        confirmLabel="Terminer l'entretien"
+        onConfirm={() => end.mutate()}
+        pending={end.isPending}
+      />
       {reportOpen && v?.interviewId && (
         <InterviewReportDialog
           open={reportOpen}
@@ -213,6 +322,7 @@ export function VisioPage({ room, guestToken }: Readonly<{ room: string; guestTo
   const [attempt, setAttempt] = useState(0);
   const query = useQuery(visioQuery(room, false, guestToken));
   const v = query.data;
+  const [closed, setClosed] = useState<string | null>(null);
   // Back to the top: the card below is read from its start, not where the call left the page.
   const leave = () => {
     setLeft(true);
@@ -235,8 +345,9 @@ export function VisioPage({ room, guestToken }: Readonly<{ room: string; guestTo
           </span>
         </header>
         <div className="min-h-0 flex-1 px-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] sm:px-4 sm:pb-4">
-          <div className="size-full overflow-hidden rounded-2xl bg-card sm:rounded-3xl">
+          <div className="relative size-full overflow-hidden rounded-2xl bg-card sm:rounded-3xl">
             <Call v={v} attempt={attempt} onLeave={leave} />
+            <GuestTranscription room={room} guestToken={guestToken} inCall />
           </div>
         </div>
       </main>
@@ -270,13 +381,24 @@ export function VisioPage({ room, guestToken }: Readonly<{ room: string; guestTo
                   {v.businessName} · {when(v.startsAt)}
                 </p>
               </div>
-              <Notice
-                v={v}
-                onRejoin={() => {
-                  setAttempt((n) => n + 1);
-                  setLeft(false);
-                }}
-              />
+              {closed ? (
+                <p className="text-muted-foreground text-sm">{closed}</p>
+              ) : (
+                <Notice
+                  v={v}
+                  onRejoin={() => {
+                    // Asked again: an interview ended by the business no longer opens.
+                    void query.refetch().then((r) => {
+                      if (r.isError) {
+                        setClosed(friendlyError(r.error, "Cet entretien est terminé."));
+                        return;
+                      }
+                      setAttempt((n) => n + 1);
+                      setLeft(false);
+                    });
+                  }}
+                />
+              )}
             </>
           )}
         </section>

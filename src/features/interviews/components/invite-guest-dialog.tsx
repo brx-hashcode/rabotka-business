@@ -52,7 +52,12 @@ export function InviteGuestDialog({
   interview: i,
   open,
   onOpenChange,
-}: Readonly<{ interview: Interview; open: boolean; onOpenChange: (o: boolean) => void }>) {
+}: Readonly<{
+  /** What the window needs: from a card on « Entretiens », or from the call page. */
+  interview: Pick<Interview, "id" | "candidateName" | "jobTitle" | "location">;
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+}>) {
   const queryClient = useQueryClient();
   const { member } = useMember();
   const key = interviewGuestsKey(i.id);
