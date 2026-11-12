@@ -23,7 +23,7 @@ export const PIPELINE = [
   { title: "Diffusion", text: "Rabotka, page carrières, Google, LinkedIn" },
   { title: "Candidatures", text: "Toutes reçues au même endroit" },
   { title: "Tri et classement", text: "Chaque CV lu, noté et expliqué" },
-  { title: "Entretiens", text: "Créneau proposé, réponse du candidat" },
+  { title: "Entretiens", text: "Créneaux au choix, visio et compte rendu" },
   { title: "Décision", text: "Avis de l'équipe, candidat retenu" },
   { title: "Contrat et mission", text: "Contrat généré, mission suivie" },
 ] as const;
@@ -168,17 +168,19 @@ export const FEATURE_PAGES: Record<Exclude<MockupKey, "pipeline">, FeaturePage> 
     ],
   },
   interviews: {
-    metaTitle: "Entretiens",
+    metaTitle: "Entretiens en visio, notes et compte rendu",
     metaDescription:
-      "Proposez un créneau : le candidat confirme ou demande un autre moment depuis son e-mail, et l'entretien arrive dans votre agenda.",
-    heading: "Des entretiens organisés sans échanges sans fin",
+      "Proposez plusieurs créneaux, menez l'entretien en visio dans Rabotka, prenez vos notes à la voix et partagez un compte rendu rédigé à partir d'elles.",
+    heading: "Des entretiens menés et suivis au même endroit",
     intro:
-      "Proposez un créneau, le candidat répond depuis l'e-mail qu'il reçoit. Vous suivez toutes les réponses au même endroit, et votre agenda se met à jour seul.",
+      "Proposez vos créneaux, le candidat choisit depuis l'e-mail qu'il reçoit. Le jour venu, la visio s'ouvre dans Rabotka avec vos notes à côté, et le compte rendu se partage avec l'équipe en un clic.",
     benefits: [
-      { title: "Sur place, au téléphone ou en visio", text: "Choisissez le format et le lieu : le candidat reçoit tout dans son invitation." },
-      { title: "La réponse du candidat", text: "Il confirme, décline ou demande un autre moment, sans compte ni mot de passe." },
-      { title: "Votre agenda synchronisé", text: "Google Agenda, Outlook ou Apple Calendrier : chaque entretien y apparaît et s'y met à jour." },
-      { title: "Un rappel la veille", text: "Pour vous et pour le candidat, afin que personne n'oublie." },
+      { title: "Plusieurs créneaux au choix", text: "Proposez jusqu'à trois moments : le candidat choisit celui qui lui convient, ou en demande un autre, sans compte ni mot de passe." },
+      { title: "La visio dans Rabotka", text: "Aucune application à installer : le candidat rejoint l'appel par son lien, sur ordinateur ou sur téléphone. Meet ou Zoom restent possibles." },
+      { title: "Un collègue dans l'appel", text: "Invitez un responsable ou un expert : il reçoit son propre lien par e-mail et entre sous son nom, sans compte." },
+      { title: "Vos notes, à la voix", text: "Tapez ou dictez vos notes pendant l'appel, à côté de la visio : elles s'enregistrent au fil de l'eau." },
+      { title: "Le compte rendu prêt", text: "Rédigé par IA à partir de vos notes : résumé, points forts, points de vigilance, prochaines étapes. Vous le relisez, l'envoyez à l'équipe ou l'enregistrez en PDF." },
+      { title: "Votre agenda synchronisé", text: "Google Agenda, Outlook ou Apple Calendrier : chaque entretien y apparaît et s'y met à jour, avec un rappel la veille pour vous et le candidat." },
     ],
   },
   tracking: {
@@ -311,19 +313,19 @@ export const GUIDES: Guide[] = [
     slug: "organiser-ses-entretiens",
     illustration: "interview",
     title: "Organiser ses entretiens sans échanges sans fin",
-    description: "Proposer un créneau, préparer ses questions, décider en équipe : un entretien qui sert vraiment la décision.",
+    description: "Proposer ses créneaux, mener la visio, partager le compte rendu : un entretien qui sert vraiment la décision.",
     minutes: 4,
     sections: [
       {
         heading: "Proposer, pas négocier",
         paragraphs: [
-          "Proposez un créneau précis, avec le format (sur place, téléphone ou visio) et le lieu. Le candidat confirme ou demande un autre moment depuis son e-mail : vous évitez les allers-retours.",
+          "Proposez un créneau précis, ou jusqu'à trois au choix, avec le format (sur place, téléphone ou visio) et le lieu. Le candidat choisit, confirme ou demande un autre moment depuis son e-mail : vous évitez les allers-retours. En visio, créez le lien dans Rabotka : l'appel s'y déroule, sans application à installer.",
         ],
       },
       {
         heading: "Les mêmes questions pour tous",
         paragraphs: [
-          "Pour comparer des candidats, posez-leur les mêmes questions principales, liées aux missions du poste. Notez les réponses juste après l'entretien, pendant qu'elles sont fraîches.",
+          "Pour comparer des candidats, posez-leur les mêmes questions principales, liées aux missions du poste. Notez les réponses pendant l'entretien ou juste après, pendant qu'elles sont fraîches : tapées ou dictées, à côté de la visio.",
         ],
         list: [
           "Une question sur une situation déjà vécue",
@@ -334,7 +336,7 @@ export const GUIDES: Guide[] = [
       {
         heading: "Décider à plusieurs",
         paragraphs: [
-          "Chaque membre de l'équipe donne son avis (Oui, Peut-être, Non) et laisse ses notes sur le candidat. La décision se prend sur des éléments partagés, et le candidat retenu reçoit son contrat dans la foulée.",
+          "Invitez le responsable du poste dans l'appel : il entre par son propre lien, sans compte. Après l'entretien, Rabotka rédige le compte rendu à partir de vos notes ; relisez-le et envoyez-le à l'équipe. Chaque membre donne son avis (Oui, Peut-être, Non) : la décision se prend sur des éléments partagés, et le candidat retenu reçoit son contrat dans la foulée.",
         ],
       },
     ],

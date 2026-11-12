@@ -28,9 +28,9 @@ const when = (iso: string) =>
 /** What a recruiter and a candidate need in the call, and nothing to invite, stream or dial. */
 const TOOLBAR = ["microphone", "camera", "desktop", "chat", "raisehand", "tileview", "select-background", "settings", "fullscreen", "hangup"];
 
-const visioQuery = (room: string, host: boolean) => ({
-  queryKey: ["visio", room, host],
-  queryFn: () => (host ? joinVisioAsHost(room) : joinVisioAsGuest(room)),
+const visioQuery = (room: string, host: boolean, guestToken?: string) => ({
+  queryKey: ["visio", room, host, guestToken ?? null],
+  queryFn: () => (host ? joinVisioAsHost(room) : joinVisioAsGuest(room, guestToken)),
   retry: false,
   // The token is signed for this visit: never refetched behind the call.
   staleTime: Infinity,
@@ -204,11 +204,14 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
   );
 }
 
-/** The candidate's side, by the link of the invitation: no account, a guest. */
-export function VisioPage({ room }: Readonly<{ room: string }>) {
+/**
+ * The guests' side, with no account: the candidate by the link of the
+ * invitation, or someone the business invited by their personal link.
+ */
+export function VisioPage({ room, guestToken }: Readonly<{ room: string; guestToken?: string }>) {
   const [left, setLeft] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  const query = useQuery(visioQuery(room, false));
+  const query = useQuery(visioQuery(room, false, guestToken));
   const v = query.data;
   // Back to the top: the card below is read from its start, not where the call left the page.
   const leave = () => {

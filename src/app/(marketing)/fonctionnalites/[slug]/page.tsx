@@ -45,7 +45,8 @@ export default async function FeaturePage({ params }: PageProps<"/fonctionnalite
       <section className="bg-card py-20 md:py-28">
         <div className="mx-auto w-full max-w-7xl space-y-14 px-4 sm:px-6">
           <SectionHeading kicker={feature.label} title="Ce que vous y gagnez" />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Six benefits sit in two rows of three, four in one row. */}
+          <div className={`grid gap-4 sm:grid-cols-2 ${page.benefits.length % 3 === 0 ? "lg:grid-cols-3" : "lg:grid-cols-4"}`}>
             {page.benefits.map((b, n) => (
               <div key={b.title} className="space-y-3 rounded-3xl bg-page p-6">
                 <span className="font-semibold text-muted-foreground text-xs tabular-nums">
