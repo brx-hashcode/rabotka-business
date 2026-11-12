@@ -127,7 +127,7 @@ export function OfferPage({
       <div className="space-y-6 pb-24 lg:pb-0">
         {/* The company first: its cover, its logo, then the offer's title and essentials. */}
         <header className="overflow-hidden rounded-3xl bg-card">
-          <div className="relative h-28 w-full sm:h-40">
+          <div className="relative h-36 w-full sm:h-56">
             {company.coverUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- the business's own upload, any host
               <img src={company.coverUrl} alt="" className="absolute inset-0 size-full object-cover" />
