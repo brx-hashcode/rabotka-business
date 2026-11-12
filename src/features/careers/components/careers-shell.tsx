@@ -6,10 +6,10 @@ import type { CareersCompany } from "#/lib/api/careers-controller";
 import { getInitials } from "#/lib/utils";
 
 /** The candidate's side of a business: the same frame as an interview invitation. */
-export function CareersShell({ children }: Readonly<{ children: ReactNode }>) {
+export function CareersShell({ children, wide = false }: Readonly<{ children: ReactNode; wide?: boolean }>) {
   return (
     <main className="min-h-svh bg-page px-4 py-8 sm:py-14">
-      <div className="mx-auto w-full max-w-2xl space-y-6">
+      <div className={`mx-auto w-full space-y-6 ${wide ? "max-w-6xl" : "max-w-2xl"}`}>
         <div className="flex justify-center">
           <BusinessLockup />
         </div>
