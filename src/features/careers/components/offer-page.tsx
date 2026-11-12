@@ -121,22 +121,26 @@ export function OfferPage({
       <div className="space-y-6 pb-24">
         <article className="space-y-10 rounded-3xl bg-card p-6 sm:p-10">
           <header className="space-y-5">
-            <Link
-              href={`/carrieres/${slug}`}
-              aria-label={`Toutes les offres de ${company.name}`}
-              title={`Toutes les offres de ${company.name}`}
-              className="flex size-10 items-center justify-center rounded-full bg-page text-foreground transition-colors hover:bg-page/70"
-            >
-              <IconArrowLeft className="size-5" />
-            </Link>
-            <div className="flex items-center gap-4">
-              <CompanyLogo company={company} />
-              <div className="min-w-0 space-y-1">
-                <p className="truncate font-medium text-foreground/70">{company.name} recrute</p>
-                <h1 className="font-semibold text-2xl leading-tight tracking-tight sm:text-3xl">{o.title}</h1>
-              </div>
+            {/* Back, and who recruits, on one line; the title has the whole width. */}
+            <div className="flex items-center gap-3">
+              <Link
+                href={`/carrieres/${slug}`}
+                aria-label={`Toutes les offres de ${company.name}`}
+                title={`Toutes les offres de ${company.name}`}
+                className="flex size-10 shrink-0 items-center justify-center rounded-full bg-page text-foreground transition-colors hover:bg-page/70"
+              >
+                <IconArrowLeft className="size-5" />
+              </Link>
+              <Link href={`/carrieres/${slug}`} className="flex min-w-0 items-center gap-2.5 rounded-full py-1 pr-3 transition-colors hover:bg-page">
+                <CompanyLogo company={company} size="sm" />
+                <span className="min-w-0 truncate text-sm">
+                  <span className="font-semibold">{company.name}</span>
+                  <span className="text-muted-foreground"> recrute</span>
+                </span>
+              </Link>
             </div>
             <div className="space-y-2">
+              <h1 className="font-semibold text-2xl leading-tight tracking-tight sm:text-3xl">{o.title}</h1>
               <p className="text-muted-foreground text-sm">
                 Publiée le {longDate(o.publishedAt)}
                 {o.categoryName ? ` · ${o.categoryName}` : ""}
