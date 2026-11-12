@@ -70,32 +70,32 @@ export function PipelineMockup() {
         label="Aperçu : le tableau d'une offre, candidats rangés par étape, avec leur note, leur provenance, la visio et le compte rendu."
         title="Caissier — Supermarché du Plateau"
       >
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
           {COLUMNS.map((col) => (
-            <div key={col.title} className="min-w-0 space-y-2 rounded-2xl bg-page p-2">
-              <p className="flex items-center justify-between gap-1 px-0.5 font-medium text-[10px] leading-tight">
+            <div key={col.title} className="min-w-0 space-y-2.5 rounded-2xl bg-page p-2.5">
+              <p className="flex items-center justify-between gap-1 px-1 pt-0.5 font-medium text-[10px] leading-tight">
                 <span className="whitespace-nowrap">{col.title}</span>
                 <span className="rounded-full bg-card px-1.5 text-[10px] text-muted-foreground tabular-nums">{col.people.length}</span>
               </p>
               {col.people.map((p) => (
                 <div
                   key={p.name}
-                  className={cn("space-y-1.5 rounded-xl bg-card p-2", p.dragging && "-rotate-3 translate-x-1 shadow-soft ring-2 ring-whatsapp/40")}
+                  className={cn("space-y-1.5 rounded-xl bg-card p-2.5", p.dragging && "-rotate-3 translate-x-1 shadow-soft ring-2 ring-whatsapp/40")}
                 >
                   <p className="truncate font-medium text-[11px]">{shortName(p.name)}</p>
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <ScoreRing score={p.score} size={24} />
+                    <ScoreRing score={p.score} size={20} />
                     <span className="whitespace-nowrap rounded-full bg-page px-1.5 py-0.5 text-[9.5px] text-muted-foreground">{p.source}</span>
                   </div>
                   <div className="flex flex-wrap gap-1 empty:hidden">
                     {p.extra === "visio" && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-chip-sky px-1.5 py-0.5 text-[9.5px] text-chip-sky-foreground">
+                      <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-chip-sky px-1.5 py-0.5 text-[9.5px] text-chip-sky-foreground">
                         <IconVideo className="size-2.5" />
-                        Visio · jeu. 10 h
+                        Visio · jeu.
                       </span>
                     )}
                     {p.extra === "report" && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-chip-green px-1.5 py-0.5 text-[9.5px] text-chip-green-foreground">
+                      <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-chip-green px-1.5 py-0.5 text-[9.5px] text-chip-green-foreground">
                         <IconFileText className="size-2.5" />
                         Compte rendu
                       </span>

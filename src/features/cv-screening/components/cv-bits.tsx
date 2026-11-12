@@ -34,7 +34,7 @@ export function VerdictChip({ score }: Readonly<{ score: number }>) {
 export function ScoreRing({ score, size = 56 }: Readonly<{ score: number; size?: number }>) {
   // A small ring (a board's card, a mock-up) keeps its number legible inside.
   const small = size < 34;
-  const stroke = small ? 3 : 5;
+  const stroke = small ? 2 : 5;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   return (
@@ -54,7 +54,7 @@ export function ScoreRing({ score, size = 56 }: Readonly<{ score: number; size?:
           className={band(score).ring}
         />
       </svg>
-      <span className={cn("absolute font-semibold tabular-nums", small ? "text-[9px]" : "text-sm")} aria-label={`${score} sur 100`}>
+      <span className={cn("absolute font-semibold tabular-nums", small ? "text-[7.5px]" : "text-sm")} aria-label={`${score} sur 100`}>
         {score}
       </span>
     </span>
