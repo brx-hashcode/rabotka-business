@@ -53,6 +53,11 @@ describe("jobPostingLd", () => {
     expect(ld).not.toHaveProperty("baseSalary");
   });
 
+  it("names the country by its code, and the sector", () => {
+    const ld = jobPostingLd(company, { ...offer, countryCode: "CG", countryName: "Congo-Brazzaville" }, "u");
+    expect(ld).toMatchObject({ jobLocation: { address: { addressCountry: "CG" } }, industry: "Finance" });
+  });
+
   it("marks remote work", () => {
     const ld = jobPostingLd(company, { ...offer, isRemote: true }, "u");
     expect(ld).toMatchObject({ jobLocationType: "TELECOMMUTE" });
