@@ -125,11 +125,6 @@ export function OfferPage({
   return (
     <CareersShell wide>
       <div className="space-y-6 pb-24 lg:pb-0">
-        <Link href={`/carrieres/${slug}`} className="inline-flex items-center gap-1.5 font-medium text-foreground/70 text-sm hover:text-foreground">
-          <IconArrowLeft className="size-4" />
-          Toutes les offres de {company.name}
-        </Link>
-
         {/* The company first: its cover, its logo, then the offer's title and essentials. */}
         <header className="overflow-hidden rounded-3xl bg-card">
           <div className="relative h-28 w-full sm:h-40">
@@ -139,6 +134,15 @@ export function OfferPage({
             ) : (
               <div aria-hidden className="absolute inset-0 bg-linear-to-br from-brand-lime/80 via-whatsapp/25 to-whatsapp-dark/40" />
             )}
+            {/* Back to the company's offers, on the cover as in an app. */}
+            <Link
+              href={`/carrieres/${slug}`}
+              aria-label={`Toutes les offres de ${company.name}`}
+              title={`Toutes les offres de ${company.name}`}
+              className="absolute top-3 left-3 flex size-10 items-center justify-center rounded-full bg-card/90 text-foreground shadow-soft backdrop-blur transition-colors hover:bg-card sm:top-4 sm:left-4"
+            >
+              <IconArrowLeft className="size-5" />
+            </Link>
           </div>
           <div className="space-y-5 px-6 pb-7 sm:px-10 sm:pb-9">
             <div className="-mt-10 inline-flex rounded-3xl bg-card p-1.5 sm:-mt-12">
@@ -166,7 +170,7 @@ export function OfferPage({
           </div>
         </header>
 
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_19rem]">
           <article className="space-y-10 rounded-3xl bg-card p-6 sm:p-10">
             <section className="space-y-3">
               <h2 className="font-semibold text-xl">Le poste</h2>

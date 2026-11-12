@@ -9,7 +9,7 @@ import { getInitials } from "#/lib/utils";
 export function CareersShell({ children, wide = false }: Readonly<{ children: ReactNode; wide?: boolean }>) {
   return (
     <main className="min-h-svh bg-page px-4 py-8 sm:py-14">
-      <div className={`mx-auto w-full space-y-6 ${wide ? "max-w-6xl" : "max-w-2xl"}`}>
+      <div className={`mx-auto w-full space-y-6 ${wide ? "max-w-5xl" : "max-w-2xl"}`}>
         <div className="flex justify-center">
           <BusinessLockup />
         </div>
