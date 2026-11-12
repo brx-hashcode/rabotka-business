@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { JaaSMeeting } from "@jitsi/react-sdk";
-import { IconArrowLeft, IconExternalLink, IconFileText, IconNotes, IconPlayerStop, IconVideo } from "@tabler/icons-react";
+import { IconArrowLeft, IconExternalLink, IconFileText, IconNotes, IconPlayerStop, IconUserPlus, IconVideo } from "@tabler/icons-react";
 
 import { ActionDialog } from "#/components/action-dialog";
 import { BusinessLockup } from "#/components/business-lockup";
@@ -17,6 +17,7 @@ import type { VisioJoin } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { InterviewReportDialog } from "./interview-report-panel";
 import { GuestTranscription, HostTranscription } from "./call-transcription";
+import { InviteGuestDialog } from "./invite-guest-dialog";
 
 /**
  * The visible screen under the status-bar strip of the root layout: `dvh`
@@ -24,6 +25,9 @@ import { GuestTranscription, HostTranscription } from "./call-transcription";
  * under them.
  */
 const SCREEN_MIN = "min-h-[calc(100dvh-env(safe-area-inset-top))]";
+
+/** The room's link as the candidate received it: this site's /visio/<room>. */
+const visioLink = (room: string) => `${window.location.origin}/visio/${encodeURIComponent(room)}`;
 
 const when = (iso: string) =>
   new Date(iso).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
@@ -153,6 +157,7 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
   const queryClient = useQueryClient();
   const api = useRef<CallApi | null>(null);
   const [confirmEnd, setConfirmEnd] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [endedNow, setEndedNow] = useState(false);
   const ended = endedNow || Boolean(v?.endedAt);
   const end = useMutation({
@@ -204,6 +209,17 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
         </div>
         {v?.interviewId && !ended && (
           <div className="ml-auto flex min-w-0 items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-10 shrink-0 rounded-full bg-card px-4 text-sm sm:h-10"
+              aria-label="Partager la visio"
+              title="Partager la visio"
+              onClick={() => setSharing(true)}
+            >
+              <IconUserPlus className="size-4" />
+              <span className="hidden lg:inline">Partager</span>
+            </Button>
             <HostTranscription interviewId={v.interviewId} inCall={v.provider === "jaas" && !left} />
             {v.provider === "jaas" && !left && (
               <Button
@@ -266,6 +282,13 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
             )}
           </section>
         </div>
+      {sharing && v?.interviewId && (
+        <InviteGuestDialog
+          interview={{ id: v.interviewId, candidateName: v.candidateName, jobTitle: v.jobTitle, location: visioLink(room) }}
+          open={sharing}
+          onOpenChange={setSharing}
+        />
+      )}
       <ActionDialog
         open={confirmEnd}
         onOpenChange={setConfirmEnd}
