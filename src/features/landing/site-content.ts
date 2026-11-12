@@ -71,6 +71,8 @@ export type FeaturePage = {
   heading: string;
   intro: string;
   benefits: { title: string; text: string }[];
+  /** « Comment ça se passe », step by step, each beside a photo (public/media, Unsplash). */
+  steps?: { kicker: string; title: string; text: string; points: string[]; photo: string; alt: string }[];
 };
 
 /** One page per feature, keyed like FEATURES. */
@@ -181,6 +183,44 @@ export const FEATURE_PAGES: Record<Exclude<MockupKey, "pipeline">, FeaturePage> 
       { title: "L'entretien transcrit", text: "Activez la transcription : la voix de chacun devient du texte pendant l'appel, celle du candidat seulement s'il l'accepte. Vos notes, tapées ou dictées, restent à côté." },
       { title: "Le compte rendu prêt", text: "Rédigé par IA à partir de vos notes et de la transcription : résumé, points forts, points de vigilance, prochaines étapes. Vous le relisez, l'envoyez à l'équipe ou l'enregistrez en PDF." },
       { title: "Votre agenda synchronisé", text: "Google Agenda, Outlook ou Apple Calendrier : chaque entretien y apparaît et s'y met à jour, avec un rappel la veille pour vous et le candidat." },
+    ],
+    steps: [
+      {
+        kicker: "Pendant l'entretien",
+        title: "La visio dans Rabotka",
+        text: "Le jour venu, l'appel s'ouvre dans votre espace, sans application à installer. Le candidat le rejoint par le lien de son invitation, sur ordinateur ou sur téléphone, sans compte.",
+        points: [
+          "Un collègue ou un responsable invité, sous son nom",
+          "Une page d'attente pour le candidat, avec l'heure d'ouverture",
+          "« Terminer l'entretien » ferme l'appel pour tous",
+        ],
+        photo: "/media/interview-visio-grid.jpg",
+        alt: "Un ordinateur portable ouvert sur un appel vidéo à plusieurs, une tasse posée à côté.",
+      },
+      {
+        kicker: "En même temps",
+        title: "La voix de chacun mise en texte",
+        text: "Activez la transcription : le navigateur de chacun transforme sa propre voix en texte, phrase après phrase, et celle du candidat seulement s'il l'accepte. Vos notes, tapées ou dictées, restent à côté de l'appel.",
+        points: [
+          "Les deux voix réunies dans l'ordre où elles ont été dites",
+          "Une phrase importante ajoutée à vos notes d'un clic",
+          "Ni le son ni l'image ne sont enregistrés",
+        ],
+        photo: "/media/interview-visio.jpg",
+        alt: "Un homme en entretien vidéo avec une recruteuse qui apparaît sur l'écran de son ordinateur.",
+      },
+      {
+        kicker: "Après l'entretien",
+        title: "Le compte rendu, prêt à partager",
+        text: "Rabotka rédige le compte rendu à partir de la transcription et de vos notes, pendant que vous passez à autre chose : une notification vous prévient quand il est prêt. Vous le relisez, le modifiez, l'envoyez à l'équipe ou l'enregistrez en PDF.",
+        points: [
+          "Résumé, points forts, points de vigilance et prochaines étapes",
+          "Les heures réelles de l'entretien, pas seulement celles prévues",
+          "Rédigé par IA : à relire avant de l'envoyer",
+        ],
+        photo: "/media/interview-team-review.jpg",
+        alt: "Une équipe autour d'une table, ordinateurs ouverts, qui échange sur un entretien.",
+      },
     ],
   },
   tracking: {
