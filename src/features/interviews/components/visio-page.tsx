@@ -14,6 +14,7 @@ import { joinVisioAsGuest, joinVisioAsHost } from "#/lib/api/interview-controlle
 import type { VisioJoin } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { InterviewReportDialog } from "./interview-report-panel";
+import { GuestTranscription, HostTranscription } from "./call-transcription";
 
 /**
  * The visible screen under the status-bar strip of the root layout: `dvh`
@@ -153,7 +154,12 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
           )}
         </div>
         {v?.interviewId && (
-          <Button type="button" className="ml-auto h-10 shrink-0 rounded-full px-4 text-sm" onClick={() => setReportOpen(true)}>
+          <div className="ml-auto flex min-w-0 items-center gap-2">
+            <HostTranscription interviewId={v.interviewId} inCall={v.provider === "jaas" && !left} />
+          </div>
+        )}
+        {v?.interviewId && (
+          <Button type="button" className="h-10 shrink-0 rounded-full px-4 text-sm" onClick={() => setReportOpen(true)}>
             <IconNotes className="size-4" />
             Notes et compte rendu
           </Button>
@@ -235,8 +241,9 @@ export function VisioPage({ room, guestToken }: Readonly<{ room: string; guestTo
           </span>
         </header>
         <div className="min-h-0 flex-1 px-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] sm:px-4 sm:pb-4">
-          <div className="size-full overflow-hidden rounded-2xl bg-card sm:rounded-3xl">
+          <div className="relative size-full overflow-hidden rounded-2xl bg-card sm:rounded-3xl">
             <Call v={v} attempt={attempt} onLeave={leave} />
+            <GuestTranscription room={room} guestToken={guestToken} inCall />
           </div>
         </div>
       </main>

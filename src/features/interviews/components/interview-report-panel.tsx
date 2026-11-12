@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -15,6 +15,7 @@ import {
 } from "@tabler/icons-react";
 
 import { Bone } from "#/components/page-skeletons";
+import { useDictation } from "#/features/interviews/use-dictation";
 import { PreviewSheet } from "#/components/preview-sheet";
 import { appConfig } from "#/config";
 import { Button } from "#/components/ui/button";
@@ -25,7 +26,10 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import {
   editInterviewReport,
   getInterviewReport,
+  getInterviewTranscript,
   interviewReportKey,
+  interviewTranscriptKey,
+  type InterviewTranscript,
   interviewsKey,
   saveInterviewNotes,
   sendInterviewReport,
@@ -99,7 +103,15 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
 
   const dictation = useDictation((text) => setDraft((d) => joinText(d ?? saved?.notes ?? "", text).slice(0, MAX_NOTES)));
   const report = saved?.report ?? null;
-  const enough = notes.trim().length >= MIN_NOTES;
+  // Both sides' speech, merged by time, when the interview was transcribed.
+  const transcript = useQuery({
+    queryKey: interviewTranscriptKey(interviewId),
+    queryFn: () => getInterviewTranscript(interviewId),
+    refetchInterval: (q) => (q.state.data?.transcribe ? 8000 : false),
+  });
+  const lines = transcript.data?.lines ?? [];
+  const spoken = lines.reduce((n, l) => n + l.text.length, 0);
+  const enough = notes.trim().length >= MIN_NOTES || spoken >= MIN_NOTES;
 
   if (query.isLoading) {
     return (
@@ -174,9 +186,14 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
           {report ? "Réécrire le compte rendu" : "Rédiger le compte rendu"}
         </Button>
         <p className="text-center text-muted-foreground text-xs">
-          {enough ? "Rédigé par IA à partir de vos notes : relisez-le avant de l'envoyer." : "Quelques lignes de notes suffisent pour rédiger le compte rendu."}
+          {enough
+            ? lines.length > 0
+              ? "Rédigé par IA à partir de vos notes et de la transcription : relisez-le avant de l'envoyer."
+              : "Rédigé par IA à partir de vos notes : relisez-le avant de l'envoyer."
+            : "Quelques lignes de notes, ou la transcription de l'entretien, suffisent pour rédiger le compte rendu."}
           {dictation.supported && " La dictée passe par le service vocal de votre navigateur."}
         </p>
+        {lines.length > 0 && <TranscriptBlock lines={lines} live={transcript.data?.transcribe ?? false} />}
       </section>
 
       {/* Right: the report, read, edited, sent or printed. */}
@@ -250,6 +267,29 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
         />
       )}
       {sending && <SendDialog interviewId={interviewId} onClose={() => setSending(false)} onSent={store} />}
+    </div>
+  );
+}
+
+/** The transcription, both sides merged by time: what the report is written from, beside the notes. */
+function TranscriptBlock({ lines, live }: Readonly<{ lines: InterviewTranscript["lines"]; live: boolean }>) {
+  return (
+    <div className="space-y-2 rounded-2xl bg-page p-4">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="font-semibold text-sm">Transcription</h3>
+        <span className="text-muted-foreground text-xs">{live ? "En cours · automatique" : "Automatique"}</span>
+      </div>
+      <ol className="max-h-64 space-y-2 overflow-y-auto pr-1 text-sm">
+        {lines.map((l, n) => (
+          <li key={`${l.at}-${n}`} className="leading-snug">
+            <span className="text-muted-foreground text-xs tabular-nums">
+              {new Date(l.at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+            </span>{" "}
+            <span className={cn("font-medium", l.role === "CANDIDATE" && "text-whatsapp-dark")}>{l.speaker}</span> : {l.text}
+          </li>
+        ))}
+      </ol>
+      <p className="text-muted-foreground text-xs">Reconnue par le navigateur de chacun : elle peut contenir des erreurs.</p>
     </div>
   );
 }
@@ -466,125 +506,6 @@ function joinText(before: string, added: string): string {
   return `${before.replace(/\s+$/, "")}${/[.!?]$/.test(before.trim()) ? " " : ". "}${a.charAt(0).toUpperCase()}${a.slice(1)}`;
 }
 
-type Recognition = {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  onresult: ((e: { resultIndex: number; results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null;
-  onend: (() => void) | null;
-  onerror: ((e: { error: string }) => void) | null;
-  start: () => void;
-  stop: () => void;
-};
-
-function recognitionClass(): (new () => Recognition) | null {
-  if (typeof window === "undefined") return null;
-  const w = window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition };
-  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
-}
-
-const noSubscribe = () => () => {};
-
-/** The browser's own dictation (Chrome, Edge, Safari), in French; absent elsewhere. */
-function useDictation(onText: (text: string) => void) {
-  const supported = useSyncExternalStore(noSubscribe, () => recognitionClass() !== null, () => false);
-  const [listening, setListening] = useState(false);
-  /** The words heard so far, not yet final: shown in grey under the notes. */
-  const [interim, setInterim] = useState("");
-  /** The microphone's level, for the meter; the recognition has no level of its own. */
-  const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
-  const [startedAt, setStartedAt] = useState(0);
-  const ref = useRef<Recognition | null>(null);
-  const wanted = useRef(false);
-  const audio = useRef<{ stream: MediaStream; context: AudioContext } | null>(null);
-  const handler = useRef(onText);
-  useEffect(() => {
-    handler.current = onText;
-  });
-
-  const release = () => {
-    audio.current?.stream.getTracks().forEach((t) => t.stop());
-    void audio.current?.context.close();
-    audio.current = null;
-    setAnalyser(null);
-  };
-  useEffect(
-    () => () => {
-      wanted.current = false;
-      ref.current?.stop();
-      audio.current?.stream.getTracks().forEach((t) => t.stop());
-      void audio.current?.context.close();
-    },
-    [],
-  );
-
-  const listen = (Klass: new () => Recognition) => {
-    const r = new Klass();
-    r.lang = "fr-FR";
-    r.continuous = true;
-    r.interimResults = true;
-    r.onresult = (e) => {
-      let pending = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const res = e.results[i];
-        if (!res) continue;
-        if (res.isFinal) handler.current(res[0].transcript);
-        else pending += res[0].transcript;
-      }
-      setInterim(pending);
-    };
-    // The browser ends a dictation after a silence: picked up again until « Arrêter ».
-    r.onend = () => {
-      setInterim("");
-      if (wanted.current) {
-        try {
-          r.start();
-          return;
-        } catch {
-          /* already restarting */
-        }
-      }
-      setListening(false);
-      release();
-    };
-    r.onerror = (e) => {
-      if (e.error === "no-speech" || e.error === "aborted") return;
-      wanted.current = false;
-      if (e.error === "not-allowed") toast.error("Autorisez le micro dans votre navigateur pour dicter.");
-    };
-    ref.current = r;
-    r.start();
-  };
-
-  const start = async () => {
-    const Klass = recognitionClass();
-    if (!Klass) return;
-    wanted.current = true;
-    setListening(true);
-    setStartedAt(Date.now());
-    listen(Klass);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const context = new AudioContext();
-      const node = context.createAnalyser();
-      node.fftSize = 1024;
-      node.smoothingTimeConstant = 0.6;
-      context.createMediaStreamSource(stream).connect(node);
-      audio.current = { stream, context };
-      setAnalyser(node);
-    } catch {
-      // No meter without the microphone's stream; the dictation itself may still run.
-    }
-  };
-  const stop = () => {
-    wanted.current = false;
-    ref.current?.stop();
-    setListening(false);
-    setInterim("");
-    release();
-  };
-  return { supported, listening, interim, analyser, startedAt, start, stop };
-}
 
 const BAR = 3;
 const GAP = 2;
