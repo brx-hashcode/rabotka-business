@@ -222,7 +222,11 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
             Au choix du candidat
           </span>
         ) : (
-          <StatusChip status={i.status} />
+          i.endedAt ? (
+            <span className="shrink-0 rounded-full bg-chip-green px-2.5 py-1 font-medium text-chip-green-foreground text-xs">Terminé</span>
+          ) : (
+            <StatusChip status={i.status} />
+          )
         )}
       </div>
 

@@ -27,6 +27,11 @@ class InterviewController extends BusinessBaseController {
     return this.patch(`/business/me/interviews/${encodeURIComponent(id)}`, slot);
   }
 
+  /** « Terminer l'entretien »: its link stops opening the call; it counts as past. */
+  end(id: string): Promise<Interview> {
+    return this.post(`/business/me/interviews/${encodeURIComponent(id)}/end`);
+  }
+
   cancel(id: string): Promise<Interview> {
     return this.post(`/business/me/interviews/${encodeURIComponent(id)}/cancel`);
   }
@@ -75,6 +80,34 @@ class InterviewController extends BusinessBaseController {
     return this.get(`/public/interviews/visio/${encodeURIComponent(room)}${guestToken ? `?g=${encodeURIComponent(guestToken)}` : ""}`);
   }
 
+  /** The transcription: whether it is on, the candidate's answer, both sides merged by time. */
+  transcript(id: string): Promise<InterviewTranscript> {
+    return this.get(`/business/me/interviews/${encodeURIComponent(id)}/report/transcript`);
+  }
+
+  /** « Transcrire l'entretien »: on or off. */
+  setTranscription(id: string, on: boolean): Promise<InterviewTranscript> {
+    return this.patch(`/business/me/interviews/${encodeURIComponent(id)}/report/transcription`, { on });
+  }
+
+  /** The organiser's sentences, as their browser recognised them. */
+  addHostTranscript(id: string, lines: TranscriptLineInput[]): Promise<{ added: number }> {
+    return this.post(`/business/me/interviews/${encodeURIComponent(id)}/report/transcript`, { lines });
+  }
+
+  /** A guest's page asks whether the call is transcribed. */
+  transcriptionStatus(room: string): Promise<{ transcribe: boolean; consent: TranscriptConsent | null }> {
+    return this.get(`/public/interviews/visio/${encodeURIComponent(room)}/transcription`);
+  }
+
+  answerTranscription(room: string, accepted: boolean, guestToken?: string): Promise<unknown> {
+    return this.post(`/public/interviews/visio/${encodeURIComponent(room)}/transcription${guestQuery(guestToken)}`, { accepted });
+  }
+
+  addGuestTranscript(room: string, lines: TranscriptLineInput[], guestToken?: string): Promise<{ added: number }> {
+    return this.post(`/public/interviews/visio/${encodeURIComponent(room)}/transcript${guestQuery(guestToken)}`, { lines });
+  }
+
   /** « Inviter quelqu'un »: who was invited into the visio. */
   guests(id: string): Promise<InterviewGuest[]> {
     return this.get(`/business/me/interviews/${encodeURIComponent(id)}/guests`);
@@ -110,6 +143,7 @@ export const listInterviews = controller.list.bind(controller);
 export const createInterview = controller.create.bind(controller);
 export const rescheduleInterview = controller.reschedule.bind(controller);
 export const cancelInterview = controller.cancel.bind(controller);
+export const endInterview = controller.end.bind(controller);
 export const getInterviewCalendar = controller.calendar.bind(controller);
 export const resetInterviewCalendar = controller.resetCalendar.bind(controller);
 export const getInvitation = controller.invitation.bind(controller);
@@ -124,6 +158,25 @@ export const joinVisioAsGuest = controller.visioAsGuest.bind(controller);
 export const listInterviewGuests = controller.guests.bind(controller);
 export const inviteInterviewGuest = controller.inviteGuest.bind(controller);
 export const removeInterviewGuest = controller.removeGuest.bind(controller);
+export const getInterviewTranscript = controller.transcript.bind(controller);
+export const setInterviewTranscription = controller.setTranscription.bind(controller);
+export const addHostTranscript = controller.addHostTranscript.bind(controller);
+export const getTranscriptionStatus = controller.transcriptionStatus.bind(controller);
+export const answerTranscription = controller.answerTranscription.bind(controller);
+export const addGuestTranscript = controller.addGuestTranscript.bind(controller);
+export const interviewTranscriptKey = (id: string) => ["interview-transcript", id] as const;
+
+export type TranscriptConsent = "ACCEPTED" | "DECLINED";
+export type TranscriptLineInput = { text: string; at: string };
+export type InterviewTranscript = {
+  transcribe: boolean;
+  consent: TranscriptConsent | null;
+  lines: { at: string; speaker: string; role: "HOST" | "CANDIDATE" | "GUEST"; text: string }[];
+};
+
+function guestQuery(guestToken?: string): string {
+  return guestToken ? `?g=${encodeURIComponent(guestToken)}` : "";
+}
 export const interviewGuestsKey = (id: string) => ["interview-guests", id] as const;
 
 /** Someone the business invited into an interview's visio. */

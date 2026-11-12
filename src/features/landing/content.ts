@@ -147,7 +147,7 @@ export const FEATURES: Feature[] = [
     points: [
       "La visio dans Rabotka : le candidat la rejoint par un lien, sans compte",
       "Invitez un collègue ou un responsable dans l'appel",
-      "Vos notes tapées ou dictées, le compte rendu rédigé par IA à partir de vos notes",
+      "L'entretien transcrit avec l'accord du candidat, le compte rendu rédigé par IA",
       "Vos entretiens dans Google Agenda, Outlook ou Apple Calendrier, mis à jour seuls",
     ],
   },
@@ -348,7 +348,7 @@ export const FAQ = [
   },
   {
     q: "Qu'est-ce que le compte rendu d'entretien ?",
-    a: "Pendant ou après l'entretien, prenez vos notes : tapez-les ou dictez-les. Rabotka rédige à partir d'elles un compte rendu : résumé, points forts, points de vigilance, infos pratiques et prochaines étapes. Vous le relisez, le modifiez, l'envoyez à votre équipe par e-mail ou l'enregistrez en PDF. Rien n'est enregistré de l'appel lui-même : seulement ce que votre équipe écrit.",
+    a: "Pendant ou après l'entretien, prenez vos notes : tapez-les ou dictez-les. En visio, vous pouvez aussi transcrire l'entretien : le navigateur de chacun transforme sa propre voix en texte, et celle du candidat seulement s'il l'accepte. Rabotka rédige à partir de vos notes et de la transcription un compte rendu : résumé, points forts, points de vigilance, infos pratiques et prochaines étapes. Vous le relisez, le modifiez, l'envoyez à votre équipe par e-mail ou l'enregistrez en PDF. Ni le son ni l'image de l'appel ne sont enregistrés.",
   },
   {
     q: "Les entretiens apparaissent-ils dans mon agenda ?",

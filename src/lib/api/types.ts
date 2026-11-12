@@ -525,6 +525,8 @@ export type Interview = {
   status: InterviewStatus;
   responseNote: string | null;
   respondedAt: string | null;
+  /** « Terminer l'entretien »: over, whatever its time; notes and compte rendu stay. */
+  endedAt?: string | null;
   createdAt: string;
   /** Times still to choose from (several offered); empty once the candidate chose. */
   options?: { id: string; startsAt: string }[];
@@ -562,6 +564,8 @@ export type VisioJoin = {
   durationMinutes: number;
   displayName: string;
   host: boolean;
+  /** Ended by the business (« Terminer l'entretien »): the page shows it over. */
+  endedAt?: string | null;
   /** The host only: the « Compte rendu » beside the call. */
   interviewId?: string;
 } & ({ provider: "jaas"; appId: string; roomName: string; jwt: string } | { provider: "jitsi"; url: string });
