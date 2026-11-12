@@ -140,14 +140,15 @@ export const FEATURES: Feature[] = [
     slug: "entretiens",
     href: "/fonctionnalites/entretiens",
     label: "Entretiens",
-    description: "Invitations, réponses et agenda synchronisé.",
+    description: "La visio dans Rabotka, les notes et le compte rendu.",
     icon: IconCalendarEvent,
-    title: "Des entretiens organisés sans échanges sans fin",
-    text: "Proposez un créneau : le candidat confirme, décline ou demande un autre moment, depuis l'e-mail qu'il reçoit. Vous suivez tout au même endroit.",
+    title: "Des entretiens menés et suivis au même endroit",
+    text: "Proposez un ou plusieurs créneaux : le candidat choisit depuis l'e-mail qu'il reçoit. Le jour venu, la visio s'ouvre dans Rabotka, vos notes à côté, et le compte rendu est prêt à partager.",
     points: [
-      "Sur place, par téléphone ou en visio",
+      "La visio dans Rabotka : le candidat la rejoint par un lien, sans compte",
+      "Invitez un collègue ou un responsable dans l'appel",
+      "Vos notes tapées ou dictées, le compte rendu rédigé par IA à partir de vos notes",
       "Vos entretiens dans Google Agenda, Outlook ou Apple Calendrier, mis à jour seuls",
-      "Un rappel la veille, pour vous et pour le candidat",
     ],
   },
   {
@@ -315,6 +316,7 @@ export const FAQ_SHOWN = [
   "Quelles organisations peuvent ouvrir un compte entreprise ?",
   "Comment fonctionne l'analyse de CV ?",
   "Puis-je publier mes offres sur LinkedIn ?",
+  "Comment se passe un entretien en visio ?",
   "Les entretiens apparaissent-ils dans mon agenda ?",
   "Que fait Rabotka dans ma messagerie ?",
 ];
@@ -339,6 +341,14 @@ export const FAQ = [
   {
     q: "Combien de temps les CV sont-ils conservés ?",
     a: "Les fichiers et les coordonnées des CV analysés sont supprimés automatiquement au bout de la durée indiquée lors de l'analyse. Les notes et le classement restent consultables.",
+  },
+  {
+    q: "Comment se passe un entretien en visio ?",
+    a: "Au moment de proposer l'entretien, créez un lien de visio : l'appel a lieu dans Rabotka, sans application à installer. Le candidat le rejoint depuis son invitation, sur ordinateur ou sur téléphone, sans compte. Vous pouvez inviter un collègue ou un responsable : il reçoit son propre lien par e-mail et entre sous son nom. Vous pouvez aussi coller un lien Meet ou Zoom si vous préférez.",
+  },
+  {
+    q: "Qu'est-ce que le compte rendu d'entretien ?",
+    a: "Pendant ou après l'entretien, prenez vos notes : tapez-les ou dictez-les. Rabotka rédige à partir d'elles un compte rendu : résumé, points forts, points de vigilance, infos pratiques et prochaines étapes. Vous le relisez, le modifiez, l'envoyez à votre équipe par e-mail ou l'enregistrez en PDF. Rien n'est enregistré de l'appel lui-même : seulement ce que votre équipe écrit.",
   },
   {
     q: "Les entretiens apparaissent-ils dans mon agenda ?",

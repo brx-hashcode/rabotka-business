@@ -13,14 +13,22 @@ import {
   IconExternalLink,
   IconHourglass,
   IconFileText,
+  IconLink,
   IconPencil,
+  IconUserPlus,
   IconVideo,
   IconX,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
 import { CardGridSkeleton, TilesSkeleton } from "#/components/page-skeletons";
 import { StatTile } from "#/features/home/components/stat-tile";
 import { friendlyError } from "#/lib/api/friendly-error";
@@ -30,6 +38,7 @@ import { cn } from "#/lib/utils";
 import { MODES, StatusChip, modeLabel } from "./interview-bits";
 import { CalendarLinkDialog } from "./calendar-link-dialog";
 import { ScheduleInterviewDialog } from "./schedule-interview-dialog";
+import { InviteGuestDialog } from "./invite-guest-dialog";
 import { InterviewReportDialog } from "./interview-report-panel";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
@@ -171,6 +180,7 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
   const hire = canHire(useMember().role);
   const [confirm, setConfirm] = useState(false);
   const [reporting, setReporting] = useState(false);
+  const [inviting, setInviting] = useState(false);
   const cancel = useMutation({
     mutationFn: () => cancelInterview(i.id),
     onSuccess: () => {
@@ -293,35 +303,53 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
               <span className="truncate">Compte rendu</span>
             </button>
             {editable && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setMoving(true)}
-                  className="flex h-10 items-center justify-center gap-2 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70"
+              <button
+                type="button"
+                onClick={() => setMoving(true)}
+                className="flex h-10 items-center justify-center gap-2 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70"
+              >
+                <IconPencil className="size-4 text-muted-foreground" />
+                Modifier
+              </button>
+            )}
+            {(join || editable) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  aria-label="Plus d'actions"
+                  className="flex size-10 shrink-0 items-center justify-center rounded-full bg-page text-muted-foreground outline-none hover:bg-page/70 hover:text-foreground"
                 >
-                  <IconPencil className="size-4 text-muted-foreground" />
-                  Modifier
-                </button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    aria-label="Plus d'actions"
-                    className="flex size-10 shrink-0 items-center justify-center rounded-full bg-page text-muted-foreground outline-none hover:bg-page/70 hover:text-foreground"
-                  >
-                    <IconDots className="size-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 rounded-2xl border-0 bg-card p-1.5 shadow-soft">
-                    <DropdownMenuItem onSelect={() => setConfirm(true)} className="gap-2 rounded-xl px-3 py-2 text-destructive focus:text-destructive">
-                      <IconX className="size-4" />
-                      Annuler l&apos;entretien
+                  <IconDots className="size-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64 rounded-2xl border-0 bg-card p-1.5 shadow-soft">
+                  {join && i.location && (
+                    <DropdownMenuItem onSelect={() => copyLink(i.location!, join.internal)} className={MENU_ITEM}>
+                      <IconLink className="size-4" />
+                      Copier le lien de la visio
                     </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
+                  )}
+                  {editable && join?.internal && (
+                    <DropdownMenuItem onSelect={() => setInviting(true)} className={MENU_ITEM}>
+                      <IconUserPlus className="size-4" />
+                      Partager la visio
+                    </DropdownMenuItem>
+                  )}
+                  {editable && (
+                    <>
+                      {join && <DropdownMenuSeparator className="my-1" />}
+                      <DropdownMenuItem onSelect={() => setConfirm(true)} className={cn(MENU_ITEM, "text-destructive focus:text-destructive")}>
+                        <IconX className="size-4" />
+                        Annuler l&apos;entretien
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         </div>
       )}
 
+      {inviting && <InviteGuestDialog interview={i} open={inviting} onOpenChange={setInviting} />}
       {moving && (
         <ScheduleInterviewDialog
           open={moving}
@@ -353,6 +381,20 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
       />
     </li>
   );
+}
+
+const MENU_ITEM = "gap-2 rounded-xl px-3 py-2";
+
+/** The room's link is the candidate's: someone else is invited by their own. */
+async function copyLink(url: string, rabotka: boolean) {
+  try {
+    await navigator.clipboard.writeText(url);
+    toast.success(
+      rabotka ? "Lien copié : c'est celui du candidat. Pour un collègue, utilisez « Partager la visio »." : "Lien de la visio copié.",
+    );
+  } catch {
+    toast.error("Le lien n'a pas pu être copié.");
+  }
 }
 
 const JOIN =

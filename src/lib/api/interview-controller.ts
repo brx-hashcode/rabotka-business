@@ -70,8 +70,24 @@ class InterviewController extends BusinessBaseController {
   }
 
   /** Joining it by its link, signed out: the candidate. */
-  visioAsGuest(room: string): Promise<VisioJoin> {
-    return this.get(`/public/interviews/visio/${encodeURIComponent(room)}`);
+  /** `guestToken`: the personal link of someone the business invited; none for the candidate. */
+  visioAsGuest(room: string, guestToken?: string): Promise<VisioJoin> {
+    return this.get(`/public/interviews/visio/${encodeURIComponent(room)}${guestToken ? `?g=${encodeURIComponent(guestToken)}` : ""}`);
+  }
+
+  /** « Inviter quelqu'un »: who was invited into the visio. */
+  guests(id: string): Promise<InterviewGuest[]> {
+    return this.get(`/business/me/interviews/${encodeURIComponent(id)}/guests`);
+  }
+
+  /** A personal link by e-mail: they join under their own name, without an account. */
+  inviteGuest(id: string, input: { name: string; email: string }): Promise<InterviewGuest> {
+    return this.post(`/business/me/interviews/${encodeURIComponent(id)}/guests`, input);
+  }
+
+  /** Withdrawn: their link stops working. */
+  removeGuest(id: string, guestId: string): Promise<unknown> {
+    return this.delete(`/business/me/interviews/${encodeURIComponent(id)}/guests/${encodeURIComponent(guestId)}`);
   }
 
   invitation(token: string): Promise<InterviewInvitation> {
@@ -105,6 +121,13 @@ export const sendInterviewReport = controller.sendReport.bind(controller);
 export const interviewReportKey = (id: string) => ["interview-report", id] as const;
 export const joinVisioAsHost = controller.visioAsHost.bind(controller);
 export const joinVisioAsGuest = controller.visioAsGuest.bind(controller);
+export const listInterviewGuests = controller.guests.bind(controller);
+export const inviteInterviewGuest = controller.inviteGuest.bind(controller);
+export const removeInterviewGuest = controller.removeGuest.bind(controller);
+export const interviewGuestsKey = (id: string) => ["interview-guests", id] as const;
+
+/** Someone the business invited into an interview's visio. */
+export type InterviewGuest = { id: string; name: string; email: string; createdAt: string };
 export const answerInvitation = controller.answer.bind(controller);
 
 export const interviewsKey = ["interviews"] as const;
