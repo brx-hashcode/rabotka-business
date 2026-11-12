@@ -330,7 +330,7 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
                   {editable && join?.internal && (
                     <DropdownMenuItem onSelect={() => setInviting(true)} className={MENU_ITEM}>
                       <IconUserPlus className="size-4" />
-                      Inviter quelqu&apos;un
+                      Partager la visio
                     </DropdownMenuItem>
                   )}
                   {editable && (
@@ -390,7 +390,7 @@ async function copyLink(url: string, rabotka: boolean) {
   try {
     await navigator.clipboard.writeText(url);
     toast.success(
-      rabotka ? "Lien copié : c'est celui du candidat. Pour un collègue, utilisez « Inviter quelqu'un »." : "Lien de la visio copié.",
+      rabotka ? "Lien copié : c'est celui du candidat. Pour un collègue, utilisez « Partager la visio »." : "Lien de la visio copié.",
     );
   } catch {
     toast.error("Le lien n'a pas pu être copié.");

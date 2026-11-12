@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { IconSend2, IconX } from "@tabler/icons-react";
+import { IconLink, IconLock, IconX } from "@tabler/icons-react";
 
 import { ActionDialog } from "#/components/action-dialog";
 import { Bone } from "#/components/page-skeletons";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
 import { Input } from "#/components/ui/input";
+import { useMember } from "#/features/team/use-member";
 import { friendlyError } from "#/lib/api/friendly-error";
 import {
   interviewGuestsKey,
@@ -27,10 +28,10 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** One colour per person, in turn, so neighbours stand apart. */
 const AVATAR = [
-  "bg-chip-green text-chip-green-foreground",
   "bg-chip-sky text-chip-sky-foreground",
   "bg-chip-violet text-chip-violet-foreground",
   "bg-chip-amber text-chip-amber-foreground",
+  "bg-chip-green text-chip-green-foreground",
 ];
 
 const initials = (name: string) =>
@@ -41,18 +42,11 @@ const initials = (name: string) =>
     .map((w) => w.charAt(0).toUpperCase())
     .join("");
 
-/** « Marie Ngoma est invité », « Marie et Paul sont invités », « Marie, Paul et 2 autres sont invités ». */
-function summary(names: string[]): string {
-  const first = names.map((n) => n.split(/\s+/)[0] ?? n);
-  if (first.length === 1) return `${names[0]} est invité`;
-  if (first.length === 2) return `${first[0]} et ${first[1]} sont invités`;
-  return `${first[0]}, ${first[1]} et ${first.length - 2} autre${first.length > 3 ? "s" : ""} sont invités`;
-}
-
 /**
- * « Inviter quelqu'un » into an interview's visio: a colleague, a manager, an
- * outside expert. Each gets a personal link by e-mail and joins under their
- * own name, without an account, as the candidate does.
+ * « Partager la visio » of an interview, as a share window: add someone by
+ * e-mail (a colleague, a manager, an outside expert), see who has access,
+ * copy the link. An invited person gets a personal link and joins under
+ * their own name, without an account, as the candidate does.
  */
 export function InviteGuestDialog({
   interview: i,
@@ -60,10 +54,11 @@ export function InviteGuestDialog({
   onOpenChange,
 }: Readonly<{ interview: Interview; open: boolean; onOpenChange: (o: boolean) => void }>) {
   const queryClient = useQueryClient();
+  const { member } = useMember();
   const key = interviewGuestsKey(i.id);
   const guests = useQuery({ queryKey: key, queryFn: () => listInterviewGuests(i.id), enabled: open });
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [removing, setRemoving] = useState<InterviewGuest | null>(null);
 
   const invite = useMutation({
@@ -81,92 +76,172 @@ export function InviteGuestDialog({
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: key });
       setRemoving(null);
-      toast.success("Invitation retirée : son lien ne fonctionne plus.");
+      toast.success("Accès retiré : son lien ne fonctionne plus.");
     },
-    onError: (err) => toast.error(friendlyError(err, "L'invitation n'a pas pu être retirée.")),
+    onError: (err) => toast.error(friendlyError(err, "L'accès n'a pas pu être retiré.")),
   });
 
   const list = guests.data ?? [];
-  const full = list.length >= MAX_GUESTS && !list.some((g) => g.email === email.trim().toLowerCase());
-  const valid = name.trim().length > 0 && EMAIL.test(email.trim());
+  const typed = email.trim().toLowerCase();
+  const adding = EMAIL.test(typed);
+  const again = list.some((g) => g.email === typed);
+  const full = list.length >= MAX_GUESTS && !again;
+
+  const copy = async () => {
+    if (!i.location) return;
+    try {
+      await navigator.clipboard.writeText(i.location);
+      toast.success("Lien copié : c'est celui du candidat. Ajoutez un collègue ci-dessus pour qu'il ait le sien.");
+    } catch {
+      toast.error("Le lien n'a pas pu être copié.");
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-2rem)] rounded-3xl border-0 bg-card p-6 shadow-soft sm:max-w-md">
-        <div className="space-y-1">
-          <DialogTitle>Inviter quelqu&apos;un</DialogTitle>
+      <DialogContent className="w-[calc(100vw-2rem)] gap-6 rounded-3xl border-0 bg-card p-6 shadow-soft sm:max-w-lg sm:p-7">
+        <div className="space-y-1 pr-8">
+          <DialogTitle className="text-xl">Partager la visio</DialogTitle>
           <DialogDescription>
-            Un collègue ou un responsable rejoint la visio avec {i.candidateName}, sous son nom et sans compte. Il reçoit un lien personnel par e-mail.
+            Entretien avec {i.candidateName} · {i.jobTitle}
           </DialogDescription>
         </div>
 
+        {/* Add someone: the e-mail first; the name once it is one. */}
         <form
           className="space-y-3"
           onSubmit={(e) => {
             e.preventDefault();
-            if (valid && !full) invite.mutate();
+            if (adding && name.trim() && !full) invite.mutate();
           }}
         >
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Son nom" aria-label="Nom" maxLength={80} className="h-11 rounded-xl border-0 bg-page" />
-          <Input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Son adresse e-mail"
-            aria-label="Adresse e-mail"
-            maxLength={200}
-            className="h-11 rounded-xl border-0 bg-page"
-          />
-          <Button type="submit" className="h-11 w-full rounded-full" disabled={!valid || full} loading={invite.isPending}>
-            <IconSend2 className="size-4" />
-            Envoyer l&apos;invitation
-          </Button>
-          {full && <p className="text-center text-muted-foreground text-xs">{MAX_GUESTS} invités au plus par entretien : retirez-en un pour en ajouter.</p>}
+          <label className="block space-y-1.5">
+            <span className="font-medium text-muted-foreground text-xs">Ajouter une personne</span>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Son adresse e-mail"
+              maxLength={200}
+              autoFocus
+              className="h-12 rounded-2xl border-0 bg-page px-4"
+            />
+          </label>
+          {adding && (
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Son nom, tel qu'il s'affichera dans l'appel"
+                aria-label="Nom"
+                maxLength={80}
+                className="h-11 flex-1 rounded-2xl border-0 bg-page px-4"
+              />
+              <Button type="submit" className="h-11 rounded-full px-5" disabled={!name.trim() || full} loading={invite.isPending}>
+                {again ? "Renvoyer" : "Envoyer"}
+              </Button>
+            </div>
+          )}
+          {adding && full && <p className="text-muted-foreground text-xs">{MAX_GUESTS} invités au plus par entretien : retirez un accès pour en ajouter.</p>}
         </form>
 
-        {guests.isLoading ? (
-          <Bone className="h-10 w-40 rounded-full" />
-        ) : list.length > 0 ? (
-          <div className="flex items-center gap-3">
-            <ul className="flex shrink-0 items-center pl-2" aria-label="Invités">
-              {list.map((g, n) => (
-                <li key={g.id} className="group relative -ml-2">
-                  <span
-                    title={`${g.name} · ${g.email}`}
-                    className={cn(
-                      "flex size-10 items-center justify-center rounded-full font-semibold text-xs ring-2 ring-card",
-                      AVATAR[n % AVATAR.length],
-                    )}
-                  >
-                    {initials(g.name)}
-                  </span>
-                  <button
-                    type="button"
-                    aria-label={`Retirer ${g.name}`}
-                    title={`Retirer ${g.name}`}
-                    onClick={() => setRemoving(g)}
-                    className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-foreground text-background opacity-0 ring-2 ring-card transition-opacity focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
-                  >
-                    <IconX className="size-3" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <p className="min-w-0 text-muted-foreground text-sm">{summary(list.map((g) => g.name))}</p>
+        <section className="space-y-2">
+          <h3 className="font-semibold text-sm">Personnes ayant accès</h3>
+          <ul className="space-y-1">
+            {member && (
+              <Person initials={initials(member.name)} tone="bg-ink text-white" name={`${member.name} (vous)`} detail={member.email} role="Organisateur" />
+            )}
+            <Person initials={initials(i.candidateName)} tone="bg-chip-green text-chip-green-foreground" name={i.candidateName} detail="Par le lien de son invitation" role="Candidat" />
+            {guests.isLoading ? (
+              <li>
+                <Bone className="h-12 w-full rounded-2xl" />
+              </li>
+            ) : (
+              list.map((g, n) => (
+                <Person
+                  key={g.id}
+                  initials={initials(g.name)}
+                  tone={AVATAR[n % AVATAR.length] ?? ""}
+                  name={g.name}
+                  detail={g.email}
+                  role="Invité"
+                  onRemove={() => setRemoving(g)}
+                />
+              ))
+            )}
+          </ul>
+        </section>
+
+        <section className="space-y-2">
+          <h3 className="font-semibold text-sm">Accès</h3>
+          <div className="flex items-start gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-page">
+              <IconLock className="size-4 text-muted-foreground" />
+            </span>
+            <div className="min-w-0 pt-0.5">
+              <p className="font-medium text-sm">Sur invitation</p>
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                Chacun entre avec son propre lien, sans compte, de la veille de l&apos;entretien à 2 heures après la fin. Votre équipe rejoint depuis son espace.
+              </p>
+            </div>
           </div>
-        ) : null}
+        </section>
+
+        <div className="flex items-center justify-between gap-3">
+          <Button type="button" variant="ghost" className="h-11 rounded-full bg-page px-5" onClick={() => void copy()} disabled={!i.location}>
+            <IconLink className="size-4" />
+            Copier le lien
+          </Button>
+          <Button type="button" className="h-11 rounded-full px-7" onClick={() => onOpenChange(false)}>
+            OK
+          </Button>
+        </div>
 
         <ActionDialog
           open={removing !== null}
           onOpenChange={(o) => !o && setRemoving(null)}
           tone="warning"
-          title={removing ? `Retirer l'invitation de ${removing.name} ?` : ""}
-          description="Son lien ne fonctionnera plus : il ne pourra pas rejoindre la visio. Vous pourrez l'inviter à nouveau."
-          confirmLabel="Retirer l'invitation"
+          title={removing ? `Retirer l'accès de ${removing.name} ?` : ""}
+          description="Son lien ne fonctionnera plus : il ne pourra pas rejoindre la visio. Vous pourrez l'ajouter à nouveau."
+          confirmLabel="Retirer l'accès"
           onConfirm={() => removing && remove.mutate(removing.id)}
           pending={remove.isPending}
         />
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** One row of « Personnes ayant accès »: who, how they join, and their place in the call. */
+function Person({
+  initials: letters,
+  tone,
+  name,
+  detail,
+  role,
+  onRemove,
+}: Readonly<{ initials: string; tone: string; name: string; detail: string; role: string; onRemove?: () => void }>) {
+  return (
+    <li className="flex items-center gap-3 rounded-2xl px-1 py-1.5">
+      <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-full font-semibold text-xs", tone)}>{letters}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate font-medium text-sm">{name}</span>
+        <span className="block truncate text-muted-foreground text-xs">{detail}</span>
+      </span>
+      <span className="shrink-0 text-muted-foreground text-xs">{role}</span>
+      {onRemove ? (
+        <button
+          type="button"
+          aria-label={`Retirer l'accès de ${name}`}
+          title="Retirer l'accès"
+          onClick={onRemove}
+          className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-page hover:text-destructive"
+        >
+          <IconX className="size-4" />
+        </button>
+      ) : (
+        <span className="size-8 shrink-0" aria-hidden />
+      )}
+    </li>
   );
 }
