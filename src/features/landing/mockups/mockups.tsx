@@ -326,7 +326,7 @@ function ApplicantsMockup() {
 function InterviewsMockup() {
   return (
     <div className="relative pb-8 md:pr-20">
-      <MockupFrame label="Aperçu : une invitation à un entretien confirmée par le candidat, et les agendas où elle apparaît." title="Entretiens">
+      <MockupFrame label="Aperçu : des entretiens confirmés, dont un en visio dans Rabotka, et le compte rendu rédigé à partir des notes." title="Entretiens">
         <div className="space-y-3">
           <div className="flex items-center gap-3 rounded-2xl bg-page p-3">
             <span className="flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-card">
@@ -351,10 +351,13 @@ function InterviewsMockup() {
               <p className="truncate font-medium text-sm">Jean-Baptiste Kiminou · Vendeur</p>
               <p className="flex items-center gap-1 text-muted-foreground text-xs">
                 <IconVideo className="size-3.5" />
-                15 h 30 · En visio
+                15 h 30 · Visio dans Rabotka
               </p>
             </div>
-            <span className="rounded-full bg-chip-amber px-2.5 py-1 font-medium text-chip-amber-foreground text-xs">Autre créneau</span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 font-medium text-primary-foreground text-xs">
+              <IconVideo className="size-3.5" />
+              Rejoindre
+            </span>
           </div>
           <div className="flex items-center gap-3 rounded-2xl bg-page p-3">
             <span className="flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-card">
@@ -371,19 +374,26 @@ function InterviewsMockup() {
           </div>
         </div>
       </MockupFrame>
-      <FloatCard className="right-0 bottom-0 hidden space-y-2 md:block">
+      <FloatCard className="right-0 bottom-0 hidden w-60 space-y-2 md:block">
         <p className="flex items-center gap-1.5 font-medium text-xs">
-          <IconCalendarEvent className="size-3.5" />
-          Dans votre agenda
+          <IconFileText className="size-3.5" />
+          Compte rendu · Grâce Loubaki
         </p>
-        <div className="space-y-1.5">
-          {["Google Agenda", "Outlook", "Apple Calendrier"].map((a) => (
-            <p key={a} className="flex items-center gap-2 rounded-xl bg-page px-2.5 py-1.5 text-[11px]">
+        <p className="text-[11px] text-muted-foreground leading-snug">
+          Accueil soigné, à l&apos;aise avec la caisse. Disponible dès lundi.
+        </p>
+        <div className="space-y-1">
+          {["Expérience en grande surface", "Rendu de monnaie rapide"].map((x) => (
+            <p key={x} className="flex items-center gap-2 rounded-xl bg-page px-2.5 py-1.5 text-[11px]">
               <IconCheck className="size-3.5 text-whatsapp-dark" />
-              {a}
+              {x}
             </p>
           ))}
         </div>
+        <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <IconCalendarEvent className="size-3.5" />
+          Aussi dans Google Agenda, Outlook, Apple Calendrier
+        </p>
       </FloatCard>
     </div>
   );

@@ -16,7 +16,7 @@ export function generateMetadata(): Promise<Metadata> {
   return marketingMetadata({
     title: "Rabotka Business — l'ATS nouvelle génération pour recruter en Afrique",
     description:
-      "Logiciel de recrutement complet : offres rédigées et diffusées partout, CV lus et classés pour chaque poste, pipeline suivi en équipe, entretiens synchronisés avec votre agenda.",
+      "Logiciel de recrutement complet : offres rédigées et diffusées partout, CV lus et classés pour chaque poste, pipeline suivi en équipe, entretiens en visio et comptes rendus partagés.",
     path: "/",
   });
 }
