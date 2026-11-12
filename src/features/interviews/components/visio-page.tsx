@@ -215,7 +215,8 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
             )}
           </div>
         )}
-        {v?.interviewId && (
+        {/* Ended: « Ouvrir le compte rendu » below says the same. */}
+        {v?.interviewId && !ended && (
           <Button type="button" className="h-10 shrink-0 rounded-full px-4 text-sm" onClick={() => setReportOpen(true)}>
             <IconNotes className="size-4" />
             Notes et compte rendu
