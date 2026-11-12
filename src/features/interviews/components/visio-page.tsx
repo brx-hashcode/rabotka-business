@@ -18,6 +18,7 @@ import { cn } from "#/lib/utils";
 import { InterviewReportDialog } from "./interview-report-panel";
 import { GuestTranscription, HostTranscription } from "./call-transcription";
 import { InviteGuestDialog } from "./invite-guest-dialog";
+import { VisioWaiting } from "./visio-waiting";
 
 /**
  * The visible screen under the status-bar strip of the root layout: `dvh`
@@ -328,6 +329,11 @@ export function VisioPage({ room, guestToken }: Readonly<{ room: string; guestTo
     setLeft(true);
     window.scrollTo(0, 0);
   };
+
+  // Too early: the interview, when the visio opens, how to get ready.
+  if (v?.provider === "waiting") {
+    return <VisioWaiting v={v} onOpen={() => void query.refetch()} />;
+  }
 
   if (v?.provider === "jaas" && !left) {
     return (

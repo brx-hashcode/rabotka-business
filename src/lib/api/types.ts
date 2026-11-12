@@ -568,7 +568,13 @@ export type VisioJoin = {
   endedAt?: string | null;
   /** The host only: the « Compte rendu » beside the call. */
   interviewId?: string;
-} & ({ provider: "jaas"; appId: string; roomName: string; jwt: string } | { provider: "jitsi"; url: string });
+  businessLogoUrl?: string | null;
+} & (
+  | { provider: "jaas"; appId: string; roomName: string; jwt: string }
+  | { provider: "jitsi"; url: string }
+  /** A guest's link before it opens (the day before): when, and no token yet. */
+  | { provider: "waiting"; opensAt: string }
+);
 
 export type InterviewInvitation = {
   businessName: string;
