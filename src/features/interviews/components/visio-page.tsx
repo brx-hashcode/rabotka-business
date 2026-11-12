@@ -12,12 +12,13 @@ import { BusinessLockup } from "#/components/business-lockup";
 import { Bone } from "#/components/page-skeletons";
 import { Button } from "#/components/ui/button";
 import { friendlyError } from "#/lib/api/friendly-error";
-import { endInterview, interviewsKey, joinVisioAsGuest, joinVisioAsHost } from "#/lib/api/interview-controller";
+import { endInterview, interviewsKey, joinVisioAsGuest, joinVisioAsHost, markCallStarted } from "#/lib/api/interview-controller";
 import type { VisioJoin } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { InterviewReportDialog } from "./interview-report-panel";
 import { GuestTranscription, HostTranscription } from "./call-transcription";
 import { InviteGuestDialog } from "./invite-guest-dialog";
+import { VisioWaiting } from "./visio-waiting";
 
 /**
  * The visible screen under the status-bar strip of the root layout: `dvh`
@@ -89,7 +90,10 @@ function Call({
 }
 
 /** What the page asks of the running call: only to end it for everyone. */
-type CallApi = { executeCommand: (command: string) => void };
+type CallApi = {
+  executeCommand: (command: string) => void;
+  addListener: (event: string, listener: () => void) => void;
+};
 
 /** Left, ended, or the public Jitsi fallback: a small card instead of the call. */
 function Notice({
@@ -265,6 +269,9 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
                 attempt={attempt}
                 onApi={(a) => {
                   api.current = a;
+                  // In the call: its real start, for the « Compte rendu » (kept once).
+                  const id = v.interviewId;
+                  if (id) a.addListener("videoConferenceJoined", () => void markCallStarted(id).catch(() => undefined));
                 }}
                 onLeave={() => {
                   setLeft(true);
@@ -328,6 +335,11 @@ export function VisioPage({ room, guestToken }: Readonly<{ room: string; guestTo
     setLeft(true);
     window.scrollTo(0, 0);
   };
+
+  // Too early: the interview, when the visio opens, how to get ready.
+  if (v?.provider === "waiting") {
+    return <VisioWaiting v={v} onOpen={() => void query.refetch()} />;
+  }
 
   if (v?.provider === "jaas" && !left) {
     return (

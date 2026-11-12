@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IconCalendarEvent,
@@ -70,6 +71,25 @@ export function InterviewsPage() {
   const past = useQuery({ queryKey: [...interviewsKey, "past"], queryFn: () => listInterviews({ scope: "past" }), enabled: tab === "past" });
   const query = tab === "upcoming" ? upcoming : past;
   const items = query.data ?? [];
+
+  // Opened from a notification on one interview: its tab, then its card in view.
+  const focusId = useSearchParams().get("entretien");
+  const inUpcoming = (upcoming.data ?? []).some((i) => i.id === focusId);
+  useEffect(() => {
+    if (!focusId || !upcoming.isSuccess) return;
+    const want = inUpcoming ? "upcoming" : "past";
+    if (tab !== want) void setTab(want);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the tab is chosen once the list is in
+  }, [focusId, upcoming.isSuccess, inUpcoming]);
+  const shown = items.some((i) => i.id === focusId);
+  useEffect(() => {
+    if (!focusId || !shown) return;
+    const t = setTimeout(
+      () => document.getElementById(`entretien-${focusId}`)?.scrollIntoView({ behavior: "smooth", block: "center" }),
+      150,
+    );
+    return () => clearTimeout(t);
+  }, [focusId, shown]);
 
   const live = (upcoming.data ?? []).filter((i) => i.status !== "CANCELLED");
   const count = (status: Interview["status"]) => live.filter((i) => i.status === status).length;
@@ -159,7 +179,7 @@ export function InterviewsPage() {
           // Each card carries its date: all of them, in date order, no day headings.
           <ul className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
             {items.map((i) => (
-              <InterviewCard key={i.id} interview={i} past={tab === "past"} />
+              <InterviewCard key={i.id} interview={i} past={tab === "past"} focused={i.id === focusId} />
             ))}
           </ul>
         )}
@@ -173,7 +193,7 @@ const initials = (name: string) => {
   return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase() || "?";
 };
 
-function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; past: boolean }>) {
+function InterviewCard({ interview: i, past, focused = false }: Readonly<{ interview: Interview; past: boolean; focused?: boolean }>) {
   const queryClient = useQueryClient();
   const [moving, setMoving] = useState(false);
   // Moving or cancelling is the hiring side's: an Évaluateur only reads.
@@ -205,7 +225,10 @@ function InterviewCard({ interview: i, past }: Readonly<{ interview: Interview; 
   const options = i.options ?? [];
 
   return (
-    <li className={cn("flex h-full flex-col gap-4 rounded-3xl bg-card p-5", cancelled && "opacity-60")}>
+    <li
+      id={`entretien-${i.id}`}
+      className={cn("flex h-full scroll-mt-24 flex-col gap-4 rounded-3xl bg-card p-5", cancelled && "opacity-60", focused && "ring-2 ring-whatsapp-dark")}
+    >
       <div className="flex items-start gap-3.5">
         <div className="flex w-14 shrink-0 flex-col items-center rounded-2xl bg-brand-lime py-2 text-[#0f2414]">
           <span className="font-semibold text-xl leading-none">{at.getDate()}</span>

@@ -60,7 +60,9 @@ export function AccountMenu() {
   });
   // A team member is not the account's profile: its own name and address.
   const asMember = member && !member.isOwner;
-  const name = asMember ? member.name : user ? `${user.first_name} ${user.last_name}`.trim() : "";
+  // The person, not the organisation: the holder's own row names them too.
+  const profileName = user ? `${user.first_name} ${user.last_name}`.trim() : "";
+  const name = member?.name?.trim() || profileName;
   // After a reload the session cache is empty: the owner comes with the organisation.
   const owner = business?.owner;
   const person = name || (owner ? `${owner.firstName} ${owner.lastName}`.trim() : "");

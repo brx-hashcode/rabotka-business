@@ -549,6 +549,10 @@ export type InterviewReportBody = {
 export type InterviewReport = {
   notes: string;
   report: InterviewReportBody | null;
+  /** Written in the background right now: a notification follows. */
+  writing?: boolean;
+  /** Why the last writing failed, until the next one. */
+  writingError?: string | null;
   generatedAt: string | null;
   sentAt: string | null;
   updatedAt: string | null;
@@ -568,7 +572,13 @@ export type VisioJoin = {
   endedAt?: string | null;
   /** The host only: the « Compte rendu » beside the call. */
   interviewId?: string;
-} & ({ provider: "jaas"; appId: string; roomName: string; jwt: string } | { provider: "jitsi"; url: string });
+  businessLogoUrl?: string | null;
+} & (
+  | { provider: "jaas"; appId: string; roomName: string; jwt: string }
+  | { provider: "jitsi"; url: string }
+  /** A guest's link before it opens (the day before): when, and no token yet. */
+  | { provider: "waiting"; opensAt: string }
+);
 
 export type InterviewInvitation = {
   businessName: string;

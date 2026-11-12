@@ -59,7 +59,12 @@ type Props = {
 export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: Readonly<Props>) {
   const queryClient = useQueryClient();
   const key = interviewReportKey(interviewId);
-  const query = useQuery({ queryKey: key, queryFn: () => getInterviewReport(interviewId) });
+  const query = useQuery({
+    queryKey: key,
+    queryFn: () => getInterviewReport(interviewId),
+    // Written in the background: looked at again until it is there (the bell tells too).
+    refetchInterval: (q) => (q.state.data?.writing ? 3000 : false),
+  });
   const saved = query.data;
   const [draft, setDraft] = useState<string | null>(null);
   const notes = draft ?? saved?.notes ?? "";
@@ -90,6 +95,7 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
     onSuccess: (data) => {
       store(data);
       setEditing(null);
+      toast.success("Rédaction lancée : vous pouvez fermer cette fenêtre, une notification vous préviendra.");
     },
     onError: (err) => toast.error(friendlyError(err, "Le compte rendu n'a pas pu être rédigé.")),
   });
@@ -105,6 +111,8 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
 
   const dictation = useDictation((text) => setDraft((d) => joinText(d ?? saved?.notes ?? "", text).slice(0, MAX_NOTES)));
   const report = saved?.report ?? null;
+  // In the background (the server's mark), or the request that starts it.
+  const writing = Boolean(saved?.writing) || write.isPending;
   // Both sides' speech, merged by time, when the interview was transcribed.
   const transcript = useQuery({
     queryKey: interviewTranscriptKey(interviewId),
@@ -230,9 +238,9 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
               Copier
             </Button>
           )}
-          <Button type="button" className="h-11 flex-1 rounded-full text-sm sm:h-11" disabled={!enough} loading={write.isPending} onClick={() => write.mutate()}>
-            {report ? <IconRefresh className="size-4" /> : <IconFileText className="size-4" />}
-            {report ? "Réécrire le compte rendu" : "Rédiger le compte rendu"}
+          <Button type="button" className="h-11 flex-1 rounded-full text-sm sm:h-11" disabled={!enough || writing} loading={write.isPending} onClick={() => write.mutate()}>
+            {report ? <IconRefresh className={cn("size-4", writing && "animate-spin")} /> : <IconFileText className="size-4" />}
+            {writing ? "Rédaction en cours…" : report ? "Réécrire le compte rendu" : "Rédiger le compte rendu"}
           </Button>
         </div>
         <p className="text-center text-muted-foreground text-xs">
@@ -247,8 +255,14 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
 
       {/* Right: the report, read, edited, sent or printed. */}
       <section className="flex min-h-0 flex-col rounded-2xl bg-page lg:overflow-hidden">
-        {write.isPending && !report ? (
-          <div className="space-y-3 p-5">
+        {!writing && saved?.writingError && (
+          <p className="mx-5 mt-4 rounded-xl bg-destructive/10 px-3 py-2 text-destructive text-sm" role="alert">
+            {saved.writingError}
+          </p>
+        )}
+        {writing && !report ? (
+          <div className="space-y-4 p-5">
+            <WritingNotice />
             <Bone className="h-5 w-1/3" />
             <Bone className="h-24 w-full rounded-xl" />
             <Bone className="h-16 w-full rounded-xl" />
@@ -291,7 +305,12 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
                 </div>
               )}
             </div>
-            <div className={cn("min-h-0 flex-1 px-5 pb-5 lg:overflow-y-auto", write.isPending && "pointer-events-none opacity-50")}>
+            {writing && (
+              <div className="px-5 pb-3">
+                <WritingNotice again />
+              </div>
+            )}
+            <div className={cn("min-h-0 flex-1 px-5 pb-5 lg:overflow-y-auto", writing && "pointer-events-none opacity-50")}>
               {editing ? (
                 <ReportEditor value={editing} onChange={setEditing} onCancel={() => setEditing(null)} onSave={() => edit.mutate(editing)} pending={edit.isPending} />
               ) : (
@@ -432,6 +451,24 @@ function Conversation({
         {consent ? ` ${CONSENT_LINE[consent] ?? ""}` : live ? " Le candidat n'a pas encore répondu." : ""}
       </p>
     </>
+  );
+}
+
+/** While the report is written off the page: nobody has to wait in front of it. */
+function WritingNotice({ again = false }: Readonly<{ again?: boolean }>) {
+  return (
+    <div className="flex items-start gap-3 rounded-2xl bg-card px-4 py-3" role="status" aria-live="polite">
+      <span className="relative mt-1 flex size-2.5 shrink-0">
+        <span className="absolute inline-flex size-full animate-ping rounded-full bg-whatsapp/60" />
+        <span className="relative inline-flex size-2.5 rounded-full bg-whatsapp" />
+      </span>
+      <div className="text-sm">
+        <p className="font-medium">{again ? "Nouvelle rédaction en cours…" : "Rédaction en cours…"}</p>
+        <p className="text-muted-foreground text-xs">
+          Vous pouvez fermer cette fenêtre et continuer : une notification vous prévient dès que le compte rendu est prêt.
+        </p>
+      </div>
+    </div>
   );
 }
 
