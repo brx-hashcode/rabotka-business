@@ -21,6 +21,7 @@ const K = {
   stats: ["business", "me", "stats"],
   subscription: ["business", "me", "subscription"],
   interviews: ["interviews"],
+  interviewReports: ["interview-report"],
   opinions: ["offer-opinions"],
   team: ["candidate-team"],
   screenings: ["cv-screenings"],
@@ -72,6 +73,10 @@ export function refreshKeysFor(n: PushedNotification): QueryKey[] {
     case "INTERVIEW_CANCELLED":
     case "INTERVIEW_INVITED":
       add(K.interviews, K.offers, K.outsiders);
+      break;
+    // Written in the background: the open « Compte rendu » fills in.
+    case "INTERVIEW_REPORT_READY":
+      add(K.interviewReports, K.interviews);
       break;
     case "CV_SCREENING_DONE": {
       const screening = id(n, "screeningId");

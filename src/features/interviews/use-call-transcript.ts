@@ -47,7 +47,7 @@ export function useCallTranscript(on: boolean, send: (lines: TranscriptLineInput
     { meter: false },
   );
 
-  const { supported, listening, start, stop } = speech;
+  const { supported, listening, error, start, stop } = speech;
   useEffect(() => {
     if (!on || !supported) return;
     if (!listening) void start();
@@ -63,5 +63,5 @@ export function useCallTranscript(on: boolean, send: (lines: TranscriptLineInput
     // eslint-disable-next-line react-hooks/exhaustive-deps -- stopped when switched off
   }, [on]);
 
-  return { supported, listening };
+  return { supported, listening, error };
 }

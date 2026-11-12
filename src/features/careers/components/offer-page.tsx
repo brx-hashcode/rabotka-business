@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   IconArrowLeft,
   IconArrowRight,
@@ -11,6 +12,7 @@ import {
   IconCalendarEvent,
   IconCash,
   IconMapPin,
+  IconShare,
   type Icon as TablerIcon,
 } from "@tabler/icons-react";
 
@@ -24,7 +26,42 @@ import { CareersShell, CompanyLogo, offerPlace } from "./careers-shell";
 const longDate = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
 
-/** Step 1 of an application from outside Rabotka: the offer, and « Postuler ». */
+type Offer = NonNullable<Awaited<ReturnType<typeof getCareersOffer>>>["offer"];
+
+/** The offer's essentials, once: on the chips under the title, and beside « Postuler ». */
+function facts(o: Offer): { icon: TablerIcon; label: string; text: string }[] {
+  return [
+    { icon: IconMapPin, label: "Lieu", text: offerPlace(o) },
+    { icon: IconBriefcase, label: "Type", text: `${EMPLOYMENT_LABEL[o.employmentType]} · ${o.quantity} poste${o.quantity > 1 ? "s" : ""}` },
+    {
+      icon: IconCash,
+      label: "Rémunération",
+      text: o.amount === null ? "À discuter" : `${fcfa(o.amount)}${o.paymentFlow ? ` ${PAYMENT_SUFFIX[o.paymentFlow]}` : ""}`,
+    },
+    ...(o.closesAt ? [{ icon: IconCalendarEvent, label: "Candidatures", text: `Jusqu'au ${longDate(o.closesAt)}` }] : []),
+  ].filter((r) => r.text);
+}
+
+/** The phone's own share sheet, or the link copied where there is none. */
+async function share(title: string) {
+  const url = window.location.href.split("?")[0] ?? window.location.href;
+  try {
+    if (navigator.share) {
+      await navigator.share({ title, url });
+      return;
+    }
+    await navigator.clipboard.writeText(url);
+    toast.success("Lien de l'offre copié.");
+  } catch {
+    // Share sheet closed: nothing to say.
+  }
+}
+
+/**
+ * Step 1 of an application from outside Rabotka: the offer, and « Postuler ».
+ * The company's careers page width; the offer in one card, under its logo;
+ * « Postuler » stays at the bottom of the screen.
+ */
 export function OfferPage({
   slug,
   reference,
@@ -49,83 +86,108 @@ export function OfferPage({
       // Private browsing: the application simply says « direct ».
     }
   }, [sourceParam]);
-  const rows: { icon: TablerIcon; label: string; text: string }[] = o
-    ? [
-        { icon: IconMapPin, label: "Lieu", text: offerPlace(o) },
-        { icon: IconBriefcase, label: "Type", text: `${EMPLOYMENT_LABEL[o.employmentType]} · ${o.quantity} poste${o.quantity > 1 ? "s" : ""}` },
-        ...(o.closesAt ? [{ icon: IconCalendarEvent, label: "Candidatures", text: `Jusqu'au ${longDate(o.closesAt)}` }] : []),
-        {
-          icon: IconCash,
-          label: "Rémunération",
-          text: o.amount === null ? "À discuter" : `${fcfa(o.amount)}${o.paymentFlow ? ` ${PAYMENT_SUFFIX[o.paymentFlow]}` : ""}`,
-        },
-      ].filter((r) => r.text)
-    : [];
+  const apply = `/carrieres/${slug}/${reference}/postuler`;
+
+  if (query.isLoading) {
+    return (
+      <CareersShell>
+        <div className="space-y-4 rounded-3xl bg-card p-6 sm:p-10">
+          <Bone className="h-32 w-full rounded-2xl" />
+          <Bone className="h-8 w-2/3" />
+          <Bone className="h-40 w-full rounded-2xl" />
+        </div>
+      </CareersShell>
+    );
+  }
+  if (!page || !o) {
+    return (
+      <CareersShell>
+        <section className="space-y-3 rounded-3xl bg-card p-6 text-center sm:p-10">
+          <h1 className="font-semibold text-lg">Cette offre n&apos;est plus ouverte</h1>
+          <p className="text-muted-foreground text-sm">Elle a peut-être été pourvue ou retirée.</p>
+          <Link href={`/carrieres/${slug}`} className="inline-block font-medium text-sm underline underline-offset-2">
+            Voir les autres offres
+          </Link>
+        </section>
+      </CareersShell>
+    );
+  }
+
+  const company = page.company;
+  const rows = facts(o);
 
   return (
     <CareersShell>
-      <section className="space-y-7 rounded-3xl bg-card p-6 sm:p-10">
-        {query.isLoading ? (
-          <div className="space-y-4">
-            <Bone className="h-6 w-2/3" />
-            <Bone className="h-24 w-full rounded-2xl" />
-            <Bone className="h-12 w-full rounded-full" />
-          </div>
-        ) : !page || !o ? (
-          <div className="space-y-3 text-center">
-            <h1 className="font-semibold text-lg">Cette offre n&apos;est plus ouverte</h1>
-            <p className="text-muted-foreground text-sm">Elle a peut-être été pourvue ou retirée.</p>
-            <Link href={`/carrieres/${slug}`} className="inline-block font-medium text-sm underline underline-offset-2">
-              Voir les autres offres
-            </Link>
-          </div>
-        ) : (
-          <>
-            <Link href={`/carrieres/${slug}`} className="inline-flex items-center gap-1.5 font-medium text-foreground/70 text-sm hover:text-foreground">
-              <IconArrowLeft className="size-4" />
-              Toutes les offres
-            </Link>
-
-            <div className="flex items-center gap-4">
-              <CompanyLogo company={page.company} />
-              <div className="min-w-0">
-                <p className="truncate font-medium text-foreground/70">{page.company.name} recrute</p>
-                <h1 className="font-semibold text-2xl leading-tight tracking-tight sm:text-3xl">{o.title}</h1>
-              </div>
+      <div className="space-y-6 pb-24">
+        <article className="space-y-10 rounded-3xl bg-card p-6 sm:p-10">
+          <header className="space-y-5">
+            {/* Back, and who recruits, on one line; the title has the whole width. */}
+            <div className="flex items-center gap-3">
+              <Link
+                href={`/carrieres/${slug}`}
+                aria-label={`Toutes les offres de ${company.name}`}
+                title={`Toutes les offres de ${company.name}`}
+                className="flex size-10 shrink-0 items-center justify-center rounded-full bg-page text-foreground transition-colors hover:bg-page/70"
+              >
+                <IconArrowLeft className="size-5" />
+              </Link>
+              <Link href={`/carrieres/${slug}`} className="flex min-w-0 items-center gap-2.5 rounded-full py-1 pr-3 transition-colors hover:bg-page">
+                <CompanyLogo company={company} size="sm" />
+                <span className="min-w-0 truncate text-sm">
+                  <span className="font-semibold">{company.name}</span>
+                  <span className="text-muted-foreground"> recrute</span>
+                </span>
+              </Link>
             </div>
-
-            <ul className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <h1 className="font-semibold text-2xl leading-tight tracking-tight sm:text-3xl">{o.title}</h1>
+              <p className="text-muted-foreground text-sm">
+                Publiée le {longDate(o.publishedAt)}
+                {o.categoryName ? ` · ${o.categoryName}` : ""}
+              </p>
+            </div>
+            <ul className="flex flex-wrap gap-2">
               {rows.map((r) => (
-                <li key={r.label} className="flex items-center gap-3 rounded-2xl bg-page p-3">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-lime text-[#0f2414]">
-                    <r.icon className="size-5" />
+                <li key={r.label} className="inline-flex items-center gap-2 rounded-full bg-page py-1.5 pr-3.5 pl-2 text-sm">
+                  <span className="flex size-7 items-center justify-center rounded-full bg-brand-lime text-[#0f2414]">
+                    <r.icon className="size-4" />
                   </span>
-                  <span className="min-w-0">
-                    <span className="block text-foreground/60 text-xs">{r.label}</span>
-                    <span className="block font-medium text-sm">{r.text}</span>
-                  </span>
+                  <span className="sr-only">{r.label} : </span>
+                  {r.text}
                 </li>
               ))}
             </ul>
+          </header>
 
-            <div className="space-y-3">
-              <h2 className="font-semibold text-lg">Description</h2>
-              <DescriptionText text={o.description} className="text-[15px]" />
-            </div>
+          <section className="space-y-3">
+            <h2 className="font-semibold text-xl">Le poste</h2>
+            <DescriptionText text={o.description} className="text-[15px]" />
+          </section>
 
-            {/* Stays in sight on a long offer. */}
-            <div className="sticky bottom-4">
-              <Link
-                href={`/carrieres/${slug}/${reference}/postuler`}
-                className="flex h-14 items-center justify-center gap-2 rounded-full bg-ink font-semibold text-[17px] text-white shadow-soft"
-              >
-                Postuler à cette offre
-                <IconArrowRight className="size-5" />
-              </Link>
-            </div>
-          </>
-        )}
-      </section>
+        </article>
+      </div>
+
+      {/* « Postuler » at the bottom of the screen, never over the text's last lines. */}
+      <div className="fixed inset-x-0 bottom-0 z-30 bg-linear-to-t from-page via-page/95 to-transparent px-4 pt-6 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="mx-auto flex max-w-2xl gap-2">
+          <button
+            type="button"
+            aria-label="Partager l'offre"
+            title="Partager l'offre"
+            onClick={() => void share(o.title)}
+            className="flex size-14 shrink-0 items-center justify-center rounded-full bg-card shadow-soft transition-colors hover:bg-card/80"
+          >
+            <IconShare className="size-5" />
+          </button>
+          <Link
+            href={apply}
+            className="flex h-14 flex-1 items-center justify-center gap-2 rounded-full bg-ink font-semibold text-[17px] text-white shadow-soft transition-opacity hover:opacity-90"
+          >
+            Postuler à cette offre
+            <IconArrowRight className="size-5" />
+          </Link>
+        </div>
+      </div>
     </CareersShell>
   );
 }

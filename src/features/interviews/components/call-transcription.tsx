@@ -18,6 +18,7 @@ import {
 } from "#/lib/api/interview-controller";
 import { cn } from "#/lib/utils";
 import { useCallTranscript } from "../use-call-transcript";
+import { speechErrorText } from "../use-dictation";
 
 const CONSENT_TEXT: Record<string, string> = {
   ACCEPTED: "Le candidat a accepté",
@@ -66,6 +67,7 @@ export function HostTranscription({ interviewId, inCall }: Readonly<{ interviewI
       {on && (
         <span className="hidden min-w-0 items-center gap-2 text-muted-foreground text-xs md:flex">
           {inCall && speech.listening && <Live />}
+          {inCall && speech.error && <span className="text-destructive">{speechErrorText(speech.error)}</span>}
           <span className="truncate">{consent ? CONSENT_TEXT[consent] : "En attente de l'accord du candidat"}</span>
         </span>
       )}
@@ -111,6 +113,15 @@ export function GuestTranscription({ room, guestToken, inCall }: Readonly<{ room
 
   // A browser that cannot transcribe has nothing to ask: only the recruiter is transcribed.
   if (!speech.supported || !inCall || !transcribe) return null;
+  if (known === "ACCEPTED" && speech.error) {
+    return (
+      <div className="absolute inset-x-0 top-2 z-10 flex justify-center px-3">
+        <span className="max-w-md rounded-2xl bg-card/95 px-3 py-2 text-center text-xs shadow-soft" role="alert">
+          {speechErrorText(speech.error)} Votre voix n&apos;est pas transcrite : essayez Chrome ou Safari.
+        </span>
+      </div>
+    );
+  }
   if (known === "ACCEPTED") {
     return (
       <div className="pointer-events-none absolute inset-x-0 top-2 z-10 flex justify-center px-3">

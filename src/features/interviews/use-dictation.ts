@@ -41,6 +41,8 @@ export function useDictation(
   /** The microphone's level, for the meter; the recognition has no level of its own. */
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const [startedAt, setStartedAt] = useState(0);
+  /** Why the browser stopped listening (« network », « audio-capture »…): none while it works. */
+  const [error, setError] = useState<string | null>(null);
   const ref = useRef<Recognition | null>(null);
   const wanted = useRef(false);
   const audio = useRef<{ stream: MediaStream; context: AudioContext } | null>(null);
@@ -97,6 +99,7 @@ export function useDictation(
     r.onerror = (e) => {
       if (e.error === "no-speech" || e.error === "aborted") return;
       wanted.current = false;
+      setError(e.error);
       if (e.error === "not-allowed") toast.error("Autorisez le micro dans votre navigateur pour dicter.");
     };
     ref.current = r;
@@ -106,6 +109,7 @@ export function useDictation(
   const start = async () => {
     const Klass = recognitionClass();
     if (!Klass) return;
+    setError(null);
     wanted.current = true;
     setListening(true);
     setStartedAt(Date.now());
@@ -131,5 +135,15 @@ export function useDictation(
     setInterim("");
     release();
   };
-  return { supported, listening, interim, analyser, startedAt, start, stop };
+  return { supported, listening, interim, analyser, startedAt, error, start, stop };
+}
+
+/** What to tell someone whose browser stopped transcribing them. */
+export function speechErrorText(error: string): string {
+  if (error === "not-allowed" || error === "service-not-allowed") {
+    return "Le micro est refusé à la transcription : autorisez-le dans votre navigateur.";
+  }
+  if (error === "audio-capture") return "Votre micro n'est pas disponible pour la transcription.";
+  if (error === "network") return "Le service vocal de votre navigateur ne répond pas.";
+  return "La transcription s'est arrêtée sur ce navigateur.";
 }
