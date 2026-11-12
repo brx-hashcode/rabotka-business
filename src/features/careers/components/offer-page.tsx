@@ -11,8 +11,6 @@ import {
   IconBriefcase,
   IconCalendarEvent,
   IconCash,
-  IconCheck,
-  IconExternalLink,
   IconMapPin,
   IconShare,
   type Icon as TablerIcon,
@@ -24,7 +22,7 @@ import { EMPLOYMENT_LABEL, PAYMENT_SUFFIX } from "#/features/offers/offer-labels
 import { candidateSource, SOURCE_KEY } from "#/features/careers/candidate-source";
 import { getCareersOffer } from "#/lib/api/careers-controller";
 import { CareersShell, offerPlace } from "./careers-shell";
-import { CompanyHero, websiteHref } from "./company-hero";
+import { CompanyHero } from "./company-hero";
 
 const longDate = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
@@ -118,7 +116,6 @@ export function OfferPage({
 
   const company = page.company;
   const rows = facts(o);
-  const benefits = company.benefits?.filter((b) => b.trim()) ?? [];
 
   return (
     <CareersShell>
@@ -176,37 +173,6 @@ export function OfferPage({
             <DescriptionText text={o.description} className="text-[15px]" />
           </section>
 
-          {benefits.length > 0 && (
-            <section className="space-y-3">
-              <h2 className="font-semibold text-xl">Pourquoi nous rejoindre</h2>
-              <ul className="grid gap-2 sm:grid-cols-2">
-                {benefits.map((b) => (
-                  <li key={b} className="flex items-start gap-2.5 rounded-2xl bg-page p-3 text-[15px]">
-                    <IconCheck className="mt-0.5 size-4 shrink-0 text-whatsapp-dark" />
-                    {b}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {company.description?.trim() && (
-            <section className="space-y-3">
-              <h2 className="font-semibold text-xl">À propos de {company.name}</h2>
-              <DescriptionText text={company.description} className="text-[15px] text-foreground/80" />
-              {websiteHref(company.website) && (
-                <a
-                  href={websiteHref(company.website) ?? undefined}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 font-medium text-sm underline-offset-2 hover:underline"
-                >
-                  Site web de {company.name}
-                  <IconExternalLink className="size-3.5" />
-                </a>
-              )}
-            </section>
-          )}
         </article>
       </div>
 
