@@ -24,7 +24,7 @@ import { applyToOffer, getCareersOffer, type CareersQuestion } from "#/lib/api/c
 import { friendlyError } from "#/lib/api/friendly-error";
 import { cn } from "#/lib/utils";
 import { appConfig } from "#/config";
-import { CareersShell } from "./careers-shell";
+import { CareersShell, CompanyLogo } from "./careers-shell";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const ACCEPT = ".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
@@ -126,18 +126,30 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-6">
-            <Link
-              href={`/carrieres/${slug}/${reference}`}
-              className="inline-flex items-center gap-1.5 font-medium text-foreground/70 text-sm hover:text-foreground"
-            >
-              <IconArrowLeft className="size-4" />
-              Retour à l&apos;offre
-            </Link>
-            <div>
-              <h1 className="font-semibold text-2xl tracking-tight">Votre candidature</h1>
-              <p className="font-medium text-foreground/70">
-                {page.offer.title} · {page.company.name}
-              </p>
+            {/* As on the offer: back, and who recruits, on one line; the heading below. */}
+            <div className="flex items-center gap-3">
+              <Link
+                href={`/carrieres/${slug}/${reference}`}
+                aria-label="Retour à l'offre"
+                title="Retour à l'offre"
+                className="flex size-10 shrink-0 items-center justify-center rounded-full bg-page text-foreground transition-colors hover:bg-page/70"
+              >
+                <IconArrowLeft className="size-5" />
+              </Link>
+              <Link
+                href={`/carrieres/${slug}/${reference}`}
+                className="flex min-w-0 items-center gap-2.5 rounded-full py-1 pr-3 transition-colors hover:bg-page"
+              >
+                <CompanyLogo company={page.company} size="sm" />
+                <span className="min-w-0 truncate text-sm">
+                  <span className="font-semibold">{page.company.name}</span>
+                  <span className="text-muted-foreground"> recrute</span>
+                </span>
+              </Link>
+            </div>
+            <div className="space-y-1">
+              <h1 className="font-semibold text-2xl leading-tight tracking-tight sm:text-3xl">Votre candidature</h1>
+              <p className="text-muted-foreground">{page.offer.title}</p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
