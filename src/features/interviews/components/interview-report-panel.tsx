@@ -5,10 +5,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   IconCheck,
+  IconCopy,
   IconFileText,
   IconMail,
   IconMicrophone,
   IconPencil,
+  IconPlus,
   IconPlayerStopFilled,
   IconFileTypePdf,
   IconRefresh,
@@ -111,6 +113,12 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
   });
   const lines = transcript.data?.lines ?? [];
   const spoken = lines.reduce((n, l) => n + l.text.length, 0);
+  const live = transcript.data?.transcribe ?? false;
+  const hasTranscript = lines.length > 0 || live;
+  const turns = toTurns(lines);
+  // Opens on the transcription once there is one; the tab chosen after that stays.
+  const [tabChoice, setTab] = useState<"transcript" | "notes" | null>(null);
+  const tab = hasTranscript ? (tabChoice ?? (lines.length > 0 ? "transcript" : "notes")) : "notes";
   const enough = notes.trim().length >= MIN_NOTES || spoken >= MIN_NOTES;
 
   if (query.isLoading) {
@@ -126,16 +134,48 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
 
   return (
     <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-      {/* Left: the team's notes, the source of the report. */}
-      <section className="flex min-h-0 flex-col gap-3 lg:overflow-y-auto">
-        <div className="flex min-h-72 flex-1 flex-col rounded-2xl bg-page">
-          <div className="flex items-center justify-between gap-2 px-4 pt-3">
-            <h3 className="font-semibold text-sm">Vos notes</h3>
-            <span className="flex items-center gap-1 text-muted-foreground text-xs" aria-live="polite">
-              {status === "Enregistré" && <IconCheck className="size-3.5" />}
-              {status}
+      {/* Left: what the report is written from: the transcription, and the team's notes. */}
+      <section className="flex min-h-0 flex-col gap-3">
+        <div className="flex min-h-80 flex-1 flex-col overflow-hidden rounded-2xl bg-page">
+          <div className="flex items-center gap-1 px-2 pt-2">
+            {hasTranscript ? (
+              <>
+                <TabButton on={tab === "transcript"} onClick={() => setTab("transcript")} label="Transcription" count={turns.length} />
+                <TabButton on={tab === "notes"} onClick={() => setTab("notes")} label="Vos notes" />
+              </>
+            ) : (
+              <h3 className="px-2 py-1.5 font-semibold text-sm">Vos notes</h3>
+            )}
+            <span className="ml-auto flex items-center gap-1.5 px-2 text-muted-foreground text-xs" aria-live="polite">
+              {tab === "transcript" ? (
+                live ? (
+                  <>
+                    <span className="size-2 rounded-full bg-destructive" />
+                    En cours
+                  </>
+                ) : (
+                  "Automatique"
+                )
+              ) : (
+                <>
+                  {status === "Enregistré" && <IconCheck className="size-3.5" />}
+                  {status}
+                </>
+              )}
             </span>
           </div>
+          {tab === "transcript" ? (
+            <Conversation
+              turns={turns}
+              live={live}
+              consent={transcript.data?.consent ?? null}
+              onAdd={(t) => {
+                setDraft(joinText(notes, `${t.speaker} : ${t.text}`).slice(0, MAX_NOTES));
+                toast.success("Ajouté à vos notes.");
+              }}
+            />
+          ) : (
+            <>
           <Textarea
             value={notes}
             onChange={(e) => setDraft(e.target.value.slice(0, MAX_NOTES))}
@@ -180,20 +220,29 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
               </span>
             </div>
           )}
+            </>
+          )}
         </div>
-        <Button type="button" className="h-11 w-full rounded-full text-sm" disabled={!enough} loading={write.isPending} onClick={() => write.mutate()}>
-          {report ? <IconRefresh className="size-4" /> : <IconFileText className="size-4" />}
-          {report ? "Réécrire le compte rendu" : "Rédiger le compte rendu"}
-        </Button>
+        <div className="flex gap-2">
+          {tab === "transcript" && turns.length > 0 && (
+            <Button type="button" variant="ghost" className="h-11 shrink-0 rounded-full bg-page px-4 text-sm sm:h-11" onClick={() => void copyTranscript(turns)}>
+              <IconCopy className="size-4" />
+              Copier
+            </Button>
+          )}
+          <Button type="button" className="h-11 flex-1 rounded-full text-sm sm:h-11" disabled={!enough} loading={write.isPending} onClick={() => write.mutate()}>
+            {report ? <IconRefresh className="size-4" /> : <IconFileText className="size-4" />}
+            {report ? "Réécrire le compte rendu" : "Rédiger le compte rendu"}
+          </Button>
+        </div>
         <p className="text-center text-muted-foreground text-xs">
           {enough
             ? lines.length > 0
-              ? "Rédigé par IA à partir de vos notes et de la transcription : relisez-le avant de l'envoyer."
+              ? "Rédigé par IA à partir de la transcription et de vos notes : relisez-le avant de l'envoyer."
               : "Rédigé par IA à partir de vos notes : relisez-le avant de l'envoyer."
             : "Quelques lignes de notes, ou la transcription de l'entretien, suffisent pour rédiger le compte rendu."}
-          {dictation.supported && " La dictée passe par le service vocal de votre navigateur."}
+          {tab === "notes" && dictation.supported && " La dictée passe par le service vocal de votre navigateur."}
         </p>
-        {lines.length > 0 && <TranscriptBlock lines={lines} live={transcript.data?.transcribe ?? false} />}
       </section>
 
       {/* Right: the report, read, edited, sent or printed. */}
@@ -271,26 +320,118 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
   );
 }
 
-/** The transcription, both sides merged by time: what the report is written from, beside the notes. */
-function TranscriptBlock({ lines, live }: Readonly<{ lines: InterviewTranscript["lines"]; live: boolean }>) {
+type Turn = { key: string; at: string; speaker: string; role: InterviewTranscript["lines"][number]["role"]; text: string };
+
+/** The rows of the transcription, in the order spoken. */
+function toTurns(lines: InterviewTranscript["lines"]): Turn[] {
+  const turns: Turn[] = [];
+  for (const l of lines) {
+    const last = turns.at(-1);
+    // One row per sentence, as recognised; only an exact repeat is dropped.
+    if (last && last.speaker === l.speaker && last.text === l.text) continue;
+    turns.push({ key: `${l.at}-${turns.length}`, at: l.at, speaker: l.speaker, role: l.role, text: l.text });
+  }
+  return turns;
+}
+
+const hhmm = (iso: string) => new Date(iso).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+
+async function copyTranscript(turns: Turn[]) {
+  try {
+    await navigator.clipboard.writeText(turns.map((t) => `[${hhmm(t.at)}] ${t.speaker} : ${t.text}`).join("\n"));
+    toast.success("Transcription copiée.");
+  } catch {
+    toast.error("La transcription n'a pas pu être copiée.");
+  }
+}
+
+/** Who spoke, at a glance: the candidate in green, an invited person in violet. */
+const SPEAKER_TONE: Record<Turn["role"], string> = {
+  HOST: "text-foreground",
+  CANDIDATE: "text-whatsapp-dark dark:text-whatsapp",
+  GUEST: "text-chip-violet-foreground",
+};
+
+const CONSENT_LINE: Record<string, string> = {
+  ACCEPTED: "Le candidat a accepté la transcription.",
+  DECLINED: "Le candidat a refusé : seule la voix de votre équipe est transcrite.",
+};
+
+function TabButton({ on, onClick, label, count }: Readonly<{ on: boolean; onClick: () => void; label: string; count?: number }>) {
   return (
-    <div className="space-y-2 rounded-2xl bg-page p-4">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="font-semibold text-sm">Transcription</h3>
-        <span className="text-muted-foreground text-xs">{live ? "En cours · automatique" : "Automatique"}</span>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={on}
+      className={cn("rounded-full px-3.5 py-1.5 text-sm transition-colors", on ? "bg-card font-semibold" : "text-muted-foreground hover:text-foreground")}
+    >
+      {label}
+      {count !== undefined && count > 0 && <span className="ml-1.5 font-normal text-muted-foreground tabular-nums">{count}</span>}
+    </button>
+  );
+}
+
+/**
+ * The transcription, one line per sentence: time, who, what. While the call
+ * runs it follows the newest line, unless the reader scrolled up.
+ */
+function Conversation({
+  turns,
+  live,
+  consent,
+  onAdd,
+}: Readonly<{ turns: Turn[]; live: boolean; consent: string | null; onAdd: (t: Turn) => void }>) {
+  const box = useRef<HTMLOListElement>(null);
+  const pinned = useRef(true);
+  const count = turns.length;
+  useEffect(() => {
+    const el = box.current;
+    if (el && pinned.current) el.scrollTop = el.scrollHeight;
+  }, [count]);
+
+  if (turns.length === 0) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center">
+        <IconMicrophone className="size-5 text-muted-foreground" />
+        <p className="max-w-xs text-muted-foreground text-sm">La transcription s&apos;affiche ici pendant l&apos;appel, phrase après phrase.</p>
       </div>
-      <ol className="max-h-64 space-y-2 overflow-y-auto pr-1 text-sm">
-        {lines.map((l, n) => (
-          <li key={`${l.at}-${n}`} className="leading-snug">
-            <span className="text-muted-foreground text-xs tabular-nums">
-              {new Date(l.at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
-            </span>{" "}
-            <span className={cn("font-medium", l.role === "CANDIDATE" && "text-whatsapp-dark")}>{l.speaker}</span> : {l.text}
+    );
+  }
+  return (
+    <>
+      <ol
+        ref={box}
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          pinned.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+        }}
+        className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-2"
+      >
+        {turns.map((t) => (
+          <li key={t.key} className="group flex items-start gap-2 rounded-lg px-1 py-0.5 hover:bg-card/60">
+            <span className="w-11 shrink-0 pt-px font-mono text-muted-foreground text-xs tabular-nums">{hhmm(t.at)}</span>
+            <p className="min-w-0 flex-1 text-sm leading-relaxed">
+              <span className={cn("font-medium", SPEAKER_TONE[t.role])}>{t.speaker}</span>
+              <span className="text-muted-foreground"> : </span>
+              {t.text}
+            </p>
+            <button
+              type="button"
+              aria-label="Ajouter aux notes"
+              title="Ajouter aux notes"
+              onClick={() => onAdd(t)}
+              className="flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-opacity hover:bg-card hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+            >
+              <IconPlus className="size-3.5" />
+            </button>
           </li>
         ))}
       </ol>
-      <p className="text-muted-foreground text-xs">Reconnue par le navigateur de chacun : elle peut contenir des erreurs.</p>
-    </div>
+      <p className="px-4 pb-3 text-muted-foreground text-xs">
+        Reconnue par le navigateur de chacun : elle peut contenir des erreurs.
+        {consent ? ` ${CONSENT_LINE[consent] ?? ""}` : live ? " Le candidat n'a pas encore répondu." : ""}
+      </p>
+    </>
   );
 }
 
