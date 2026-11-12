@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { IconSend2, IconX } from "@tabler/icons-react";
 
+import { ActionDialog } from "#/components/action-dialog";
 import { Bone } from "#/components/page-skeletons";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
@@ -15,12 +16,38 @@ import {
   inviteInterviewGuest,
   listInterviewGuests,
   removeInterviewGuest,
+  type InterviewGuest,
 } from "#/lib/api/interview-controller";
 import type { Interview } from "#/lib/api/types";
+import { cn } from "#/lib/utils";
 
 /** The server's limit: an interview, not a meeting. */
 const MAX_GUESTS = 5;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** One colour per person, in turn, so neighbours stand apart. */
+const AVATAR = [
+  "bg-chip-green text-chip-green-foreground",
+  "bg-chip-sky text-chip-sky-foreground",
+  "bg-chip-violet text-chip-violet-foreground",
+  "bg-chip-amber text-chip-amber-foreground",
+];
+
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w.charAt(0).toUpperCase())
+    .join("");
+
+/** « Marie Ngoma est invité », « Marie et Paul sont invités », « Marie, Paul et 2 autres sont invités ». */
+function summary(names: string[]): string {
+  const first = names.map((n) => n.split(/\s+/)[0] ?? n);
+  if (first.length === 1) return `${names[0]} est invité`;
+  if (first.length === 2) return `${first[0]} et ${first[1]} sont invités`;
+  return `${first[0]}, ${first[1]} et ${first.length - 2} autre${first.length > 3 ? "s" : ""} sont invités`;
+}
 
 /**
  * « Inviter quelqu'un » into an interview's visio: a colleague, a manager, an
@@ -37,6 +64,7 @@ export function InviteGuestDialog({
   const guests = useQuery({ queryKey: key, queryFn: () => listInterviewGuests(i.id), enabled: open });
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [removing, setRemoving] = useState<InterviewGuest | null>(null);
 
   const invite = useMutation({
     mutationFn: () => inviteInterviewGuest(i.id, { name: name.trim(), email: email.trim() }),
@@ -52,6 +80,7 @@ export function InviteGuestDialog({
     mutationFn: (guestId: string) => removeInterviewGuest(i.id, guestId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: key });
+      setRemoving(null);
       toast.success("Invitation retirée : son lien ne fonctionne plus.");
     },
     onError: (err) => toast.error(friendlyError(err, "L'invitation n'a pas pu être retirée.")),
@@ -96,32 +125,47 @@ export function InviteGuestDialog({
         </form>
 
         {guests.isLoading ? (
-          <Bone className="h-14 w-full rounded-2xl" />
+          <Bone className="h-10 w-40 rounded-full" />
         ) : list.length > 0 ? (
-          <div className="space-y-2">
-            <p className="font-medium text-sm">Invités</p>
-            <ul className="space-y-1">
-              {list.map((g) => (
-                <li key={g.id} className="flex items-center gap-3 rounded-xl bg-page px-3 py-2">
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium text-sm">{g.name}</span>
-                    <span className="block truncate text-muted-foreground text-xs">{g.email}</span>
+          <div className="flex items-center gap-3">
+            <ul className="flex shrink-0 items-center pl-2" aria-label="Invités">
+              {list.map((g, n) => (
+                <li key={g.id} className="group relative -ml-2">
+                  <span
+                    title={`${g.name} · ${g.email}`}
+                    className={cn(
+                      "flex size-10 items-center justify-center rounded-full font-semibold text-xs ring-2 ring-card",
+                      AVATAR[n % AVATAR.length],
+                    )}
+                  >
+                    {initials(g.name)}
                   </span>
                   <button
                     type="button"
                     aria-label={`Retirer ${g.name}`}
-                    title="Retirer l'invitation"
-                    disabled={remove.isPending}
-                    onClick={() => remove.mutate(g.id)}
-                    className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-card hover:text-destructive"
+                    title={`Retirer ${g.name}`}
+                    onClick={() => setRemoving(g)}
+                    className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-foreground text-background opacity-0 ring-2 ring-card transition-opacity focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
                   >
-                    <IconX className="size-4" />
+                    <IconX className="size-3" />
                   </button>
                 </li>
               ))}
             </ul>
+            <p className="min-w-0 text-muted-foreground text-sm">{summary(list.map((g) => g.name))}</p>
           </div>
         ) : null}
+
+        <ActionDialog
+          open={removing !== null}
+          onOpenChange={(o) => !o && setRemoving(null)}
+          tone="warning"
+          title={removing ? `Retirer l'invitation de ${removing.name} ?` : ""}
+          description="Son lien ne fonctionnera plus : il ne pourra pas rejoindre la visio. Vous pourrez l'inviter à nouveau."
+          confirmLabel="Retirer l'invitation"
+          onConfirm={() => removing && remove.mutate(removing.id)}
+          pending={remove.isPending}
+        />
       </DialogContent>
     </Dialog>
   );
