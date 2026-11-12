@@ -525,6 +525,8 @@ export type Interview = {
   status: InterviewStatus;
   responseNote: string | null;
   respondedAt: string | null;
+  /** « Terminer l'entretien »: over, whatever its time; notes and compte rendu stay. */
+  endedAt?: string | null;
   createdAt: string;
   /** Times still to choose from (several offered); empty once the candidate chose. */
   options?: { id: string; startsAt: string }[];
