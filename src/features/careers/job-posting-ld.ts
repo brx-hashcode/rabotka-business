@@ -49,7 +49,7 @@ export function jobPostingLd(company: CareersCompany, offer: CareersOffer, url: 
     ...(offer.isRemote
       ? {
           jobLocationType: "TELECOMMUTE",
-          applicantLocationRequirements: { "@type": "Country", name: offer.countryName ?? "Congo" },
+          applicantLocationRequirements: { "@type": "Country", name: offer.countryCode ?? offer.countryName ?? "CG" },
         }
       : {
           jobLocation: {
@@ -57,7 +57,8 @@ export function jobPostingLd(company: CareersCompany, offer: CareersOffer, url: 
             address: {
               "@type": "PostalAddress",
               ...(offer.city ? { addressLocality: offer.city } : {}),
-              addressCountry: offer.countryName ?? "Congo",
+              // A two-letter code, as Google asks; the name only for an older offer without one.
+              addressCountry: offer.countryCode ?? offer.countryName ?? "CG",
             },
           },
         }),
@@ -70,6 +71,7 @@ export function jobPostingLd(company: CareersCompany, offer: CareersOffer, url: 
           },
         }
       : {}),
+    ...(offer.categoryName ? { industry: offer.categoryName, occupationalCategory: offer.categoryName } : {}),
     totalJobOpenings: offer.quantity,
     directApply: true,
     url,

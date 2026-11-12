@@ -18,9 +18,18 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title,
     description,
+    keywords: [
+      page.company.name,
+      `${page.company.name} recrutement`,
+      page.company.city,
+      page.company.categoryLabel,
+      "offres d'emploi",
+      page.company.city ? `emploi ${page.company.city}` : null,
+      "recrutement",
+    ].filter((k): k is string => Boolean(k)),
     robots: indexed && page.company.indexable ? { index: true, follow: true } : NOINDEX,
     alternates: { canonical: `/carrieres/${page.company.slug}` },
-    openGraph: { type: "website", title, description, ...(page.company.logoUrl ? { images: [page.company.logoUrl] } : {}) },
+    openGraph: { type: "website", siteName: "Rabotka", locale: "fr_FR", title, description, ...(page.company.logoUrl ? { images: [page.company.logoUrl] } : {}) },
   };
 }
 
