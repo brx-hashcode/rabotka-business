@@ -5,6 +5,7 @@ import { AtsSection } from "#/features/landing/components/ats-section";
 import { CountriesSection } from "#/features/landing/components/countries-section";
 import { DemoBlock } from "#/features/landing/components/demo-block";
 import { FeatureStages } from "#/features/landing/components/feature-stages";
+import { InterviewsSpotlight } from "#/features/landing/components/interviews-spotlight";
 import { LandingHero } from "#/features/landing/components/landing-hero";
 import { AudiencesSection, FaqSection } from "#/features/landing/components/landing-sections";
 import { businessCountriesServer } from "#/lib/api/catalog-server";
@@ -39,6 +40,7 @@ export default async function LandingPage() {
       <PartnersStrip partners={partners} className="pt-14" />
       <AtsSection />
       <FeatureStages />
+      <InterviewsSpotlight />
       <CountriesSection countries={countries} />
       <AudiencesSection />
       <FaqSection countries={countries} />

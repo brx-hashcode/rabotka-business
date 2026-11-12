@@ -32,8 +32,10 @@ import {
  *   boardroom 1573164574511, team-laptops 1573167101669, interview
  *   1573496267526, meeting-table 1573164574397, manager-office 1758519290996,
  *   candidates-panel 1573497701240, interview-room 1573496130407,
- *   compliance-officer 1653669486816.
+ *   compliance-officer 1653669486816, interview-visio-grid 1588196749597,
+ *   interview-visio 1616587894289, interview-team-review 1622675363311.
  * Office and recruitment scenes only — no informal-sector photos here.
+ * « Entretiens » shows the three interview-* photos, step by step.
  */
 
 export const SIGN_UP_HREF = "/auth/sign-up";
