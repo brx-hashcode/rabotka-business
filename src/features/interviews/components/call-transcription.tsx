@@ -62,7 +62,7 @@ export function HostTranscription({ interviewId, inCall }: Readonly<{ interviewI
   }
   const consent = query.data?.consent;
   return (
-    <div className="flex min-w-0 items-center gap-2">
+    <div className="flex shrink-0 items-center gap-2">
       {on && (
         <span className="hidden min-w-0 items-center gap-2 text-muted-foreground text-xs md:flex">
           {inCall && speech.listening && <Live />}
@@ -79,7 +79,7 @@ export function HostTranscription({ interviewId, inCall }: Readonly<{ interviewI
         onClick={() => toggle.mutate(!on)}
       >
         {on ? <IconMicrophoneOff className="size-4" /> : <IconMicrophone className="size-4" />}
-        <span className="hidden sm:inline">{on ? "Arrêter la transcription" : "Transcrire"}</span>
+        <span className="hidden lg:inline">{on ? "Arrêter la transcription" : "Transcrire"}</span>
       </Button>
     </div>
   );

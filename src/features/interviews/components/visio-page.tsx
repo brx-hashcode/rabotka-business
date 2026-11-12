@@ -29,7 +29,7 @@ const when = (iso: string) =>
   new Date(iso).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
 
 /** What a recruiter and a candidate need in the call, and nothing to invite, stream or dial. */
-const TOOLBAR = ["microphone", "camera", "desktop", "chat", "raisehand", "tileview", "select-background", "settings", "fullscreen", "hangup"];
+const TOOLBAR = ["microphone", "camera", "desktop", "chat", "raisehand", "tileview", "settings", "fullscreen", "hangup"];
 
 const visioQuery = (room: string, host: boolean, guestToken?: string) => ({
   queryKey: ["visio", room, host, guestToken ?? null],
@@ -68,6 +68,9 @@ function Call({
         enableClosePage: false,
         hideConferenceTimer: false,
         disableThirdPartyRequests: true,
+        // A background effect the browser cannot run sends a black video while
+        // the call goes on: none offered, on either side.
+        disableVirtualBackground: true,
         notifications: [],
       }}
       interfaceConfigOverwrite={{ SHOW_PROMOTIONAL_CLOSE_PAGE: false, MOBILE_APP_PROMO: false, SHOW_CHROME_EXTENSION_BANNER: false }}
@@ -210,7 +213,7 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
                 onClick={() => setConfirmEnd(true)}
               >
                 <IconPlayerStop className="size-4" />
-                <span className="hidden sm:inline">Terminer</span>
+                <span className="hidden lg:inline">Terminer</span>
               </Button>
             )}
           </div>
