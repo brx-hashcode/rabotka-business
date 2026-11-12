@@ -21,8 +21,7 @@ import { DescriptionText } from "#/features/careers/components/description-text"
 import { EMPLOYMENT_LABEL, PAYMENT_SUFFIX } from "#/features/offers/offer-labels";
 import { candidateSource, SOURCE_KEY } from "#/features/careers/candidate-source";
 import { getCareersOffer } from "#/lib/api/careers-controller";
-import { CareersShell, offerPlace } from "./careers-shell";
-import { CompanyHero } from "./company-hero";
+import { CareersShell, CompanyLogo, offerPlace } from "./careers-shell";
 
 const longDate = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
@@ -60,8 +59,8 @@ async function share(title: string) {
 
 /**
  * Step 1 of an application from outside Rabotka: the offer, and « Postuler ».
- * The company first, as on its careers page (same width, same cover), then
- * the offer; « Postuler » stays at the bottom of the screen.
+ * The company's careers page width; the offer in one card, under its logo;
+ * « Postuler » stays at the bottom of the screen.
  */
 export function OfferPage({
   slug,
@@ -120,36 +119,24 @@ export function OfferPage({
   return (
     <CareersShell>
       <div className="space-y-6 pb-24">
-        {/* The company first, as on its careers page; back to its offers from the cover. */}
-        <div className="relative">
-          <CompanyHero
-            company={company}
-            heading="p"
-            actions={
-              <Link
-                href={`/carrieres/${slug}`}
-                className="inline-flex h-10 items-center gap-2 rounded-full bg-page px-4 font-medium text-sm transition-colors hover:bg-page/70"
-              >
-                <IconBriefcase className="size-4" />
-                Toutes les offres
-              </Link>
-            }
-          />
-          <Link
-            href={`/carrieres/${slug}`}
-            aria-label={`Toutes les offres de ${company.name}`}
-            title={`Toutes les offres de ${company.name}`}
-            className="absolute top-3 left-3 z-10 flex size-10 items-center justify-center rounded-full bg-card/90 text-foreground shadow-soft backdrop-blur transition-colors hover:bg-card sm:top-4 sm:left-4"
-          >
-            <IconArrowLeft className="size-5" />
-          </Link>
-        </div>
-
         <article className="space-y-10 rounded-3xl bg-card p-6 sm:p-10">
-          <header className="space-y-4">
+          <header className="space-y-5">
+            <Link
+              href={`/carrieres/${slug}`}
+              aria-label={`Toutes les offres de ${company.name}`}
+              title={`Toutes les offres de ${company.name}`}
+              className="flex size-10 items-center justify-center rounded-full bg-page text-foreground transition-colors hover:bg-page/70"
+            >
+              <IconArrowLeft className="size-5" />
+            </Link>
+            <div className="flex items-center gap-4">
+              <CompanyLogo company={company} />
+              <div className="min-w-0 space-y-1">
+                <p className="truncate font-medium text-foreground/70">{company.name} recrute</p>
+                <h1 className="font-semibold text-2xl leading-tight tracking-tight sm:text-3xl">{o.title}</h1>
+              </div>
+            </div>
             <div className="space-y-2">
-              <p className="font-medium text-foreground/70">{company.name} recrute</p>
-              <h1 className="font-semibold text-2xl leading-tight tracking-tight sm:text-3xl">{o.title}</h1>
               <p className="text-muted-foreground text-sm">
                 Publiée le {longDate(o.publishedAt)}
                 {o.categoryName ? ` · ${o.categoryName}` : ""}
