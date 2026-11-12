@@ -27,6 +27,8 @@ export type CareersOfferSummary = {
   publishedAt: string;
   isRemote: boolean;
   city: string | null;
+  /** ISO 3166-1 (« CG »): the country as Google for Jobs wants it. */
+  countryCode?: string | null;
   countryName: string | null;
   quantity: number;
 };

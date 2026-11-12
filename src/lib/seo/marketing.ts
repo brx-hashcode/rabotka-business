@@ -22,16 +22,31 @@ export const MARKETING_PATHS = ["/", "/fonctionnalites", "/ressources", "/a-prop
  * A marketing page's metadata: its own title, description and canonical,
  * indexed on business.rabotka.work only (develop and previews stay out).
  */
+/** What a business searches for, on every marketing page; a page adds its own. */
+const BASE_KEYWORDS = [
+  "logiciel de recrutement",
+  "ATS",
+  "recrutement Afrique",
+  "recrutement Congo",
+  "analyse de CV",
+  "offre d'emploi",
+  "page carrières",
+  "entretien en visio",
+  "Rabotka",
+];
+
 export async function marketingMetadata({
   title,
   description,
   path,
-}: Readonly<{ title: string; description: string; path: string }>): Promise<Metadata> {
+  keywords = [],
+}: Readonly<{ title: string; description: string; path: string; keywords?: string[] }>): Promise<Metadata> {
   const { indexed } = await siteOrigin();
-  const full = path === "/" ? title : `${title} · Rabotka Business`;
+  const full = path === "/" ? title : `${title} - Rabotka Business`;
   return {
     title: full,
     description,
+    keywords: [...new Set([...keywords, ...BASE_KEYWORDS])],
     robots: indexed ? { index: true, follow: true } : NOINDEX,
     alternates: { canonical: path },
     openGraph: {

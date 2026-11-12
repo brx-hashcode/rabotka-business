@@ -3,6 +3,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 
 import { OfferPage } from "#/features/careers/components/offer-page";
 import { jobPostingLd, ldScript } from "#/features/careers/job-posting-ld";
+import { EMPLOYMENT_LABEL } from "#/features/offers/offer-labels";
 import { careersOfferServer } from "#/lib/api/careers-server";
 import { NOINDEX } from "#/lib/seo/indexed-host";
 import { siteOrigin } from "#/lib/seo/site";
@@ -19,14 +20,30 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const page = await careersOfferServer(slug, reference);
   if (!page) return { title: "Offre d'emploi", robots: NOINDEX };
   const { indexed } = await siteOrigin();
-  const title = `${page.offer.title} · ${page.company.name}`;
+  const title = `${page.offer.title} - ${page.company.name}`;
   const description = excerpt(page.offer.description);
+  const o = page.offer;
   return {
     title,
     description,
+    // What a candidate types: the job, its trade, where, the contract, the company.
+    keywords: [
+      ...new Set([
+      o.title,
+      o.categoryName,
+      o.city,
+      o.countryName,
+      EMPLOYMENT_LABEL[o.employmentType],
+      page.company.name,
+      `emploi ${o.city ?? ""}`.trim(),
+      "offre d'emploi",
+      "emploi",
+      "recrutement",
+      ]),
+    ].filter((k): k is string => Boolean(k)),
     robots: indexed && page.company.indexable ? { index: true, follow: true } : NOINDEX,
     alternates: { canonical: `/carrieres/${page.company.slug}/${reference}` },
-    openGraph: { type: "website", title, description },
+    openGraph: { type: "website", siteName: "Rabotka", locale: "fr_FR", title, description },
   };
 }
 

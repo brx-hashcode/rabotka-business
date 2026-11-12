@@ -15,10 +15,11 @@ import { siteOrigin } from "#/lib/seo/site";
 
 export function generateMetadata(): Promise<Metadata> {
   return marketingMetadata({
-    title: "Rabotka Business — l'ATS nouvelle génération pour recruter en Afrique",
+    title: "Rabotka Business - l'ATS nouvelle génération pour recruter en Afrique",
     description:
       "Logiciel de recrutement complet : offres rédigées et diffusées partout, CV lus et classés pour chaque poste, pipeline suivi en équipe, entretiens en visio et comptes rendus partagés.",
     path: "/",
+    keywords: ["ATS Afrique", "logiciel RH", "gestion des candidatures", "Google for Jobs", "LinkedIn", "compte rendu d'entretien"],
   });
 }
 

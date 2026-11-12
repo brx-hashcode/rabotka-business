@@ -1,5 +1,13 @@
 import Link from "next/link";
-import { IconArrowRight } from "@tabler/icons-react";
+import {
+  IconArrowRight,
+  IconArrowsSort,
+  IconFileCertificate,
+  IconInbox,
+  IconSpeakerphone,
+  IconUsersGroup,
+  IconVideo,
+} from "@tabler/icons-react";
 
 import { FEATURES_HREF } from "../content";
 import { PipelineMockup } from "../mockups/ats-mockups";
@@ -7,20 +15,39 @@ import { ATS_PILLARS, PIPELINE } from "../site-content";
 import { SectionHeading } from "./section-heading";
 import { IconTile } from "./icon-tile";
 
-/** Every stage of a hire, numbered: the pipeline the ATS runs. */
+/** One icon per stage, in PIPELINE's order. */
+const STEP_ICONS = [IconSpeakerphone, IconInbox, IconArrowsSort, IconVideo, IconUsersGroup, IconFileCertificate];
+
+/**
+ * Every stage of a hire as one path: a marker per stage on a line that joins
+ * them, across on a wide screen, down the side on a phone.
+ */
 export function PipelineSteps() {
   return (
-    <ol className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-      {PIPELINE.map((step, i) => (
-        <li key={step.title} className="space-y-2 rounded-3xl bg-page p-4">
-          <span className="flex size-8 items-center justify-center rounded-full bg-header font-semibold text-header-foreground text-sm">
-            {i + 1}
-          </span>
-          <p className="font-semibold text-sm">{step.title}</p>
-          <p className="text-muted-foreground text-xs leading-snug">{step.text}</p>
-        </li>
-      ))}
-    </ol>
+    <div className="rounded-[2rem] bg-page p-6 sm:p-8">
+      <ol className="relative grid gap-7 xl:grid-cols-6 xl:gap-4">
+        {/* The line through the markers. */}
+        <span
+          aria-hidden
+          className="absolute top-5 bottom-5 left-5 w-0.5 bg-linear-to-b from-brand-lime via-whatsapp/50 to-brand-lime xl:top-5 xl:right-[8%] xl:bottom-auto xl:left-[8%] xl:h-0.5 xl:w-auto xl:bg-linear-to-r"
+        />
+        {PIPELINE.map((step, i) => {
+          const Icon = STEP_ICONS[i] ?? IconArrowRight;
+          return (
+            <li key={step.title} className="relative flex gap-4 xl:flex-col xl:items-center xl:text-center">
+              <span className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-header text-header-foreground ring-4 ring-page">
+                <Icon className="size-5" />
+              </span>
+              <div className="min-w-0 space-y-1 pt-0.5 xl:pt-1">
+                <p className="font-semibold text-muted-foreground text-[11px] tabular-nums tracking-wide">{String(i + 1).padStart(2, "0")}</p>
+                <p className="font-semibold">{step.title}</p>
+                <p className="text-muted-foreground text-sm leading-snug">{step.text}</p>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   );
 }
 
