@@ -549,6 +549,10 @@ export type InterviewReportBody = {
 export type InterviewReport = {
   notes: string;
   report: InterviewReportBody | null;
+  /** Written in the background right now: a notification follows. */
+  writing?: boolean;
+  /** Why the last writing failed, until the next one. */
+  writingError?: string | null;
   generatedAt: string | null;
   sentAt: string | null;
   updatedAt: string | null;
