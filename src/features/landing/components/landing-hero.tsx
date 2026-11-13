@@ -6,6 +6,7 @@ import type { BusinessCountryName } from "#/lib/api/catalog-server";
 import { DemoButton, SignUpButton } from "./demo-button";
 import { flagUrl } from "../globe/country-places";
 import { HeroMockup } from "../mockups/mockups";
+import { Highlighter } from "./highlighter";
 
 /**
  * The opening: an ATS, said plainly; the demo first and the account beside
@@ -17,11 +18,19 @@ export function LandingHero({ countries }: Readonly<{ countries: BusinessCountry
     <section className="overflow-hidden bg-header text-header-foreground">
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-4 pt-10 pb-14 sm:px-6 md:pt-16 lg:grid-cols-[1fr_1.05fr] lg:gap-16 lg:pb-20">
         <div className="space-y-6 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700">
-          <h1 className="font-semibold text-4xl leading-[1.06] tracking-tight sm:text-5xl lg:text-[3.5rem]">
-            Recevez, triez et rencontrez les bons candidats, au même endroit
+          <h1 className="isolate font-semibold text-4xl leading-[1.12] tracking-tight sm:text-5xl lg:text-[3.5rem]">
+            Recevez, triez et rencontrez{" "}
+            <Highlighter action="underline" color="#FF9800" strokeWidth={3} delay={700}>
+              les bons candidats
+            </Highlighter>
+            , au même endroit
           </h1>
-          <p className="max-w-lg text-header-muted text-lg">
-            Le logiciel de recrutement complet : vos offres diffusées, chaque CV lu et classé, vos entretiens en visio et
+          <p className="isolate max-w-lg text-header-muted text-lg">
+            Le logiciel de recrutement complet : vos offres diffusées,{" "}
+            <Highlighter action="highlight" color="#87CEFA" delay={1600}>
+              chaque CV lu et classé
+            </Highlighter>
+            , vos entretiens en visio et
             leur compte rendu.
           </p>
           <div className="flex flex-wrap items-center gap-3">

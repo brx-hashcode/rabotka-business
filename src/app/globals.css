@@ -529,3 +529,9 @@ html {
 html:has([data-site-header]) {
   scroll-padding-top: calc(4.5rem + env(safe-area-inset-top));
 }
+
+/* Hand-drawn marks (rough-notation) sit behind every word of their line, not
+   only the marked ones: the paragraph or heading holding one is `isolate`. */
+.rough-annotation {
+  z-index: -1;
+}
