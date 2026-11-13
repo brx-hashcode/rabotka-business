@@ -372,7 +372,6 @@ function InterviewCard({ interview: i, past, focused = false }: Readonly<{ inter
                     <DropdownMenuItem disabled={!videoPlan.allowed} onSelect={() => setInviting(true)} className={MENU_ITEM}>
                       {videoPlan.allowed ? <IconUserPlus className="size-4" /> : <IconLock className="size-4" />}
                       Partager la visio
-                      {!videoPlan.allowed && <span className="ml-auto text-muted-foreground text-xs">Formule supérieure</span>}
                     </DropdownMenuItem>
                   )}
                   {editable && (
