@@ -75,7 +75,7 @@ export function AccountMenu() {
   // organisation's logo, already at the top of the sidebar.
   const avatar = (size: string) => (
     <Avatar className={size}>
-      <AvatarFallback className="rounded-[inherit] bg-brand-lime font-medium text-[#0f2414]">
+      <AvatarFallback className="rounded-[inherit] bg-brand-lime font-semibold text-[#0f2414]">
         {person ? getInitials(person) : business?.name ? getInitials(business.name) : ""}
       </AvatarFallback>
     </Avatar>
