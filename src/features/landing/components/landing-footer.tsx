@@ -274,6 +274,12 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
           </div>
         </div>
 
+        {/* A faint grid at the very bottom, gone a few rows up: the letters,
+            filled with the footer's colour, stand out of it. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-40 bg-[linear-gradient(to_right,rgb(255_255_255/0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgb(255_255_255/0.05)_1px,transparent_1px)] bg-size-[28px_28px] mask-[linear-gradient(to_top,black_0%,transparent_85%)]"
+        />
         {/* The name in large capitals drawn with a dashed outline (SVG: CSS
             cannot dash a text stroke), cut by the bottom edge and fading out
             towards the top.
