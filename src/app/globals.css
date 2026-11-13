@@ -529,3 +529,28 @@ html {
 html:has([data-site-header]) {
   scroll-padding-top: calc(4.5rem + env(safe-area-inset-top));
 }
+
+/* « Ils recrutent avec Rabotka »: the logos slide on, endlessly; still for
+   those who reduce motion, paused under the pointer. */
+@keyframes logo-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.logo-marquee {
+  animation: logo-marquee 40s linear infinite;
+}
+
+.logo-marquee:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-marquee {
+    animation: none;
+  }
+}

@@ -38,7 +38,7 @@ export default async function LandingPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(organizationLd(origin)) }} />
       <LandingHero countries={countries} />
-      <PartnersStrip partners={partners} className="pt-14" />
+      <PartnersStrip partners={partners} className="py-14" />
       <AtsSection />
       <FeatureStages />
       <InterviewsSpotlight />
