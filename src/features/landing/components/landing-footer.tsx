@@ -123,7 +123,7 @@ const MAX_FLAGS = 7;
 
 /** Nested chevrons, as in the logo's handshake: one V per tile, stacked into bands. */
 const CHEVRONS = `url("data:image/svg+xml,${encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" width="44" height="22"><path d="M0 22 L22 0 L44 22" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="5"/></svg>',
+  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="10"><path d="M0 10 L12 0 L24 10" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1.25"/></svg>',
 )}")`;
 
 /**
@@ -285,7 +285,7 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
         <div
           aria-hidden
           className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-44 mask-[linear-gradient(to_top,black_0%,transparent_90%)]"
-          style={{ backgroundImage: CHEVRONS, backgroundSize: "44px 22px" }}
+          style={{ backgroundImage: CHEVRONS, backgroundSize: "24px 10px" }}
         />
         {/* The name in large capitals drawn with a dashed outline (SVG: CSS
             cannot dash a text stroke), cut by the bottom edge and fading out
