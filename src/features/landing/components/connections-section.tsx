@@ -107,9 +107,14 @@ function Beams({ layout, vertical, className }: Readonly<{ layout: Layout; verti
           ),
       )}
       <div className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center" style={at(center)}>
-        <span className="flex size-20 items-center justify-center rounded-full bg-white shadow-[0_0_40px_-12px_rgba(22,163,74,0.6)] ring-1 ring-black/5 sm:size-24">
-          <Image src="/rabotka-mark.png" alt="Rabotka" width={56} height={56} className="size-12 object-contain sm:size-14" />
-        </span>
+        {/* The round bubble logo on its own, glowing: no square tile in a circle. */}
+        <Image
+          src="/rabotka-logo.png"
+          alt="Rabotka"
+          width={112}
+          height={112}
+          className="size-20 object-contain drop-shadow-[0_8px_24px_rgba(22,163,74,0.45)] sm:size-24"
+        />
       </div>
     </div>
   );
