@@ -13,7 +13,7 @@ import {
   IconUsersGroup,
 } from "@tabler/icons-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
+import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,9 +43,8 @@ const shortDate = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { d
 /** The signed-in person in the header: avatar, name, email, sign-out. */
 export function AccountMenu() {
   const { data: user } = useSessionUser();
-  // The organisation, for its logo: the login's cache is gone after a reload.
+  // The organisation (its owner, name and plan): the login's cache is gone after a reload.
   const { data: business } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
-  const picture = user?.avatar_url ?? business?.logoUrl ?? null;
   const [confirmLogout, setConfirmLogout] = useState(false);
   const { data: subscription } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   const { member, role } = useMember();
@@ -72,11 +71,12 @@ export function AccountMenu() {
   const plan = subscription?.entitlements;
   const planStatus = plan?.status ? PLAN_STATUS[plan.status] : undefined;
 
+  // The person's initials, never a picture: the account's picture is the
+  // organisation's logo, already at the top of the sidebar.
   const avatar = (size: string) => (
     <Avatar className={size}>
-      {picture && <AvatarImage src={picture} alt={name} className="object-cover" />}
       <AvatarFallback className="rounded-[inherit] bg-brand-lime font-medium text-[#0f2414]">
-        {name ? getInitials(name) : business?.name ? getInitials(business.name) : ""}
+        {person ? getInitials(person) : business?.name ? getInitials(business.name) : ""}
       </AvatarFallback>
     </Avatar>
   );
