@@ -25,7 +25,7 @@ export function PartnersStrip({
               <Link
                 href={`/carrieres/${p.slug}`}
                 title={`${p.name} recrute`}
-                className="group relative flex h-24 items-center justify-center overflow-hidden rounded-2xl bg-card px-6 transition-colors hover:bg-card/70 sm:h-28"
+                className="group relative flex h-24 items-center justify-center overflow-hidden px-6 sm:h-28"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
