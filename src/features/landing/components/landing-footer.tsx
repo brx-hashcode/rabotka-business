@@ -121,6 +121,11 @@ const FOOTER_COLUMNS: { title: string; links: NavLink[] }[] = [
 /** Flags shown side by side before « +N ». */
 const MAX_FLAGS = 7;
 
+/** Nested chevrons, as in the logo's handshake: one V per tile, stacked into bands. */
+const CHEVRONS = `url("data:image/svg+xml,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="44" height="22"><path d="M0 22 L22 0 L44 22" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="5"/></svg>',
+)}")`;
+
 /**
  * The footer, a dark panel set in the page: a statement with where Rabotka is
  * open, how to reach the team and where to follow it (as admins set it), the links in four
@@ -274,11 +279,13 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
           </div>
         </div>
 
-        {/* A faint grid at the very bottom, gone a few rows up: the letters,
-            filled with the footer's colour, stand out of it. */}
+        {/* The chevrons of the Rabotka handshake, faint, at the very bottom
+            and gone a few rows up: the letters, filled with the footer's
+            colour, stand out of them. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-40 bg-[linear-gradient(to_right,rgb(255_255_255/0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgb(255_255_255/0.05)_1px,transparent_1px)] bg-size-[28px_28px] mask-[linear-gradient(to_top,black_0%,transparent_85%)]"
+          className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-44 mask-[linear-gradient(to_top,black_0%,transparent_90%)]"
+          style={{ backgroundImage: CHEVRONS, backgroundSize: "44px 22px" }}
         />
         {/* The name in large capitals drawn with a dashed outline (SVG: CSS
             cannot dash a text stroke), cut by the bottom edge and fading out
