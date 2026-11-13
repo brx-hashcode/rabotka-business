@@ -614,7 +614,8 @@ function PlanChooser({ data, focused = false }: Readonly<{ data: MySubscription;
           return (
             <article
               key={plan.id}
-              className={cn("flex flex-col gap-5 rounded-3xl bg-card p-6", (isCurrent || isFeatured) && "ring-2 ring-ink")}
+              // The plan running now stands out whichever period the toggle shows.
+              className={cn("flex flex-col gap-5 rounded-3xl bg-card p-6", (isCurrent || switching || isFeatured) && "ring-2 ring-ink")}
             >
               <div className="space-y-1">
                 <div className="flex items-center justify-between gap-2">
@@ -631,7 +632,7 @@ function PlanChooser({ data, focused = false }: Readonly<{ data: MySubscription;
                       Votre formule
                     </span>
                   ) : switching ? (
-                    <span className="rounded-full bg-page px-2.5 py-1 font-medium text-muted-foreground text-xs">
+                    <span className="rounded-full bg-chip-green px-2.5 py-1 font-medium text-chip-green-foreground text-xs">
                       Votre formule, en {runningPeriod === "ANNUAL" ? "annuel" : "mensuel"}
                     </span>
                   ) : scheduled.has(plan.name) ? (
