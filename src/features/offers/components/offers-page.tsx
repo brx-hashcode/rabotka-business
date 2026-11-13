@@ -17,7 +17,8 @@ import { offersFull, offersUsed } from "#/features/subscription/offers-quota";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
 
-const PAGE = 50;
+/** 12 at a time: four rows of the three-column grid, then « Voir plus ». */
+const PAGE = 12;
 
 // The same words as the cards' chips: « En ligne » is every offer still taking
 // candidates, « en partie pourvue » included; « Pourvues » those filled.
