@@ -312,18 +312,31 @@ export const AUDIENCES: Audience[] = [
 /** Behind « Votre secteur n'apparaît pas ? »: an office, not the product. */
 export const AUDIENCE_PHOTO = "/media/meeting-table.jpg";
 
-/** The questions the home page answers, in order: the few a business asks first. */
+/**
+ * The questions the home page answers, five at most, in order: what it is,
+ * what it does, then the tools a business already uses, then where.
+ */
 export const FAQ_SHOWN = [
-  "Dans quels pays Rabotka Business est-il disponible ?",
-  "Quelles organisations peuvent ouvrir un compte entreprise ?",
-  "Comment fonctionne l'analyse de CV ?",
+  "Qu'est-ce que Rabotka Business ?",
+  "Que puis-je faire avec Rabotka Business ?",
   "Puis-je publier mes offres sur LinkedIn ?",
-  "Comment se passe un entretien en visio ?",
-  "Les entretiens apparaissent-ils dans mon agenda ?",
-  "Que fait Rabotka dans ma messagerie ?",
+  "Puis-je importer des CV depuis Gmail ?",
+  "Dans quels pays Rabotka Business est-il disponible ?",
 ];
 
 export const FAQ = [
+  {
+    q: "Qu'est-ce que Rabotka Business ?",
+    a: "L'espace de recrutement de Rabotka pour les organisations : entreprises, ONG, écoles, structures de santé, administrations. Vous y publiez vos offres, recevez et triez les candidatures, menez vos entretiens et décidez en équipe, au même endroit. Vos offres sont diffusées auprès des candidats de Rabotka dans votre pays, et votre page carrières reçoit les candidatures venues d'ailleurs.",
+  },
+  {
+    q: "Que puis-je faire avec Rabotka Business ?",
+    a: "Rédiger et publier une offre en quelques minutes, recevoir les candidatures et les suivre étape par étape, faire lire et classer des CV pour un poste, obtenir le contact des candidats qui vous intéressent, proposer des entretiens en visio ou sur place avec un compte rendu à partager, et travailler à plusieurs avec vos recruteurs et évaluateurs. Le détail dépend de votre formule.",
+  },
+  {
+    q: "Puis-je importer des CV depuis Gmail ?",
+    a: "Oui. Connectez votre messagerie Gmail une fois, en lecture seule : vous voyez les e-mails récents qui contiennent un CV, vous cochez ceux à analyser, et seules ces pièces jointes sont lues. Aucun e-mail n'est conservé ni envoyé, et vous pouvez déconnecter Gmail à tout moment. Vous pouvez aussi déposer des PDF, des fichiers Word ou des photos de CV depuis votre appareil.",
+  },
   {
     q: "Puis-je publier mes offres sur LinkedIn ?",
     a: "Oui. Connectez votre compte LinkedIn une fois depuis une offre : elle se publie sur votre profil en carte, avec un texte prêt que vous relisez et l'image de votre choix. La carte ouvre votre page carrières, où les candidats postulent ; leurs candidatures sont repérées comme venues de LinkedIn. Chaque recruteur de l'équipe publie sur son propre profil.",
