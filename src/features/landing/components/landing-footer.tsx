@@ -121,6 +121,11 @@ const FOOTER_COLUMNS: { title: string; links: NavLink[] }[] = [
 /** Flags shown side by side before « +N ». */
 const MAX_FLAGS = 7;
 
+/** Nested chevrons, as in the logo's handshake: one V per tile, stacked into bands. */
+const CHEVRONS = `url("data:image/svg+xml,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="10"><path d="M0 10 L12 0 L24 10" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1.25"/></svg>',
+)}")`;
+
 /**
  * The footer, a dark panel set in the page: a statement with where Rabotka is
  * open, how to reach the team and where to follow it (as admins set it), the links in four
@@ -274,30 +279,45 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
           </div>
         </div>
 
+        {/* The chevrons of the Rabotka handshake, faint, at the very bottom
+            and gone a few rows up: the letters, filled with the footer's
+            colour, stand out of them. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-44 mask-[linear-gradient(to_top,black_0%,transparent_90%)]"
+          style={{ backgroundImage: CHEVRONS, backgroundSize: "24px 10px" }}
+        />
         {/* The name in large capitals drawn with a dashed outline (SVG: CSS
-            cannot dash a text stroke), cut by and fading into the bottom edge.
-            textLength spreads it over the width whatever the font's metrics. */}
+            cannot dash a text stroke), cut by the bottom edge and fading out
+            towards the top.
+            textLength spreads it over the width whatever the font's metrics.
+            The font builds some letters from overlapping pieces, whose outlines
+            crossed inside them: the same text, filled with the footer's own
+            colour, is laid over the outline and hides those inner lines, the
+            outer edge and the holes (R, A, B, O) staying drawn. */}
         <svg
           aria-hidden
           viewBox="0 0 1000 160"
-          className="pointer-events-none mx-auto block w-full max-w-7xl select-none px-5 pt-2 mask-[linear-gradient(to_bottom,black_25%,transparent_95%)] sm:px-8"
+          className="pointer-events-none mx-auto block w-full max-w-7xl select-none px-5 pt-2 mask-[linear-gradient(to_top,black_35%,transparent_100%)] sm:px-8"
         >
-          <text
-            x="500"
-            y="172"
-            textAnchor="middle"
-            textLength="980"
-            lengthAdjust="spacing"
-            fontSize="200"
-            fontWeight="800"
-            className="fill-none stroke-white/30 font-sans"
-            strokeWidth="2.5"
-            strokeDasharray="8 6"
-            strokeLinecap="round"
-            vectorEffect="non-scaling-stroke"
-          >
-            RABOTKA
-          </text>
+          {(["outline", "cover"] as const).map((layer) => (
+            <text
+              key={layer}
+              x="500"
+              y="172"
+              textAnchor="middle"
+              textLength="980"
+              lengthAdjust="spacing"
+              fontSize="200"
+              fontWeight="800"
+              className={layer === "outline" ? "fill-none stroke-white/30 font-sans" : "fill-[#0b0f0c] font-sans"}
+              {...(layer === "outline"
+                ? { strokeWidth: 4, strokeDasharray: "8 6", strokeLinecap: "round" as const, vectorEffect: "non-scaling-stroke" }
+                : {})}
+            >
+              RABOTKA
+            </text>
+          ))}
         </svg>
       </footer>
     </div>
