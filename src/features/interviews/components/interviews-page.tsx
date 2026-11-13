@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IconCalendarEvent,
@@ -15,6 +15,7 @@ import {
   IconHourglass,
   IconFileText,
   IconLink,
+  IconLock,
   IconPencil,
   IconUserPlus,
   IconVideo,
@@ -40,6 +41,7 @@ import { MODES, StatusChip, modeLabel } from "./interview-bits";
 import { CalendarLinkDialog } from "./calendar-link-dialog";
 import { ScheduleInterviewDialog } from "./schedule-interview-dialog";
 import { InviteGuestDialog } from "./invite-guest-dialog";
+import { PLANS_HREF, useVideoPlan } from "../use-video-plan";
 import { InterviewReportDialog } from "./interview-report-panel";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
@@ -201,6 +203,8 @@ function InterviewCard({ interview: i, past, focused = false }: Readonly<{ inter
   const [confirm, setConfirm] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [inviting, setInviting] = useState(false);
+  const videoPlan = useVideoPlan();
+  const router = useRouter();
   const cancel = useMutation({
     mutationFn: () => cancelInterview(i.id),
     onSuccess: () => {
@@ -355,9 +359,13 @@ function InterviewCard({ interview: i, past, focused = false }: Readonly<{ inter
                     </DropdownMenuItem>
                   )}
                   {editable && join?.internal && (
-                    <DropdownMenuItem onSelect={() => setInviting(true)} className={MENU_ITEM}>
-                      <IconUserPlus className="size-4" />
+                    <DropdownMenuItem
+                      onSelect={() => (videoPlan.allowed ? setInviting(true) : router.push(PLANS_HREF))}
+                      className={MENU_ITEM}
+                    >
+                      {videoPlan.allowed ? <IconUserPlus className="size-4" /> : <IconLock className="size-4" />}
                       Partager la visio
+                      {!videoPlan.allowed && <span className="ml-auto text-muted-foreground text-xs">Formule supérieure</span>}
                     </DropdownMenuItem>
                   )}
                   {editable && (

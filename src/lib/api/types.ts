@@ -200,6 +200,8 @@ export type BusinessPlan = {
   linkedinPosting?: boolean;
   /** « Exports RH »: candidates, staff register, ACPE. Absent before the service. */
   hrExports?: boolean;
+  /** « Visio dans Rabotka »: link made in Rabotka, guests, transcription. Absent before the service. */
+  videoInterviews?: boolean;
   /** Team places (the holder is the one administrator). Null: unlimited; 0: none. Absent before the team. */
   recruitersLimit?: number | null;
   reviewersLimit?: number | null;
@@ -261,6 +263,8 @@ export type MySubscription = {
     linkedinPosting?: boolean;
     /** « Exports RH »: candidates, staff register, ACPE declaration. */
     hrExports?: boolean;
+    /** « Visio dans Rabotka »: link made in Rabotka, guests, transcription. */
+    videoInterviews?: boolean;
     /** Team places and who fills them now (invited or active). Absent before the team. */
     recruitersLimit?: number | null;
     reviewersLimit?: number | null;
