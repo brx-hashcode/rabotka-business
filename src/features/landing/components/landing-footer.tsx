@@ -275,29 +275,35 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
         </div>
 
         {/* The name in large capitals drawn with a dashed outline (SVG: CSS
-            cannot dash a text stroke), cut by and fading into the bottom edge.
-            textLength spreads it over the width whatever the font's metrics. */}
+            cannot dash a text stroke), fading into the bottom edge.
+            textLength spreads it over the width whatever the font's metrics.
+            The font builds some letters from overlapping pieces, whose outlines
+            crossed inside them: the same text, filled with the footer's own
+            colour, is laid over the outline and hides those inner lines, the
+            outer edge and the holes (R, A, B, O) staying drawn. */}
         <svg
           aria-hidden
           viewBox="0 0 1000 160"
-          className="pointer-events-none mx-auto block w-full max-w-7xl select-none px-5 pt-2 mask-[linear-gradient(to_bottom,black_25%,transparent_95%)] sm:px-8"
+          className="pointer-events-none mx-auto -mt-2 block w-full max-w-7xl select-none px-5 mask-[linear-gradient(to_bottom,black_40%,transparent_98%)] sm:px-8"
         >
-          <text
-            x="500"
-            y="172"
-            textAnchor="middle"
-            textLength="980"
-            lengthAdjust="spacing"
-            fontSize="200"
-            fontWeight="800"
-            className="fill-none stroke-white/30 font-sans"
-            strokeWidth="2.5"
-            strokeDasharray="8 6"
-            strokeLinecap="round"
-            vectorEffect="non-scaling-stroke"
-          >
-            RABOTKA
-          </text>
+          {(["outline", "cover"] as const).map((layer) => (
+            <text
+              key={layer}
+              x="500"
+              y="158"
+              textAnchor="middle"
+              textLength="980"
+              lengthAdjust="spacing"
+              fontSize="200"
+              fontWeight="800"
+              className={layer === "outline" ? "fill-none stroke-white/30 font-sans" : "fill-[#0b0f0c] font-sans"}
+              {...(layer === "outline"
+                ? { strokeWidth: 4, strokeDasharray: "8 6", strokeLinecap: "round" as const, vectorEffect: "non-scaling-stroke" }
+                : {})}
+            >
+              RABOTKA
+            </text>
+          ))}
         </svg>
       </footer>
     </div>
