@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IconCalendarEvent,
@@ -41,7 +41,7 @@ import { MODES, StatusChip, modeLabel } from "./interview-bits";
 import { CalendarLinkDialog } from "./calendar-link-dialog";
 import { ScheduleInterviewDialog } from "./schedule-interview-dialog";
 import { InviteGuestDialog } from "./invite-guest-dialog";
-import { PLANS_HREF, useVideoPlan } from "../use-video-plan";
+import { useVideoPlan } from "../use-video-plan";
 import { InterviewReportDialog } from "./interview-report-panel";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
@@ -204,7 +204,6 @@ function InterviewCard({ interview: i, past, focused = false }: Readonly<{ inter
   const [reporting, setReporting] = useState(false);
   const [inviting, setInviting] = useState(false);
   const videoPlan = useVideoPlan();
-  const router = useRouter();
   const cancel = useMutation({
     mutationFn: () => cancelInterview(i.id),
     onSuccess: () => {
@@ -224,6 +223,8 @@ function InterviewCard({ interview: i, past, focused = false }: Readonly<{ inter
         ? { href: `/espace/entretiens${new URL(i.location).pathname}`, internal: true }
         : { href: i.location, internal: false }
       : null;
+  // A Rabotka room, booked before or not, opens only with the plan's visio.
+  const roomLocked = Boolean(join?.internal) && !videoPlan.loading && !videoPlan.allowed;
   const at = new Date(i.startsAt);
   // Several times offered and none chosen yet: the earliest shows, the rest below.
   const options = i.options ?? [];
@@ -291,7 +292,16 @@ function InterviewCard({ interview: i, past, focused = false }: Readonly<{ inter
           </span>
           {/* The call, where the format is said: the one thing to do on the day. */}
           {join &&
-            (join.internal ? (
+            (roomLocked ? (
+              <span
+                aria-disabled
+                title="Visio dans Rabotka : incluse dans les formules supérieures"
+                className={cn(JOIN, "cursor-not-allowed opacity-50")}
+              >
+                <IconLock className="size-4" />
+                Rejoindre
+              </span>
+            ) : join.internal ? (
               <Link href={join.href} className={JOIN}>
                 <IconVideo className="size-4" />
                 Rejoindre
@@ -352,20 +362,16 @@ function InterviewCard({ interview: i, past, focused = false }: Readonly<{ inter
                   <IconDots className="size-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64 rounded-2xl border-0 bg-card p-1.5 shadow-soft">
-                  {join && i.location && (
+                  {join && i.location && !roomLocked && (
                     <DropdownMenuItem onSelect={() => copyLink(i.location!, join.internal)} className={MENU_ITEM}>
                       <IconLink className="size-4" />
                       Copier le lien de la visio
                     </DropdownMenuItem>
                   )}
                   {editable && join?.internal && (
-                    <DropdownMenuItem
-                      onSelect={() => (videoPlan.allowed ? setInviting(true) : router.push(PLANS_HREF))}
-                      className={MENU_ITEM}
-                    >
+                    <DropdownMenuItem disabled={!videoPlan.allowed} onSelect={() => setInviting(true)} className={MENU_ITEM}>
                       {videoPlan.allowed ? <IconUserPlus className="size-4" /> : <IconLock className="size-4" />}
                       Partager la visio
-                      {!videoPlan.allowed && <span className="ml-auto text-muted-foreground text-xs">Formule supérieure</span>}
                     </DropdownMenuItem>
                   )}
                   {editable && (

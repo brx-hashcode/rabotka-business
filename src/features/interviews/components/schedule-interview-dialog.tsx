@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IconLock, IconPlus, IconVideo, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
@@ -20,7 +19,7 @@ import {
 import type { Interview, InterviewMode } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { MODES } from "./interview-bits";
-import { PLANS_HREF, useVideoPlan } from "../use-video-plan";
+import { useVideoPlan } from "../use-video-plan";
 
 /** Tomorrow at 10:00, local: a sensible first proposal. */
 function tomorrowAtTen(): Date {
@@ -255,12 +254,12 @@ export function ScheduleInterviewDialog({
                 </button>
               ) : (
                 !videoPlan.loading && (
-                  // Not in the plan: a Meet or Zoom link above still works.
-                  <Link href={PLANS_HREF} className="inline-flex items-center gap-1.5 pt-1 font-medium text-muted-foreground text-sm hover:text-foreground">
+                  // Not in the plan, and not clickable: a Meet or Zoom link above still works.
+                  <span aria-disabled className="inline-flex cursor-not-allowed items-center gap-1.5 pt-1 font-medium text-muted-foreground/70 text-sm">
                     <IconLock className="size-4" />
                     Créer un lien de visio
                     <span className="font-normal">· inclus dans les formules supérieures</span>
-                  </Link>
+                  </span>
                 )
               ))}
           </label>
