@@ -294,7 +294,7 @@ function CurrentPlan({ data, focused }: Readonly<{ data: MySubscription; focused
         </ul>
       )}
 
-      {data.upcoming.length > 0 && <UpcomingPeriods upcoming={data.upcoming} entitlements={e} focused={focused} />}
+      {data.upcoming.length > 0 && <UpcomingPeriods upcoming={data.upcoming} history={data.history} entitlements={e} focused={focused} />}
     </section>
   );
 }
@@ -305,6 +305,12 @@ const LENGTH: Record<string, string> = { MONTHLY: "1 mois", ANNUAL: "1 an" };
  * What the running period still has, in words, for the « start now » warning.
  * The packs are not lost: they go on with the next plan.
  */
+/** « 10 jours », « 1 jour »: what a paused period keeps. */
+function pausedDays(p: SubscriptionPeriod): string {
+  const days = Math.max(1, Math.ceil((Date.parse(p.endsAt) - Date.now()) / 86_400_000));
+  return days > 1 ? `${days} jours` : "1 jour";
+}
+
 function leftover(e: MySubscription["entitlements"]): string[] {
   const out: string[] = [];
   const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
@@ -330,9 +336,15 @@ function leftover(e: MySubscription["entitlements"]): string[] {
  */
 function UpcomingPeriods({
   upcoming,
+  history,
   entitlements,
   focused,
-}: Readonly<{ upcoming: SubscriptionPeriod[]; entitlements: MySubscription["entitlements"]; focused: string | null }>) {
+}: Readonly<{
+  upcoming: SubscriptionPeriod[];
+  history: SubscriptionPeriod[];
+  entitlements: MySubscription["entitlements"];
+  focused: string | null;
+}>) {
   const queryClient = useQueryClient();
   const [confirm, setConfirm] = useState<SubscriptionPeriod | null>(null);
   const start = useMutation({
@@ -345,6 +357,10 @@ function UpcomingPeriods({
     onError: (err) => toast.error(friendlyError(err, "La formule n'a pas pu démarrer. Réessayez dans un instant.")),
   });
   const lost = leftover(entitlements);
+  // The running period (it ends when the plan does), when Rabotka granted it:
+  // paused by a start, not lost.
+  const gifted =
+    history.find((p) => p.granted && !p.paid && p.status === "ACTIVE" && p.endsAt === entitlements.endsAt) ?? null;
   // Soonest first, whatever order they come in: only the first one can be
   // started now (the server refuses the others).
   const queued = [...upcoming].sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt));
@@ -402,14 +418,22 @@ function UpcomingPeriods({
                   ses avantages à zéro.
                 </DialogDescription>
               </div>
-              <div className="space-y-2 rounded-2xl bg-chip-amber/60 p-4 text-chip-amber-foreground text-sm">
-                <p className="font-medium">Attention : votre formule actuelle s&apos;arrête aujourd&apos;hui.</p>
-                {lost.length > 0 ? (
-                  <p>Ce qu&apos;il lui reste est perdu : {lost.join(", ")}.</p>
-                ) : (
-                  <p>Il ne lui reste plus rien à utiliser.</p>
-                )}
-              </div>
+              {gifted ? (
+                // A plan Rabotka granted is paused, not lost: its days come back after.
+                <div className="space-y-2 rounded-2xl bg-chip-green/60 p-4 text-chip-green-foreground text-sm">
+                  <p className="font-medium">Votre formule {gifted.planName} offerte est mise en pause.</p>
+                  <p>Ses {pausedDays(gifted)} restants reprendront à la fin de {confirm.planName}.</p>
+                </div>
+              ) : (
+                <div className="space-y-2 rounded-2xl bg-chip-amber/60 p-4 text-chip-amber-foreground text-sm">
+                  <p className="font-medium">Attention : votre formule actuelle s&apos;arrête aujourd&apos;hui.</p>
+                  {lost.length > 0 ? (
+                    <p>Ce qu&apos;il lui reste est perdu : {lost.join(", ")}.</p>
+                  ) : (
+                    <p>Il ne lui reste plus rien à utiliser.</p>
+                  )}
+                </div>
+              )}
               <div className="flex gap-2">
                 <button
                   type="button"
