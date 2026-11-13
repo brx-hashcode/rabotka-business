@@ -1,6 +1,4 @@
 import {
-  IconAffiliate,
-  IconCalendarStats,
   IconLayoutKanban,
   IconMapPin,
   IconSortDescending,
@@ -38,11 +36,6 @@ export const ATS_PILLARS: Pillar[] = [
     icon: IconSortDescending,
   },
   {
-    title: "Une offre, partout à la fois",
-    text: "Publiée sur Rabotka, jusque sur WhatsApp côté candidats, sur votre page carrières visible sur Google, sur LinkedIn et en affiche à QR code.",
-    icon: IconAffiliate,
-  },
-  {
     title: "Un pipeline lisible",
     text: "De la candidature reçue au candidat retenu, chacun a son statut et son historique. Rien ne se perd entre deux e-mails.",
     icon: IconLayoutKanban,
@@ -51,11 +44,6 @@ export const ATS_PILLARS: Pillar[] = [
     title: "Recruter à plusieurs",
     text: "Recruteurs et évaluateurs donnent leur avis et laissent leurs notes. L'Activité de l'équipe garde la trace de chaque décision.",
     icon: IconUsers,
-  },
-  {
-    title: "Branché sur vos outils",
-    text: "Les CV choisis dans votre messagerie Gmail, les entretiens dans Google Agenda, Outlook ou Apple Calendrier, les rapports en PDF et en Excel.",
-    icon: IconCalendarStats,
   },
   {
     title: "Pensé pour l'Afrique",

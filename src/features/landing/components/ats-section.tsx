@@ -14,6 +14,7 @@ import { PipelineMockup } from "../mockups/ats-mockups";
 import { ATS_PILLARS, PIPELINE } from "../site-content";
 import { SectionHeading } from "./section-heading";
 import { IconTile } from "./icon-tile";
+import { ConnectionsSection } from "./connections-section";
 
 /** One icon per stage, in PIPELINE's order. */
 const STEP_ICONS = [IconSpeakerphone, IconInbox, IconArrowsSort, IconVideo, IconUsersGroup, IconFileCertificate];
@@ -54,7 +55,7 @@ export function PipelineSteps() {
 /** What makes it an ATS, not a job board: six pillars. */
 export function AtsPillars() {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 sm:grid-cols-2">
       {ATS_PILLARS.map(({ title, text, icon }) => (
         <div key={title} className="space-y-3 rounded-3xl bg-page p-6">
           <IconTile icon={icon} surface="card" />
@@ -96,6 +97,7 @@ export function AtsSection({ more = true }: Readonly<{ more?: boolean }>) {
           </div>
         </div>
         <PipelineSteps />
+        <ConnectionsSection />
         <AtsPillars />
       </div>
     </section>
