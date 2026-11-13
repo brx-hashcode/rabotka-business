@@ -93,8 +93,8 @@ export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryNam
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="relative space-y-5 rounded-3xl bg-card p-6 sm:p-8">
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextField control={form.control} name="lastName" label="Nom" autoComplete="family-name" />
-          <TextField control={form.control} name="firstName" label="Prénom" autoComplete="given-name" />
+          <TextField control={form.control} name="lastName" label="Nom" autoComplete="family-name" placeholder="Mabiala" />
+          <TextField control={form.control} name="firstName" label="Prénom" autoComplete="given-name" placeholder="Grâce" />
         </div>
         <TextField
           control={form.control}
@@ -105,7 +105,7 @@ export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryNam
           placeholder="prenom.nom@entreprise.com"
         />
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextField control={form.control} name="company" label="Entreprise" autoComplete="organization" />
+          <TextField control={form.control} name="company" label="Entreprise" autoComplete="organization" placeholder="Le nom de votre organisation" />
           <TextField control={form.control} name="jobTitle" label="Fonction" autoComplete="organization-title" placeholder="Responsable RH, gérant…" />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -134,6 +134,7 @@ export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryNam
             inputMode="tel"
             autoComplete="tel-national"
             prefix={dialCode(country)}
+            placeholder="Votre numéro, sans indicatif"
           />
         </div>
 
