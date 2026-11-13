@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { IconLogout } from "@tabler/icons-react";
 
 import { BusinessLockup } from "#/components/business-lockup";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
@@ -13,18 +11,16 @@ import { useMember } from "#/features/team/use-member";
 import { builtAtTitle, versionLabel } from "#/lib/app-version";
 import { getMyBusiness, myBusinessKey } from "#/lib/api/business-controller";
 import { cn, getInitials } from "#/lib/utils";
-import { LogoutDialog } from "./logout-dialog";
 import { isActive, NAV_GROUPS } from "./nav-items";
 
 /**
  * The space's white rail: the brand, the pages (the ones still to come
- * greyed « Bientôt ») and the organisation's card with sign-out.
+ * greyed « Bientôt ») and the build's version (sign-out is in the account menu, top right).
  * `onNavigate` closes the mobile sheet after a tap.
  */
 export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>) {
   const pathname = usePathname();
   const { data: business } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
-  const [confirmLogout, setConfirmLogout] = useState(false);
   // Each person sees the pages its role uses (the API refuses the rest anyway).
   const { role } = useMember();
   const groups = NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => pageAllowed(role, i.href)) })).filter(
@@ -112,31 +108,10 @@ export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>
       </nav>
 
       <div className="pt-4">
-        <div className="flex items-center gap-3 rounded-2xl bg-page p-3">
-          <Avatar className="size-10 rounded-xl">
-            {business?.logoUrl && <AvatarImage src={business.logoUrl} alt="" className="object-cover" />}
-            <AvatarFallback className="rounded-xl bg-brand-lime font-semibold text-[#0f2414]">
-              {business?.name ? getInitials(business.name) : ""}
-            </AvatarFallback>
-          </Avatar>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-medium text-sm">{business?.name ?? "Mon organisation"}</p>
-            <p className="truncate text-muted-foreground text-xs">Compte entreprise</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setConfirmLogout(true)}
-            aria-label="Se déconnecter"
-            className="rounded-xl p-2 text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
-          >
-            <IconLogout className="size-5" />
-          </button>
-        </div>
-        <p className="mt-2 px-3 text-[11px] text-muted-foreground/70 tabular-nums" title={builtAtTitle()}>
+        <p className="px-3 text-[11px] text-muted-foreground/70 tabular-nums" title={builtAtTitle()}>
           {versionLabel()}
         </p>
       </div>
-      <LogoutDialog open={confirmLogout} onOpenChange={setConfirmLogout} />
     </div>
   );
 }
