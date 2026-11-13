@@ -1,10 +1,10 @@
 "use client";
 
 import { de } from "#/features/subscription/french";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IconCalendarRepeat,
@@ -79,6 +79,24 @@ export function SubscriptionPage() {
     !!data?.entitlements.plan && ((packs.data?.onSale.length ?? 0) > 0 || (packs.data?.credits.length ?? 0) > 0);
   const onPacks = hasPacks && tab === "packs";
 
+  // Opened from a notification: what it is about, in view and ringed — a
+  // queued period by its id, the running plan, or the plans to choose.
+  const focus = useSearchParams().get("periode");
+  const target = !focus || !data
+    ? null
+    : data.upcoming.some((p) => p.id === focus)
+      ? `periode-${focus}`
+      : focus === "formules"
+        ? "formules"
+        : "formule-actuelle";
+  useEffect(() => {
+    if (!target) return;
+    if (tab === "packs") void setTab(null);
+    const t = setTimeout(() => document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "center" }), 150);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per opened notice
+  }, [target]);
+
   return (
     <div className="w-full space-y-8 pt-2">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -143,8 +161,8 @@ export function SubscriptionPage() {
             <PacksSection data={data} />
           ) : (
             <>
-              <CurrentPlan data={data} />
-              <PlanChooser data={data} />
+              <CurrentPlan data={data} focused={target} />
+              <PlanChooser data={data} focused={target === "formules"} />
             </>
           )}
         </>
@@ -181,11 +199,12 @@ function PayCountryNotice() {
   );
 }
 
-function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
+function CurrentPlan({ data, focused }: Readonly<{ data: MySubscription; focused: string | null }>) {
   const e = data.entitlements;
+  const ring = focused === "formule-actuelle" && "ring-2 ring-whatsapp-dark";
   if (!e.plan || !e.status) {
     return (
-      <section className="space-y-2 rounded-3xl bg-card p-6">
+      <section id="formule-actuelle" className={cn("scroll-mt-24 space-y-2 rounded-3xl bg-card p-6", ring)}>
         <h2 className="font-semibold text-lg">Aucune formule en cours</h2>
         <p className="text-muted-foreground text-sm">
           Choisissez une formule pour publier vos offres. Sans formule, chaque contact est payant.
@@ -202,7 +221,7 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
       ? `Pour la période, jusqu'au ${date(e.endsAt)}.`
       : undefined;
   return (
-    <section className="space-y-6 rounded-3xl bg-card p-6">
+    <section id="formule-actuelle" className={cn("scroll-mt-24 space-y-6 rounded-3xl bg-card p-6", ring)}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -276,7 +295,7 @@ function CurrentPlan({ data }: Readonly<{ data: MySubscription }>) {
         </ul>
       )}
 
-      {data.upcoming.length > 0 && <UpcomingPeriods upcoming={data.upcoming} entitlements={e} />}
+      {data.upcoming.length > 0 && <UpcomingPeriods upcoming={data.upcoming} history={data.history} entitlements={e} focused={focused} />}
     </section>
   );
 }
@@ -287,6 +306,12 @@ const LENGTH: Record<string, string> = { MONTHLY: "1 mois", ANNUAL: "1 an" };
  * What the running period still has, in words, for the « start now » warning.
  * The packs are not lost: they go on with the next plan.
  */
+/** « 10 jours », « 1 jour »: what a paused period keeps. */
+function pausedDays(p: SubscriptionPeriod): string {
+  const days = Math.max(1, Math.ceil((Date.parse(p.endsAt) - Date.now()) / 86_400_000));
+  return days > 1 ? `${days} jours` : "1 jour";
+}
+
 function leftover(e: MySubscription["entitlements"]): string[] {
   const out: string[] = [];
   const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
@@ -312,8 +337,15 @@ function leftover(e: MySubscription["entitlements"]): string[] {
  */
 function UpcomingPeriods({
   upcoming,
+  history,
   entitlements,
-}: Readonly<{ upcoming: SubscriptionPeriod[]; entitlements: MySubscription["entitlements"] }>) {
+  focused,
+}: Readonly<{
+  upcoming: SubscriptionPeriod[];
+  history: SubscriptionPeriod[];
+  entitlements: MySubscription["entitlements"];
+  focused: string | null;
+}>) {
   const queryClient = useQueryClient();
   const [confirm, setConfirm] = useState<SubscriptionPeriod | null>(null);
   const start = useMutation({
@@ -326,6 +358,10 @@ function UpcomingPeriods({
     onError: (err) => toast.error(friendlyError(err, "La formule n'a pas pu démarrer. Réessayez dans un instant.")),
   });
   const lost = leftover(entitlements);
+  // The running period (it ends when the plan does), when Rabotka granted it:
+  // paused by a start, not lost.
+  const gifted =
+    history.find((p) => p.granted && !p.paid && p.status === "ACTIVE" && p.endsAt === entitlements.endsAt) ?? null;
   // Soonest first, whatever order they come in: only the first one can be
   // started now (the server refuses the others).
   const queued = [...upcoming].sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt));
@@ -334,7 +370,14 @@ function UpcomingPeriods({
     <div className="space-y-2">
       <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">À suivre</p>
       {queued.map((p, i) => (
-        <div key={p.id} className="flex flex-wrap items-start gap-4 rounded-2xl bg-page p-4 sm:items-center">
+        <div
+          key={p.id}
+          id={`periode-${p.id}`}
+          className={cn(
+            "flex scroll-mt-24 flex-wrap items-start gap-4 rounded-2xl bg-page p-4 sm:items-center",
+            focused === `periode-${p.id}` && "ring-2 ring-whatsapp-dark",
+          )}
+        >
           <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-card">
             <IconCalendarRepeat className="size-5" />
           </span>
@@ -376,14 +419,22 @@ function UpcomingPeriods({
                   ses avantages à zéro.
                 </DialogDescription>
               </div>
-              <div className="space-y-2 rounded-2xl bg-chip-amber/60 p-4 text-chip-amber-foreground text-sm">
-                <p className="font-medium">Attention : votre formule actuelle s&apos;arrête aujourd&apos;hui.</p>
-                {lost.length > 0 ? (
-                  <p>Ce qu&apos;il lui reste est perdu : {lost.join(", ")}.</p>
-                ) : (
-                  <p>Il ne lui reste plus rien à utiliser.</p>
-                )}
-              </div>
+              {gifted ? (
+                // A plan Rabotka granted is paused, not lost: its days come back after.
+                <div className="space-y-2 rounded-2xl bg-chip-green/60 p-4 text-chip-green-foreground text-sm">
+                  <p className="font-medium">Votre formule {gifted.planName} offerte est mise en pause.</p>
+                  <p>Ses {pausedDays(gifted)} restants reprendront à la fin de {confirm.planName}.</p>
+                </div>
+              ) : (
+                <div className="space-y-2 rounded-2xl bg-chip-amber/60 p-4 text-chip-amber-foreground text-sm">
+                  <p className="font-medium">Attention : votre formule actuelle s&apos;arrête aujourd&apos;hui.</p>
+                  {lost.length > 0 ? (
+                    <p>Ce qu&apos;il lui reste est perdu : {lost.join(", ")}.</p>
+                  ) : (
+                    <p>Il ne lui reste plus rien à utiliser.</p>
+                  )}
+                </div>
+              )}
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -479,7 +530,7 @@ function Feature({ children }: Readonly<{ children: React.ReactNode }>) {
   );
 }
 
-function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
+function PlanChooser({ data, focused = false }: Readonly<{ data: MySubscription; focused?: boolean }>) {
   const router = useRouter();
   // In the organisation's country's currency (dollars in the DRC).
   const { price: priceLabel } = useDisplayCurrency();
@@ -505,7 +556,7 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
 
   if (data.plans.length === 0) return null;
   return (
-    <section className="space-y-5">
+    <section id="formules" className={cn("scroll-mt-24 space-y-5 rounded-3xl", focused && "ring-2 ring-whatsapp-dark ring-offset-8 ring-offset-page")}>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1">
           <h2 className="font-semibold text-xl">{current ? "Renouveler ou changer de formule" : "Choisir une formule"}</h2>
@@ -564,7 +615,8 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
           return (
             <article
               key={plan.id}
-              className={cn("flex flex-col gap-5 rounded-3xl bg-card p-6", (isCurrent || isFeatured) && "ring-2 ring-ink")}
+              // The plan running now stands out whichever period the toggle shows.
+              className={cn("flex flex-col gap-5 rounded-3xl bg-card p-6", (isCurrent || switching || isFeatured) && "ring-2 ring-ink")}
             >
               <div className="space-y-1">
                 <div className="flex items-center justify-between gap-2">
@@ -581,7 +633,7 @@ function PlanChooser({ data }: Readonly<{ data: MySubscription }>) {
                       Votre formule
                     </span>
                   ) : switching ? (
-                    <span className="rounded-full bg-page px-2.5 py-1 font-medium text-muted-foreground text-xs">
+                    <span className="rounded-full bg-chip-green px-2.5 py-1 font-medium text-chip-green-foreground text-xs">
                       Votre formule, en {runningPeriod === "ANNUAL" ? "annuel" : "mensuel"}
                     </span>
                   ) : scheduled.has(plan.name) ? (
