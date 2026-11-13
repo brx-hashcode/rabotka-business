@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { IconLock, IconMicrophone, IconMicrophoneOff } from "@tabler/icons-react";
@@ -19,7 +18,7 @@ import {
 } from "#/lib/api/interview-controller";
 import { cn } from "#/lib/utils";
 import { useCallTranscript } from "../use-call-transcript";
-import { PLANS_HREF, useVideoPlan } from "../use-video-plan";
+import { useVideoPlan } from "../use-video-plan";
 import { speechErrorText } from "../use-dictation";
 
 const CONSENT_TEXT: Record<string, string> = {
@@ -45,7 +44,6 @@ function Live() {
  */
 export function HostTranscription({ interviewId, inCall }: Readonly<{ interviewId: string; inCall: boolean }>) {
   const videoPlan = useVideoPlan();
-  const router = useRouter();
   const queryClient = useQueryClient();
   const key = interviewTranscriptKey(interviewId);
   const query = useQuery({
@@ -75,20 +73,21 @@ export function HostTranscription({ interviewId, inCall }: Readonly<{ interviewI
           <span className="truncate">{consent ? CONSENT_TEXT[consent] : "En attente de l'accord du candidat"}</span>
         </span>
       )}
-      <Button
-        type="button"
-        variant="ghost"
-        className={cn("h-10 shrink-0 rounded-full px-4 text-sm sm:h-10", on ? "bg-destructive/10 text-destructive hover:bg-destructive/15" : "bg-card")}
-        loading={toggle.isPending}
-        disabled={query.isLoading}
-        aria-pressed={on}
-        title={!on && !videoPlan.allowed ? "Transcription : incluse dans les formules supérieures" : undefined}
-        // Switching it on is the plan's; switching it off, always.
-        onClick={() => (!on && !videoPlan.allowed ? router.push(PLANS_HREF) : toggle.mutate(!on))}
-      >
+      {/* Switching it on is the plan's; switching it off, always. Disabled, the title shows on the wrapper. */}
+      <span title={!on && !videoPlan.allowed ? "Transcription : incluse dans les formules supérieures" : undefined}>
+        <Button
+          type="button"
+          variant="ghost"
+          className={cn("h-10 shrink-0 rounded-full px-4 text-sm sm:h-10", on ? "bg-destructive/10 text-destructive hover:bg-destructive/15" : "bg-card")}
+          loading={toggle.isPending}
+          disabled={query.isLoading || (!on && !videoPlan.allowed)}
+          aria-pressed={on}
+          onClick={() => toggle.mutate(!on)}
+        >
         {on ? <IconMicrophoneOff className="size-4" /> : videoPlan.allowed ? <IconMicrophone className="size-4" /> : <IconLock className="size-4" />}
         <span className="hidden lg:inline">{on ? "Arrêter la transcription" : "Transcrire"}</span>
-      </Button>
+        </Button>
+      </span>
     </div>
   );
 }

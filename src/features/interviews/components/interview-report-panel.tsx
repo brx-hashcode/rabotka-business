@@ -7,6 +7,7 @@ import {
   IconCheck,
   IconCopy,
   IconFileText,
+  IconLock,
   IconMail,
   IconMicrophone,
   IconPencil,
@@ -18,6 +19,7 @@ import {
 
 import { Bone } from "#/components/page-skeletons";
 import { useDictation } from "#/features/interviews/use-dictation";
+import { useVideoPlan } from "#/features/interviews/use-video-plan";
 import { PreviewSheet } from "#/components/preview-sheet";
 import { appConfig } from "#/config";
 import { Button } from "#/components/ui/button";
@@ -86,6 +88,9 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only the text decides
   }, [draft]);
 
+  // The report written by AI comes with the visio service; notes and dictation stay free.
+  const videoPlan = useVideoPlan();
+  const reportLocked = !videoPlan.loading && !videoPlan.allowed;
   const write = useMutation({
     mutationFn: async () => {
       // The notes on screen are the ones written from, even typed a second ago.
@@ -238,13 +243,23 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
               Copier
             </Button>
           )}
-          <Button type="button" className="h-11 flex-1 rounded-full text-sm sm:h-11" disabled={!enough || writing} loading={write.isPending} onClick={() => write.mutate()}>
-            {report ? <IconRefresh className={cn("size-4", writing && "animate-spin")} /> : <IconFileText className="size-4" />}
-            {writing ? "Rédaction en cours…" : report ? "Réécrire le compte rendu" : "Rédiger le compte rendu"}
-          </Button>
+          {reportLocked ? (
+            // Not clickable, the reason said in the button itself.
+            <Button type="button" variant="ghost" className="h-11 flex-1 rounded-full bg-page text-sm sm:h-11" disabled>
+              <IconLock className="size-4" />
+              Compte rendu par IA · formule supérieure
+            </Button>
+          ) : (
+            <Button type="button" className="h-11 flex-1 rounded-full text-sm sm:h-11" disabled={!enough || writing} loading={write.isPending} onClick={() => write.mutate()}>
+              {report ? <IconRefresh className={cn("size-4", writing && "animate-spin")} /> : <IconFileText className="size-4" />}
+              {writing ? "Rédaction en cours…" : report ? "Réécrire le compte rendu" : "Rédiger le compte rendu"}
+            </Button>
+          )}
         </div>
         <p className="text-center text-muted-foreground text-xs">
-          {enough
+          {reportLocked
+            ? "Le compte rendu rédigé par IA est inclus dans les formules supérieures. Vos notes restent enregistrées."
+            : enough
             ? lines.length > 0
               ? "Rédigé par IA à partir de la transcription et de vos notes : relisez-le avant de l'envoyer."
               : "Rédigé par IA à partir de vos notes : relisez-le avant de l'envoyer."
