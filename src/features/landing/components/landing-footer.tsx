@@ -275,7 +275,8 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
         </div>
 
         {/* The name in large capitals drawn with a dashed outline (SVG: CSS
-            cannot dash a text stroke), fading into the bottom edge.
+            cannot dash a text stroke), cut by the bottom edge and fading out
+            towards the top.
             textLength spreads it over the width whatever the font's metrics.
             The font builds some letters from overlapping pieces, whose outlines
             crossed inside them: the same text, filled with the footer's own
@@ -284,13 +285,13 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
         <svg
           aria-hidden
           viewBox="0 0 1000 160"
-          className="pointer-events-none mx-auto -mt-2 block w-full max-w-7xl select-none px-5 mask-[linear-gradient(to_bottom,black_40%,transparent_98%)] sm:px-8"
+          className="pointer-events-none mx-auto block w-full max-w-7xl select-none px-5 pt-2 mask-[linear-gradient(to_top,black_35%,transparent_100%)] sm:px-8"
         >
           {(["outline", "cover"] as const).map((layer) => (
             <text
               key={layer}
               x="500"
-              y="158"
+              y="172"
               textAnchor="middle"
               textLength="980"
               lengthAdjust="spacing"
