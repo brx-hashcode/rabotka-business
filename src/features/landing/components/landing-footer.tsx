@@ -280,7 +280,7 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
             out of it. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-10 mask-[linear-gradient(to_top,black_0%,transparent_100%)] sm:h-14"
+          className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-16 mask-[linear-gradient(to_top,black_0%,transparent_100%)] sm:h-28"
         >
           <FlickeringGrid squareSize={4} gridGap={6} color="#cbffa5" maxOpacity={0.35} flickerChance={0.3} />
         </div>
