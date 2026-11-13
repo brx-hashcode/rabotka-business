@@ -32,6 +32,7 @@ import {
   SOLUTION_LINKS,
   type NavLink,
 } from "../content";
+import { FlickeringGrid } from "./flickering-grid";
 import { SmartLink } from "./smart-link";
 
 function contactCards(contact: SupportContact | undefined) {
@@ -120,11 +121,6 @@ const FOOTER_COLUMNS: { title: string; links: NavLink[] }[] = [
 
 /** Flags shown side by side before « +N ». */
 const MAX_FLAGS = 7;
-
-/** Nested chevrons, as in the logo's handshake: one V per tile, stacked into bands. */
-const CHEVRONS = `url("data:image/svg+xml,${encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="10"><path d="M0 10 L12 0 L24 10" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1.25"/></svg>',
-)}")`;
 
 /**
  * The footer, a dark panel set in the page: a statement with where Rabotka is
@@ -279,14 +275,15 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
           </div>
         </div>
 
-        {/* The chevrons of the Rabotka handshake, faint, at the very bottom
-            and gone a few rows up: the letters, filled with the footer's
-            colour, stand out of them. */}
+        {/* A grid of faint lime squares flickering at the very bottom, gone a
+            few rows up: the letters, filled with the footer's colour, stand
+            out of it. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-44 mask-[linear-gradient(to_top,black_0%,transparent_90%)]"
-          style={{ backgroundImage: CHEVRONS, backgroundSize: "24px 10px" }}
-        />
+          className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-16 mask-[linear-gradient(to_top,black_0%,transparent_100%)] sm:h-28"
+        >
+          <FlickeringGrid squareSize={4} gridGap={6} color="#cbffa5" maxOpacity={0.35} flickerChance={0.3} />
+        </div>
         {/* The name in large capitals drawn with a dashed outline (SVG: CSS
             cannot dash a text stroke), cut by the bottom edge and fading out
             towards the top.
