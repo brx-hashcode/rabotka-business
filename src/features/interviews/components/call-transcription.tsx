@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { IconMicrophone, IconMicrophoneOff } from "@tabler/icons-react";
+import { IconLock, IconMicrophone, IconMicrophoneOff } from "@tabler/icons-react";
 
 import { Button } from "#/components/ui/button";
 import { friendlyError } from "#/lib/api/friendly-error";
@@ -18,6 +19,7 @@ import {
 } from "#/lib/api/interview-controller";
 import { cn } from "#/lib/utils";
 import { useCallTranscript } from "../use-call-transcript";
+import { PLANS_HREF, useVideoPlan } from "../use-video-plan";
 import { speechErrorText } from "../use-dictation";
 
 const CONSENT_TEXT: Record<string, string> = {
@@ -42,6 +44,8 @@ function Live() {
  * accept, and both are merged by time for the « Compte rendu ».
  */
 export function HostTranscription({ interviewId, inCall }: Readonly<{ interviewId: string; inCall: boolean }>) {
+  const videoPlan = useVideoPlan();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const key = interviewTranscriptKey(interviewId);
   const query = useQuery({
@@ -78,9 +82,11 @@ export function HostTranscription({ interviewId, inCall }: Readonly<{ interviewI
         loading={toggle.isPending}
         disabled={query.isLoading}
         aria-pressed={on}
-        onClick={() => toggle.mutate(!on)}
+        title={!on && !videoPlan.allowed ? "Transcription : incluse dans les formules supérieures" : undefined}
+        // Switching it on is the plan's; switching it off, always.
+        onClick={() => (!on && !videoPlan.allowed ? router.push(PLANS_HREF) : toggle.mutate(!on))}
       >
-        {on ? <IconMicrophoneOff className="size-4" /> : <IconMicrophone className="size-4" />}
+        {on ? <IconMicrophoneOff className="size-4" /> : videoPlan.allowed ? <IconMicrophone className="size-4" /> : <IconLock className="size-4" />}
         <span className="hidden lg:inline">{on ? "Arrêter la transcription" : "Transcrire"}</span>
       </Button>
     </div>

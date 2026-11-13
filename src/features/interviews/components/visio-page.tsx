@@ -2,10 +2,11 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { JaaSMeeting } from "@jitsi/react-sdk";
-import { IconArrowLeft, IconExternalLink, IconFileText, IconNotes, IconPlayerStop, IconUserPlus, IconVideo } from "@tabler/icons-react";
+import { IconArrowLeft, IconExternalLink, IconFileText, IconNotes, IconLock, IconPlayerStop, IconUserPlus, IconVideo } from "@tabler/icons-react";
 
 import { ActionDialog } from "#/components/action-dialog";
 import { BusinessLockup } from "#/components/business-lockup";
@@ -18,6 +19,7 @@ import { cn } from "#/lib/utils";
 import { InterviewReportDialog } from "./interview-report-panel";
 import { GuestTranscription, HostTranscription } from "./call-transcription";
 import { InviteGuestDialog } from "./invite-guest-dialog";
+import { PLANS_HREF, useVideoPlan } from "../use-video-plan";
 import { VisioWaiting } from "./visio-waiting";
 
 /**
@@ -162,6 +164,8 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
   const api = useRef<CallApi | null>(null);
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const videoPlan = useVideoPlan();
+  const router = useRouter();
   const [endedNow, setEndedNow] = useState(false);
   const ended = endedNow || Boolean(v?.endedAt);
   const end = useMutation({
@@ -218,10 +222,10 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
               variant="ghost"
               className="h-10 shrink-0 rounded-full bg-card px-4 text-sm sm:h-10"
               aria-label="Partager la visio"
-              title="Partager la visio"
-              onClick={() => setSharing(true)}
+              title={videoPlan.allowed ? "Partager la visio" : "Partager la visio : inclus dans les formules supérieures"}
+              onClick={() => (videoPlan.allowed ? setSharing(true) : router.push(PLANS_HREF))}
             >
-              <IconUserPlus className="size-4" />
+              {videoPlan.allowed ? <IconUserPlus className="size-4" /> : <IconLock className="size-4" />}
               <span className="hidden lg:inline">Partager</span>
             </Button>
             <HostTranscription interviewId={v.interviewId} inCall={v.provider === "jaas" && !left} />

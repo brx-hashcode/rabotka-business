@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconPlus, IconVideo, IconX } from "@tabler/icons-react";
+import { IconLock, IconPlus, IconVideo, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
@@ -19,6 +20,7 @@ import {
 import type { Interview, InterviewMode } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { MODES } from "./interview-bits";
+import { PLANS_HREF, useVideoPlan } from "../use-video-plan";
 
 /** Tomorrow at 10:00, local: a sensible first proposal. */
 function tomorrowAtTen(): Date {
@@ -69,6 +71,7 @@ export function ScheduleInterviewDialog({
 }>) {
   const queryClient = useQueryClient();
   const business = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness, enabled: open });
+  const videoPlan = useVideoPlan();
   // One time, or up to three for the candidate to choose from.
   const initial = existing?.options?.length
     ? existing.options.map((x) => new Date(x.startsAt))
@@ -239,17 +242,27 @@ export function ScheduleInterviewDialog({
               className={field}
             />
             {mode === "PHONE" && !location.trim() && <span className="text-muted-foreground text-xs">Sinon, le candidat sera prévenu que vous l&apos;appelez.</span>}
-            {mode === "VIDEO" && (
-              <button
-                type="button"
-                onClick={() => setLocations((l) => ({ ...l, VIDEO: jitsiLink() }))}
-                className="inline-flex items-center gap-1.5 pt-1 font-medium text-sm text-whatsapp-dark hover:underline"
-              >
-                <IconVideo className="size-4" />
-                Créer un lien de visio
-                <span className="font-normal text-muted-foreground">(dans Rabotka, sans compte)</span>
-              </button>
-            )}
+            {mode === "VIDEO" &&
+              (videoPlan.allowed ? (
+                <button
+                  type="button"
+                  onClick={() => setLocations((l) => ({ ...l, VIDEO: jitsiLink() }))}
+                  className="inline-flex items-center gap-1.5 pt-1 font-medium text-sm text-whatsapp-dark hover:underline"
+                >
+                  <IconVideo className="size-4" />
+                  Créer un lien de visio
+                  <span className="font-normal text-muted-foreground">(dans Rabotka, sans compte)</span>
+                </button>
+              ) : (
+                !videoPlan.loading && (
+                  // Not in the plan: a Meet or Zoom link above still works.
+                  <Link href={PLANS_HREF} className="inline-flex items-center gap-1.5 pt-1 font-medium text-muted-foreground text-sm hover:text-foreground">
+                    <IconLock className="size-4" />
+                    Créer un lien de visio
+                    <span className="font-normal">· inclus dans les formules supérieures</span>
+                  </Link>
+                )
+              ))}
           </label>
 
           {isCv && !existing && (
