@@ -74,7 +74,7 @@ export default async function RootLayout({ children, modal }: LayoutProps<"/">) 
     // The document background is the browser chrome's colour: Safari (iOS 26+)
     // tints its bars with it, ignoring theme-color, and overscroll shows it
     // too. The grey page colour lives on the wrapper below.
-    <html lang="fr" translate="no" className="bg-chrome" suppressHydrationWarning>
+    <html lang="fr" translate="no" className="bg-chrome" data-scroll-behavior="smooth" suppressHydrationWarning>
       {/* Extensions such as Grammarly add attributes to <body> before React
           hydrates; only this element's own attributes are exempt. */}
       <body className="min-h-svh bg-chrome antialiased" suppressHydrationWarning>
