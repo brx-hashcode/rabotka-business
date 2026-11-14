@@ -533,7 +533,7 @@ function Feature({ children }: Readonly<{ children: React.ReactNode }>) {
 function PlanChooser({ data, focused = false }: Readonly<{ data: MySubscription; focused?: boolean }>) {
   const router = useRouter();
   // In the organisation's country's currency (dollars in the DRC).
-  const { price: priceLabel } = useDisplayCurrency();
+  const { price: priceLabel, ready: priceReady } = useDisplayCurrency();
   const current = data.entitlements.status === "ACTIVE" ? data.entitlements.plan?.id : null;
   // How the running plan is billed: the switch opens on it, and the plan is
   // « Votre formule » on that side only.
@@ -647,7 +647,12 @@ function PlanChooser({ data, focused = false }: Readonly<{ data: MySubscription;
                 {plan.description && <p className="text-muted-foreground text-sm">{plan.description}</p>}
               </div>
               <p className="flex items-end gap-1.5">
-                <span className="font-semibold text-3xl tracking-tight">{priceLabel(price)}</span>
+                {/* A skeleton until the currency is known: no FCFA flashing into dollars. */}
+                {priceReady ? (
+                  <span className="font-semibold text-3xl tracking-tight">{priceLabel(price)}</span>
+                ) : (
+                  <Bone className="mb-0.5 h-8 w-28" />
+                )}
                 <span className="mb-1 text-muted-foreground text-sm">/ {period === "ANNUAL" ? "an" : "mois"}</span>
               </p>
               <ul className="flex-1 space-y-2.5 text-sm">
