@@ -78,6 +78,8 @@ function Call({
         // the call goes on: none offered, on either side.
         disableVirtualBackground: true,
         notifications: [],
+        // Jitsi logs every step at « trace » into the page's console: errors only.
+        logging: { defaultLogLevel: "error", loggers: {} },
       }}
       interfaceConfigOverwrite={{ SHOW_PROMOTIONAL_CLOSE_PAGE: false, MOBILE_APP_PROMO: false, SHOW_CHROME_EXTENSION_BANNER: false }}
       getIFrameRef={(node) => {
