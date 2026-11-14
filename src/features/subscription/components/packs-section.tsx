@@ -99,10 +99,10 @@ function PackCard({ kind, quantity, priceFcfa }: Readonly<{ kind: PackKind; quan
           <p className="text-muted-foreground text-sm">{packUnits(kind, quantity)}</p>
         </div>
       </div>
-      <p className="flex items-end gap-1.5">
+      <div className="flex items-end gap-1.5">
         {ready ? <span className="font-semibold text-2xl tracking-tight">{price(priceFcfa)}</span> : <Bone className="h-7 w-24" />}
         <span className="mb-0.5 text-muted-foreground text-sm">/ pack</span>
-      </p>
+      </div>
       <div className="mt-auto space-y-3">
         <div className="flex items-center justify-between gap-3 rounded-2xl bg-page p-1.5">
           <button

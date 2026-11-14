@@ -646,7 +646,7 @@ function PlanChooser({ data, focused = false }: Readonly<{ data: MySubscription;
                 </div>
                 {plan.description && <p className="text-muted-foreground text-sm">{plan.description}</p>}
               </div>
-              <p className="flex items-end gap-1.5">
+              <div className="flex items-end gap-1.5">
                 {/* A skeleton until the currency is known: no FCFA flashing into dollars. */}
                 {priceReady ? (
                   <span className="font-semibold text-3xl tracking-tight">{priceLabel(price)}</span>
@@ -654,7 +654,7 @@ function PlanChooser({ data, focused = false }: Readonly<{ data: MySubscription;
                   <Bone className="mb-0.5 h-8 w-28" />
                 )}
                 <span className="mb-1 text-muted-foreground text-sm">/ {period === "ANNUAL" ? "an" : "mois"}</span>
-              </p>
+              </div>
               <ul className="flex-1 space-y-2.5 text-sm">
                 <PlanLine>
                   {plan.unlocksPerPeriod === null
