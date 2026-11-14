@@ -35,7 +35,7 @@ const when = (iso: string) =>
   new Date(iso).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
 
 /**
- * The call's tools: screen and its sound, chat (with polls), hands and
+ * The call's tools: background (blur or image), screen and its sound, chat (with polls), hands and
  * reactions, participants (the host mutes everyone there), the whiteboard and
  * shared notes, noise suppression, who spoke how long.
  * Nothing to invite people from inside the call: « Partager » does that.
@@ -43,6 +43,9 @@ const when = (iso: string) =>
 const TOOLBAR = [
   "microphone",
   "camera",
+  // Blur or a background image, also before joining. Our server ships the
+  // model, and Jitsi hides it on browsers that can't run it.
+  "select-background",
   "desktop",
   "shareaudio",
   "chat",
@@ -95,9 +98,6 @@ function Call({
         enableClosePage: false,
         hideConferenceTimer: false,
         disableThirdPartyRequests: true,
-        // A background effect the browser cannot run sends a black video while
-        // the call goes on: none offered, on either side.
-        disableVirtualBackground: true,
         notifications: [],
         // Jitsi logs every step at « trace » into the page's console: errors only.
         logging: { defaultLogLevel: "error", loggers: {} },
