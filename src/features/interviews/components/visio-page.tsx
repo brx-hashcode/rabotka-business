@@ -95,7 +95,10 @@ function Call({
         enableWelcomePage: false,
         enableClosePage: false,
         hideConferenceTimer: false,
-        disableThirdPartyRequests: true,
+        // Off, or Jitsi hides « Partager une vidéo » (YouTube); Gravatar stays
+        // off, so no participant's email reaches a third party.
+        disableThirdPartyRequests: false,
+        gravatar: { disabled: true },
         // A background effect the browser cannot run sends a black video while
         // the call goes on: none offered, on either side.
         disableVirtualBackground: true,
