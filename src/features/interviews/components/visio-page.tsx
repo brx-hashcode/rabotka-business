@@ -34,8 +34,30 @@ const visioLink = (room: string) => `${window.location.origin}/visio/${encodeURI
 const when = (iso: string) =>
   new Date(iso).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
 
-/** What a recruiter and a candidate need in the call, and nothing to invite, stream or dial. */
-const TOOLBAR = ["microphone", "camera", "desktop", "chat", "raisehand", "tileview", "settings", "fullscreen", "hangup"];
+/**
+ * The call's tools: screen and its sound, chat (with polls), hands and
+ * reactions, participants (the host mutes everyone there), the whiteboard and
+ * shared notes, a video shown to all, noise suppression, who spoke how long.
+ * Nothing to invite people from inside the call: « Partager » does that.
+ */
+const TOOLBAR = [
+  "microphone",
+  "camera",
+  "desktop",
+  "shareaudio",
+  "chat",
+  "raisehand",
+  "participants-pane",
+  "whiteboard",
+  "etherpad",
+  "sharedvideo",
+  "noisesuppression",
+  "tileview",
+  "stats",
+  "settings",
+  "fullscreen",
+  "hangup",
+];
 
 const visioQuery = (room: string, host: boolean, guestToken?: string) => ({
   queryKey: ["visio", room, host, guestToken ?? null],
