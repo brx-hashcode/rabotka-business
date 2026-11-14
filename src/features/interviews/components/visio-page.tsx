@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { JaaSMeeting } from "@jitsi/react-sdk";
+import { JitsiMeeting } from "@jitsi/react-sdk";
 import { IconArrowLeft, IconExternalLink, IconFileText, IconNotes, IconLock, IconPlayerStop, IconUserPlus, IconVideo } from "@tabler/icons-react";
 
 import { ActionDialog } from "#/components/action-dialog";
@@ -46,18 +46,18 @@ const visioQuery = (room: string, host: boolean, guestToken?: string) => ({
   refetchOnWindowFocus: false,
 });
 
-/** The JaaS call itself, filling its parent. */
+/** The call itself, on our own Jitsi server, filling its parent. */
 function Call({
   v,
   attempt,
   onLeave,
   onApi,
-}: Readonly<{ v: Extract<VisioJoin, { provider: "jaas" }>; attempt: number; onLeave: () => void; onApi?: (api: CallApi) => void }>) {
+}: Readonly<{ v: Extract<VisioJoin, { provider: "hosted" }>; attempt: number; onLeave: () => void; onApi?: (api: CallApi) => void }>) {
   return (
-    <JaaSMeeting
+    <JitsiMeeting
       onApiReady={(api) => onApi?.(api as unknown as CallApi)}
       key={attempt}
-      appId={v.appId}
+      domain={v.domain}
       roomName={v.roomName}
       jwt={v.jwt}
       lang="fr"
@@ -157,7 +157,7 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
   const [attempt, setAttempt] = useState(0);
   const query = useQuery(visioQuery(room, true));
   const v = query.data;
-  // The call over (hung up in JaaS): the « Compte rendu » opens, notes kept.
+  // The call over (hung up in the call): the « Compte rendu » opens, notes kept.
   const [reportOpen, setReportOpen] = useState(false);
   const queryClient = useQueryClient();
   const api = useRef<CallApi | null>(null);
@@ -229,8 +229,8 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
                 <span className="hidden lg:inline">Partager</span>
               </Button>
             </span>
-            <HostTranscription interviewId={v.interviewId} inCall={v.provider === "jaas" && !left} />
-            {v.provider === "jaas" && !left && (
+            <HostTranscription interviewId={v.interviewId} inCall={v.provider === "hosted" && !left} />
+            {v.provider === "hosted" && !left && (
               <Button
                 type="button"
                 variant="ghost"
@@ -270,7 +270,7 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
                   )}
                 </div>
               </div>
-            ) : v.provider === "jaas" && !left && !ended ? (
+            ) : v.provider === "hosted" && !left && !ended ? (
               <Call
                 v={v}
                 attempt={attempt}
@@ -348,7 +348,7 @@ export function VisioPage({ room, guestToken }: Readonly<{ room: string; guestTo
     return <VisioWaiting v={v} onOpen={() => void query.refetch()} />;
   }
 
-  if (v?.provider === "jaas" && !left) {
+  if (v?.provider === "hosted" && !left) {
     return (
       // Pinned to the screen: nothing scrolls, so the browser's bars never push the call around.
       <main className="fixed inset-x-0 top-[env(safe-area-inset-top)] bottom-0 z-40 flex flex-col overflow-hidden overscroll-none bg-page">
