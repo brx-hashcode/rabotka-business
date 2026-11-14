@@ -37,7 +37,7 @@ const when = (iso: string) =>
 /**
  * The call's tools: screen and its sound, chat (with polls), hands and
  * reactions, participants (the host mutes everyone there), the whiteboard and
- * shared notes, a video shown to all, noise suppression, who spoke how long.
+ * shared notes, noise suppression, who spoke how long.
  * Nothing to invite people from inside the call: « Partager » does that.
  */
 const TOOLBAR = [
@@ -50,7 +50,6 @@ const TOOLBAR = [
   "participants-pane",
   "whiteboard",
   "etherpad",
-  "sharedvideo",
   "noisesuppression",
   "tileview",
   "stats",
@@ -95,10 +94,7 @@ function Call({
         enableWelcomePage: false,
         enableClosePage: false,
         hideConferenceTimer: false,
-        // Off, or Jitsi hides « Partager une vidéo » (YouTube); Gravatar stays
-        // off, so no participant's email reaches a third party.
-        disableThirdPartyRequests: false,
-        gravatar: { disabled: true },
+        disableThirdPartyRequests: true,
         // A background effect the browser cannot run sends a black video while
         // the call goes on: none offered, on either side.
         disableVirtualBackground: true,
