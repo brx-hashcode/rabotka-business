@@ -21,41 +21,37 @@ import { InviteGuestDialog } from "./invite-guest-dialog";
 import { useVideoPlan } from "../use-video-plan";
 import { VisioWaiting } from "./visio-waiting";
 
-/**
- * The visible screen under the status-bar strip of the root layout: `dvh`
- * follows the browser's own bars on phones, where `svh` lets content slide
- * under them.
- */
+
 const SCREEN_MIN = "min-h-[calc(100dvh-env(safe-area-inset-top))]";
 
-/** The room's link as the candidate received it: this site's /visio/<room>. */
 const visioLink = (room: string) => `${window.location.origin}/visio/${encodeURIComponent(room)}`;
 
 const when = (iso: string) =>
   new Date(iso).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
 
-/**
- * The call's tools: background (blur or image), screen and its sound, chat (with polls), hands and
- * reactions, participants (the host mutes everyone there), the whiteboard and
- * shared notes, noise suppression, who spoke how long.
- * Nothing to invite people from inside the call: « Partager » does that.
- */
+
 const TOOLBAR = [
   "microphone",
   "camera",
-  // Blur or a background image, also before joining. Our server ships the
-  // model, and Jitsi hides it on browsers that can't run it.
+  "toggle-camera",
   "select-background",
+  "videoquality",
   "desktop",
   "shareaudio",
   "chat",
   "raisehand",
+  "closedcaptions",
   "participants-pane",
+  "mute-everyone",
+  "mute-video-everyone",
+  "security",
   "whiteboard",
   "etherpad",
   "noisesuppression",
   "tileview",
+  "filmstrip",
   "stats",
+  "shortcuts",
   "settings",
   "fullscreen",
   "hangup",
@@ -65,12 +61,10 @@ const visioQuery = (room: string, host: boolean, guestToken?: string) => ({
   queryKey: ["visio", room, host, guestToken ?? null],
   queryFn: () => (host ? joinVisioAsHost(room) : joinVisioAsGuest(room, guestToken)),
   retry: false,
-  // The token is signed for this visit: never refetched behind the call.
   staleTime: Infinity,
   refetchOnWindowFocus: false,
 });
 
-/** The call itself, on our own Jitsi server, filling its parent. */
 function Call({
   v,
   attempt,
@@ -89,9 +83,7 @@ function Call({
         subject: v.jobTitle,
         prejoinConfig: { enabled: true, hideExtraJoinButtons: ["no-audio", "by-phone"] },
         toolbarButtons: TOOLBAR,
-        // Recording is off in the token: no warning about it before joining.
         recordings: { showPrejoinWarning: false },
-        // Stay in the browser on phones, instead of « Get the app ».
         disableDeepLinking: true,
         disableInviteFunctions: true,
         enableWelcomePage: false,
@@ -99,7 +91,6 @@ function Call({
         hideConferenceTimer: false,
         disableThirdPartyRequests: true,
         notifications: [],
-        // Jitsi logs every step at « trace » into the page's console: errors only.
         logging: { defaultLogLevel: "error", loggers: {} },
       }}
       interfaceConfigOverwrite={{ SHOW_PROMOTIONAL_CLOSE_PAGE: false, MOBILE_APP_PROMO: false, SHOW_CHROME_EXTENSION_BANNER: false }}
@@ -113,13 +104,11 @@ function Call({
   );
 }
 
-/** What the page asks of the running call: only to end it for everyone. */
 type CallApi = {
   executeCommand: (command: string) => void;
   addListener: (event: string, listener: () => void) => void;
 };
 
-/** Left, ended, or the public Jitsi fallback: a small card instead of the call. */
 function Notice({
   v,
   onRejoin,
@@ -171,16 +160,83 @@ function Notice({
   );
 }
 
-/**
- * The business's side, inside « Entretiens »: sidebar and top bar stay,
- * the call fills the page under the interview's line.
- */
+/** What fills the host's call area: loading, unavailable, the call, or where it stands. */
+function HostCallArea({
+  room,
+  loading,
+  error,
+  v,
+  inCall,
+  ended,
+  attempt,
+  canJoinAsGuest,
+  onApi,
+  onLeave,
+  onRejoin,
+  onReport,
+  onEnd,
+}: Readonly<{
+  room: string;
+  loading: boolean;
+  error: unknown;
+  v: VisioJoin | undefined;
+  inCall: boolean;
+  ended: boolean;
+  attempt: number;
+  canJoinAsGuest: boolean;
+  onApi: (api: CallApi) => void;
+  onLeave: () => void;
+  onRejoin: () => void;
+  onReport: () => void;
+  onEnd: () => void;
+}>) {
+  if (loading) return <Bone className="size-full rounded-none" />;
+
+  if (!v) {
+    return (
+      <div className="flex size-full items-center justify-center p-6">
+        <div className="max-w-sm space-y-2 text-center">
+          <p className="font-semibold">Visio indisponible</p>
+          <p className="text-muted-foreground text-sm">
+            {friendlyError(error, "Cette visio n'appartient pas à un entretien de votre organisation.")}
+          </p>
+          {canJoinAsGuest && (
+            <Link href={`/visio/${encodeURIComponent(room)}?invite=1`} className="inline-block pt-2 font-medium text-sm underline underline-offset-2">
+              Rejoindre en invité
+            </Link>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (v.provider === "hosted" && inCall) {
+    return (
+      <Call
+        v={v}
+        attempt={attempt}
+        onApi={(a) => {
+          onApi(a);
+          // In the call: its real start, for the « Compte rendu » (kept once).
+          const id = v.interviewId;
+          if (id) a.addListener("videoConferenceJoined", () => void markCallStarted(id).catch(() => undefined));
+        }}
+        onLeave={onLeave}
+      />
+    );
+  }
+
+  const id = v.interviewId;
+  return (
+    <Notice v={v} ended={ended} onRejoin={onRejoin} onReport={id ? onReport : undefined} onEnd={id ? onEnd : undefined} />
+  );
+}
+
 export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
   const [left, setLeft] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const query = useQuery(visioQuery(room, true));
   const v = query.data;
-  // The call over (hung up in the call): the « Compte rendu » opens, notes kept.
   const [reportOpen, setReportOpen] = useState(false);
   const queryClient = useQueryClient();
   const api = useRef<CallApi | null>(null);
@@ -192,11 +248,10 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
   const end = useMutation({
     mutationFn: () => endInterview(v?.interviewId ?? ""),
     onSuccess: () => {
-      // Everyone out of the call, then the compte rendu.
       try {
         api.current?.executeCommand("endConference");
       } catch {
-        /* already gone */
+        // already gone
       }
       setEndedNow(true);
       setLeft(true);
@@ -238,7 +293,6 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
         </div>
         {v?.interviewId && !ended && (
           <div className="ml-auto flex min-w-0 items-center gap-2">
-            {/* Disabled without the plan; the title shows on the wrapper. */}
             <span title={videoPlan.allowed ? "Partager la visio" : "Partager la visio : inclus dans les formules supérieures"}>
               <Button
                 type="button"
@@ -275,50 +329,30 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
         )}
       </div>
 
-        <div>
-          <section className="h-[calc(100dvh-12rem-env(safe-area-inset-top))] min-h-[24rem] overflow-hidden rounded-2xl bg-card sm:rounded-3xl">
-            {query.isLoading ? (
-              <Bone className="size-full rounded-none" />
-            ) : !v ? (
-              <div className="flex size-full items-center justify-center p-6">
-                <div className="max-w-sm space-y-2 text-center">
-                  <p className="font-semibold">Visio indisponible</p>
-                  <p className="text-muted-foreground text-sm">
-                    {friendlyError(query.error, "Cette visio n'appartient pas à un entretien de votre organisation.")}
-                  </p>
-                  {videoPlan.allowed && (
-                    <Link href={`/visio/${encodeURIComponent(room)}?invite=1`} className="inline-block pt-2 font-medium text-sm underline underline-offset-2">
-                      Rejoindre en invité
-                    </Link>
-                  )}
-                </div>
-              </div>
-            ) : v.provider === "hosted" && !left && !ended ? (
-              <Call
-                v={v}
-                attempt={attempt}
-                onApi={(a) => {
-                  api.current = a;
-                  // In the call: its real start, for the « Compte rendu » (kept once).
-                  const id = v.interviewId;
-                  if (id) a.addListener("videoConferenceJoined", () => void markCallStarted(id).catch(() => undefined));
-                }}
-                onLeave={() => {
-                  setLeft(true);
-                  if (v.interviewId) setReportOpen(true);
-                }}
-              />
-            ) : (
-              <Notice
-                v={v}
-                ended={ended}
-                onRejoin={rejoin}
-                onReport={v.interviewId ? () => setReportOpen(true) : undefined}
-                onEnd={v.interviewId ? () => setConfirmEnd(true) : undefined}
-              />
-            )}
-          </section>
-        </div>
+      <div>
+        <section className="h-[calc(100dvh-12rem-env(safe-area-inset-top))] min-h-96 overflow-hidden rounded-2xl bg-card sm:rounded-3xl">
+          <HostCallArea
+            room={room}
+            loading={query.isLoading}
+            error={query.error}
+            v={v}
+            inCall={!left && !ended}
+            ended={ended}
+            attempt={attempt}
+            canJoinAsGuest={videoPlan.allowed}
+            onApi={(a) => {
+              api.current = a;
+            }}
+            onLeave={() => {
+              setLeft(true);
+              if (v?.interviewId) setReportOpen(true);
+            }}
+            onRejoin={rejoin}
+            onReport={() => setReportOpen(true)}
+            onEnd={() => setConfirmEnd(true)}
+          />
+        </section>
+      </div>
       {sharing && v?.interviewId && (
         <InviteGuestDialog
           interview={{ id: v.interviewId, candidateName: v.candidateName, jobTitle: v.jobTitle, location: visioLink(room) }}

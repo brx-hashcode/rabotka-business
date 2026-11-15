@@ -122,7 +122,8 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
   const transcript = useQuery({
     queryKey: interviewTranscriptKey(interviewId),
     queryFn: () => getInterviewTranscript(interviewId),
-    refetchInterval: (q) => (q.state.data?.transcribe ? 8000 : false),
+    // New sentences are pushed (interview:transcript); this only covers a lost socket.
+    refetchInterval: (q) => (q.state.data?.transcribe ? 15000 : false),
   });
   const lines = transcript.data?.lines ?? [];
   const spoken = lines.reduce((n, l) => n + l.text.length, 0);

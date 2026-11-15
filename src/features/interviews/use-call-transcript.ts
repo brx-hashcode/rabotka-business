@@ -5,9 +5,9 @@ import { useEffect, useRef } from "react";
 import type { TranscriptLineInput } from "#/lib/api/interview-controller";
 import { useDictation } from "./use-dictation";
 
-/** Sent every this often, or sooner once a few sentences wait. */
+/** Each sentence is sent the moment it is finished; this retries what failed. */
 const FLUSH_MS = 4000;
-const FLUSH_LINES = 5;
+const FLUSH_LINES = 1;
 
 /**
  * « Transcrire l'entretien », on this side of the call: while `on`, the
@@ -27,13 +27,17 @@ export function useCallTranscript(on: boolean, send: (lines: TranscriptLineInput
     if (sending.current || queue.current.length === 0) return;
     sending.current = true;
     const batch = queue.current.splice(0, 20);
+    let sent = false;
     try {
       await sender.current(batch);
+      sent = true;
     } catch {
       queue.current.unshift(...batch);
     } finally {
       sending.current = false;
     }
+    // A sentence finished while this one was on its way: it goes now, not at the next tick.
+    if (sent && queue.current.length > 0) void flush();
   };
 
   // No meter: the call already holds the microphone, and phones share it badly.
