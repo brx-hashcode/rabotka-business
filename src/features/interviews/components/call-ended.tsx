@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   IconAlertTriangle,
+  IconCalendarMonth,
   IconCheck,
   IconCircleCheckFilled,
   IconFileText,
@@ -216,6 +218,22 @@ export function CallEnded({
             </div>
           )}
         </section>
+
+        {/* Done here: back to the calendar. The note is already saved, the report follows by e-mail. */}
+        <div className="flex justify-center pt-2">
+          <Button
+            variant="ghost"
+            className="h-11 rounded-full bg-page px-5 text-sm sm:h-11"
+            render={<Link href="/espace/entretiens" />}
+            onClick={() => {
+              // Typed a second ago and not saved yet: saved on the way out.
+              if (draft !== null && draft !== saved?.notes) void saveInterviewNotes(interviewId, draft).catch(() => undefined);
+            }}
+          >
+            <IconCalendarMonth className="size-4" />
+            Fermer et revenir aux entretiens
+          </Button>
+        </div>
       </div>
     </div>
   );
