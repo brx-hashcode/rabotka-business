@@ -16,7 +16,7 @@ import { endInterview, interviewsKey, joinVisioAsGuest, joinVisioAsHost, markCal
 import type { VisioJoin } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { InterviewReportDialog } from "./interview-report-panel";
-import { GuestTranscription, HostTranscription } from "./call-transcription";
+import { useCallCaptions, type CallCaptionsApi } from "../call-captions";
 import { InviteGuestDialog } from "./invite-guest-dialog";
 import { useVideoPlan } from "../use-video-plan";
 import { VisioWaiting } from "./visio-waiting";
@@ -173,10 +173,7 @@ function Call({
   );
 }
 
-type CallApi = {
-  executeCommand: (command: string) => void;
-  addListener: (event: string, listener: (payload?: { name?: string; key?: string }) => void) => void;
-};
+type CallApi = CallCaptionsApi;
 
 function Notice({
   v,
@@ -320,6 +317,8 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [sharing, setSharing] = useState(false);
   const videoPlan = useVideoPlan();
+  // Our Jitsi transcribes the call; its sentences go to the « Compte rendu ».
+  const captions = useCallCaptions(v?.interviewId ?? undefined, videoPlan.allowed);
   const [endedNow, setEndedNow] = useState(false);
   const [gone, setGone] = useState(false);
   const onGone = useCallback(() => setGone(true), []);
@@ -393,7 +392,6 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
                 <span className="hidden lg:inline">Partager</span>
               </Button>
             </span>
-            <HostTranscription interviewId={v.interviewId} inCall={v.provider === "hosted" && !left} />
             {v.provider === "hosted" && !left && (
               <Button
                 type="button"
@@ -431,6 +429,7 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
             canJoinAsGuest={videoPlan.allowed}
             onApi={(a) => {
               api.current = a;
+              captions(a);
             }}
             onLeave={() => {
               setLeft(true);
@@ -487,6 +486,8 @@ export function VisioPage({ room, guestToken }: Readonly<{ room: string; guestTo
   const [closed, setClosed] = useState<string | null>(null);
   const [gone, setGone] = useState(false);
   const onGone = useCallback(() => setGone(true), []);
+  // Told by the call itself: the server transcribes it (for the business's compte rendu).
+  const [transcribed, setTranscribed] = useState(false);
   // Back to the top: the card below is read from its start, not where the call left the page.
   const leave = () => {
     setLeft(true);
@@ -520,8 +521,25 @@ export function VisioPage({ room, guestToken }: Readonly<{ room: string; guestTo
         </header>
         <div className="min-h-0 flex-1 px-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] sm:px-4 sm:pb-4">
           <div className="relative size-full overflow-hidden rounded-2xl bg-card sm:rounded-3xl">
-            <Call v={v} attempt={attempt} hidden={left} onLeave={leave} onGone={onGone} />
-            {!left && <GuestTranscription room={room} guestToken={guestToken} inCall />}
+            <Call
+              v={v}
+              attempt={attempt}
+              hidden={left}
+              onLeave={leave}
+              onGone={onGone}
+              onApi={(a) => a.addListener("transcribingStatusChanged", (e) => setTranscribed(Boolean(e?.on)))}
+            />
+            {!left && transcribed && (
+              <div className="pointer-events-none absolute inset-x-0 top-2 z-10 flex justify-center px-3">
+                <span className="flex items-center gap-2 rounded-full bg-card/95 px-3 py-1.5 text-xs shadow-soft">
+                  <span className="relative flex size-2 shrink-0">
+                    <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive/60" />
+                    <span className="relative inline-flex size-2 rounded-full bg-destructive" />
+                  </span>
+                  Entretien transcrit pour le compte rendu
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </main>

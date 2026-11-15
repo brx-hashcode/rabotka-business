@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 /**
  * The browser's own speech recognition (Chrome, Edge, Safari), in French:
- * « Dicter » in the notes, and « Transcrire l'entretien » during the visio.
+ * « Dicter » in the notes. (The visio itself is transcribed by our Jitsi.)
  * It hears only this device's microphone, never the other side of a call.
  * Absent on Firefox (`supported` false).
  */
@@ -136,14 +136,4 @@ export function useDictation(
     release();
   };
   return { supported, listening, interim, analyser, startedAt, error, start, stop };
-}
-
-/** What to tell someone whose browser stopped transcribing them. */
-export function speechErrorText(error: string): string {
-  if (error === "not-allowed" || error === "service-not-allowed") {
-    return "Le micro est refusé à la transcription : autorisez-le dans votre navigateur.";
-  }
-  if (error === "audio-capture") return "Votre micro n'est pas disponible pour la transcription.";
-  if (error === "network") return "Le service vocal de votre navigateur ne répond pas.";
-  return "La transcription s'est arrêtée sur ce navigateur.";
 }
