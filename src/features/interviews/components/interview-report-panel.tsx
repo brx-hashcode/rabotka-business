@@ -181,8 +181,6 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
           {tab === "transcript" ? (
             <Conversation
               turns={turns}
-              live={live}
-              consent={transcript.data?.consent ?? null}
               onAdd={(t) => {
                 setDraft(joinText(notes, `${t.speaker} : ${t.text}`).slice(0, MAX_NOTES));
                 toast.success("Ajouté à vos notes.");
@@ -387,11 +385,6 @@ const SPEAKER_TONE: Record<Turn["role"], string> = {
   GUEST: "text-chip-violet-foreground",
 };
 
-const CONSENT_LINE: Record<string, string> = {
-  ACCEPTED: "Le candidat a accepté la transcription.",
-  DECLINED: "Le candidat a refusé : seule la voix de votre équipe est transcrite.",
-};
-
 function TabButton({ on, onClick, label, count }: Readonly<{ on: boolean; onClick: () => void; label: string; count?: number }>) {
   return (
     <button
@@ -412,10 +405,8 @@ function TabButton({ on, onClick, label, count }: Readonly<{ on: boolean; onClic
  */
 function Conversation({
   turns,
-  live,
-  consent,
   onAdd,
-}: Readonly<{ turns: Turn[]; live: boolean; consent: string | null; onAdd: (t: Turn) => void }>) {
+}: Readonly<{ turns: Turn[]; onAdd: (t: Turn) => void }>) {
   const box = useRef<HTMLOListElement>(null);
   const pinned = useRef(true);
   const count = turns.length;
@@ -463,8 +454,7 @@ function Conversation({
         ))}
       </ol>
       <p className="px-4 pb-3 text-muted-foreground text-xs">
-        Reconnue par le navigateur de chacun : elle peut contenir des erreurs.
-        {consent ? ` ${CONSENT_LINE[consent] ?? ""}` : live ? " Le candidat n'a pas encore répondu." : ""}
+        Transcrite automatiquement pendant la visio : elle peut contenir des erreurs.
       </p>
     </>
   );
