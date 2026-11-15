@@ -13,7 +13,15 @@ import type {
 /** « Entretiens »: interviews with candidates, and the candidate's side of one. */
 class InterviewController extends BusinessBaseController {
   list(
-    params: { scope?: "upcoming" | "past"; cvResumeId?: string; applicationId?: string; externalApplicationId?: string } = {},
+    params: {
+      scope?: "upcoming" | "past";
+      /** The calendar: everything in [from, to), ISO dates, six weeks at most. */
+      from?: string;
+      to?: string;
+      cvResumeId?: string;
+      applicationId?: string;
+      externalApplicationId?: string;
+    } = {},
   ): Promise<Interview[]> {
     const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v) as [string, string][]);
     return this.get(`/business/me/interviews${qs.size ? `?${qs}` : ""}`);
