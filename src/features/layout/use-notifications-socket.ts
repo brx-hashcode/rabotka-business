@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { io } from "socket.io-client";
 
+import { interviewTranscriptKey } from "#/lib/api/interview-controller";
+
 import { createProgressRefresh, refreshFor, type PushedNotification, type ScreeningProgress } from "./notification-refresh";
 import { armNotificationSound, playNotificationSound } from "./notification-sound";
 import { setSocketConnected } from "./socket-status";
@@ -40,6 +42,10 @@ export function useNotificationsSocket() {
     // Throttled: that screening at once, the rest every 2 s and at the end.
     const progress = createProgressRefresh((queryKey) => void queryClient.invalidateQueries({ queryKey }));
     socket.on("cv-screening:progress", (event?: ScreeningProgress) => progress(event));
+    // Someone in a call said a sentence: its open « Compte rendu » shows it now.
+    socket.on("interview:transcript", (event?: { interviewId?: string }) => {
+      if (event?.interviewId) void queryClient.invalidateQueries({ queryKey: interviewTranscriptKey(event.interviewId) });
+    });
     return () => {
       disarm();
       socket.disconnect();
