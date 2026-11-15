@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { InterviewReport } from "#/lib/api/types";
-import { reportStage, untilText } from "./call-ended";
+import { reportStage, untilText, waitProgress } from "./call-ended";
 
 const report = (over: Partial<InterviewReport> = {}): InterviewReport => ({
   notes: "",
@@ -33,5 +33,12 @@ describe("the end of the call", () => {
     expect(untilText("2026-11-15T10:02:00Z", now)).toBe("dans 2 min");
     expect(untilText("2026-11-15T10:00:20Z", now)).toBe("dans 20 s");
     expect(untilText("2026-11-15T09:59:00Z", now)).toBe("dans 0 s");
+  });
+
+  it("fills the bar as the wait runs out", () => {
+    const now = new Date("2026-11-15T10:00:00Z").getTime();
+    expect(waitProgress("2026-11-15T10:02:00Z", now)).toBe(0);
+    expect(waitProgress("2026-11-15T10:01:00Z", now)).toBe(0.5);
+    expect(waitProgress("2026-11-15T09:59:00Z", now)).toBe(1);
   });
 });

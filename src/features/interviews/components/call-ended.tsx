@@ -9,6 +9,7 @@ import {
   IconCircleCheckFilled,
   IconFileText,
   IconMicrophone,
+  IconNotes,
   IconPlayerStopFilled,
   IconRefresh,
 } from "@tabler/icons-react";
@@ -52,6 +53,15 @@ export function untilText(at: string, now: number): string {
   return rest ? `dans ${m} min ${String(rest).padStart(2, "0")}` : `dans ${m} min`;
 }
 
+/** The server's wait after the call, for the bar (AFTER_CALL_DELAY_MS there). */
+const WAIT_MS = 2 * 60_000;
+
+/** How far the wait is, 0 to 1. */
+export function waitProgress(at: string, now: number): number {
+  const left = new Date(at).getTime() - now;
+  return Math.min(1, Math.max(0, 1 - left / WAIT_MS));
+}
+
 /**
  * Where the call was, once « Terminer » ended it: done, the report on its
  * way by itself (« Votre compte rendu est prêt » follows by notification and
@@ -61,8 +71,10 @@ export function untilText(at: string, now: number): string {
 export function CallEnded({
   interviewId,
   candidateName,
+  jobTitle,
+  endedAt,
   onOpenReport,
-}: Readonly<{ interviewId: string; candidateName: string; onOpenReport: () => void }>) {
+}: Readonly<{ interviewId: string; candidateName: string; jobTitle: string; endedAt?: string | null; onOpenReport: () => void }>) {
   const queryClient = useQueryClient();
   const key = interviewReportKey(interviewId);
   const videoPlan = useVideoPlan();
@@ -117,40 +129,56 @@ export function CallEnded({
     return () => clearInterval(t);
   }, [stage]);
 
-  const status = save.isPending ? "Enregistrement…" : draft !== null && draft !== saved?.notes ? "Modifié" : saved?.updatedAt && notes ? "Enregistré" : "";
+  let noteStatus = "Facultatif · enregistrée automatiquement";
+  if (save.isPending) noteStatus = "Enregistrement…";
+  else if (draft !== null && draft !== saved?.notes) noteStatus = "Modifiée";
+  else if (notes) noteStatus = "Enregistrée";
+  const endedTime = endedAt ? new Date(endedAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : null;
 
   return (
-    <div className="flex size-full items-start justify-center overflow-y-auto p-4 sm:items-center sm:p-8">
-      <div className="w-full max-w-xl space-y-6">
-        <div className="space-y-1">
-          <p className="flex items-center gap-2 font-semibold text-lg">
-            <IconCircleCheckFilled className="size-5 text-whatsapp" />
-            Entretien terminé
-          </p>
-          <p className="text-muted-foreground text-sm">Avec {candidateName}. Son lien n&apos;ouvre plus la visio.</p>
-        </div>
+    <div className="flex size-full justify-center overflow-y-auto px-4 py-8 sm:items-center sm:py-10">
+      <div className="w-full max-w-lg space-y-4">
+        <header className="space-y-3 pb-2 text-center">
+          <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-whatsapp/12 text-whatsapp">
+            <IconCheck className="size-6" stroke={2.5} />
+          </span>
+          <div className="space-y-1">
+            <h2 className="font-semibold text-xl tracking-tight">Entretien terminé</h2>
+            <p className="text-muted-foreground text-sm">
+              {candidateName} · {jobTitle}
+              {endedTime && ` · ${endedTime}`}
+            </p>
+          </div>
+        </header>
 
-        <ReportStatus
+        <ReportCard
           stage={stage}
           report={saved}
-          until={saved?.scheduledFor ? untilText(saved.scheduledFor, now) : ""}
+          scheduledFor={saved?.scheduledFor ?? null}
+          now={now}
           addedSinceReport={addedSinceReport}
           pending={write.isPending}
           onWrite={() => write.mutate()}
           onOpen={onOpenReport}
         />
 
-        <section className="space-y-3">
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 className="font-semibold text-sm">Une note à ajouter ?</h2>
-            <span className="flex items-center gap-1 text-muted-foreground text-xs" aria-live="polite">
-              {status === "Enregistré" && <IconCheck className="size-3.5" />}
-              {status}
-            </span>
+        {/* One note, written or spoken: the microphone sits in it, as in a message. */}
+        <section className="overflow-hidden rounded-2xl bg-page">
+          <div className="flex items-center gap-2 px-4 pt-3.5">
+            <IconNotes className="size-4 text-muted-foreground" />
+            <h3 className="font-medium text-sm">Une note pour le compte rendu</h3>
           </div>
-
+          <Textarea
+            value={notes}
+            onChange={(e) => setDraft(e.target.value.slice(0, MAX_NOTES))}
+            placeholder="Votre impression, ses disponibilités, la suite à donner…"
+            className="min-h-24 resize-none rounded-none border-0 bg-transparent px-4 pt-2 shadow-none focus-visible:ring-0 dark:bg-transparent"
+          />
           {dictation.listening ? (
-            <div className="space-y-2 rounded-2xl bg-page p-3" role="status" aria-live="polite">
+            <div className="space-y-2 px-3 pb-3" role="status" aria-live="polite">
+              <p className={cn("line-clamp-2 min-h-5 px-1 text-sm", dictation.interim ? "text-foreground/70" : "text-muted-foreground italic")}>
+                {dictation.interim || "Je vous écoute… vos phrases s'ajoutent à la note."}
+              </p>
               <div className="flex items-center gap-3 rounded-full bg-card py-1 pr-1 pl-3">
                 <span className="relative flex size-2.5 shrink-0">
                   <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive/60" />
@@ -160,44 +188,45 @@ export function CallEnded({
                 <LiveWaveform analyser={dictation.analyser} />
                 <button
                   type="button"
-                  aria-label="Arrêter l'enregistrement"
-                  title="Arrêter l'enregistrement"
+                  aria-label="Arrêter la dictée"
+                  title="Arrêter la dictée"
                   onClick={dictation.stop}
                   className="flex size-9 shrink-0 items-center justify-center rounded-full bg-destructive text-white transition-transform hover:scale-105"
                 >
                   <IconPlayerStopFilled className="size-3.5" />
                 </button>
               </div>
-              <p className={cn("line-clamp-2 min-h-5 px-1 text-sm", dictation.interim ? "text-foreground/70" : "text-muted-foreground italic")}>
-                {dictation.interim || "Je vous écoute… vos phrases s'ajoutent à la note."}
-              </p>
             </div>
           ) : (
-            dictation.supported && (
-              <Button type="button" className="h-12 w-full rounded-full text-sm sm:h-12" onClick={() => void dictation.start()}>
-                <IconMicrophone className="size-4" />
-                Enregistrer une note vocale
-              </Button>
-            )
+            <div className="flex items-center justify-between gap-3 py-2.5 pr-2.5 pl-4">
+              <span className="flex items-center gap-1 text-muted-foreground text-xs" aria-live="polite">
+                {noteStatus === "Enregistrée" && <IconCheck className="size-3.5" />}
+                {noteStatus}
+              </span>
+              {dictation.supported && (
+                <button
+                  type="button"
+                  onClick={() => void dictation.start()}
+                  className="flex h-10 shrink-0 items-center gap-2 rounded-full bg-card px-4 text-sm transition-colors hover:bg-card/70"
+                >
+                  <IconMicrophone className="size-4" />
+                  Dicter
+                </button>
+              )}
+            </div>
           )}
-
-          <Textarea
-            value={notes}
-            onChange={(e) => setDraft(e.target.value.slice(0, MAX_NOTES))}
-            placeholder={dictation.supported ? "Ou écrivez-la : votre impression, ses disponibilités, la suite à donner…" : "Votre impression, ses disponibilités, la suite à donner…"}
-            className="min-h-28 resize-none rounded-2xl border-0 bg-page px-4 py-3 shadow-none focus-visible:ring-0 dark:bg-page"
-          />
         </section>
       </div>
     </div>
   );
 }
 
-/** The report's line: on its way, ready, or why not, with the one action that fits. */
-function ReportStatus({
+/** The report's card: what it is, where it stands, the one action that fits, and how far along. */
+function ReportCard({
   stage,
   report,
-  until,
+  scheduledFor,
+  now,
   addedSinceReport,
   pending,
   onWrite,
@@ -205,83 +234,90 @@ function ReportStatus({
 }: Readonly<{
   stage: ReportStage;
   report: InterviewReport | undefined;
-  until: string;
+  scheduledFor: string | null;
+  now: number;
   addedSinceReport: boolean;
   pending: boolean;
   onWrite: () => void;
   onOpen: () => void;
 }>) {
-  const box = "flex flex-col gap-3 rounded-2xl bg-page p-4 sm:flex-row sm:items-center";
-  if (stage === "locked") {
-    return (
-      <div className={box}>
-        <p className="flex-1 text-muted-foreground text-sm">Vos notes restent avec l&apos;entretien. Le compte rendu rédigé par IA est inclus dans les formules supérieures.</p>
-      </div>
-    );
-  }
-  if (stage === "ready") {
-    return (
-      <div className={box}>
-        <div className="flex-1 space-y-0.5">
-          <p className="flex items-center gap-2 font-medium text-sm">
-            <IconCheck className="size-4 text-whatsapp" />
-            Votre compte rendu est prêt
-          </p>
-          <p className="text-muted-foreground text-xs">
-            {addedSinceReport ? "Votre note n'y figure pas encore : mettez-le à jour." : "Vous l'avez aussi reçu par e-mail. Relisez-le avant de l'envoyer."}
-          </p>
-        </div>
-        <div className="flex gap-2">
+  let title = "Compte rendu";
+  let line: string;
+  let action: React.ReactNode = null;
+  const ghost = "h-9 shrink-0 rounded-full bg-card px-4 text-sm sm:h-9";
+  const primary = "h-9 shrink-0 rounded-full px-4 text-sm sm:h-9";
+  switch (stage) {
+    case "locked":
+      line = "Le compte rendu rédigé par IA est inclus dans les formules supérieures. Votre note reste avec l'entretien.";
+      break;
+    case "waiting":
+      line = `Rédigé automatiquement ${scheduledFor ? untilText(scheduledFor, now) : "dans un instant"}. Ajoutez une note d'ici là si vous le souhaitez.`;
+      action = (
+        <Button type="button" variant="ghost" className={ghost} loading={pending} onClick={onWrite}>
+          Rédiger maintenant
+        </Button>
+      );
+      break;
+    case "writing":
+      line = "Rédaction en cours. Vous serez prévenu par e-mail dès qu'il est prêt : vous pouvez quitter cette page.";
+      break;
+    case "ready":
+      title = "Votre compte rendu est prêt";
+      line = addedSinceReport ? "Votre note n'y figure pas encore : mettez-le à jour." : "Envoyé aussi par e-mail. Relisez-le avant de le partager.";
+      action = (
+        <div className="flex shrink-0 gap-2">
           {addedSinceReport && (
-            <Button type="button" variant="ghost" className="h-10 rounded-full bg-card px-4 text-sm sm:h-10" loading={pending} onClick={onWrite}>
+            <Button type="button" variant="ghost" className={ghost} loading={pending} onClick={onWrite}>
               <IconRefresh className="size-4" />
               Mettre à jour
             </Button>
           )}
-          <Button type="button" className="h-10 rounded-full px-4 text-sm sm:h-10" onClick={onOpen}>
-            <IconFileText className="size-4" />
-            Lire le compte rendu
+          <Button type="button" className={primary} onClick={onOpen}>
+            Lire
           </Button>
         </div>
-      </div>
-    );
+      );
+      break;
+    case "failed":
+      title = "Compte rendu non rédigé";
+      line = report?.writingError ?? "Il n'a pas pu être rédigé.";
+      action = (
+        <Button type="button" variant="ghost" className={ghost} loading={pending} onClick={onWrite}>
+          Réessayer
+        </Button>
+      );
+      break;
+    default:
+      line = "Pas assez d'éléments pour le rédiger : ajoutez une note ci-dessous.";
+      action = (
+        <Button type="button" variant="ghost" className={ghost} loading={pending} onClick={onWrite}>
+          Rédiger
+        </Button>
+      );
   }
-  if (stage === "waiting" || stage === "writing") {
-    return (
-      <div className={box}>
-        <span className="relative flex size-2.5 shrink-0 self-start sm:self-center">
-          <span className="absolute inline-flex size-full animate-ping rounded-full bg-whatsapp/60" />
-          <span className="relative inline-flex size-2.5 rounded-full bg-whatsapp" />
-        </span>
-        <div className="flex-1 space-y-0.5">
-          <p className="font-medium text-sm">{stage === "waiting" ? `Compte rendu rédigé ${until}` : "Rédaction du compte rendu…"}</p>
-          <p className="text-muted-foreground text-xs">
-            {stage === "waiting"
-              ? "Ajoutez une note d'ici là si vous le souhaitez. Vous serez prévenu par e-mail dès qu'il est prêt."
-              : "Vous serez prévenu par e-mail dès qu'il est prêt : vous pouvez quitter cette page."}
-          </p>
-        </div>
-        {stage === "waiting" && (
-          <Button type="button" variant="ghost" className="h-10 rounded-full bg-card px-4 text-sm sm:h-10" loading={pending} onClick={onWrite}>
-            Rédiger maintenant
-          </Button>
-        )}
-      </div>
-    );
-  }
+  let icon = <IconFileText className="size-5 text-muted-foreground" />;
+  if (stage === "ready") icon = <IconCircleCheckFilled className="size-5 text-whatsapp" />;
+  if (stage === "failed") icon = <IconAlertTriangle className="size-5 text-destructive" />;
+
   return (
-    <div className={box}>
-      <p className="flex flex-1 items-start gap-2 text-sm">
-        {stage === "failed" && <IconAlertTriangle className="mt-0.5 size-4 shrink-0 text-destructive" />}
-        <span className={stage === "failed" ? "" : "text-muted-foreground"}>
-          {stage === "failed"
-            ? (report?.writingError ?? "Le compte rendu n'a pas pu être rédigé.")
-            : "Pas assez d'éléments pour un compte rendu : ajoutez une note, puis rédigez-le."}
-        </span>
-      </p>
-      <Button type="button" className="h-10 rounded-full px-4 text-sm sm:h-10" loading={pending} onClick={onWrite}>
-        {stage === "failed" ? "Réessayer" : "Rédiger le compte rendu"}
-      </Button>
-    </div>
+    <section className="overflow-hidden rounded-2xl bg-page">
+      <div className="flex flex-wrap items-center gap-3 p-4 sm:flex-nowrap">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-card">{icon}</span>
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <p className="font-medium text-sm">{title}</p>
+          <p className="text-muted-foreground text-xs leading-relaxed">{line}</p>
+          {(stage === "waiting" || stage === "writing") && (
+            <div className="mt-2 h-1 overflow-hidden rounded-full bg-card" role="progressbar" aria-label="Rédaction du compte rendu">
+              <div
+                className={cn("h-full rounded-full bg-whatsapp transition-[width] duration-1000 ease-linear", stage === "writing" && "w-full animate-pulse")}
+                style={stage === "waiting" && scheduledFor ? { width: `${Math.round(waitProgress(scheduledFor, now) * 100)}%` } : undefined}
+              />
+            </div>
+          )}
+        </div>
+        {/* On a phone the action goes under the text, lined up with it. */}
+        {action && <div className="w-full pl-13 sm:w-auto sm:pl-0">{action}</div>}
+      </div>
+    </section>
   );
 }

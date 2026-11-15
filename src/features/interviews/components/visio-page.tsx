@@ -304,7 +304,7 @@ function HostCallArea({
       {call}
       {/* Ended in Rabotka's call: done, the report on its way, a note to add. */}
       {ended && id && v.provider === "hosted" ? (
-        <CallEnded interviewId={id} candidateName={v.candidateName} onOpenReport={onReport} />
+        <CallEnded interviewId={id} candidateName={v.candidateName} jobTitle={v.jobTitle} endedAt={v.endedAt} onOpenReport={onReport} />
       ) : (
         <Notice v={v} ended={ended} onRejoin={onRejoin} onReport={id ? onReport : undefined} onEnd={id ? onEnd : undefined} />
       )}
