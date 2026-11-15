@@ -313,7 +313,7 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
   const query = useQuery(visioQuery(room, true));
   const v = query.data;
   const [reportOpen, setReportOpen] = useState(false);
-  // Out of the call: only « Voulez-vous ajouter une note ? », the report follows by itself.
+  // After « Terminer » only (not Jitsi's hang-up): « Voulez-vous ajouter une note ? », the report follows by itself.
   const [afterCall, setAfterCall] = useState(false);
   const queryClient = useQueryClient();
   const api = useRef<CallApi | null>(null);
@@ -437,7 +437,6 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
             }}
             onLeave={() => {
               setLeft(true);
-              if (v?.interviewId) setAfterCall(true);
               // Ended by a colleague's « Terminer »: the page says so, not « Rejoindre ».
               void query.refetch();
             }}
@@ -543,7 +542,7 @@ export function VisioPage({ room, guestToken }: Readonly<{ room: string; guestTo
                     <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive/60" />
                     <span className="relative inline-flex size-2 rounded-full bg-destructive" />
                   </span>
-                  Entretien transcrit pour le compte rendu
+                  <span>Entretien transcrit pour le compte rendu</span>
                 </span>
               </div>
             )}
