@@ -23,6 +23,7 @@ import type { Interview } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { CalendarLinkDialog } from "./calendar-link-dialog";
 import { InterviewCard } from "./interview-card";
+import { InterviewReportDialog } from "./interview-report-panel";
 import { InterviewsCalendar } from "./interviews-calendar";
 
 const VIEWS = [
@@ -44,7 +45,14 @@ export function InterviewsPage() {
   const [view, setView] = useQueryState("vue", parseAsStringLiteral(["calendrier", "liste"] as const).withDefault("calendrier"));
   // The upcoming ones feed the tiles whatever the tab.
   const upcoming = useQuery({ queryKey: [...interviewsKey, "upcoming"], queryFn: () => listInterviews({ scope: "upcoming" }) });
-  const past = useQuery({ queryKey: [...interviewsKey, "past"], queryFn: () => listInterviews({ scope: "past" }), enabled: tab === "past" });
+  // « Votre compte rendu est prêt » links here (?compte-rendu=): that report, opened over the page.
+  const [reportId, setReportId] = useQueryState("compte-rendu");
+  const past = useQuery({
+    queryKey: [...interviewsKey, "past"],
+    queryFn: () => listInterviews({ scope: "past" }),
+    enabled: tab === "past" || Boolean(reportId),
+  });
+  const reportFor = reportId ? [...(past.data ?? []), ...(upcoming.data ?? [])].find((i) => i.id === reportId) : undefined;
   const query = tab === "upcoming" ? upcoming : past;
   const items = query.data ?? [];
 
@@ -185,6 +193,18 @@ export function InterviewsPage() {
           </ul>
         )}
       </section>
+      )}
+      {reportFor && (
+        <InterviewReportDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) void setReportId(null);
+          }}
+          interviewId={reportFor.id}
+          candidateName={reportFor.candidateName}
+          jobTitle={reportFor.jobTitle}
+          startsAt={reportFor.startsAt}
+        />
       )}
     </div>
   );

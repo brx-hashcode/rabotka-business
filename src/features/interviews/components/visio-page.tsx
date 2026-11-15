@@ -12,10 +12,10 @@ import { BusinessLockup } from "#/components/business-lockup";
 import { Bone } from "#/components/page-skeletons";
 import { Button } from "#/components/ui/button";
 import { friendlyError } from "#/lib/api/friendly-error";
-import { endInterview, interviewsKey, joinVisioAsGuest, joinVisioAsHost, markCallStarted } from "#/lib/api/interview-controller";
+import { endInterview, interviewReportKey, interviewsKey, joinVisioAsGuest, joinVisioAsHost, markCallStarted } from "#/lib/api/interview-controller";
 import type { VisioJoin } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
-import { AfterCallDialog } from "./after-call-dialog";
+import { CallEnded } from "./call-ended";
 import { InterviewReportDialog } from "./interview-report-panel";
 import { useCallCaptions, type CallCaptionsApi } from "../call-captions";
 import { InviteGuestDialog } from "./invite-guest-dialog";
@@ -302,7 +302,12 @@ function HostCallArea({
   return (
     <>
       {call}
-      <Notice v={v} ended={ended} onRejoin={onRejoin} onReport={id ? onReport : undefined} onEnd={id ? onEnd : undefined} />
+      {/* Ended in Rabotka's call: done, the report on its way, a note to add. */}
+      {ended && id && v.provider === "hosted" ? (
+        <CallEnded interviewId={id} candidateName={v.candidateName} onOpenReport={onReport} />
+      ) : (
+        <Notice v={v} ended={ended} onRejoin={onRejoin} onReport={id ? onReport : undefined} onEnd={id ? onEnd : undefined} />
+      )}
     </>
   );
 }
@@ -313,8 +318,6 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
   const query = useQuery(visioQuery(room, true));
   const v = query.data;
   const [reportOpen, setReportOpen] = useState(false);
-  // After « Terminer » only (not Jitsi's hang-up): « Voulez-vous ajouter une note ? », the report follows by itself.
-  const [afterCall, setAfterCall] = useState(false);
   const queryClient = useQueryClient();
   const api = useRef<CallApi | null>(null);
   const [confirmEnd, setConfirmEnd] = useState(false);
@@ -341,7 +344,8 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: interviewsKey });
-      setAfterCall(true);
+      // The report now waits a couple of minutes before writing itself: the end screen shows it.
+      void queryClient.invalidateQueries({ queryKey: interviewReportKey(v?.interviewId ?? "") });
     },
     onError: (err) => {
       // Not recorded as ended: « Rejoindre » and « Terminer » stay offered.
@@ -351,7 +355,6 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
   });
   const rejoin = () => {
     setReportOpen(false);
-    setAfterCall(false);
     setAttempt((n) => n + 1);
     setGone(false);
     setLeft(false);
@@ -463,9 +466,6 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
         onConfirm={() => end.mutate()}
         pending={end.isPending}
       />
-      {v?.interviewId && (
-        <AfterCallDialog interviewId={v.interviewId} candidateName={v.candidateName} open={afterCall} onOpenChange={setAfterCall} />
-      )}
       {reportOpen && v?.interviewId && (
         <InterviewReportDialog
           open={reportOpen}
