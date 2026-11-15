@@ -683,7 +683,7 @@ function SendDialog({
   );
 }
 
-function joinText(before: string, added: string): string {
+export function joinText(before: string, added: string): string {
   const a = added.trim();
   if (!a) return before;
   if (!before.trim()) return a.charAt(0).toUpperCase() + a.slice(1);
@@ -702,7 +702,7 @@ const TICK = 50;
  * right to left, as tall as the microphone's level, fading out on the left.
  * Drawn on a canvas each frame, with no render per frame.
  */
-function LiveWaveform({ analyser }: Readonly<{ analyser: AnalyserNode | null }>) {
+export function LiveWaveform({ analyser }: Readonly<{ analyser: AnalyserNode | null }>) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const canvas = ref.current;
@@ -774,7 +774,7 @@ function LiveWaveform({ analyser }: Readonly<{ analyser: AnalyserNode | null }>)
 }
 
 /** How long the dictation has been running, as 0:42. */
-function Elapsed({ since }: Readonly<{ since: number }>) {
+export function Elapsed({ since }: Readonly<{ since: number }>) {
   const [now, setNow] = useState(since);
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 500);

@@ -12,9 +12,10 @@ import { BusinessLockup } from "#/components/business-lockup";
 import { Bone } from "#/components/page-skeletons";
 import { Button } from "#/components/ui/button";
 import { friendlyError } from "#/lib/api/friendly-error";
-import { endInterview, interviewsKey, joinVisioAsGuest, joinVisioAsHost, markCallStarted } from "#/lib/api/interview-controller";
+import { endInterview, interviewReportKey, interviewsKey, joinVisioAsGuest, joinVisioAsHost, markCallStarted } from "#/lib/api/interview-controller";
 import type { VisioJoin } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
+import { CallEnded } from "./call-ended";
 import { InterviewReportDialog } from "./interview-report-panel";
 import { useCallCaptions, type CallCaptionsApi } from "../call-captions";
 import { InviteGuestDialog } from "./invite-guest-dialog";
@@ -301,7 +302,12 @@ function HostCallArea({
   return (
     <>
       {call}
-      <Notice v={v} ended={ended} onRejoin={onRejoin} onReport={id ? onReport : undefined} onEnd={id ? onEnd : undefined} />
+      {/* Ended in Rabotka's call: done, the report on its way, a note to add. */}
+      {ended && id && v.provider === "hosted" ? (
+        <CallEnded interviewId={id} candidateName={v.candidateName} jobTitle={v.jobTitle} endedAt={v.endedAt} onOpenReport={onReport} />
+      ) : (
+        <Notice v={v} ended={ended} onRejoin={onRejoin} onReport={id ? onReport : undefined} onEnd={id ? onEnd : undefined} />
+      )}
     </>
   );
 }
@@ -338,7 +344,8 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: interviewsKey });
-      setReportOpen(true);
+      // The report now waits a couple of minutes before writing itself: the end screen shows it.
+      void queryClient.invalidateQueries({ queryKey: interviewReportKey(v?.interviewId ?? "") });
     },
     onError: (err) => {
       // Not recorded as ended: « Rejoindre » and « Terminer » stay offered.
@@ -433,7 +440,6 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
             }}
             onLeave={() => {
               setLeft(true);
-              if (v?.interviewId) setReportOpen(true);
               // Ended by a colleague's « Terminer »: the page says so, not « Rejoindre ».
               void query.refetch();
             }}
@@ -536,7 +542,7 @@ export function VisioPage({ room, guestToken }: Readonly<{ room: string; guestTo
                     <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive/60" />
                     <span className="relative inline-flex size-2 rounded-full bg-destructive" />
                   </span>
-                  Entretien transcrit pour le compte rendu
+                  <span>Entretien transcrit pour le compte rendu</span>
                 </span>
               </div>
             )}

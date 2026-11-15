@@ -557,6 +557,8 @@ export type InterviewReport = {
   writing?: boolean;
   /** Why the last writing failed, until the next one. */
   writingError?: string | null;
+  /** After the call: when it writes itself (« Rédiger maintenant » runs it now). */
+  scheduledFor?: string | null;
   generatedAt: string | null;
   sentAt: string | null;
   updatedAt: string | null;
