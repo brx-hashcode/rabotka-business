@@ -15,6 +15,7 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import { endInterview, interviewsKey, joinVisioAsGuest, joinVisioAsHost, markCallStarted } from "#/lib/api/interview-controller";
 import type { VisioJoin } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
+import { AfterCallDialog } from "./after-call-dialog";
 import { InterviewReportDialog } from "./interview-report-panel";
 import { useCallCaptions, type CallCaptionsApi } from "../call-captions";
 import { InviteGuestDialog } from "./invite-guest-dialog";
@@ -312,6 +313,8 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
   const query = useQuery(visioQuery(room, true));
   const v = query.data;
   const [reportOpen, setReportOpen] = useState(false);
+  // Out of the call: only « Voulez-vous ajouter une note ? », the report follows by itself.
+  const [afterCall, setAfterCall] = useState(false);
   const queryClient = useQueryClient();
   const api = useRef<CallApi | null>(null);
   const [confirmEnd, setConfirmEnd] = useState(false);
@@ -338,7 +341,7 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: interviewsKey });
-      setReportOpen(true);
+      setAfterCall(true);
     },
     onError: (err) => {
       // Not recorded as ended: « Rejoindre » and « Terminer » stay offered.
@@ -348,6 +351,7 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
   });
   const rejoin = () => {
     setReportOpen(false);
+    setAfterCall(false);
     setAttempt((n) => n + 1);
     setGone(false);
     setLeft(false);
@@ -433,7 +437,7 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
             }}
             onLeave={() => {
               setLeft(true);
-              if (v?.interviewId) setReportOpen(true);
+              if (v?.interviewId) setAfterCall(true);
               // Ended by a colleague's « Terminer »: the page says so, not « Rejoindre ».
               void query.refetch();
             }}
@@ -460,6 +464,9 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
         onConfirm={() => end.mutate()}
         pending={end.isPending}
       />
+      {v?.interviewId && (
+        <AfterCallDialog interviewId={v.interviewId} candidateName={v.candidateName} open={afterCall} onOpenChange={setAfterCall} />
+      )}
       {reportOpen && v?.interviewId && (
         <InterviewReportDialog
           open={reportOpen}
