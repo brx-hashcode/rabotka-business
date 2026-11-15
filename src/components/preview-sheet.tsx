@@ -115,7 +115,7 @@ export function PreviewSheet({
         <SheetPrimitive.Content
           data-preview-sheet
           aria-describedby={undefined}
-          className="data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-card shadow-soft outline-none data-[state=closed]:duration-300 data-[state=open]:duration-500 sm:w-[min(56rem,92vw)]"
+          className="data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-card shadow-soft outline-none data-[state=closed]:duration-300 data-[state=open]:duration-500 sm:w-[min(56rem,92vw)] xl:w-2/5 xl:min-w-[40rem]"
         >
           <header className="flex flex-wrap items-center gap-3 px-5 py-4 sm:px-6">
             <div className="min-w-0 flex-1">
