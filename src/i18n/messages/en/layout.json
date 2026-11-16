@@ -43,7 +43,6 @@
     "verifying": "Verification in progress",
     "trial": "Free trial",
     "active": "Active",
-    "noPlan": "No subscription",
     "trialUntil": "Trial until {date}",
     "until": "Until {date}",
     "choosePlan": "Choose a plan",
