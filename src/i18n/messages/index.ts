@@ -6,6 +6,9 @@ import enHome from "./en/home.json";
 import enLabels from "./en/labels.json";
 import enLayout from "./en/layout.json";
 import enSignUp from "./en/signUp.json";
+import enMissions from "./en/missions.json";
+import enOffers from "./en/offers.json";
+import enApplications from "./en/applications.json";
 import enSite from "./en/site.json";
 import enSiteCopy from "./en/siteCopy.json";
 import frAuth from "./fr/auth.json";
@@ -14,6 +17,9 @@ import frHome from "./fr/home.json";
 import frLabels from "./fr/labels.json";
 import frLayout from "./fr/layout.json";
 import frSignUp from "./fr/signUp.json";
+import frMissions from "./fr/missions.json";
+import frOffers from "./fr/offers.json";
+import frApplications from "./fr/applications.json";
 import frSite from "./fr/site.json";
 import frSiteCopy from "./fr/siteCopy.json";
 
@@ -30,6 +36,9 @@ const fr = {
   labels: frLabels,
   layout: frLayout,
   signUp: frSignUp,
+  missions: frMissions,
+  offers: frOffers,
+  applications: frApplications,
   site: frSite,
   siteCopy: frSiteCopy,
 };
@@ -45,6 +54,9 @@ export const MESSAGES: Record<Locale, Messages> = {
     labels: enLabels,
     layout: enLayout,
     signUp: enSignUp,
+    missions: enMissions,
+    offers: enOffers,
+    applications: enApplications,
     site: enSite,
     siteCopy: enSiteCopy as typeof frSiteCopy,
   },

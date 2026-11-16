@@ -1,0 +1,26 @@
+{
+  "tabs": {
+    "new": "À examiner",
+    "viewed": "Vues",
+    "hired": "Retenues",
+    "closed": "Refusées ou annulées",
+    "all": "Toutes",
+    "shortlisted": "Présélectionnées"
+  },
+  "title": "Candidatures",
+  "intro": "Toutes les candidatures à vos offres, au même endroit : retenez, refusez, écrivez.",
+  "search": "Rechercher un candidat, une offre…",
+  "offer": "Offre",
+  "allOffers": "Toutes les offres",
+  "stage": "Étape",
+  "unavailable": "Vos candidatures sont indisponibles pour le moment.",
+  "noneYet": "Aucune candidature pour le moment",
+  "noneHere": "Aucune candidature ici",
+  "noneYetHint": "Publiez une offre : les profils correspondants en sont prévenus et leurs candidatures arrivent ici.",
+  "allAnswered": "Vous avez répondu à tout le monde.",
+  "changeFilter": "Changez d'étape ou de filtre pour en voir d'autres.",
+  "reliability": "Fiabilité {score}/100",
+  "forOffer": "Pour l'offre",
+  "waiting": "En attente de votre réponse depuis {days} jours",
+  "plan": "Planifier un entretien"
+}

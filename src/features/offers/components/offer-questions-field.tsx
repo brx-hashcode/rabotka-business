@@ -12,17 +12,17 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 
+import { useTranslations } from "next-intl";
+
 import { Input } from "#/components/ui/input";
 import type { OfferQuestion, QuestionKind } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
 import {
   blankQuestion,
   CAN_KNOCK_OUT,
-  KIND_HINT,
-  KIND_LABEL,
   MAX_QUESTIONS,
   questionProblem,
-  SUGGESTIONS,
+  suggestions,
   withKind,
 } from "../offer-questions";
 
@@ -80,10 +80,12 @@ function Pill({ on, children, onClick }: Readonly<{ on: boolean; children: React
 
 /** The six kinds as tiles, the chosen one saying what the candidate will do. */
 function KindPicker({ value, onChange }: Readonly<{ value: QuestionKind; onChange: (kind: QuestionKind) => void }>) {
+  const t = useTranslations("offers.questionsField");
+  const tq = useTranslations("offers.questions");
   return (
     <div className="space-y-2">
-      <p className="font-medium text-muted-foreground text-xs">Type de réponse</p>
-      <div role="radiogroup" aria-label="Type de réponse" className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+      <p className="font-medium text-muted-foreground text-xs">{t("kind")}</p>
+      <div role="radiogroup" aria-label={t("kind")} className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
         {KINDS.map(({ kind, icon: Icon }) => (
           <button
             key={kind}
@@ -97,21 +99,23 @@ function KindPicker({ value, onChange }: Readonly<{ value: QuestionKind; onChang
             )}
           >
             <Icon className="size-4 shrink-0" />
-            <span className="truncate">{KIND_LABEL[kind]}</span>
+            <span className="truncate">{tq(`kind.${kind}`)}</span>
           </button>
         ))}
       </div>
-      <p className="text-muted-foreground text-xs">{KIND_HINT[value]}</p>
+      <p className="text-muted-foreground text-xs">{tq(`hint.${value}`)}</p>
     </div>
   );
 }
 
 /** What an « éliminatoire » keeps: the expected answer, a minimum or a latest date. */
 function Threshold({ q, onChange }: Readonly<{ q: OfferQuestion; onChange: (q: OfferQuestion) => void }>) {
+  const t = useTranslations("offers.questionsField");
+  const tc = useTranslations("offers.candidate");
   if (q.kind === "NUMBER" || q.kind === "DATE") {
     return (
       <label className="flex flex-wrap items-center gap-3 text-sm">
-        <span className="font-medium">{q.kind === "NUMBER" ? "Au moins" : "Disponible au plus tard le"}</span>
+        <span className="font-medium">{q.kind === "NUMBER" ? t("atLeast") : t("latest")}</span>
         <Input
           type={q.kind === "NUMBER" ? "number" : "date"}
           min={0}
@@ -126,8 +130,8 @@ function Threshold({ q, onChange }: Readonly<{ q: OfferQuestion; onChange: (q: O
   const choices: [string, string][] =
     q.kind === "YES_NO"
       ? [
-          ["yes", "Oui"],
-          ["no", "Non"],
+          ["yes", tc("yes")],
+          ["no", tc("no")],
         ]
       : q.options
           .map((o) => o.trim())
@@ -135,7 +139,7 @@ function Threshold({ q, onChange }: Readonly<{ q: OfferQuestion; onChange: (q: O
           .map((o) => [o, o]);
   return (
     <div className="space-y-2">
-      <p className="font-medium text-sm">{q.kind === "YES_NO" ? "Réponse attendue" : "Réponses acceptées"}</p>
+      <p className="font-medium text-sm">{q.kind === "YES_NO" ? t("expected") : t("accepted")}</p>
       <div className="flex flex-wrap gap-1.5">
         {choices.map(([v, l]) => (
           <Pill
@@ -166,13 +170,16 @@ export function OfferQuestionsField({
   onChange,
 }: Readonly<{ value: OfferQuestion[]; onChange: (questions: OfferQuestion[]) => void }>) {
   const set = (i: number, q: OfferQuestion) => onChange(value.map((x, j) => (j === i ? q : x)));
-  const unused = SUGGESTIONS.filter((s) => !value.some((q) => q.label.trim() === s.label));
+  const t = useTranslations("offers.questionsField");
+  const tq = useTranslations("offers.questions");
+  const unused = suggestions(tq.raw("suggestions") as { label: string; options: string[] }[]).filter(
+    (s) => !value.some((q) => q.label.trim() === s.label),
+  );
 
   return (
     <div className="space-y-3">
       <p className="text-muted-foreground text-sm">
-        Les candidats y répondent en postulant. Une question <span className="font-medium text-foreground">éliminatoire</span>{" "}
-        place à la fin de la liste ceux qui ne remplissent pas le critère, sans les refuser.
+        {t.rich("intro", { strong: (chunks) => <span className="font-medium text-foreground">{chunks}</span> })}
       </p>
 
       {value.map((q, i) => {
@@ -187,13 +194,13 @@ export function OfferQuestionsField({
                 value={q.label}
                 onChange={(e) => set(i, { ...q, label: e.target.value })}
                 maxLength={140}
-                placeholder="Votre question"
-                aria-label={`Question ${i + 1}`}
+                placeholder={t("placeholder")}
+                aria-label={t("question", { n: i + 1 })}
                 className={INPUT}
               />
               <button
                 type="button"
-                aria-label={`Retirer la question ${i + 1}`}
+                aria-label={t("removeQuestion", { n: i + 1 })}
                 onClick={() => onChange(value.filter((_, j) => j !== i))}
                 className="flex size-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:bg-card hover:text-destructive"
               >
@@ -206,7 +213,7 @@ export function OfferQuestionsField({
 
               {q.kind === "CHOICE" && (
                 <div className="space-y-2">
-                  <p className="font-medium text-muted-foreground text-xs">Réponses proposées</p>
+                  <p className="font-medium text-muted-foreground text-xs">{t("options")}</p>
                   {q.options.map((o, oi) => (
                     <div key={oi} className="flex items-center gap-2">
                       <Input
@@ -216,13 +223,13 @@ export function OfferQuestionsField({
                           set(i, { ...q, options, accepted: q.accepted.filter((a) => a !== o) });
                         }}
                         maxLength={60}
-                        placeholder={`Réponse ${oi + 1}`}
+                        placeholder={t("answer", { n: oi + 1 })}
                         className={INPUT}
                       />
                       {q.options.length > 2 && (
                         <button
                           type="button"
-                          aria-label={`Retirer la réponse ${oi + 1}`}
+                          aria-label={t("removeAnswer", { n: oi + 1 })}
                           onClick={() =>
                             set(i, { ...q, options: q.options.filter((_, j) => j !== oi), accepted: q.accepted.filter((a) => a !== o) })
                           }
@@ -240,7 +247,7 @@ export function OfferQuestionsField({
                       className="inline-flex items-center gap-1.5 font-medium text-sm text-whatsapp-dark hover:underline"
                     >
                       <IconPlus className="size-4" />
-                      Ajouter une réponse
+                      {t("addAnswer")}
                     </button>
                   )}
                 </div>
@@ -250,14 +257,14 @@ export function OfferQuestionsField({
                 <Toggle
                   on={q.knockout ? true : q.required}
                   disabled={q.knockout}
-                  label="Obligatoire"
-                  hint={q.knockout ? "Une question éliminatoire est toujours posée" : undefined}
+                  label={t("required")}
+                  hint={q.knockout ? t("alwaysAsked") : undefined}
                   onChange={(required) => set(i, { ...q, required })}
                 />
                 {CAN_KNOCK_OUT.includes(q.kind) && (
                   <Toggle
                     on={q.knockout}
-                    label="Éliminatoire"
+                    label={t("knockout")}
                     onChange={(knockout) => set(i, { ...q, knockout, required: knockout ? true : q.required, accepted: [] })}
                   />
                 )}
@@ -269,7 +276,7 @@ export function OfferQuestionsField({
                 </div>
               )}
 
-              {problem && <p className="text-destructive text-sm">{problem}</p>}
+              {problem && <p className="text-destructive text-sm">{tq(`problem.${problem}`)}</p>}
             </div>
           </div>
         );
@@ -283,7 +290,7 @@ export function OfferQuestionsField({
             className="inline-flex h-11 items-center gap-2 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70"
           >
             <IconPlus className="size-4" />
-            Ajouter une question
+            {t("add")}
           </button>
           {unused.length > 0 && (
             <div className="flex flex-wrap gap-2">

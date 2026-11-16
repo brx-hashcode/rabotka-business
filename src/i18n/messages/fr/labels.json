@@ -61,7 +61,8 @@
     "untilYouClose": "jusqu'à ce que vous la fermiez",
     "daysLeft": "J-{n}",
     "today": "Aujourd'hui",
-    "past": "Passée"
+    "past": "Passée",
+    "remote": "À distance"
   },
   "fcfa": "{amount} FCFA",
   "verdict": {
@@ -75,11 +76,21 @@
     "experience": "Expérience",
     "training": "Formation",
     "location": "Lieu",
-    "languages": "Langues"
+    "languages": "Langues",
+    "trade": "Métier",
+    "reliability": "Fiabilité",
+    "proximity": "Proximité"
   },
   "role": {
     "ADMIN": "Administrateur",
     "RECRUITER": "Recruteur",
     "REVIEWER": "Évaluateur"
+  },
+  "when": {
+    "today": "Aujourd'hui",
+    "tomorrow": "Demain",
+    "inDays": "Dans {days} jours",
+    "yesterday": "Hier",
+    "daysAgo": "Il y a {days} jours"
   }
 }

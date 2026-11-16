@@ -1,0 +1,23 @@
+{
+  "title": "Missions",
+  "intro": "Your hires in the field: who is coming, who is on the job, who has finished — and who to rate.",
+  "unavailable": "Your missions are unavailable right now.",
+  "current": "Current missions",
+  "coming": "Expected",
+  "comingHint": "hired, mission to come",
+  "onIt": "On the job",
+  "finished": "Completed",
+  "finishedHint": "people who finished their mission",
+  "tabCurrent": "Current and upcoming",
+  "tabDone": "Completed",
+  "noneCurrent": "No current mission",
+  "noneDone": "No completed mission",
+  "noneCurrentHint": "Hire a candidate on one of your jobs: the mission shows up here.",
+  "noneDoneHint": "Your completed missions will show up here.",
+  "seeApplications": "See applications",
+  "toRate": "{count} to rate",
+  "team": "Team",
+  "positions": "{filled}/{quantity, plural, one {# position} other {# positions}}",
+  "doneRated": "Completed · rated",
+  "see": "See the mission"
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -20,7 +20,9 @@ import { ScheduleInterviewDialog } from "#/features/interviews/components/schedu
 import { interviewsKey, listInterviews } from "#/lib/api/interview-controller";
 import type { Interview } from "#/lib/api/types";
 import { applicationStatusLabel, applicationStage, isRecruiting, statusClass, type ApplicationStage } from "#/features/offers/offer-labels";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import type { LabelsT } from "#/i18n/translator";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { externalApplicationsKey, listExternalApplications } from "#/lib/api/careers-controller";
 import { listReceivedApplications, offersKey, type ReceivedApplication } from "#/lib/api/offer-controller";
 import { cn, getInitials } from "#/lib/utils";
@@ -32,13 +34,7 @@ import { pollEvery } from "#/features/layout/socket-status";
 const PAGE = 100;
 const fold = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
-const TABS: { key: "all" | ApplicationStage; label: string }[] = [
-  { key: "new", label: "À examiner" },
-  { key: "viewed", label: "Vues" },
-  { key: "hired", label: "Retenues" },
-  { key: "closed", label: "Refusées ou annulées" },
-  { key: "all", label: "Toutes" },
-];
+const TABS: { key: "all" | ApplicationStage }[] = [{ key: "new" }, { key: "viewed" }, { key: "hired" }, { key: "closed" }, { key: "all" }];
 
 /**
  * Every application to the business's offers, in one inbox — the client
@@ -46,6 +42,8 @@ const TABS: { key: "all" | ApplicationStage; label: string }[] = [
  * retain, turn down, follow the unlock, write, rate.
  */
 export function ApplicationsPage() {
+  const t = useTranslations("applications");
+  const friendlyError = useFriendlyError();
   const query = useInfiniteQuery({
     queryKey: [...offersKey, "received"],
     queryFn: ({ pageParam }) => listReceivedApplications(pageParam, PAGE),
@@ -118,8 +116,8 @@ export function ApplicationsPage() {
   return (
     <div className="w-full space-y-6 pt-2">
       <div className="space-y-1.5">
-        <h1 className="font-semibold text-3xl tracking-tight">Candidatures</h1>
-        <p className="text-muted-foreground">Toutes les candidatures à vos offres, au même endroit : retenez, refusez, écrivez.</p>
+        <h1 className="font-semibold text-3xl tracking-tight">{t("title")}</h1>
+        <p className="text-muted-foreground">{t("intro")}</p>
       </div>
 
       <section className="space-y-5 rounded-3xl bg-card p-6">
@@ -129,21 +127,21 @@ export function ApplicationsPage() {
             <Input
               value={q}
               onChange={(e) => void setQ(e.target.value)}
-              placeholder="Rechercher un candidat, une offre…"
+              placeholder={t("search")}
               className="h-11 rounded-full border-0 bg-page pl-10 shadow-none focus-visible:ring-2 focus-visible:ring-ink/10"
             />
           </div>
           {offers.length > 1 && (
             <Select value={offerId} onValueChange={(v) => void setOfferId(v)}>
               <SelectTrigger
-                aria-label="Offre"
+                aria-label={t("offer")}
                 className="h-11 w-full gap-3 rounded-full border-0 bg-page px-4 font-medium shadow-none focus-visible:ring-2 focus-visible:ring-ink/10 sm:w-80 dark:bg-page"
               >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent position="popper" align="end" sideOffset={8} className="max-h-96 w-[var(--radix-select-trigger-width)] min-w-80">
                 <SelectItem value="all" className="[&>span:last-child]:flex-1 [&>span:last-child]:gap-3">
-                  <span className="flex-1">Toutes les offres</span>
+                  <span className="flex-1">{t("allOffers")}</span>
                   <span className="text-muted-foreground tabular-nums">{all.length}</span>
                 </SelectItem>
                 {offers.map((o) => (
@@ -157,21 +155,21 @@ export function ApplicationsPage() {
           )}
         </div>
 
-        <div role="tablist" aria-label="Étape" className="flex gap-1 overflow-x-auto rounded-full bg-page p-1">
-          {TABS.map((t) => (
+        <div role="tablist" aria-label={t("stage")} className="flex gap-1 overflow-x-auto rounded-full bg-page p-1">
+          {TABS.map((x) => (
             <button
-              key={t.key}
+              key={x.key}
               type="button"
               role="tab"
-              aria-selected={tab === t.key}
-              onClick={() => void setTab(t.key)}
+              aria-selected={tab === x.key}
+              onClick={() => void setTab(x.key)}
               className={cn(
                 "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 font-medium text-sm transition-colors",
-                tab === t.key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
+                tab === x.key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {t.label}
-              <span className="tabular-nums opacity-70">{count(t.key)}</span>
+              {t(`tabs.${x.key}`)}
+              <span className="tabular-nums opacity-70">{count(x.key)}</span>
             </button>
           ))}
         </div>
@@ -179,19 +177,19 @@ export function ApplicationsPage() {
         {query.isLoading || forwarding ? (
           <CardGridSkeleton kind="application" />
         ) : !query.data ? (
-          <p className="text-muted-foreground">{friendlyError(query.error, "Vos candidatures sont indisponibles pour le moment.")}</p>
+          <p className="text-muted-foreground">{friendlyError(query.error, t("unavailable"))}</p>
         ) : shown.length + shownExternal.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-2xl bg-page px-6 py-12 text-center">
             <span className="flex size-12 items-center justify-center rounded-2xl bg-card">
               <IconInbox className="size-6 text-muted-foreground" />
             </span>
-            <p className="font-medium">{all.length + scopedExternal.length === 0 ? "Aucune candidature pour le moment" : "Aucune candidature ici"}</p>
+            <p className="font-medium">{all.length + scopedExternal.length === 0 ? t("noneYet") : t("noneHere")}</p>
             <p className="max-w-sm text-muted-foreground text-sm">
               {all.length + scopedExternal.length === 0
-                ? "Publiez une offre : les profils correspondants en sont prévenus et leurs candidatures arrivent ici."
+                ? t("noneYetHint")
                 : tab === "new"
-                  ? "Vous avez répondu à tout le monde."
-                  : "Changez d'étape ou de filtre pour en voir d'autres."}
+                  ? t("allAnswered")
+                  : t("changeFilter")}
             </p>
           </div>
         ) : (
@@ -234,11 +232,11 @@ function daysSince(iso: string): number {
   return Math.floor((Date.now() - new Date(iso).getTime()) / DAY_MS);
 }
 
-function ago(iso: string): string {
+function ago(iso: string, t: LabelsT): string {
   const days = daysSince(iso);
-  if (days <= 0) return "Aujourd'hui";
-  if (days === 1) return "Hier";
-  return `Il y a ${days} jours`;
+  if (days <= 0) return t("when.today");
+  if (days === 1) return t("when.yesterday");
+  return t("when.daysAgo", { days });
 }
 
 /** One application: who, for which offer, how long it has waited — and the decision. */
@@ -249,6 +247,8 @@ function ApplicationCard({
 }: Readonly<{ application: ReceivedApplication; focused?: boolean; interview?: Interview }>) {
   const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
   const tLabels = useTranslations("labels");
+  const t = useTranslations("applications");
+  const locale = useLocale() as Locale;
   const [planning, setPlanning] = useState(false);
   const hire = canHire(useMember().role);
   const stage = applicationStage(a.status);
@@ -274,24 +274,24 @@ function ApplicationCard({
             <span className={cn("rounded-full px-2 py-0.5 font-medium text-[11px]", statusClass(a.status))}>
               {applicationStatusLabel(a.status, tLabels)}
             </span>
-            <span className="text-muted-foreground text-xs">{ago(a.createdAt)}</span>
+            <span className="text-muted-foreground text-xs">{ago(a.createdAt, tLabels)}</span>
           </p>
           {a.worker.reliabilityScore !== null && (
             <p className="mt-1 inline-flex items-center gap-1 font-medium text-xs">
               <IconShieldCheck className="size-3.5 text-whatsapp-dark" />
-              Fiabilité {a.worker.reliabilityScore}/100
+              {t("reliability", { score: a.worker.reliabilityScore })}
             </p>
           )}
         </div>
       </div>
 
       <Link href={`/espace/offres/${a.offer.id}`} className="group space-y-0.5 rounded-2xl bg-card p-3">
-        <span className="block text-muted-foreground text-[11px] uppercase tracking-wide">Pour l&apos;offre</span>
+        <span className="block text-muted-foreground text-[11px] uppercase tracking-wide">{t("forOffer")}</span>
         <span className="line-clamp-1 font-medium text-sm group-hover:underline">{a.offer.title}</span>
         {at && (
           <span className="flex items-center gap-1 text-muted-foreground text-xs">
             <IconCalendarEvent className="size-3.5" />
-            {at.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "long" })}
+            {at.toLocaleDateString(INTL_LOCALE[locale], { weekday: "short", day: "numeric", month: "long" })}
           </span>
         )}
       </Link>
@@ -299,7 +299,7 @@ function ApplicationCard({
       {waitingDays >= 2 && (
         <p className="-mt-1 flex items-center gap-1.5 text-chip-amber-foreground text-xs">
           <IconClock className="size-3.5" />
-          En attente de votre réponse depuis {waitingDays} jours
+          {t("waiting", { days: waitingDays })}
         </p>
       )}
 
@@ -316,7 +316,7 @@ function ApplicationCard({
             className="-mt-1 inline-flex items-center gap-1.5 self-start font-medium text-sm underline-offset-2 hover:underline"
           >
             <IconCalendarPlus className="size-4" />
-            Planifier un entretien
+            {t("plan")}
           </button>
         )
       )}
