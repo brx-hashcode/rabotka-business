@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, type ClipboardEvent, type KeyboardEvent } from "react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "#/lib/utils";
 
@@ -26,6 +27,7 @@ export function CodeInput({
   boxClassName?: string;
 }>) {
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
+  const t = useTranslations("signUp.code");
   const digits = Array.from({ length: CODE_LENGTH }, (_, i) => value[i]?.trim() ?? "");
 
   function setAt(index: number, char: string) {
@@ -66,7 +68,7 @@ export function CodeInput({
           autoComplete={i === 0 ? "one-time-code" : "off"}
           autoFocus={autoFocus && i === 0}
           maxLength={1}
-          aria-label={`Chiffre ${i + 1}`}
+          aria-label={t("digit", { n: i + 1 })}
           disabled={disabled}
           className={cn(
             "size-12 shrink-0 rounded-xl bg-page text-center font-semibold text-lg outline-none transition-shadow sm:size-14 sm:text-xl",

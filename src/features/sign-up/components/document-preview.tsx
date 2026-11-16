@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { PreviewSheet } from "#/components/preview-sheet";
 import type { UploadedDocument } from "./documents-step";
 
@@ -19,6 +21,7 @@ export function DocumentPreviewDialog({
   src: string | undefined;
   onOpenChange: (open: boolean) => void;
 }>) {
+  const t = useTranslations("signUp.documents");
   const isPdf = doc?.mimeType === "application/pdf" || !!doc?.fileName.toLowerCase().endsWith(".pdf");
   return (
     <PreviewSheet
@@ -29,7 +32,7 @@ export function DocumentPreviewDialog({
       src={src}
       kind={isPdf ? "pdf" : "image"}
       fileName={doc?.fileName}
-      unavailable="L'aperçu n'est plus disponible. Le document est bien enregistré."
+      unavailable={t("previewGone")}
     />
   );
 }

@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Skeleton } from "#/components/ui/skeleton";
 import { useBusinessCatalog } from "#/hooks/use-business-catalog";
 import { sessionUserKey } from "#/hooks/use-session-user";
-import { friendlyError, httpStatusOf } from "#/lib/api/friendly-error";
+import { httpStatusOf } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { reportSignUpProgress, sendSignUpCode } from "#/lib/api/signup-controller";
 import { signUpSession } from "#/lib/auth/session-client";
 import { toInternational } from "#/lib/phone";
@@ -20,7 +22,7 @@ import { IDENTIFIER_KEYS, officialIdentifiers, requiredDocuments } from "../requ
 import { emptyOrganisation, OrganisationStep } from "./organisation-step";
 import { ReviewStep, SignUpDone } from "./review-step";
 import { AuthShell, AuthTabs } from "#/features/auth/components/auth-shell";
-import { DONE_STEP, ProgressHeader } from "./sign-up-chrome";
+import { ProgressHeader } from "./sign-up-chrome";
 import { VerifyStep } from "./verify-step";
 
 const STEP_IDS = STEPS.map((s) => s.id) as StepId[];
@@ -40,6 +42,8 @@ const stepParser = parseAsStringLiteral(STEP_IDS).withDefault("account");
 /** `visitorCountry`: where the visitor is (Cloudflare's CF-IPCountry), to suggest. */
 export function SignUpWizard({ visitorCountry }: Readonly<{ visitorCountry?: string | null }>) {
   const queryClient = useQueryClient();
+  const t = useTranslations("signUp");
+  const friendlyError = useFriendlyError();
   const [etape, setEtape] = useQueryState("etape", stepParser.withOptions({ history: "push" }));
   const store = useSignUpStore();
   const { account, token, organisation, documents, previews, done } = store;
@@ -182,6 +186,8 @@ export function SignUpWizard({ visitorCountry }: Readonly<{ visitorCountry?: str
       // review comes back with everything as it was.
       // Only the expired sign-up token: another refusal (a security check, a
       // rule) re-sent a code and looped on the e-mail step.
+      // TODO(i18n): told apart by the backend's French sentence; once its
+      // errors follow the language, it needs a code to match instead.
       if (httpStatusOf(err) === 403 && /avant de créer votre compte/i.test(errorText(err))) {
         store.setToken(null);
         setResumeAt("review");
@@ -190,11 +196,11 @@ export function SignUpWizard({ visitorCountry }: Readonly<{ visitorCountry?: str
           firstName: account.firstName,
           lastName: account.lastName,
         }).catch(() => undefined);
-        toast.info("Pour finaliser, confirmez à nouveau votre adresse : un nouveau code vous a été envoyé.");
+        toast.info(t("review.verifyAgain"));
         void setEtape("verify");
         return;
       }
-      setSubmitError(friendlyError(err, "La création du compte a échoué. Réessayez."));
+      setSubmitError(friendlyError(err, t("review.failed")));
     } finally {
       setSubmitting(false);
     }
@@ -300,12 +306,19 @@ export function SignUpWizard({ visitorCountry }: Readonly<{ visitorCountry?: str
     }
   }
 
-  const current = done ? DONE_STEP : STEPS[step];
+  const current = done ? "done" : STEPS[step].id;
 
   return (
     // The same frame as sign-in: the form on the left, the card wall on the
     // right, whose ink card speaks of the step being filled in.
-    <AuthShell wide spotlight={{ label: current.kicker, title: current.title, text: current.text }}>
+    <AuthShell
+      wide
+      spotlight={{
+        label: t(`steps.${current}.kicker`),
+        title: t(`steps.${current}.title`),
+        text: t(`steps.${current}.text`),
+      }}
+    >
       {/* Pinned while the form scrolls under it: where you are stays in view.
           Frosted rather than opaque, with a short fade below, so the fields
           blur away under it instead of being cut off; a little wider than the

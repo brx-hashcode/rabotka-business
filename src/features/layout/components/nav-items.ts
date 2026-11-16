@@ -17,15 +17,20 @@ import {
   type Icon,
 } from "@tabler/icons-react";
 
+import type { Messages } from "#/i18n/messages";
+
+/** A key of `layout.nav` (src/i18n/messages/fr/layout.json). */
+export type NavKey = keyof Messages["layout"]["nav"];
+
 export type NavItem = {
-  label: string;
+  label: NavKey;
   href: string;
   icon: Icon;
   /** Shown greyed with « Bientôt » until the page exists. */
   soon?: boolean;
 };
 
-export type NavGroup = { title: string | null; items: NavItem[] };
+export type NavGroup = { title: NavKey | null; items: NavItem[] };
 
 /**
  * The business space's pages, grouped as an employer works: the daily stops
@@ -37,40 +42,40 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: null,
     items: [
-      { label: "Tableau de bord", href: "/espace", icon: IconLayoutDashboard },
-      { label: "Messages", href: "/espace/discussions", icon: IconMessageCircle },
+      { label: "dashboard", href: "/espace", icon: IconLayoutDashboard },
+      { label: "messages", href: "/espace/discussions", icon: IconMessageCircle },
     ],
   },
   {
-    title: "Recrutement",
+    title: "recruitment",
     items: [
-      { label: "Offres", href: "/espace/offres", icon: IconBriefcase },
-      { label: "Page carrières", href: "/espace/page-carrieres", icon: IconWorldWww },
-      { label: "Candidatures", href: "/espace/candidatures", icon: IconUsers },
-      { label: "Entretiens", href: "/espace/entretiens", icon: IconCalendarTime },
-      { label: "Missions", href: "/espace/missions", icon: IconCalendarCheck },
+      { label: "offers", href: "/espace/offres", icon: IconBriefcase },
+      { label: "careersPage", href: "/espace/page-carrieres", icon: IconWorldWww },
+      { label: "applications", href: "/espace/candidatures", icon: IconUsers },
+      { label: "interviews", href: "/espace/entretiens", icon: IconCalendarTime },
+      { label: "missions", href: "/espace/missions", icon: IconCalendarCheck },
     ],
   },
   {
-    title: "Profils",
+    title: "profiles",
     items: [
-      { label: "Trouver des profils", href: "/espace/recherche", icon: IconSearch },
-      { label: "Mes profils", href: "/espace/vivier", icon: IconBookmark },
-      { label: "Analyse de CV", href: "/espace/analyse-cv", icon: IconFileSearch },
+      { label: "search", href: "/espace/recherche", icon: IconSearch },
+      { label: "pool", href: "/espace/vivier", icon: IconBookmark },
+      { label: "cvAnalysis", href: "/espace/analyse-cv", icon: IconFileSearch },
     ],
   },
   {
-    title: "Mon compte",
+    title: "account",
     items: [
-      { label: "Organisation", href: "/espace/organisation", icon: IconBuilding },
-      { label: "Équipe", href: "/espace/equipe", icon: IconUsersGroup },
-      { label: "Abonnement", href: "/espace/abonnement", icon: IconCreditCard },
-      { label: "Factures", href: "/espace/factures", icon: IconFileInvoice },
+      { label: "organisation", href: "/espace/organisation", icon: IconBuilding },
+      { label: "team", href: "/espace/equipe", icon: IconUsersGroup },
+      { label: "subscription", href: "/espace/abonnement", icon: IconCreditCard },
+      { label: "invoices", href: "/espace/factures", icon: IconFileInvoice },
     ],
   },
   {
     title: null,
-    items: [{ label: "Aide", href: "/espace/reclamations", icon: IconAlertCircle }],
+    items: [{ label: "help", href: "/espace/reclamations", icon: IconAlertCircle }],
   },
 ];
 

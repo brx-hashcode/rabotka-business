@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { sendSignUpCode, verifySignUpCode } from "#/lib/api/signup-controller";
 import type { AccountValues } from "./account-step";
 import { CodeInput, completeCode } from "./code-input";
@@ -21,6 +22,8 @@ export function VerifyStep({
   onBack: () => void;
   onDone: (signupToken: string) => void;
 }>) {
+  const t = useTranslations("signUp");
+  const friendlyError = useFriendlyError();
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -35,7 +38,7 @@ export function VerifyStep({
   async function verify() {
     const code = completeCode(value);
     if (!code) {
-      setError("Saisissez les 6 chiffres du code.");
+      setError(t("code.incomplete"));
       return;
     }
     setError(null);
@@ -44,7 +47,7 @@ export function VerifyStep({
       const { signupToken } = await verifySignUpCode(account.email, code);
       onDone(signupToken);
     } catch (err) {
-      setError(friendlyError(err, "Ce code n'a pas fonctionné. Réessayez.", { keepUnauthorized: true }));
+      setError(friendlyError(err, t("code.failed"), { keepUnauthorized: true }));
       setPending(false);
     }
   }
@@ -55,9 +58,9 @@ export function VerifyStep({
       await sendSignUpCode({ email: account.email, firstName: account.firstName, lastName: account.lastName });
       setValue("");
       setCooldown(RESEND_SECONDS);
-      toast.success("Nouveau code envoyé");
+      toast.success(t("code.resent"));
     } catch (err) {
-      toast.error(friendlyError(err, "Impossible de renvoyer le code."));
+      toast.error(friendlyError(err, t("code.resendFailed")));
     }
   }
 
@@ -71,29 +74,29 @@ export function VerifyStep({
       }}
     >
       <StepHeading
-        title="Vérifiez votre adresse e-mail"
-        text={`Nous avons envoyé un code à 6 chiffres à ${account.email}. Il est valable quelques minutes.`}
+        title={t("verify.title")}
+        text={t("verify.text", { email: account.email })}
       />
 
       <CodeInput value={value} onChange={setValue} disabled={pending} />
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-        <span className="text-muted-foreground">Vous n&apos;avez rien reçu ?</span>
+        <span className="text-muted-foreground">{t("verify.nothing")}</span>
         <button
           type="button"
           onClick={() => void resend()}
           disabled={cooldown > 0}
           className="font-medium underline-offset-4 hover:underline disabled:text-muted-foreground disabled:no-underline"
         >
-          {cooldown > 0 ? `Renvoyer dans ${cooldown} s` : "Renvoyer le code"}
+          {cooldown > 0 ? t("code.resendIn", { seconds: cooldown }) : t("code.resend")}
         </button>
         <button type="button" onClick={onBack} className="font-medium underline-offset-4 hover:underline">
-          Modifier l&apos;adresse
+          {t("verify.changeEmail")}
         </button>
       </div>
 
       <FormError message={error} />
-      <StepActions onBack={onBack} continueLabel="Vérifier" pending={pending} />
+      <StepActions onBack={onBack} continueLabel={t("verify.submit")} pending={pending} />
     </form>
   );
 }

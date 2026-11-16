@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { Sheet, SheetContent, SheetTitle } from "#/components/ui/sheet";
 import { useOrganisationFavicon } from "#/features/layout/use-organisation-favicon";
@@ -17,6 +18,7 @@ import { useMember } from "#/features/team/use-member";
  */
 export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const t = useTranslations("layout");
   useOrganisationFavicon();
   // A page typed in by hand that the role cannot use: said here, rather
   // than a full page whose every button ends in « non autorisé ».
@@ -32,7 +34,7 @@ export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
 
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
         <SheetContent side="left" showCloseButton={false} className="w-80 max-w-[85vw] border-0 bg-transparent p-3 shadow-none">
-          <SheetTitle className="sr-only">Menu</SheetTitle>
+          <SheetTitle className="sr-only">{t("nav.menu")}</SheetTitle>
           <AppSidebar onNavigate={() => setMenuOpen(false)} />
         </SheetContent>
       </Sheet>
@@ -42,17 +44,15 @@ export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
         <main className="px-4 pb-10 sm:px-6">
           {refused ? (
             <section className="mx-auto mt-10 max-w-lg space-y-3 rounded-3xl bg-card p-8 text-center">
-              <p className="font-semibold text-lg">Cette page est réservée</p>
+              <p className="font-semibold text-lg">{t("refused.title")}</p>
               <p className="text-muted-foreground text-sm">
-                {role === "REVIEWER"
-                  ? "Un évaluateur lit les candidatures et donne son avis ; cette page est pour ceux qui recrutent."
-                  : "Elle est réservée à l'administrateur de votre organisation."}
+                {role === "REVIEWER" ? t("refused.reviewer") : t("refused.admin")}
               </p>
               <Link
                 href="/espace"
                 className="inline-flex h-11 items-center rounded-full bg-ink px-5 font-medium text-sm text-white hover:bg-ink/90"
               >
-                Retour au tableau de bord
+                {t("refused.back")}
               </Link>
             </section>
           ) : (

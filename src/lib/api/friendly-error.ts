@@ -25,30 +25,47 @@ const TECHNICAL =
  * A message fit to show a person. Ported from rabotka-admin.
  *
  * The server's own message is kept when it reads like a sentence meant for a
- * person — the backend writes French ones ("Code de vérification invalide ou
- * expiré"). Anything technical, and every network or server failure, is
+ * person — the backend answers in the page's language (the proxy sends it as
+ * Accept-Language): "Code de vérification invalide ou expiré". Anything technical, and every network or server failure, is
  * replaced by a standard sentence or by the caller's `fallback`.
  *
  * `keepUnauthorized` keeps the server's 401 message instead of the generic
  * "session expired" — a wrong login code is a 401 that is not about a session.
  */
+/** The standard sentences, in the reader's language (see useFriendlyError). */
+export type StandardErrors = {
+  network: string;
+  server: string;
+  session: string;
+  permission: string;
+  rateLimit: string;
+};
+
+const FRENCH: StandardErrors = {
+  network: NETWORK_ERROR,
+  server: SERVER_ERROR,
+  session: SESSION_ERROR,
+  permission: PERMISSION_ERROR,
+  rateLimit: RATE_LIMIT_ERROR,
+};
+
 export function friendlyError(
   error: unknown,
   fallback: string,
-  { keepUnauthorized = false } = {},
+  { keepUnauthorized = false, standard = FRENCH }: { keepUnauthorized?: boolean; standard?: StandardErrors } = {},
 ): string {
   const status = httpStatusOf(error);
   const message = messageOf(error);
 
   if (status === 0 || (status === null && isNetworkMessage(message))) {
-    return NETWORK_ERROR;
+    return standard.network;
   }
-  if (status !== null && status >= 500) return SERVER_ERROR;
-  if (status === 401 && !keepUnauthorized) return SESSION_ERROR;
-  if (status === 429 && !isHuman(message)) return RATE_LIMIT_ERROR;
+  if (status !== null && status >= 500) return standard.server;
+  if (status === 401 && !keepUnauthorized) return standard.session;
+  if (status === 429 && !isHuman(message)) return standard.rateLimit;
 
   if (isHuman(message)) return message;
-  if (status === 403) return PERMISSION_ERROR;
+  if (status === 403) return standard.permission;
   return fallback;
 }
 

@@ -1,0 +1,203 @@
+{
+  "steps": {
+    "account": {
+      "label": "Account",
+      "kicker": "Account holder",
+      "title": "The person who will run your hiring",
+      "text": "The business account belongs to one person: they sign in, publish jobs and talk with candidates."
+    },
+    "verify": {
+      "label": "Verification",
+      "kicker": "Security",
+      "title": "Your work address, confirmed",
+      "text": "A one-time code proves the email address is yours. It is also how you will sign in: no password."
+    },
+    "organisation": {
+      "label": "Organisation",
+      "kicker": "Your organisation",
+      "title": "Introduce your organisation to candidates",
+      "text": "Registered name, legal status, official numbers: this shows on your profile and is used for verification."
+    },
+    "documents": {
+      "label": "Documents",
+      "kicker": "Compliance",
+      "title": "The documents that prove your organisation is real",
+      "text": "The documents asked for depend on your status. They are kept confidential and reviewed by our team only."
+    },
+    "review": {
+      "label": "Review",
+      "kicker": "Last step",
+      "title": "Check, confirm, start hiring",
+      "text": "Read your details again before sending. Your account is activated as soon as our team has approved your organisation."
+    },
+    "done": {
+      "kicker": "Request sent",
+      "title": "Welcome to Rabotka Business",
+      "text": "Our team is reviewing your organisation. You can already explore your space."
+    }
+  },
+  "progress": {
+    "previous": "Previous step",
+    "finished": "Sign-up complete",
+    "stepOf": "Step {n} of {total}",
+    "welcome": "Welcome",
+    "haveAccount": "Already have an account? ",
+    "signIn": "Sign in",
+    "steps": "Sign-up steps"
+  },
+  "form": {
+    "optional": "optional",
+    "back": "Back",
+    "continue": "Continue",
+    "loading": "Loading"
+  },
+  "code": {
+    "digit": "Digit {n}",
+    "incomplete": "Enter the code's 6 digits.",
+    "failed": "This code didn't work. Try again.",
+    "resent": "New code sent",
+    "resendFailed": "The code could not be sent again.",
+    "resendIn": "Resend in {seconds} s",
+    "resend": "Resend the code"
+  },
+  "account": {
+    "firstNameRequired": "Enter your first name",
+    "lastNameRequired": "Enter your last name",
+    "emailInvalid": "Enter a valid email address",
+    "phoneInvalid": "Enter a valid phone number",
+    "sendFailed": "The code could not be sent. Try again.",
+    "title": "Create your business account",
+    "text": "Start with the account holder. A verification code will be sent to their work email address.",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Work email address",
+    "emailPlaceholder": "firstname.lastname@organisation.com",
+    "phone": "Phone",
+    "phonePlaceholder": "0712 345 678 (or with the country code, +254…)",
+    "submit": "Get the code"
+  },
+  "verify": {
+    "title": "Verify your email address",
+    "text": "We sent a 6-digit code to {email}. It is valid for a few minutes.",
+    "nothing": "Didn't get anything?",
+    "changeEmail": "Change the address",
+    "submit": "Verify"
+  },
+  "organisation": {
+    "nameRequired": "Enter the registered name",
+    "categoryRequired": "Choose the type of organisation",
+    "countryRequired": "Choose the country",
+    "websiteInvalid": "Full web address, with https://",
+    "identifierRequired": "Enter the {label}",
+    "title": "Your organisation",
+    "text": "This information shows on your business profile and is used to verify it.",
+    "identity": "Identity",
+    "verified": "verified",
+    "verifiedPlural": "verified",
+    "name": "Registered name",
+    "category": "Type of organisation",
+    "categoryPlaceholder": "Choose the type of organisation",
+    "categorySearch": "Search: SME, school, NGO…",
+    "legalForm": "Legal form",
+    "legalFormPlaceholder": "Choose the legal form",
+    "legalFormFirst": "Choose the type first",
+    "identifiers": "Official numbers",
+    "identifiersRequired": "The numbers on your required documents, as they appear there.",
+    "identifiersOptional": "They make your organisation easier to verify.",
+    "statisticalId": "Statistical number",
+    "notProvided": "Not provided",
+    "headOffice": "Head office",
+    "headOfficeText": "Only the country is required: an organisation that works online leaves the address empty.",
+    "address": "Address",
+    "addressPlaceholder": "Street, area, district",
+    "country": "Country",
+    "countryPlaceholder": "Choose the country",
+    "countrySearch": "Search for a country",
+    "city": "City",
+    "cityPlaceholder": "Choose the city",
+    "cityFirst": "Choose the country first",
+    "citySearch": "Search for a city",
+    "presentation": "About",
+    "website": "Website",
+    "description": "About the organisation",
+    "descriptionPlaceholder": "Activity, mission, values: what candidates should know about you.",
+    "size": "Headcount",
+    "employees": "employees",
+    "groups": {
+      "companies": "Companies",
+      "associations": "Associations and NGOs",
+      "education": "Education and training",
+      "health": "Health",
+      "public": "Public sector and international",
+      "other": "Other"
+    }
+  },
+  "documents": {
+    "title": "Supporting documents",
+    "text": "They prove your organisation exists: we check them before you can hire. PDF, JPG, PNG or WEBP, 10 MB maximum per file; your documents stay confidential.",
+    "required": "Required documents",
+    "eitherOne": "Either one is enough",
+    "recommended": "Recommended documents",
+    "yours": "Your documents",
+    "complementary": "Additional documents",
+    "atLeastOne": "at least one",
+    "addComplementary": "Add additional documents",
+    "missing": "Still missing: {list}.",
+    "anyDocument": "at least one document",
+    "quoted": "“{name}”",
+    "tooBig": "“{name}” is over 10 MB.",
+    "uploadFailed": "“{name}” could not be sent. Try again.",
+    "previewOf": "Preview: {title}",
+    "preview": "{fileName} · Preview",
+    "noFile": "No file",
+    "replace": "Replace",
+    "remove": "Remove",
+    "upload": "Upload",
+    "previewGone": "The preview is no longer available. The document is saved."
+  },
+  "review": {
+    "title": "Check your details",
+    "text": "Read them again before sending: our team will verify your organisation based on this information.",
+    "holder": "Account holder",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "organisation": "Organisation",
+    "companyName": "Registered name",
+    "type": "Type",
+    "legalForm": "Legal form",
+    "size": "Headcount",
+    "employees": "{size} employees",
+    "registrationNumber": "Registration no.",
+    "taxId": "Tax ID",
+    "address": "Address",
+    "country": "Country",
+    "website": "Website",
+    "documents": "Documents",
+    "noDocuments": "None yet: you can add them from your space.",
+    "terms": "I accept Rabotka's <terms>terms of use</terms> and <privacy>privacy policy</privacy>, and certify that I am authorised to represent this organisation.",
+    "submit": "Send my request",
+    "edit": "Edit",
+    "failed": "The account could not be created. Try again.",
+    "verifyAgain": "To finish, confirm your address again: a new code has been sent to you."
+  },
+  "done": {
+    "title": "Your business account is created",
+    "signIn": "All that's left is to sign in: enter the code we just sent by email.",
+    "thanks": "Thank you! Our team is now reviewing your organisation's documents. You will be told by email as soon as your account is activated.",
+    "next": "Next steps",
+    "checkTitle": "Your organisation is checked",
+    "checkText": "Our team reviews your supporting documents.",
+    "activationTitle": "Your account is activated",
+    "activationText": "You are notified by email and in your space.",
+    "hireTitle": "Your first hires",
+    "hireText": "Publish your jobs and receive pre-selected profiles.",
+    "enter": "Explore my business space"
+  },
+  "inlineSignIn": {
+    "sendFailed": "The sign-in code could not be sent.",
+    "title": "Go to your space",
+    "text": "We just sent a sign-in code to <strong>{email}</strong>.",
+    "submit": "Sign in"
+  }
+}

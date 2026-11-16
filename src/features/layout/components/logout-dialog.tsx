@@ -1,6 +1,7 @@
 "use client";
 
 import { IconLogout } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { ActionDialog } from "#/components/action-dialog";
 import { useLogoutMutation } from "#/hooks/use-auth-mutations";
@@ -11,6 +12,7 @@ export function LogoutDialog({
   onOpenChange,
 }: Readonly<{ open: boolean; onOpenChange: (open: boolean) => void }>) {
   const logout = useLogoutMutation();
+  const t = useTranslations("layout.logout");
 
   return (
     <ActionDialog
@@ -18,9 +20,9 @@ export function LogoutDialog({
       onOpenChange={onOpenChange}
       tone="warning"
       icon={<IconLogout className="size-5" />}
-      title="Se déconnecter ?"
-      description="Vous devrez saisir à nouveau votre e-mail et un code pour revenir."
-      confirmLabel="Se déconnecter"
+      title={t("title")}
+      description={t("description")}
+      confirmLabel={t("confirm")}
       pending={logout.isPending}
       onConfirm={() => logout.mutate(undefined, { onSettled: () => onOpenChange(false) })}
     />
