@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { cookies, headers } from "next/headers";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale } from "next-intl/server";
 
 import { Providers } from "#/app/providers";
+import { OG_LOCALE } from "#/i18n/config";
 import { REFRESH_COOKIE } from "#/lib/auth/cookies";
 import "./globals.css";
 
@@ -19,6 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3500";
   const proto =
     h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  const locale = await getLocale();
 
   return {
     metadataBase: new URL(`${proto}://${host}`),
@@ -39,7 +43,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       type: "website",
       siteName: "Rabotka",
-      locale: "fr_FR",
+      locale: OG_LOCALE[locale],
       title: "Recrutez avec Rabotka",
       description: DESCRIPTION,
     },
@@ -69,12 +73,13 @@ export const viewport: Viewport = {
  */
 export default async function RootLayout({ children, modal }: LayoutProps<"/">) {
   const isAuthenticated = (await cookies()).has(REFRESH_COOKIE);
+  const locale = await getLocale();
 
   return (
     // The document background is the browser chrome's colour: Safari (iOS 26+)
     // tints its bars with it, ignoring theme-color, and overscroll shows it
     // too. The grey page colour lives on the wrapper below.
-    <html lang="fr" translate="no" className="bg-chrome" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang={locale} translate="no" className="bg-chrome" data-scroll-behavior="smooth" suppressHydrationWarning>
       {/* Extensions such as Grammarly add attributes to <body> before React
           hydrates; only this element's own attributes are exempt. */}
       <body className="min-h-svh bg-chrome antialiased" suppressHydrationWarning>
@@ -86,10 +91,13 @@ export default async function RootLayout({ children, modal }: LayoutProps<"/">) 
           className="fixed inset-x-0 top-0 z-50 h-[env(safe-area-inset-top)] bg-chrome"
         />
         <div className="min-h-svh bg-page pt-[env(safe-area-inset-top)]">
-          <Providers isAuthenticated={isAuthenticated}>
-            {children}
-            {modal}
-          </Providers>
+          {/* The request's language and messages, for client components. */}
+          <NextIntlClientProvider>
+            <Providers isAuthenticated={isAuthenticated}>
+              {children}
+              {modal}
+            </Providers>
+          </NextIntlClientProvider>
         </div>
       </body>
     </html>

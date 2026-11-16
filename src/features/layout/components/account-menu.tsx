@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   IconBuilding,
+  IconLanguage,
   IconChevronDown,
   IconCreditCard,
   IconDiscountCheckFilled,
@@ -13,6 +14,7 @@ import {
   IconUsersGroup,
 } from "@tabler/icons-react";
 
+import { LanguageSwitch } from "#/components/language-switch";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import {
   DropdownMenu,
@@ -21,8 +23,10 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { OFFERED_LOCALES } from "#/i18n/config";
 import { isAdmin } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
 import { useSessionUser } from "#/hooks/use-session-user";
@@ -49,6 +53,7 @@ export function AccountMenu() {
   const { data: subscription } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   const { member, role } = useMember();
   const queryClient = useQueryClient();
+  const tLanguage = useTranslations("common.language");
   const emails = useMutation({
     mutationFn: (emailsOn: boolean) => updateMe({ emailsOn }),
     onSuccess: (me) => {
@@ -218,6 +223,17 @@ export function AccountMenu() {
               Abonnement
             </Link>
           </DropdownMenuItem>
+          )}
+
+          {OFFERED_LOCALES.length > 1 && (
+            // Not a menu item: the pill's own buttons are the choices.
+            <div className="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm">
+              <span className="flex size-8 items-center justify-center rounded-full bg-page">
+                <IconLanguage className="size-4" />
+              </span>
+              <span className="flex-1">{tLanguage("label")}</span>
+              <LanguageSwitch />
+            </div>
           )}
 
           <DropdownMenuItem
