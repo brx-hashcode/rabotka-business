@@ -23,26 +23,27 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-import { OFFERED_LOCALES } from "#/i18n/config";
+import { INTL_LOCALE, OFFERED_LOCALES, type Locale } from "#/i18n/config";
 import { isAdmin } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
 import { useSessionUser } from "#/hooks/use-session-user";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { meKey, ROLE_LABEL, updateMe } from "#/lib/api/team-controller";
 import { getMyBusiness, getMySubscription, myBusinessKey, mySubscriptionKey } from "#/lib/api/business-controller";
 import type { SubscriptionStatus } from "#/lib/api/types";
 import { cn, getInitials } from "#/lib/utils";
 import { LogoutDialog } from "./logout-dialog";
 
-const PLAN_STATUS: Partial<Record<SubscriptionStatus, { label: string; className: string }>> = {
-  TRIAL: { label: "Essai gratuit", className: "bg-chip-violet text-chip-violet-foreground" },
-  ACTIVE: { label: "Actif", className: "bg-chip-green text-chip-green-foreground" },
+const PLAN_STATUS: Partial<Record<SubscriptionStatus, { label: "trial" | "active"; className: string }>> = {
+  TRIAL: { label: "trial", className: "bg-chip-violet text-chip-violet-foreground" },
+  ACTIVE: { label: "active", className: "bg-chip-green text-chip-green-foreground" },
 };
 
-const shortDate = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+const shortDate = (iso: string, locale: Locale) =>
+  new Date(iso).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "short" });
 
 /** The signed-in person in the header: avatar, name, email, sign-out. */
 export function AccountMenu() {
@@ -54,13 +55,17 @@ export function AccountMenu() {
   const { member, role } = useMember();
   const queryClient = useQueryClient();
   const tLanguage = useTranslations("common.language");
+  const t = useTranslations("layout.account");
+  const tNav = useTranslations("layout.nav");
+  const locale = useLocale();
+  const friendlyError = useFriendlyError();
   const emails = useMutation({
     mutationFn: (emailsOn: boolean) => updateMe({ emailsOn }),
     onSuccess: (me) => {
       queryClient.setQueryData(meKey, me);
-      toast.success(me.emailsOn ? "Vous recevrez les e-mails de l'espace." : "Vous ne recevrez plus les e-mails de l'espace.");
+      toast.success(me.emailsOn ? t("emailsOn") : t("emailsOff"));
     },
-    onError: (err) => toast.error(friendlyError(err, "Le réglage n'a pas pu être enregistré.")),
+    onError: (err) => toast.error(friendlyError(err, t("emailsFailed"))),
   });
   // A team member is not the account's profile: its own name and address.
   const asMember = member && !member.isOwner;
@@ -91,13 +96,13 @@ export function AccountMenu() {
       <DropdownMenu>
         <DropdownMenuTrigger
           className="group flex h-12 items-center gap-2.5 rounded-2xl bg-card pr-2 pl-1.5 outline-none transition-colors hover:bg-card/70 focus-visible:ring-2 focus-visible:ring-ink/40 sm:pr-3"
-          aria-label="Mon compte"
+          aria-label={t("myAccount")}
         >
           {avatar("size-9 rounded-xl")}
           <span className="hidden min-w-0 flex-col text-left leading-tight md:flex">
-            <span className="max-w-44 truncate font-medium text-sm">{name || business?.name || "Mon compte"}</span>
+            <span className="max-w-44 truncate font-medium text-sm">{name || business?.name || t("myAccount")}</span>
             <span className="max-w-44 truncate text-muted-foreground text-xs">
-              {asMember ? `${ROLE_LABEL[member.role]} · ${business?.name ?? ""}` : (personEmail ?? "Compte entreprise")}
+              {asMember ? `${ROLE_LABEL[member.role]} · ${business?.name ?? ""}` : (personEmail ?? t("businessAccount"))}
             </span>
           </span>
           <IconChevronDown className="hidden size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180 sm:block" />
@@ -116,9 +121,9 @@ export function AccountMenu() {
               {avatar("size-12")}
               <div className="min-w-0">
                 <p className="flex items-center gap-1 font-semibold">
-                  <span className="truncate">{business?.name || person || "Mon compte"}</span>
+                  <span className="truncate">{business?.name || person || t("myAccount")}</span>
                   {business?.verificationStatus === "VERIFIED" && (
-                    <IconDiscountCheckFilled className="size-4 shrink-0 text-whatsapp" aria-label="Organisation vérifiée" />
+                    <IconDiscountCheckFilled className="size-4 shrink-0 text-whatsapp" aria-label={t("verified")} />
                   )}
                 </p>
                 {place && (
@@ -128,7 +133,7 @@ export function AccountMenu() {
                   </p>
                 )}
                 {business?.verificationStatus === "PENDING" && (
-                  <p className="text-chip-amber-foreground text-xs">Vérification en cours</p>
+                  <p className="text-chip-amber-foreground text-xs">{t("verifying")}</p>
                 )}
               </div>
             </div>
@@ -151,16 +156,16 @@ export function AccountMenu() {
                 className="flex items-center justify-between gap-2 rounded-xl bg-card px-3 py-2 text-sm hover:bg-card/70"
               >
                 <span className="min-w-0">
-                  <span className="block truncate font-medium">{plan.plan ? `Plan ${plan.plan.name}` : "Aucun abonnement"}</span>
+                  <span className="block truncate font-medium">{plan.plan ? t("plan", { name: plan.plan.name }) : t("noPlan")}</span>
                   <span className="block truncate text-muted-foreground text-xs">
                     {plan.plan && plan.endsAt
-                      ? `${plan.status === "TRIAL" ? "Essai jusqu'au" : "Jusqu'au"} ${shortDate(plan.endsAt)}`
-                      : "Choisir une formule"}
+                      ? t(plan.status === "TRIAL" ? "trialUntil" : "until", { date: shortDate(plan.endsAt, locale) })
+                      : t("choosePlan")}
                   </span>
                 </span>
                 {planStatus && (
                   <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 font-medium text-xs", planStatus.className)}>
-                    {planStatus.label}
+                    {t(planStatus.label)}
                   </span>
                 )}
               </Link>
@@ -183,7 +188,7 @@ export function AccountMenu() {
               <span className="flex size-8 items-center justify-center rounded-full bg-page">
                 <IconMail className="size-4" />
               </span>
-              <span className="flex-1">Recevoir les e-mails</span>
+              <span className="flex-1">{t("emails")}</span>
               <span className={cn("relative h-5 w-9 shrink-0 rounded-full transition-colors", member.emailsOn ? "bg-whatsapp-dark" : "bg-foreground/15")}>
                 <span
                   className={cn(
@@ -200,7 +205,7 @@ export function AccountMenu() {
                 <span className="flex size-8 items-center justify-center rounded-full bg-page">
                   <IconUsersGroup className="size-4" />
                 </span>
-                Équipe
+                {tNav("team")}
               </Link>
             </DropdownMenuItem>
           )}
@@ -210,7 +215,7 @@ export function AccountMenu() {
               <span className="flex size-8 items-center justify-center rounded-full bg-page">
                 <IconBuilding className="size-4" />
               </span>
-              Organisation
+              {tNav("organisation")}
             </Link>
           </DropdownMenuItem>
           )}
@@ -220,7 +225,7 @@ export function AccountMenu() {
               <span className="flex size-8 items-center justify-center rounded-full bg-page">
                 <IconCreditCard className="size-4" />
               </span>
-              Abonnement
+              {tNav("subscription")}
             </Link>
           </DropdownMenuItem>
           )}
@@ -243,7 +248,7 @@ export function AccountMenu() {
             <span className="flex size-8 items-center justify-center rounded-full bg-page">
               <IconLogout className="size-4" />
             </span>
-            Se déconnecter
+            {t("signOut")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

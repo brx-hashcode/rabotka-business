@@ -1,4 +1,5 @@
 import { BusinessBaseController } from "./base-controller";
+import type { Locale } from "#/i18n/config";
 
 /** One in-app notification (`profile/notifications`, ProfileNotificationDto). */
 export type AppNotification = {
@@ -48,9 +49,9 @@ export const markAllNotificationsRead = controller.markAllRead.bind(controller);
 export const notificationsKey = ["notifications"] as const;
 
 /** « il y a 5 min », « hier »… — French, relative to now. */
-export function timeAgo(iso: string, now = Date.now()): string {
+export function timeAgo(iso: string, locale: Locale = "fr", now = Date.now()): string {
   const seconds = Math.round((new Date(iso).getTime() - now) / 1000);
-  const rtf = new Intl.RelativeTimeFormat("fr", { numeric: "auto" });
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
   const steps: [Intl.RelativeTimeFormatUnit, number][] = [
     ["year", 31536000],
     ["month", 2592000],
@@ -62,5 +63,7 @@ export function timeAgo(iso: string, now = Date.now()): string {
   for (const [unit, size] of steps) {
     if (Math.abs(seconds) >= size) return rtf.format(Math.round(seconds / size), unit);
   }
-  return "à l'instant";
+  return JUST_NOW[locale];
 }
+
+const JUST_NOW: Record<Locale, string> = { fr: "à l'instant", en: "just now" };

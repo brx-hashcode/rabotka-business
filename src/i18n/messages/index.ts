@@ -1,7 +1,9 @@
 import type { Locale } from "../config";
 
 import enCommon from "./en/common.json";
+import enLayout from "./en/layout.json";
 import frCommon from "./fr/common.json";
+import frLayout from "./fr/layout.json";
 
 /**
  * Every message, one namespace per file and per feature (`common`, `offers`,
@@ -11,6 +13,7 @@ import frCommon from "./fr/common.json";
  */
 const fr = {
   common: frCommon,
+  layout: frLayout,
 };
 
 export type Messages = typeof fr;
@@ -19,5 +22,6 @@ export const MESSAGES: Record<Locale, Messages> = {
   fr,
   en: {
     common: enCommon,
+    layout: enLayout,
   },
 };

@@ -3,5 +3,21 @@
     "label": "Language",
     "fr": "Français",
     "en": "English"
-  }
+  },
+  "errors": {
+    "network": "Rabotka can't be reached. Check your internet connection and try again.",
+    "server": "Something went wrong on our side. Try again in a moment.",
+    "session": "Your session has expired. Please sign in again.",
+    "permission": "You don't have permission to do this.",
+    "rateLimit": "Too many attempts. Wait a moment and try again."
+  },
+  "time": {
+    "justNow": "Just now",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "thisWeek": "This week",
+    "older": "Older"
+  },
+  "loading": "Loading…",
+  "seeMore": "See more"
 }
