@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 import { BusinessLockup } from "#/components/business-lockup";
 import { PUBLIC_SITE, SIGN_IN_HREF, SIGN_UP_HREF } from "#/features/landing/content";
@@ -32,10 +33,11 @@ export function AuthShell({
   /** What the ink card says instead of its default — the sign-up's current step. */
   spotlight?: Spotlight;
 }>) {
+  const t = useTranslations("auth.shell");
   return (
     <div className="grid min-h-svh bg-card lg:grid-cols-2">
       <section className="flex min-h-svh min-w-0 flex-col px-5 py-6 sm:px-10">
-        <Link href="/" aria-label="Rabotka Business — accueil" className="self-start">
+        <Link href="/" aria-label={t("home")} className="self-start">
           <BusinessLockup compact />
         </Link>
 
@@ -54,7 +56,7 @@ export function AuthShell({
             rel="noreferrer"
             className="no-underline hover:text-foreground"
           >
-            Confidentialité
+            {t("privacy")}
           </a>
           {footer}
         </footer>
@@ -67,12 +69,13 @@ export function AuthShell({
 
 /** « Se connecter / Créer un compte », above the form's title. */
 export function AuthTabs({ active }: Readonly<{ active: "sign-in" | "sign-up" }>) {
+  const tr = useTranslations("auth.tabs");
   const tabs = [
-    { id: "sign-in", label: "Se connecter", href: SIGN_IN_HREF },
-    { id: "sign-up", label: "Créer un compte", href: SIGN_UP_HREF },
+    { id: "sign-in", label: tr("signIn"), href: SIGN_IN_HREF },
+    { id: "sign-up", label: tr("signUp"), href: SIGN_UP_HREF },
   ] as const;
   return (
-    <nav aria-label="Compte" className="inline-flex self-start rounded-full bg-page p-1">
+    <nav aria-label={tr("label")} className="inline-flex self-start rounded-full bg-page p-1">
       {tabs.map((t) => (
         <Link
           key={t.id}
@@ -133,13 +136,16 @@ function Statement({
  */
 function FeatureWall({ spotlight }: Readonly<{ spotlight?: Spotlight }>) {
   const card = "flex flex-col justify-center rounded-3xl p-8";
+  const t = useTranslations("auth.shell");
+  const mark = (chunks: ReactNode) => <Mark>{chunks}</Mark>;
+  const markDark = (chunks: ReactNode) => <Mark onDark>{chunks}</Mark>;
   return (
-    <aside aria-label="Rabotka Business en bref" className="hidden p-3 lg:sticky lg:top-0 lg:block lg:h-svh">
+    <aside aria-label={t("wall")} className="hidden p-3 lg:sticky lg:top-0 lg:block lg:h-svh">
       <div className="grid h-full grid-cols-2 gap-3 rounded-[28px] bg-page p-3">
         <div className="flex min-h-0 flex-col gap-3">
           <div className={cn(card, "flex-[5] bg-card")}>
-            <Statement label="Offres rédigées pour vous" size="lg">
-              Décrivez votre besoin en quelques mots : <Mark>l&apos;offre complète est prête</Mark>.
+            <Statement label={t("offersLabel")} size="lg">
+              {t.rich("offers", { mark })}
             </Statement>
           </div>
           <div className={cn(card, "flex-[2.5] bg-ink text-white")}>
@@ -154,15 +160,14 @@ function FeatureWall({ spotlight }: Readonly<{ spotlight?: Spotlight }>) {
                 <p className="text-sm text-white/70 leading-relaxed">{spotlight.text}</p>
               </div>
             ) : (
-              <Statement label="Organisation vérifiée" dark>
-                Votre compte est activé <Mark onDark>après vérification de vos pièces officielles</Mark> : un
-                gage de sérieux pour les candidats.
+              <Statement label={t("verifiedLabel")} dark>
+                {t.rich("verified", { mark: markDark })}
               </Statement>
             )}
           </div>
           <div className={cn(card, "flex-[2.5] bg-card")}>
-            <Statement label="Candidatures classées">
-              <Mark>Les meilleurs candidats en tête de liste</Mark>, et pourquoi, critère par critère.
+            <Statement label={t("rankedLabel")}>
+              {t.rich("ranked", { mark })}
             </Statement>
           </div>
         </div>
@@ -173,19 +178,17 @@ function FeatureWall({ spotlight }: Readonly<{ spotlight?: Spotlight }>) {
               100
             </p>
             <p className="mt-4 max-w-56 text-sm">
-              Chaque CV noté sur 100 par rapport au poste, avec ses points forts et ses points d&apos;attention.
+              {t("score")}
             </p>
           </div>
           <div className={cn(card, "flex-[2.5] bg-card")}>
-            <Statement label="Messagerie en lecture seule">
-              Rabotka <Mark>ne lit que les pièces jointes que vous choisissez</Mark> et n&apos;envoie jamais rien
-              depuis votre messagerie.
+            <Statement label={t("mailboxLabel")}>
+              {t.rich("mailbox", { mark })}
             </Statement>
           </div>
           <div className={cn(card, "flex-[5] bg-card")}>
-            <Statement label="Entretiens" size="lg">
-              Le candidat confirme, décline ou propose <Mark>un autre moment</Mark>, depuis l&apos;e-mail qu&apos;il
-              reçoit.
+            <Statement label={t("interviewsLabel")} size="lg">
+              {t.rich("interviews", { mark })}
             </Statement>
           </div>
         </div>

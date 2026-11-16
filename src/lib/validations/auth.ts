@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-export const emailSchema = z.email("Saisissez une adresse e-mail valide");
+/** Built with the reader's sentence (auth.validation.*): the schema itself has no language. */
+export const emailSchema = (message: string) => z.email(message);
 
-export const otpSchema = z
-  .string()
-  .regex(/^\d{6}$/, "Le code contient 6 chiffres");
+export const otpSchema = (message: string) => z.string().regex(/^\d{6}$/, message);

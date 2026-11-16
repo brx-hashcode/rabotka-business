@@ -1,7 +1,9 @@
 import type { Locale } from "../config";
 
+import enAuth from "./en/auth.json";
 import enCommon from "./en/common.json";
 import enLayout from "./en/layout.json";
+import frAuth from "./fr/auth.json";
 import frCommon from "./fr/common.json";
 import frLayout from "./fr/layout.json";
 
@@ -12,6 +14,7 @@ import frLayout from "./fr/layout.json";
  * A new namespace is a file in fr/ and en/, imported and listed below.
  */
 const fr = {
+  auth: frAuth,
   common: frCommon,
   layout: frLayout,
 };
@@ -21,6 +24,7 @@ export type Messages = typeof fr;
 export const MESSAGES: Record<Locale, Messages> = {
   fr,
   en: {
+    auth: enAuth,
     common: enCommon,
     layout: enLayout,
   },
