@@ -1,5 +1,6 @@
 "use client";
 
+import { useTradeName } from "#/lib/api/use-trade-name";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { debounce, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
@@ -192,6 +193,7 @@ export function TalentsPage() {
 
 function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
   const tt = useTranslations("talents.page");
+  const trade = useTradeName();
   const tCard = useTranslations("candidates.card");
   const locale = useLocale();
   const friendlyError = useFriendlyError();
@@ -233,7 +235,7 @@ function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
             {name}
           </Link>
           {(t.categoryName || t.city) && (
-            <p className="truncate text-muted-foreground text-sm">{[t.categoryName, t.city].filter(Boolean).join(" · ")}</p>
+            <p className="truncate text-muted-foreground text-sm">{[t.categoryName && trade(t.categoryName), t.city].filter(Boolean).join(" · ")}</p>
           )}
           <p className="mt-1 flex flex-wrap items-center gap-x-3 text-xs">
             {t.ratingAvg !== null && t.ratingCount > 0 && (

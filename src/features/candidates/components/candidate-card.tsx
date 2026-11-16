@@ -1,5 +1,6 @@
 "use client";
 
+import { useTradeName } from "#/lib/api/use-trade-name";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { BadgeCheck } from "lucide-react";
@@ -20,6 +21,7 @@ const button = "inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-
  */
 export function CandidateCard({ candidate: c, compact }: Readonly<{ candidate: Candidate; compact?: boolean }>) {
   const t = useTranslations("candidates.card");
+  const trade = useTradeName();
   const name = `${c.firstName} ${c.lastName}`.trim();
   return (
     <li className={cn("flex flex-col gap-4 rounded-3xl bg-page p-5", compact && "gap-3 p-4")}>
@@ -35,7 +37,7 @@ export function CandidateCard({ candidate: c, compact }: Readonly<{ candidate: C
             <span className="truncate font-semibold">{name}</span>
             {c.isVerified && <BadgeCheck aria-label={t("verified")} className="size-4 shrink-0 text-whatsapp" />}
           </Link>
-          {c.categoryName && <p className="truncate text-muted-foreground text-sm">{c.categoryName}</p>}
+          {c.categoryName && <p className="truncate text-muted-foreground text-sm">{trade(c.categoryName)}</p>}
           <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs">
             {c.ratingAvg !== null && c.ratingCount > 0 && (
               <span className="inline-flex items-center gap-1 font-medium">

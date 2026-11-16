@@ -1,5 +1,6 @@
 "use client";
 
+import { useTradeName } from "#/lib/api/use-trade-name";
 import { startsWithVowel } from "#/features/subscription/french";
 import { useState } from "react";
 import Link from "next/link";
@@ -640,6 +641,7 @@ function OffersCard({ offers }: Readonly<{ offers: BusinessStats["topOffers"] }>
 function CategoriesCard({ categories }: Readonly<{ categories: BusinessStats["categories"] }>) {
   const max = Math.max(0, ...categories.map((c) => c.applications));
   const t = useTranslations("home");
+  const trade = useTradeName();
   return (
     <Card title={t("categories.title")} href="/espace/offres">
       {categories.length === 0 ? (
@@ -649,7 +651,7 @@ function CategoriesCard({ categories }: Readonly<{ categories: BusinessStats["ca
           {categories.map((c) => (
             <li key={c.name} className="space-y-1.5">
               <div className="flex items-baseline justify-between gap-3 text-sm">
-                <span className="truncate font-medium">{c.name}</span>
+                <span className="truncate font-medium">{trade(c.name)}</span>
                 <span className="shrink-0 tabular-nums">{c.applications}</span>
               </div>
               <Bar value={c.applications} max={max} />

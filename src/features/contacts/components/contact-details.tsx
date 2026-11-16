@@ -1,5 +1,6 @@
 "use client";
 
+import { useTradeName } from "#/lib/api/use-trade-name";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { IconBrandWhatsapp, IconCopy, IconMail, IconPhone } from "@tabler/icons-react";
@@ -17,9 +18,10 @@ import { cn, getInitials } from "#/lib/utils";
  */
 export function ContactDetails({ contact: c }: Readonly<{ contact: ContactedProfile }>) {
   const t = useTranslations("candidates.contact");
+  const trade = useTradeName();
   const locale = useLocale();
   const name = `${c.firstName} ${c.lastName}`.trim();
-  const subtitle = [c.categoryName, c.city].filter(Boolean).join(" · ");
+  const subtitle = [c.categoryName && trade(c.categoryName), c.city].filter(Boolean).join(" · ");
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-5">
       <div className="flex items-center gap-4">

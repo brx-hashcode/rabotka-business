@@ -1,5 +1,6 @@
 "use client";
 
+import { useTradeName } from "#/lib/api/use-trade-name";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -57,6 +58,7 @@ export function SearchPage() {
     void setFilters({ [key]: value });
 
   const categories = useQuery({ queryKey: ["job-categories"], queryFn: getJobCategories, staleTime: Infinity });
+  const trade = useTradeName();
   const cities = useCities("CG");
   const sub = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
 
@@ -138,7 +140,7 @@ export function SearchPage() {
                   <SelectItem value={ANY}>{t("allTrades")}</SelectItem>
                   {(categories.data ?? []).map((c) => (
                     <SelectItem key={c.id} value={c.id}>
-                      {c.name}
+                      {trade(c.name)}
                     </SelectItem>
                   ))}
                 </SelectContent>

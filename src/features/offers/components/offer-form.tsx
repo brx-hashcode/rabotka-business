@@ -1,5 +1,6 @@
 "use client";
 
+import { useTradeName } from "#/lib/api/use-trade-name";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
@@ -203,6 +204,7 @@ export function OfferForm({
   const { data: countries } = useCountries();
   const { data: cities } = useCities(country);
   const { data: categories } = useQuery({ queryKey: ["job-categories"], queryFn: getJobCategories, staleTime: Infinity });
+  const trade = useTradeName();
   const { data: subscription } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   const [writing, setWriting] = useState(false);
   // No AI writing in the plan nor in a pack: the button says where to find it instead.
@@ -330,7 +332,7 @@ export function OfferForm({
                     value={field.value}
                     onChange={field.onChange}
                     invalid={!!fieldState.error}
-                    options={(categories ?? []).map((c) => ({ value: c.id, label: c.name }))}
+                    options={(categories ?? []).map((c) => ({ value: c.id, label: trade(c.name) }))}
                     placeholder={t("tradePlaceholder")}
                     searchPlaceholder={t("tradeSearch")}
                   />
@@ -490,7 +492,10 @@ export function OfferForm({
         <aside className="space-y-6 lg:sticky lg:top-24">
           <OfferSummary
             control={form.control}
-            categoryName={(id) => categories?.find((c) => c.id === id)?.name}
+            categoryName={(id) => {
+              const name = categories?.find((c) => c.id === id)?.name;
+              return name && trade(name);
+            }}
             countryName={(code) => countries?.find((c) => c.code === code)?.name}
           />
           {aside}

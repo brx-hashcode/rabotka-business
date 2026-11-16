@@ -1,5 +1,6 @@
 "use client";
 
+import { useTradeName } from "#/lib/api/use-trade-name";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import Link from "next/link";
@@ -35,6 +36,7 @@ import { getInitials } from "#/lib/utils";
 export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: string; asPage?: boolean }>) {
   const Title = asPage ? "h1" : "h2";
   const t = useTranslations("candidates.profile");
+  const trade = useTradeName();
   const locale = useLocale();
   const friendlyError = useFriendlyError();
   const date = (iso: string) => new Date(iso).toLocaleDateString(INTL_LOCALE[locale], { month: "long", year: "numeric" });
@@ -111,7 +113,7 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
               {t("verified")}
             </span>
           )}
-          {c.categoryName && <p className="text-muted-foreground">{c.categoryName}</p>}
+          {c.categoryName && <p className="text-muted-foreground">{trade(c.categoryName)}</p>}
           {location && (
             <p className="flex items-center gap-1.5 text-muted-foreground text-sm">
               <IconMapPin className="size-4" />
@@ -156,7 +158,7 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
       <div className="flex flex-wrap gap-2">
         {c.categoryNames.map((n) => (
           <span key={n} className="rounded-full bg-page px-3 py-1.5 text-sm">
-            {n}
+            {trade(n)}
           </span>
         ))}
       </div>

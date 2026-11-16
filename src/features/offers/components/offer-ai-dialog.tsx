@@ -1,5 +1,6 @@
 "use client";
 
+import { useTradeName } from "#/lib/api/use-trade-name";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -32,6 +33,7 @@ export function OfferAiDialog({
 }>) {
   const queryClient = useQueryClient();
   const t = useTranslations("offers.ai");
+  const trade = useTradeName();
   const friendlyError = useFriendlyError();
   const EXAMPLES = t.raw("examples") as string[];
   const [brief, setBrief] = useState(context.title ?? "");
@@ -96,7 +98,7 @@ export function OfferAiDialog({
               <p className="whitespace-pre-line text-sm leading-relaxed">{draft.description}</p>
               {draft.categoryName && (
                 <p className="text-muted-foreground text-xs">
-                  {t("trade")} <span className="font-medium text-foreground">{draft.categoryName}</span>
+                  {t("trade")} <span className="font-medium text-foreground">{trade(draft.categoryName)}</span>
                 </p>
               )}
               {!!draft.toConfirm?.length && (

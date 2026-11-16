@@ -1,5 +1,6 @@
 "use client";
 
+import { useTradeName } from "#/lib/api/use-trade-name";
 import { useLocale, useTranslations } from "next-intl";
 import { DescriptionText } from "#/features/careers/components/description-text";
 import { useEffect, useState } from "react";
@@ -447,6 +448,7 @@ function OfferHeader({
   const tLabels = useTranslations("labels");
   const t = useTranslations("offers.detail");
   const locale = useLocale() as Locale;
+  const trade = useTradeName();
   const status = offerChip(o, tLabels);
   const list = applicants ?? [];
   const toReview = list.filter((a) => applicationStage(a.status) === "new").length + outsiders.filter((a) => externalStage(a) === "new").length;
@@ -465,7 +467,7 @@ function OfferHeader({
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className={cn("rounded-full px-2.5 py-1 font-medium", status.className)}>{status.label}</span>
             <span className="rounded-full bg-page px-2.5 py-1 font-medium">{tLabels(`employmentType.${o.employmentType}`)}</span>
-            {category && <span className="rounded-full bg-page px-2.5 py-1 font-medium">{category}</span>}
+            {category && <span className="rounded-full bg-page px-2.5 py-1 font-medium">{trade(category)}</span>}
           </div>
           <h1 className="break-words font-semibold text-3xl tracking-tight sm:text-4xl">{o.title}</h1>
           <p className="text-muted-foreground text-sm">
@@ -1462,6 +1464,7 @@ function DetailsCard({ offer: o, category }: Readonly<{ offer: Offer; category?:
   const tLabels = useTranslations("labels");
   const t = useTranslations("offers.cards");
   const locale = useLocale() as Locale;
+  const trade = useTradeName();
   const place = o.isRemote ? tLabels("offer.remote") : [o.city, o.countryName].filter(Boolean).join(", ");
   const rows: { icon: TablerIcon; label: string; value: string; hint?: string }[] = [
     ...(isDatedMission(o.employmentType) || o.scheduledAt
@@ -1483,7 +1486,7 @@ function DetailsCard({ offer: o, category }: Readonly<{ offer: Offer; category?:
       label: t("pay"),
       value: o.amount === null ? t("toDiscuss") : `${fcfa(o.amount, locale)}${o.paymentFlow ? ` ${tLabels(`paymentSuffix.${o.paymentFlow}`)}` : ""}`,
     },
-    { icon: IconBriefcase, label: t("type"), value: [tLabels(`employmentType.${o.employmentType}`), category].filter(Boolean).join(" · ") },
+    { icon: IconBriefcase, label: t("type"), value: [tLabels(`employmentType.${o.employmentType}`), category && trade(category)].filter(Boolean).join(" · ") },
   ];
   return (
     <section className="space-y-4 rounded-3xl bg-card p-6">

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTradeName } from "#/lib/api/use-trade-name";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -37,6 +38,7 @@ const plain = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerC
 export function CommandSearch() {
   const router = useRouter();
   const t = useTranslations("layout");
+  const trade = useTradeName();
   const friendlyError = useFriendlyError();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -148,7 +150,7 @@ export function CommandSearch() {
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-medium">{name}</span>
                         <span className="block truncate text-muted-foreground text-xs">
-                          {c.categoryNames.slice(0, 3).join(" · ") || "—"}
+                          {c.categoryNames.slice(0, 3).map(trade).join(" · ") || "—"}
                         </span>
                         {c.description && (
                           <span className="mt-0.5 line-clamp-1 text-muted-foreground text-xs">{c.description}</span>
