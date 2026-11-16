@@ -15,6 +15,7 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import { uploadSignUpDocument } from "#/lib/api/signup-controller";
 import type { BusinessCatalog } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
+import { requiredDocuments } from "../required-documents";
 import { DocumentPreviewDialog } from "./document-preview";
 import { FormError, StepActions, StepHeading } from "./form-bits";
 
@@ -26,15 +27,16 @@ const ACCEPT = "image/jpeg,image/png,image/webp,application/pdf";
 const MAX_BYTES = 10 * 1024 * 1024;
 
 /**
- * The organisation's papers. None is required: the catalog for the chosen
- * country and type lists the usual ones first (« recommandés »), the others
- * below; an organisation sends what it has, and the review asks for the rest.
- * Files go to the private KYC store as soon as they are picked, with the
- * signup token.
+ * The organisation's papers. The catalog for the chosen country, type and
+ * legal form says which ones it must send (« obligatoires »: every group, one
+ * paper of each — the RCCM and the NIU, the récépissé or the arrêté…); the
+ * others follow, recommended then complementary. Files go to the private KYC
+ * store as soon as they are picked, with the signup token.
  */
 export function DocumentsStep({
   catalog,
   category,
+  legalForm,
   signupToken,
   value,
   previews,
@@ -45,6 +47,8 @@ export function DocumentsStep({
 }: Readonly<{
   catalog: BusinessCatalog;
   category: string;
+  /** Empty or undefined when none was chosen. */
+  legalForm?: string;
   signupToken: string;
   value: DocumentsValue;
   previews: Record<string, string>;
@@ -57,14 +61,18 @@ export function DocumentsStep({
   const documents = catalog.categories.find((c) => c.value === category)?.documents ?? {
     recommended: [],
     optional: [],
+    required: [],
   };
+  const { groups, anyPaper, recommended, optional, missing } = requiredDocuments(documents, legalForm, value);
   const label = new Map(catalog.documentTypes.map((d) => [d.value, d.label]));
   const [error, setError] = useState<string | null>(null);
   // A type with nothing usual (« Autre organisation ») shows the whole list.
   const [showOptional, setShowOptional] = useState(
-    documents.recommended.length === 0 || documents.optional.some((t) => value[t]),
+    recommended.length === 0 || optional.some((t) => value[t]),
   );
-  const sent = Object.keys(value).length;
+  const missingText = anyPaper
+    ? "au moins un document"
+    : missing.map((group) => group.map((t) => `« ${label.get(t) ?? t} »`).join(" ou ")).join(" et ");
   const [viewing, setViewing] = useState<string | null>(null);
   const viewed = viewing ? value[viewing] : undefined;
   const rowProps = { signupToken, onError: setError, onPreview, onView: setViewing };
@@ -80,28 +88,56 @@ export function DocumentsStep({
     <div className="space-y-8">
       <StepHeading
         title="Pièces justificatives"
-        text="Envoyez ceux dont vous disposez : ils accélèrent la vérification de votre organisation. Vous pourrez en ajouter depuis votre espace. PDF, JPG, PNG ou WEBP, 10 Mo maximum par fichier ; vos documents restent confidentiels."
+        text="Ils prouvent que votre organisation existe : nous les vérifions avant que vous puissiez recruter. PDF, JPG, PNG ou WEBP, 10 Mo maximum par fichier ; vos documents restent confidentiels."
       />
 
-      {documents.recommended.length > 0 && (
+      {groups.length > 0 && (
+        <section className="space-y-3">
+          <p className="font-semibold text-sm">Documents obligatoires</p>
+          {groups.map((group) =>
+            group.length === 1 ? (
+              <DocumentRow
+                key={group[0]}
+                type={group[0]}
+                title={label.get(group[0]) ?? group[0]}
+                doc={value[group[0]]}
+                onSet={set}
+                {...rowProps}
+              />
+            ) : (
+              <div key={group.join("|")} className="space-y-2 rounded-3xl bg-page/60 p-2">
+                <p className="px-2 pt-1 text-muted-foreground text-xs">L’un ou l’autre suffit</p>
+                {group.map((type) => (
+                  <DocumentRow key={type} type={type} title={label.get(type) ?? type} doc={value[type]} onSet={set} {...rowProps} />
+                ))}
+              </div>
+            ),
+          )}
+        </section>
+      )}
+
+      {recommended.length > 0 && (
         <section className="space-y-3">
           <p className="font-semibold text-sm">
             Documents recommandés <span className="font-normal text-muted-foreground">(facultatif)</span>
           </p>
-          {documents.recommended.map((type) => (
+          {recommended.map((type) => (
             <DocumentRow key={type} type={type} title={label.get(type) ?? type} doc={value[type]} onSet={set} {...rowProps} />
           ))}
         </section>
       )}
 
-      {documents.optional.length > 0 && (
+      {optional.length > 0 && (
         <section className="space-y-3">
           {showOptional ? (
             <>
               <p className="font-semibold text-sm">
-                Documents complémentaires <span className="font-normal text-muted-foreground">(facultatif)</span>
+                {anyPaper ? "Vos documents" : "Documents complémentaires"}{" "}
+                <span className="font-normal text-muted-foreground">
+                  {anyPaper ? "(au moins un)" : "(facultatif)"}
+                </span>
               </p>
-              {documents.optional.map((type) => (
+              {optional.map((type) => (
                 <DocumentRow
                   key={type}
                   type={type}
@@ -126,6 +162,9 @@ export function DocumentsStep({
       )}
 
       <FormError message={error} />
+      {missing.length > 0 && (
+        <p className="text-muted-foreground text-sm">Il manque encore {missingText}.</p>
+      )}
       <DocumentPreviewDialog
         title={viewing ? (label.get(viewing) ?? viewing) : ""}
         doc={viewed ?? null}
@@ -138,7 +177,7 @@ export function DocumentsStep({
         type="button"
         onBack={onBack}
         onContinue={onDone}
-        continueLabel={sent === 0 ? "Continuer sans document" : "Continuer"}
+        disabled={missing.length > 0}
       />
     </div>
   );

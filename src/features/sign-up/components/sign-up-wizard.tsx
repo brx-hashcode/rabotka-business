@@ -245,6 +245,7 @@ export function SignUpWizard({ visitorCountry }: Readonly<{ visitorCountry?: str
           <DocumentsStep
             catalog={catalog}
             category={organisation.category}
+            legalForm={organisation.legalForm}
             signupToken={token}
             value={documents}
             previews={previews}

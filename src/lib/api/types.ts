@@ -28,6 +28,14 @@ export type Paginated<T> = {
 export type DocumentList = {
   recommended: string[];
   optional: string[];
+  /**
+   * The papers to send to sign up: every group, one paper of each
+   * (`[["ARRETE", "RECEPISSE"], ["STATUTS"]]`: the arrêté or the récépissé,
+   * and the statuts).
+   */
+  required: string[][];
+  /** For a school or a clinic: the groups once its legal form is chosen. */
+  requiredByLegalForm?: Record<string, string[][]>;
 };
 
 /** One official identifier field, in the country's words; null: none there. */
