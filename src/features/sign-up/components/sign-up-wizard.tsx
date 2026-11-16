@@ -16,6 +16,7 @@ import { useSignUpStore } from "#/stores/sign-up-store";
 import { STEPS, type StepId } from "../steps";
 import { AccountStep } from "./account-step";
 import { DocumentsStep } from "./documents-step";
+import { IDENTIFIER_KEYS, officialIdentifiers, requiredDocuments } from "../required-documents";
 import { emptyOrganisation, OrganisationStep } from "./organisation-step";
 import { ReviewStep, SignUpDone } from "./review-step";
 import { AuthShell, AuthTabs } from "#/features/auth/components/auth-shell";
@@ -80,14 +81,33 @@ export function SignUpWizard({ visitorCountry }: Readonly<{ visitorCountry?: str
     });
     s.setDocuments(
       Number(preview) >= 5 || preview === "done"
-        ? { AGREMENT: { url: "", key: "preview", fileName: "agrement-ministere-2024.pdf", mimeType: "application/pdf" } }
+        ? {
+            AGREMENT: { url: "", key: "preview", fileName: "agrement-ministere-2024.pdf", mimeType: "application/pdf" },
+            RECEPISSE: { url: "", key: "preview-2", fileName: "recepisse-declaration.pdf", mimeType: "application/pdf" },
+          }
         : {},
     );
     if (preview === "done") s.finish(false);
     else void setEtape(STEP_IDS[Math.min(Math.max(Number(preview) - 1, 0), 4)]);
   }, [hydrated, setEtape]);
 
-  const reachable = !account ? 0 : !token ? 1 : !organisation ? 2 : 4;
+  // A step opens only once those before it meet the rules for this type:
+  // its required numbers on the organisation step, its required papers on
+  // the documents step — a reload or a typed ?etape= cannot skip them.
+  const typeDocuments = catalog?.categories.find((c) => c.value === organisation?.category)?.documents;
+  const organisationComplete =
+    !!organisation &&
+    !!typeDocuments &&
+    IDENTIFIER_KEYS.every(
+      (k) =>
+        !officialIdentifiers(typeDocuments, organisation.legalForm, catalog!.identifiers)[k]?.required ||
+        !!organisation[k]?.trim(),
+    );
+  const documentsComplete =
+    organisationComplete && requiredDocuments(typeDocuments, organisation.legalForm, documents).missing.length === 0;
+  const reachable = !account ? 0 : !token ? 1 : !organisationComplete ? 2 : !documentsComplete ? 3 : 4;
+  // The catalog of a saved organisation's country is needed to tell.
+  const waitingForRules = !!organisation && !catalog;
   const step = Math.min(STEP_IDS.indexOf(etape), reachable);
 
   // Each step starts at the top of the form, not where the last one ended.
@@ -104,6 +124,11 @@ export function SignUpWizard({ visitorCountry }: Readonly<{ visitorCountry?: str
 
   async function submit() {
     if (!account || !organisation || !token) return;
+    if (!documentsComplete) {
+      // Never sent incomplete: back to the step still missing something.
+      go(reachable);
+      return;
+    }
     setSubmitting(true);
     setSubmitError(null);
     // The organisation's country, known by now: a number typed in Cameroon
@@ -176,7 +201,7 @@ export function SignUpWizard({ visitorCountry }: Readonly<{ visitorCountry?: str
   }
 
   function renderStep() {
-    if (!hydrated) {
+    if (!hydrated || waitingForRules) {
       return (
         <div className="space-y-6">
           <Skeleton className="h-16 w-3/4 rounded-xl" />
@@ -245,6 +270,7 @@ export function SignUpWizard({ visitorCountry }: Readonly<{ visitorCountry?: str
           <DocumentsStep
             catalog={catalog}
             category={organisation.category}
+            legalForm={organisation.legalForm}
             signupToken={token}
             value={documents}
             previews={previews}
