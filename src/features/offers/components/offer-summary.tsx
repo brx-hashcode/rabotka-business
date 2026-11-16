@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useWatch, type Control } from "react-hook-form";
 import {
   IconCalendarEvent,
@@ -13,14 +14,16 @@ import {
 
 import type { EmploymentType, PaymentFlow } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
-import { EMPLOYMENT_LABEL, fcfa, isDatedMission, PAYMENT_SUFFIX } from "../offer-labels";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import type { Translator } from "#/i18n/translator";
+import { fcfa, isDatedMission } from "../offer-labels";
 import type { OfferFormValues } from "./offer-form";
 
-const day = (date: string, time: string) => {
+const day = (date: string, time: string, locale: Locale, t: Translator<"offers.summary">) => {
   const d = new Date(`${date}T${time || "12:00"}`);
   if (Number.isNaN(d.getTime())) return null;
-  const label = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "long", year: "numeric" });
-  return time ? `${label} à ${time.replace(":", " h ")}` : label;
+  const label = d.toLocaleDateString(INTL_LOCALE[locale], { weekday: "short", day: "numeric", month: "long", year: "numeric" });
+  return time ? t("dayAt", { day: label, time: locale === "fr" ? time.replace(":", " h ") : time }) : label;
 };
 
 /**
@@ -37,57 +40,61 @@ export function OfferSummary({
   countryName: (code: string) => string | undefined;
 }>) {
   const v = useWatch({ control }) as OfferFormValues;
+  const t = useTranslations("offers.summary");
+  const tLabels = useTranslations("labels");
+  const tCards = useTranslations("offers.cards");
+  const locale = useLocale() as Locale;
   const type = v.employmentType as EmploymentType;
   const category = v.categoryId ? categoryName(v.categoryId) : undefined;
-  const when = v.scheduledDate ? day(v.scheduledDate, v.scheduledTime) : null;
-  const where = v.isRemote ? "À distance" : [v.city, countryName(v.countryCode)].filter(Boolean).join(", ");
+  const when = v.scheduledDate ? day(v.scheduledDate, v.scheduledTime, locale, t) : null;
+  const where = v.isRemote ? tLabels("offer.remote") : [v.city, countryName(v.countryCode)].filter(Boolean).join(", ");
   const quantity = Number(v.quantity) || 0;
   const amount = Number(v.amount) || 0;
 
   const checks = [
-    { label: "Intitulé", done: v.title.trim().length >= 5 },
-    { label: "Description (20 caractères au moins)", done: v.description.trim().length >= 20 },
-    { label: "Métier", done: !!v.categoryId },
-    ...(isDatedMission(type) ? [{ label: "Candidatures jusqu'au", done: !!v.scheduledDate }] : []),
-    { label: "Lieu", done: v.isRemote || (!!v.countryCode && !!v.city) },
+    { label: t("title"), done: v.title.trim().length >= 5 },
+    { label: t("description"), done: v.description.trim().length >= 20 },
+    { label: t("trade"), done: !!v.categoryId },
+    ...(isDatedMission(type) ? [{ label: t("until"), done: !!v.scheduledDate }] : []),
+    { label: t("place"), done: v.isRemote || (!!v.countryCode && !!v.city) },
   ];
   const done = checks.filter((c) => c.done).length;
 
   return (
     <section className="space-y-5 rounded-3xl bg-card p-6">
       <div className="space-y-3">
-        <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Aperçu de l&apos;offre</p>
+        <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("preview")}</p>
         <h2 className={cn("break-words font-semibold text-xl leading-snug", !v.title.trim() && "text-muted-foreground")}>
-          {v.title.trim() || "Intitulé de l'offre"}
+          {v.title.trim() || t("titlePlaceholder")}
         </h2>
         <div className="flex flex-wrap gap-2 text-xs">
-          <span className="rounded-full bg-brand-lime px-2.5 py-1 font-medium text-[#0f2414]">{EMPLOYMENT_LABEL[type]}</span>
+          <span className="rounded-full bg-brand-lime px-2.5 py-1 font-medium text-[#0f2414]">{tLabels(`employmentType.${type}`)}</span>
           {category && <span className="rounded-full bg-page px-2.5 py-1 font-medium">{category}</span>}
         </div>
       </div>
 
       <dl className="space-y-3 text-sm">
-        {isDatedMission(type) && <Row icon={IconCalendarEvent} label="Date" value={when} />}
-        <Row icon={IconMapPin} label="Lieu" value={where || null} hint={v.isRemote ? undefined : v.address.trim() || undefined} />
+        {isDatedMission(type) && <Row icon={IconCalendarEvent} label={t("date")} value={when} />}
+        <Row icon={IconMapPin} label={t("place")} value={where || null} hint={v.isRemote ? undefined : v.address.trim() || undefined} />
         <Row
           icon={IconUsers}
-          label="Postes"
-          value={quantity >= 1 ? `${quantity} personne${quantity > 1 ? "s" : ""}` : null}
+          label={t("positions")}
+          value={quantity >= 1 ? tCards("people", { count: quantity }) : null}
         />
         <Row
           icon={IconCash}
-          label="Rémunération"
+          label={t("pay")}
           value={
             amount
-              ? `${fcfa(amount)}${v.paymentFlow ? ` ${PAYMENT_SUFFIX[v.paymentFlow as PaymentFlow]}` : ""}`
-              : "À discuter avec le candidat"
+              ? `${fcfa(amount, locale)}${v.paymentFlow ? ` ${tLabels(`paymentSuffix.${v.paymentFlow as PaymentFlow}`)}` : ""}`
+              : tCards("toDiscuss")
           }
         />
       </dl>
 
       <div className="space-y-3 rounded-2xl bg-page p-4">
         <div className="flex items-baseline justify-between gap-3">
-          <p className="font-medium text-sm">{done === checks.length ? "Prête à publier" : "À compléter"}</p>
+          <p className="font-medium text-sm">{done === checks.length ? t("ready") : t("toComplete")}</p>
           <p className="text-muted-foreground text-xs tabular-nums">
             {done}/{checks.length}
           </p>
@@ -118,6 +125,7 @@ function Row({
   value,
   hint,
 }: Readonly<{ icon: TablerIcon; label: string; value: string | null; hint?: string }>) {
+  const t = useTranslations("offers.summary");
   return (
     <div className="flex items-start gap-3">
       <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-page">
@@ -125,7 +133,7 @@ function Row({
       </span>
       <div className="min-w-0">
         <dt className="text-muted-foreground text-xs">{label}</dt>
-        <dd className={cn("break-words font-medium", !value && "text-muted-foreground")}>{value ?? "Non renseigné"}</dd>
+        <dd className={cn("break-words font-medium", !value && "text-muted-foreground")}>{value ?? t("notSet")}</dd>
         {hint && <dd className="break-words text-muted-foreground text-xs">{hint}</dd>}
       </div>
     </div>

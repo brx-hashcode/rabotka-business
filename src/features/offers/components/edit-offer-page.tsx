@@ -1,11 +1,13 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Skeleton } from "#/components/ui/skeleton";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { getOffer, offersKey, updateOffer, type Offer } from "#/lib/api/offer-controller";
 import { OfferForm, offerFormValues, scheduledIso, toOfferInput, type OfferFormValues } from "./offer-form";
 
@@ -16,16 +18,19 @@ import { OfferForm, offerFormValues, scheduledIso, toOfferInput, type OfferFormV
 export function EditOfferPage({ id }: Readonly<{ id: string }>) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const t = useTranslations("offers.edit");
+  const tDetail = useTranslations("offers.detail");
+  const friendlyError = useFriendlyError();
   const { data: offer, isLoading, error } = useQuery({ queryKey: [...offersKey, id], queryFn: () => getOffer(id) });
   const save = useMutation({
     mutationFn: ({ v, country }: { v: OfferFormValues; country: string | undefined }) =>
       updateOffer(id, toOfferInput(v, country)),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: offersKey });
-      toast.success("Offre mise à jour.");
+      toast.success(t("saved"));
       router.push(`/espace/offres/${id}`);
     },
-    onError: (err) => toast.error(friendlyError(err, "L'offre n'a pas pu être modifiée.")),
+    onError: (err) => toast.error(friendlyError(err, t("failed"))),
   });
 
   const values = offer ? offerFormValues(offer) : null;
@@ -33,14 +38,14 @@ export function EditOfferPage({ id }: Readonly<{ id: string }>) {
   return (
     <div className="w-full space-y-6 pt-2">
       <div className="space-y-1.5">
-        <h1 className="font-semibold text-3xl tracking-tight">Modifier l&apos;offre</h1>
-        <p className="text-muted-foreground">Les candidats déjà positionnés sont prévenus d&apos;un changement de rémunération, de date ou de lieu.</p>
+        <h1 className="font-semibold text-3xl tracking-tight">{t("title")}</h1>
+        <p className="text-muted-foreground">{t("intro")}</p>
       </div>
       {offer && values && (offer.status === "ACTIVE" || offer.status === "PARTIALLY_FILLED") ? (
         <OfferForm
           defaultValues={values}
           keepSchedule={values.scheduledDate ? scheduledIso(values.scheduledDate, values.scheduledTime) : undefined}
-          submitLabel="Enregistrer"
+          submitLabel={t("submit")}
           pending={save.isPending}
           aside={<OfferFacts offer={offer} />}
           onCancel={() => router.push(`/espace/offres/${id}`)}
@@ -51,9 +56,9 @@ export function EditOfferPage({ id }: Readonly<{ id: string }>) {
           {isLoading ? (
             <Skeleton className="h-96 rounded-2xl" />
           ) : !offer ? (
-            <p className="text-muted-foreground">{friendlyError(error, "Cette offre est introuvable.")}</p>
+            <p className="text-muted-foreground">{friendlyError(error, tDetail("notFound"))}</p>
           ) : (
-            <p className="text-muted-foreground">Seule une offre en ligne peut être modifiée.</p>
+            <p className="text-muted-foreground">{t("onlyLive")}</p>
           )}
         </section>
       )}
@@ -63,17 +68,19 @@ export function EditOfferPage({ id }: Readonly<{ id: string }>) {
 
 /** What the form does not change: the offer's reference, age and hires so far. */
 function OfferFacts({ offer }: Readonly<{ offer: Offer }>) {
+  const t = useTranslations("offers.edit");
+  const locale = useLocale() as Locale;
   const facts = [
-    { label: "Référence", value: offer.reference },
+    { label: t("reference"), value: offer.reference },
     {
-      label: "Publiée le",
-      value: new Date(offer.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }),
+      label: t("publishedOn"),
+      value: new Date(offer.createdAt).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long", year: "numeric" }),
     },
-    { label: "Personnes retenues", value: `${offer.acceptedCount}/${offer.quantity}` },
+    { label: t("hired"), value: `${offer.acceptedCount}/${offer.quantity}` },
   ];
   return (
     <section className="space-y-3 rounded-3xl bg-card p-6">
-      <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Informations</p>
+      <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("info")}</p>
       <dl className="space-y-2 text-sm">
         {facts.map((f) => (
           <div key={f.label} className="flex items-baseline justify-between gap-3">

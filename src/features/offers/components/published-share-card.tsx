@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { IconBrandFacebook, IconBrandLinkedin, IconBrandWhatsapp, IconConfetti, IconLink, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 
@@ -23,6 +24,7 @@ export function PublishedShareCard({
   const [linkedinOpen, setLinkedinOpen] = useState(false);
   // Each network with the offer's details and its tagged link (use-offer-share.ts).
   const share = useOfferShare(slug ?? "", offer);
+  const t = useTranslations("offers.share");
 
   return (
     <section className="relative space-y-5 rounded-3xl bg-card p-5 sm:p-6">
@@ -31,11 +33,9 @@ export function PublishedShareCard({
           <IconConfetti className="size-6" />
         </span>
         <div className="min-w-0 space-y-1 pt-0.5">
-          <h2 className="font-semibold">Votre offre est en ligne : faites-la connaître</h2>
+          <h2 className="font-semibold">{t("liveTitle")}</h2>
           <p className="text-muted-foreground text-sm">
-            {isPublic
-              ? "Partagez-la sur LinkedIn ou ailleurs : les candidats postulent directement sur votre page carrières."
-              : "Elle sera sur votre page carrières, et pourra être partagée, dès que votre organisation sera vérifiée."}
+            {isPublic ? t("public") : t("notYet")}
           </p>
         </div>
       </div>
@@ -56,14 +56,14 @@ export function PublishedShareCard({
           </button>
           <button type="button" onClick={() => void share.copyLink()} className={`${BUTTON} bg-page text-foreground hover:bg-page/70`}>
             <IconLink className="size-[18px]" />
-            Copier le lien
+            {t("copyLink")}
           </button>
         </div>
       )}
       <button
         type="button"
         onClick={onDismiss}
-        aria-label="Fermer"
+        aria-label={t("close")}
         className="absolute top-4 right-4 flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-page hover:text-foreground"
       >
         <IconX className="size-4" />

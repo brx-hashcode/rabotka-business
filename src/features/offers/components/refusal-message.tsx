@@ -1,26 +1,16 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 import { Textarea } from "#/components/ui/textarea";
 import { listMessageTemplates, messageTemplatesKey } from "#/lib/api/message-templates-controller";
 import { cn } from "#/lib/utils";
 
-/** Ready words for a refusal while the team's own templates load (the server offers the same). */
-export const REFUSAL_TEMPLATES = [
-  {
-    label: "Poste pourvu",
-    text: "Merci pour votre candidature. Les postes de cette offre sont désormais pourvus. Nous gardons votre profil en tête pour nos prochaines missions.",
-  },
-  {
-    label: "Profil différent",
-    text: "Merci pour votre candidature. Nous avons retenu des profils plus proches de ce que demande cette mission. Bonne continuation dans vos recherches.",
-  },
-  {
-    label: "Disponibilités",
-    text: "Merci pour votre candidature. Vos disponibilités ne correspondent pas aux dates de cette mission. N'hésitez pas à postuler à nos prochaines offres.",
-  },
-] as const;
+/** Ready words for a refusal while the team's own templates load (offers.refusal.templates; the server offers the same). */
+export function useDefaultRefusals(): { label: string; text: string }[] {
+  return useTranslations("offers.refusal").raw("templates") as { label: string; text: string }[];
+}
 
 /**
  * The message a refused candidate reads, in their notification: a template
@@ -29,6 +19,7 @@ export const REFUSAL_TEMPLATES = [
  */
 export function RefusalMessageField({ value, onChange }: Readonly<{ value: string; onChange: (v: string) => void }>) {
   const templates = useRefusalTemplates();
+  const tr = useTranslations("offers.refusal");
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
@@ -51,10 +42,10 @@ export function RefusalMessageField({ value, onChange }: Readonly<{ value: strin
         onChange={(e) => onChange(e.target.value)}
         maxLength={500}
         rows={4}
-        placeholder="Un mot pour le candidat (facultatif)"
+        placeholder={tr("placeholder")}
         className="min-h-24 rounded-xl border-0 bg-page px-4 py-3 shadow-none"
       />
-      <p className="text-muted-foreground text-xs">Le candidat lit ce message dans sa notification. Pas de téléphone, d&apos;e-mail ni de lien.</p>
+      <p className="text-muted-foreground text-xs">{tr("note")}</p>
     </div>
   );
 }
@@ -65,7 +56,8 @@ export function RefusalMessageField({ value, onChange }: Readonly<{ value: strin
  */
 export function useRefusalTemplates(): { label: string; text: string }[] {
   const { data } = useQuery({ queryKey: messageTemplatesKey, queryFn: listMessageTemplates, staleTime: 60_000 });
-  if (!data) return [...REFUSAL_TEMPLATES];
+  const defaults = useDefaultRefusals();
+  if (!data) return defaults;
   const own = data.templates.filter((t) => t.kind === "REFUSAL").map((t) => ({ label: t.title, text: t.body }));
   if (own.length > 0) return own;
   return data.suggested.filter((t) => t.kind === "REFUSAL").map((t) => ({ label: t.title, text: t.body }));

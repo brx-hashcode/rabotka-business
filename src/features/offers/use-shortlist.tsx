@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { IconStar, IconStarOff } from "@tabler/icons-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { ActionDialog } from "#/components/action-dialog";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { externalApplicationsKey } from "#/lib/api/careers-controller";
 import { offersKey, shortlistApplication, shortlistApplications } from "#/lib/api/offer-controller";
 
@@ -53,6 +54,9 @@ function showShortlist(queryClient: QueryClient, targets: ShortlistTargets, shor
  */
 export function useShortlist(offerId: string) {
   const queryClient = useQueryClient();
+  const t = useTranslations("offers.shortlist");
+  const tr = useTranslations("offers.refusal");
+  const friendlyError = useFriendlyError();
   return useMutation({
     mutationFn: ({ targets, shortlisted }: { targets: ShortlistTargets; shortlisted: boolean }) => {
       const count = targets.rabotka.length + targets.external.length;
@@ -66,20 +70,14 @@ export function useShortlist(offerId: string) {
     onSuccess: ({ changed, skipped }, { shortlisted }) => {
       if (changed > 1 || skipped > 0) {
         toast.success(
-          (shortlisted
-            ? changed === 1
-              ? "1 candidature présélectionnée."
-              : `${changed} candidatures présélectionnées.`
-            : changed === 1
-              ? "1 candidature retirée de la présélection."
-              : `${changed} candidatures retirées de la présélection.`) +
-            (skipped ? ` ${skipped} n'étai${skipped > 1 ? "ent" : "t"} plus en attente.` : ""),
+          (shortlisted ? t("added", { count: changed }) : t("removed", { count: changed })) +
+            (skipped ? tr("skipped", { count: skipped }) : ""),
         );
       }
     },
     onError: (err, _vars, ctx) => {
       ctx?.undo();
-      toast.error(friendlyError(err, "La présélection n'a pas pu être modifiée."));
+      toast.error(friendlyError(err, t("failed")));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: offersKey });
@@ -103,6 +101,7 @@ type ShortlistAsk = {
  */
 export function useConfirmedShortlist(offerId: string) {
   const shortlist = useShortlist(offerId);
+  const t = useTranslations("offers.shortlist");
   const [asked, setAsked] = useState<ShortlistAsk | null>(null);
   const count = asked ? asked.targets.rabotka.length + asked.targets.external.length : 0;
   const several = count > 1 || !asked?.who;
@@ -110,11 +109,11 @@ export function useConfirmedShortlist(offerId: string) {
     ? ""
     : asked.shortlisted
       ? several
-        ? `Présélectionner ${count} candidatures ?`
-        : `Présélectionner ${asked.who} ?`
+        ? t("addMany", { count })
+        : t("addOne", { name: asked.who ?? "" })
       : several
-        ? `Retirer ${count} candidatures de la présélection ?`
-        : `Retirer ${asked.who} de la présélection ?`;
+        ? t("removeMany", { count })
+        : t("removeOne", { name: asked.who ?? "" });
   const dialog = (
     <ActionDialog
       open={!!asked}
@@ -122,11 +121,9 @@ export function useConfirmedShortlist(offerId: string) {
       icon={asked?.shortlisted === false ? <IconStarOff className="size-5" /> : <IconStar className="size-5" />}
       title={title}
       description={
-        asked?.shortlisted
-          ? "Une étape pour votre équipe avant de décider : le candidat n'en est pas prévenu."
-          : "La candidature revient à « À examiner ». Le candidat n'en est pas prévenu."
+        asked?.shortlisted ? t("addText") : t("removeText")
       }
-      confirmLabel={asked?.shortlisted ? "Présélectionner" : "Retirer"}
+      confirmLabel={asked?.shortlisted ? t("add") : t("remove")}
       pending={shortlist.isPending}
       onConfirm={() => {
         if (!asked) return;

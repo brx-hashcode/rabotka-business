@@ -28,6 +28,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
+import { useLocale, useTranslations } from "next-intl";
 
 import { ActionDialog } from "#/components/action-dialog";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
@@ -40,7 +41,8 @@ import { showExternalStatus } from "#/features/offers/application-cache";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
 import { externalApplicationsKey, retainExternalApplication, type ExternalApplication } from "#/lib/api/careers-controller";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { interviewsKey, listInterviews } from "#/lib/api/interview-controller";
 import type { OfferApplicant } from "#/lib/api/offer-controller";
 import type { Interview } from "#/lib/api/types";
@@ -65,23 +67,24 @@ export type BoardEntry = {
  */
 type Column = "review" | "shortlisted" | "interview" | "hired" | "closed";
 
-const COLUMNS: { key: Column; label: string }[] = [
-  { key: "review", label: "À examiner" },
-  { key: "shortlisted", label: "Présélectionnées" },
-  { key: "interview", label: "Entretien" },
-  { key: "hired", label: "Retenues" },
-  { key: "closed", label: "Refusées" },
-];
+const COLUMN_KEYS: Column[] = ["review", "shortlisted", "interview", "hired", "closed"];
+type ColumnInfo = { key: Column; label: string };
+
+/** The columns with their names (offers.board.columns). */
+function useColumns(): ColumnInfo[] {
+  const t = useTranslations("offers.board.columns");
+  return COLUMN_KEYS.map((key) => ({ key, label: t(key) }));
+}
 
 /** Cards a column shows at first, and adds with each « Voir plus ». */
 const PAGE = 20;
 
 /** The fit labels the cards use (cv-bits `band`): « Adaptés » from 60, « Très adaptés » from 80. */
 const SCORE_FILTERS = [
-  { min: 0, label: "Tous", hint: "Tous les candidats" },
-  { min: 60, label: "Adaptés", hint: "Adaptés ou très adaptés au poste (60 et plus)" },
-  { min: 80, label: "Très adaptés", hint: "Très adaptés au poste (80 et plus)" },
-];
+  { min: 0, key: "all" },
+  { min: 60, key: "good" },
+  { min: 80, key: "high" },
+] as const;
 
 /** Lower case, no accents: « Élodie » is found by « elodie ». */
 const fold = (text: string) =>
@@ -137,6 +140,10 @@ export function OfferBoard({
   renderRabotka: (a: OfferApplicant) => React.ReactNode;
 }>) {
   const hire = canHire(useMember().role);
+  const t = useTranslations("offers.board");
+  const tc = useTranslations("offers.candidate");
+  const COLUMNS = useColumns();
+  const friendlyError = useFriendlyError();
   const queryClient = useQueryClient();
   const interviews = useQuery({ queryKey: [...interviewsKey, "upcoming"], queryFn: () => listInterviews({ scope: "upcoming" }) });
   const shortlist = useConfirmedShortlist(offerId);
@@ -182,10 +189,10 @@ export function OfferBoard({
   const retainCareers = useMutation({
     mutationFn: (id: string) => retainExternalApplication(id),
     onMutate: (id) => ({ undo: showExternalStatus(queryClient, id, "RETAINED") }),
-    onSuccess: () => toast.success("Candidature retenue : le candidat est prévenu par e-mail."),
+    onSuccess: () => toast.success(t("retained")),
     onError: (err, _id, ctx) => {
       ctx?.undo();
-      toast.error(friendlyError(err, "La candidature n'a pas pu être retenue."));
+      toast.error(friendlyError(err, tc("retainFailed")));
     },
     onSettled: () => void queryClient.invalidateQueries({ queryKey: externalApplicationsKey }),
   });
@@ -202,7 +209,7 @@ export function OfferBoard({
   const move = ({ entry, to }: Move) => {
     if (!allowed(entry, to)) {
       if (columnOf(entry) !== to) {
-        toast.info(waiting(entry) ? "Cette candidature ne peut pas aller à cette étape." : "Cette candidature est déjà décidée.");
+        toast.info(waiting(entry) ? t("notThere") : t("decided"));
       }
       return;
     }
@@ -242,18 +249,18 @@ export function OfferBoard({
               type="search"
               value={query}
               onChange={(ev) => setQuery(ev.target.value)}
-              placeholder="Rechercher un candidat"
-              aria-label="Rechercher un candidat par son nom"
+              placeholder={t("search")}
+              aria-label={t("searchLabel")}
               className="h-9 w-full rounded-full bg-page pr-3 pl-9 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-whatsapp/40"
             />
           </div>
-          <div role="group" aria-label="Afficher selon l'adéquation au poste" className="flex items-center gap-1 rounded-full bg-page p-1">
-            <span className="pr-1 pl-2.5 text-muted-foreground text-xs">Afficher</span>
+          <div role="group" aria-label={t("fitLabel")} className="flex items-center gap-1 rounded-full bg-page p-1">
+            <span className="pr-1 pl-2.5 text-muted-foreground text-xs">{t("show")}</span>
             {SCORE_FILTERS.map((f) => (
               <button
                 key={f.min}
                 type="button"
-                title={f.hint}
+                title={t(`filterHints.${f.key}`)}
                 aria-pressed={minScore === f.min}
                 onClick={() => setMinScore(f.min)}
                 className={cn(
@@ -261,7 +268,7 @@ export function OfferBoard({
                   minScore === f.min ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {f.label}
+                {t(`filters.${f.key}`)}
               </button>
             ))}
           </div>
@@ -275,12 +282,12 @@ export function OfferBoard({
                 hideOut ? "bg-selected text-selected-foreground" : "bg-page text-muted-foreground hover:text-foreground",
               )}
             >
-              Masquer hors critères ({outCount})
+              {t("hideOut", { count: outCount })}
             </button>
           )}
           {filtering && (
             <span className="text-muted-foreground text-xs">
-              {shownEntries.length} sur {entries.length}
+              {t("shown", { shown: shownEntries.length, total: entries.length })}
             </span>
           )}
         </div>
@@ -344,13 +351,13 @@ export function OfferBoard({
         >
           <div className="sticky top-0 z-10 flex items-center justify-between gap-4 bg-page px-5 pt-4 pb-1 sm:px-6">
             <div className="min-w-0">
-              <DialogTitle className="truncate font-medium text-muted-foreground text-sm">Candidature · {jobTitle}</DialogTitle>
+              <DialogTitle className="truncate font-medium text-muted-foreground text-sm">{t("application", { job: jobTitle })}</DialogTitle>
               <DialogDescription className="sr-only">
-                {opened?.kind === "rabotka" ? "Candidature Rabotka" : "Candidature reçue sur la page carrières"}
+                {opened?.kind === "rabotka" ? t("rabotka") : t("careers")}
               </DialogDescription>
             </div>
             <DialogClose
-              aria-label="Fermer"
+              aria-label={t("close")}
               className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card text-muted-foreground outline-none transition-colors hover:bg-card/70 hover:text-foreground focus-visible:ring-2 focus-visible:ring-whatsapp/40"
             >
               <IconX className="size-4" />
@@ -420,9 +427,9 @@ export function OfferBoard({
         open={retaining?.entry.kind === "careers"}
         onOpenChange={(o) => !o && setRetaining(null)}
         icon={<IconCheck className="size-5" />}
-        title={retaining ? `Retenir ${nameOf(retaining.entry)} ?` : ""}
-        description="Le candidat est prévenu par e-mail. Vous pourrez annuler ce choix ensuite."
-        confirmLabel="Retenir"
+        title={retaining ? t("retainTitle", { name: nameOf(retaining.entry) }) : ""}
+        description={t("retainText")}
+        confirmLabel={t("retain")}
         pending={retainCareers.isPending}
         onConfirm={() => {
           if (retaining?.entry.kind !== "careers") return;
@@ -443,7 +450,7 @@ function BoardColumn({
   onWrite,
   children,
 }: Readonly<{
-  column: (typeof COLUMNS)[number];
+  column: ColumnInfo;
   count: number;
   /** Cards not shown yet in this column. */
   more: number;
@@ -455,6 +462,7 @@ function BoardColumn({
   children: React.ReactNode;
 }>) {
   const { setNodeRef, isOver } = useDroppable({ id: column.key });
+  const t = useTranslations("offers.board");
   return (
     <section
       ref={setNodeRef}
@@ -472,8 +480,8 @@ function BoardColumn({
             <button
               type="button"
               onClick={onWrite}
-              title="Écrire à tous les candidats de cette colonne"
-              aria-label={`Écrire aux candidats de « ${column.label} »`}
+              title={t("writeAll")}
+              aria-label={t("writeColumn", { column: column.label })}
               className="flex size-6 items-center justify-center rounded-full text-muted-foreground hover:bg-card hover:text-foreground"
             >
               <IconMail className="size-4" />
@@ -483,7 +491,7 @@ function BoardColumn({
             <button
               type="button"
               onClick={onFold}
-              aria-label={`Replier « ${column.label} »`}
+              aria-label={t("fold", { column: column.label })}
               className="flex size-6 items-center justify-center rounded-full text-muted-foreground hover:bg-card hover:text-foreground"
             >
               <IconChevronsRight className="size-4" />
@@ -495,7 +503,7 @@ function BoardColumn({
       <div className="flex max-h-[min(65vh,40rem)] min-h-24 flex-col gap-1.5 overflow-y-auto px-2 pb-2 [scrollbar-width:thin]">
         {count === 0 ? (
           <p className="flex flex-1 items-center justify-center rounded-xl px-3 py-6 text-center text-muted-foreground/70 text-xs">
-            Aucun candidat
+            {t("none")}
           </p>
         ) : (
           <>
@@ -506,7 +514,7 @@ function BoardColumn({
                 onClick={onMore}
                 className="mt-1 h-9 shrink-0 rounded-xl font-medium text-muted-foreground text-xs hover:bg-card hover:text-foreground"
               >
-                Voir {Math.min(more, PAGE)} de plus · {more} restant{more > 1 ? "s" : ""}
+                {t("more", { count: Math.min(more, PAGE), left: more })}
               </button>
             )}
           </>
@@ -517,14 +525,15 @@ function BoardColumn({
 }
 
 /** « Refusées » while folded: its name and count on a strip, still a drop target. */
-function FoldedColumn({ column, count, onOpen }: Readonly<{ column: (typeof COLUMNS)[number]; count: number; onOpen: () => void }>) {
+function FoldedColumn({ column, count, onOpen }: Readonly<{ column: ColumnInfo; count: number; onOpen: () => void }>) {
   const { setNodeRef, isOver } = useDroppable({ id: column.key });
+  const t = useTranslations("offers.board");
   return (
     <button
       ref={setNodeRef}
       type="button"
       onClick={onOpen}
-      aria-label={`Afficher « ${column.label} » (${count})`}
+      aria-label={t("unfold", { column: column.label, count })}
       className={cn(
         "flex min-h-40 w-14 shrink-0 flex-col items-center gap-3 self-stretch rounded-2xl bg-page py-3 text-muted-foreground transition-colors duration-200 hover:text-foreground",
         isOver && "bg-brand-lime/40 text-foreground",
@@ -548,12 +557,13 @@ function BoardCard({
   entry: BoardEntry;
   interview?: Interview;
   draggable: boolean;
-  targets: (typeof COLUMNS)[number][];
+  targets: ColumnInfo[];
   onMove: (to: Column) => void;
   /** The candidate in a window over the board. */
   onOpen: () => void;
 }>) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: e.key, disabled: !draggable });
+  const t = useTranslations("offers.board");
   const name = nameOf(e);
   return (
     // The whole card is the handle: a short drag moves it (its copy follows
@@ -570,17 +580,17 @@ function BoardCard({
       {targets.length > 0 && (
         <DropdownMenu>
           <DropdownMenuTrigger
-            aria-label={`Déplacer ${name}`}
+            aria-label={t("move", { name })}
             onPointerDown={(ev) => ev.stopPropagation()}
             className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-md text-muted-foreground opacity-0 outline-none transition-opacity hover:bg-page hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 data-[state=open]:opacity-100 max-md:opacity-100"
           >
             <IconDots className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52 rounded-2xl border-0 bg-card p-1.5 shadow-soft">
-            <p className="px-3 pt-1.5 pb-1 text-muted-foreground text-xs">Déplacer vers</p>
-            {targets.map((t) => (
-              <DropdownMenuItem key={t.key} onSelect={() => onMove(t.key)} className="cursor-pointer rounded-xl px-3 py-2 text-sm focus:bg-page">
-                {t.label}
+            <p className="px-3 pt-1.5 pb-1 text-muted-foreground text-xs">{t("moveTo")}</p>
+            {targets.map((target) => (
+              <DropdownMenuItem key={target.key} onSelect={() => onMove(target.key)} className="cursor-pointer rounded-xl px-3 py-2 text-sm focus:bg-page">
+                {target.label}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
@@ -615,6 +625,9 @@ function CardFace({
 >) {
   const name = nameOf(e);
   const fit = e.score !== null ? band(e.score) : null;
+  const t = useTranslations("offers.board");
+  const tVerdict = useTranslations("labels.verdict");
+  const locale = useLocale() as Locale;
   const nameClass = "line-clamp-2 text-left font-medium text-sm leading-snug hover:underline";
   return (
     <article
@@ -635,28 +648,28 @@ function CardFace({
       {children}
       <div className="flex items-center gap-2">
         <span
-          title={e.kind === "rabotka" ? "Candidature Rabotka" : "Candidature reçue sur la page carrières"}
+          title={e.kind === "rabotka" ? t("rabotka") : t("careers")}
           className="flex size-5 shrink-0 items-center justify-center rounded bg-page text-muted-foreground"
         >
           {e.kind === "rabotka" ? <IconBriefcase className="size-3.5" /> : <IconWorld className="size-3.5" />}
         </span>
         {fit && e.score !== null && (
-          <span title={fit.label} className={cn("rounded px-1.5 py-0.5 font-semibold text-[11px] tabular-nums", fit.chip)}>
+          <span title={tVerdict(fit.level)} className={cn("rounded px-1.5 py-0.5 font-semibold text-[11px] tabular-nums", fit.chip)}>
             {e.score}
           </span>
         )}
         {interview && (
-          <span title="Entretien prévu" className="inline-flex items-center gap-1 rounded bg-page px-1.5 py-0.5 font-medium text-[11px]">
+          <span title={t("interview")} className="inline-flex items-center gap-1 rounded bg-page px-1.5 py-0.5 font-medium text-[11px]">
             <IconCalendarEvent className="size-3" />
-            {new Date(interview.startsAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+            {new Date(interview.startsAt).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "short" })}
           </span>
         )}
         {e.a.knockedOut && (
           <span
-            title="Ne remplit pas un critère éliminatoire"
+            title={t("knockedOut")}
             className="rounded bg-chip-amber px-1.5 py-0.5 font-medium text-[11px] text-chip-amber-foreground"
           >
-            Critère
+            {t("criterion")}
           </span>
         )}
         {/* The photo of a Rabotka candidate; careers-page ones have none, initials then. */}
