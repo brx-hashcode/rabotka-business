@@ -11,6 +11,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { useBusinessCatalog } from "#/hooks/use-business-catalog";
 import { useCities } from "#/hooks/use-geo";
 import { cn } from "#/lib/utils";
+import { IDENTIFIER_KEYS, officialIdentifiers } from "../required-documents";
 import { Combobox, type ComboboxOption } from "./combobox";
 import { FieldLabel, StepActions, StepHeading, TextField } from "./form-bits";
 
@@ -189,10 +190,31 @@ export function OrganisationStep({
   }));
   const formLabel = new Map(catalog.legalForms.map((f) => [f.value, f.label]));
   const legalFormOptions = allowedForms.map((value) => ({ value, label: formLabel.get(value) ?? value }));
+  // The numbers its type carries (no N° RCCM for an association), required
+  // with the papers it must send. Before a type is chosen: the country's all.
+  const categoryDocuments = catalog.categories.find((c) => c.value === category)?.documents;
+  const fieldsHere = identifiers ?? catalog.identifiers;
+  const officialFields = categoryDocuments
+    ? officialIdentifiers(categoryDocuments, legalForm, fieldsHere)
+    : Object.fromEntries(IDENTIFIER_KEYS.map((k) => [k, fieldsHere[k] && { ...fieldsHere[k], required: false }]));
+  // Shown while filled once verified, even where the type has none: it stays visible.
+  const shownIdentifiers = IDENTIFIER_KEYS.filter((k) => officialFields[k] || (lockIdentity && form.getValues(k)));
+  const anyRequired = !lockIdentity && shownIdentifiers.some((k) => officialFields[k]?.required);
+
+  function submit(values: OrganisationValues) {
+    if (!lockIdentity) {
+      const missing = IDENTIFIER_KEYS.filter((k) => officialFields[k]?.required && !values[k]?.trim());
+      for (const k of missing) {
+        form.setError(k, { message: `Indiquez le ${officialFields[k]?.label}` }, { shouldFocus: k === missing[0] });
+      }
+      if (missing.length > 0) return;
+    }
+    onDone(values);
+  }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onDone)} noValidate className="space-y-10">
+      <form onSubmit={form.handleSubmit(submit)} noValidate className="space-y-10">
         {heading && <StepHeading
           title="Votre organisation"
           text="Ces informations apparaissent sur votre profil entreprise et servent à sa vérification."
@@ -228,30 +250,38 @@ export function OrganisationStep({
           <SizeField control={form.control} sizes={catalog.sizes} />
         </Section>
 
-        <Section
-          title="Identifiants officiels"
-          note={lockIdentity ? "vérifiés" : "facultatif"}
-          text={lockIdentity ? undefined : "Ils facilitent la vérification de votre organisation."}
-        >
-          <div className="grid gap-5 sm:grid-cols-2">
-            {(["registrationNumber", "taxId", "statisticalId"] as const).map((name) => {
-              const field = (identifiers ?? catalog.identifiers)[name];
-              // Shown while filled, even where the country has none: it stays visible until cleared.
-              if (!field && !(lockIdentity && form.getValues(name))) return null;
-              return (
-                <TextField
-                  key={name}
-                  control={form.control}
-                  name={name}
-                  label={field?.label ?? "Identifiant statistique"}
-                  className={name === "statisticalId" ? "sm:col-span-2" : undefined}
-                  placeholder={lockIdentity ? "Non renseigné" : field?.placeholder}
-                  disabled={lockIdentity}
-                />
-              );
-            })}
-          </div>
-        </Section>
+        {shownIdentifiers.length > 0 && (
+          <Section
+            title="Identifiants officiels"
+            note={lockIdentity ? "vérifiés" : anyRequired ? undefined : "facultatif"}
+            text={
+              lockIdentity
+                ? undefined
+                : anyRequired
+                  ? "Les numéros de vos documents obligatoires, tels qu'ils y figurent."
+                  : "Ils facilitent la vérification de votre organisation."
+            }
+          >
+            <div className="grid gap-5 sm:grid-cols-2">
+              {shownIdentifiers.map((name) => {
+                const field = officialFields[name];
+                return (
+                  <TextField
+                    key={name}
+                    control={form.control}
+                    name={name}
+                    label={field?.label ?? "Identifiant statistique"}
+                    // Facultatif beside required ones; all are when none is.
+                    optional={!lockIdentity && anyRequired && !field?.required}
+                    className={shownIdentifiers.length % 2 === 1 && name === shownIdentifiers.at(-1) ? "sm:col-span-2" : undefined}
+                    placeholder={lockIdentity ? "Non renseigné" : field?.placeholder}
+                    disabled={lockIdentity}
+                  />
+                );
+              })}
+            </div>
+          </Section>
+        )}
 
         <Section title="Siège" text="Seul le pays est demandé : une organisation qui exerce en ligne laisse l'adresse vide.">
           <TextField
