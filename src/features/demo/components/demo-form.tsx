@@ -101,8 +101,8 @@ export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryNam
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="relative space-y-5 rounded-3xl bg-card p-6 sm:p-8">
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextField control={form.control} name="lastName" label={t("lastName")} autoComplete="family-name" placeholder={t("lastNamePlaceholder")} />
           <TextField control={form.control} name="firstName" label={t("firstName")} autoComplete="given-name" placeholder={t("firstNamePlaceholder")} />
+          <TextField control={form.control} name="lastName" label={t("lastName")} autoComplete="family-name" placeholder={t("lastNamePlaceholder")} />
         </div>
         <TextField
           control={form.control}
