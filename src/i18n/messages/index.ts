@@ -9,6 +9,7 @@ import enSignUp from "./en/signUp.json";
 import enMissions from "./en/missions.json";
 import enOffers from "./en/offers.json";
 import enApplications from "./en/applications.json";
+import enInterviews from "./en/interviews.json";
 import enSite from "./en/site.json";
 import enSiteCopy from "./en/siteCopy.json";
 import frAuth from "./fr/auth.json";
@@ -20,6 +21,7 @@ import frSignUp from "./fr/signUp.json";
 import frMissions from "./fr/missions.json";
 import frOffers from "./fr/offers.json";
 import frApplications from "./fr/applications.json";
+import frInterviews from "./fr/interviews.json";
 import frSite from "./fr/site.json";
 import frSiteCopy from "./fr/siteCopy.json";
 
@@ -39,6 +41,7 @@ const fr = {
   missions: frMissions,
   offers: frOffers,
   applications: frApplications,
+  interviews: frInterviews,
   site: frSite,
   siteCopy: frSiteCopy,
 };
@@ -57,6 +60,7 @@ export const MESSAGES: Record<Locale, Messages> = {
     missions: enMissions,
     offers: enOffers,
     applications: enApplications,
+    interviews: enInterviews,
     site: enSite,
     siteCopy: enSiteCopy as typeof frSiteCopy,
   },

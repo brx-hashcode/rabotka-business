@@ -1,5 +1,6 @@
 import { addDays, addMonths, addWeeks, format, isSameDay, isSameMonth, startOfMonth, startOfWeek } from "date-fns";
-import { fr } from "date-fns/locale";
+import type { Locale } from "#/i18n/config";
+import { DATE_FNS_LOCALE } from "#/i18n/date-fns";
 
 import type { Interview } from "#/lib/api/types";
 
@@ -31,13 +32,14 @@ export function step(mode: CalendarMode, anchor: Date, by: 1 | -1): Date {
 }
 
 /** « novembre 2026 », or « 16 – 22 nov. 2026 » for a week. */
-export function periodTitle(mode: CalendarMode, anchor: Date): string {
-  if (mode === "mois") return format(anchor, "LLLL yyyy", { locale: fr });
+export function periodTitle(mode: CalendarMode, anchor: Date, lang: Locale = "fr"): string {
+  const locale = DATE_FNS_LOCALE[lang];
+  if (mode === "mois") return format(anchor, "LLLL yyyy", { locale });
   const days = visibleDays("semaine", anchor);
   const first = days[0];
   const last = days[6];
-  const end = format(last, "d MMM yyyy", { locale: fr });
-  return isSameMonth(first, last) ? `${format(first, "d")} – ${end}` : `${format(first, "d MMM", { locale: fr })} – ${end}`;
+  const end = format(last, "d MMM yyyy", { locale });
+  return isSameMonth(first, last) ? `${format(first, "d")} – ${end}` : `${format(first, "d MMM", { locale })} – ${end}`;
 }
 
 /** One thing in the calendar: an interview at its time, or one of the times offered for it. */

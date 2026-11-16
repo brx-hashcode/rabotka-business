@@ -4,13 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useQuery } from "@tanstack/react-query";
 import { format, isSameDay, isSameMonth, isToday } from "date-fns";
-import { fr } from "date-fns/locale";
+import { useLocale, useTranslations } from "next-intl";
 import { IconCalendarEvent, IconChevronLeft, IconChevronRight, IconDownload, IconVideo } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { Dialog, DialogContent, DialogTitle } from "#/components/ui/dialog";
 import { Skeleton } from "#/components/ui/skeleton";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { interviewsKey, listInterviews } from "#/lib/api/interview-controller";
 import type { Interview } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
@@ -29,12 +29,14 @@ import {
   type CalendarEntry,
 } from "../calendar-grid";
 import { interviewsCsv, saveCsv } from "../interviews-csv";
-import { STATUS } from "./interview-bits";
+import type { Locale } from "#/i18n/config";
+import { DATE_FNS_LOCALE } from "#/i18n/date-fns";
+import { STATUS_CHIP } from "./interview-bits";
 import { InterviewCard } from "./interview-card";
 
 const MODES = [
-  { key: "mois", label: "Mois" },
-  { key: "semaine", label: "Semaine" },
+  { key: "mois" },
+  { key: "semaine" },
 ] as const;
 
 /** Chips shown in one day of the month before « +N ». */
@@ -46,6 +48,10 @@ const hhmm = (d: Date) => format(d, "HH:mm");
 
 /** The interviews in a month or a week; a click opens the same card as the list. */
 export function InterviewsCalendar() {
+  const t = useTranslations("interviews.calendar");
+  const ti = useTranslations("interviews");
+  const locale = useLocale() as Locale;
+  const friendlyError = useFriendlyError();
   const [mode, setMode] = useQueryState("periode", parseAsStringLiteral(["mois", "semaine"] as const).withDefault("mois"));
   const [anchor, setAnchor] = useState(() => new Date());
   const [open, setOpen] = useState<Interview | null>(null);
@@ -64,11 +70,11 @@ export function InterviewsCalendar() {
   function exportPeriod() {
     const inPeriod = entries.filter((e) => (mode === "mois" ? isSameMonth(e.start, anchor) : days.some((d) => isSameDay(d, e.start))));
     if (inPeriod.length === 0) {
-      toast("Aucun entretien sur cette période.");
+      toast(t("none"));
       return;
     }
-    const name = mode === "mois" ? format(anchor, "yyyy-MM") : `semaine-du-${format(days[0], "yyyy-MM-dd")}`;
-    saveCsv(interviewsCsv(inPeriod), `entretiens-${name}.csv`);
+    const name = mode === "mois" ? format(anchor, "yyyy-MM") : t("week", { date: format(days[0], "yyyy-MM-dd") });
+    saveCsv(interviewsCsv(inPeriod, ti, locale), t("file", { name }));
   }
 
   // The card in the dialog follows the list: moved, cancelled, answered.
@@ -78,10 +84,10 @@ export function InterviewsCalendar() {
     <section className="space-y-4 rounded-3xl bg-card p-4 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <NavButton label="Précédent" onClick={() => setAnchor((a) => step(mode, a, -1))}>
+          <NavButton label={t("previous")} onClick={() => setAnchor((a) => step(mode, a, -1))}>
             <IconChevronLeft className="size-4" />
           </NavButton>
-          <NavButton label="Suivant" onClick={() => setAnchor((a) => step(mode, a, 1))}>
+          <NavButton label={t("next")} onClick={() => setAnchor((a) => step(mode, a, 1))}>
             <IconChevronRight className="size-4" />
           </NavButton>
           <button
@@ -89,9 +95,9 @@ export function InterviewsCalendar() {
             onClick={() => setAnchor(new Date())}
             className="h-9 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70"
           >
-            Aujourd&apos;hui
+            {t("today")}
           </button>
-          <h2 className="ml-2 font-semibold text-lg capitalize">{periodTitle(mode, anchor)}</h2>
+          <h2 className="ml-2 font-semibold text-lg capitalize">{periodTitle(mode, anchor, locale)}</h2>
         </div>
         <div className="flex items-center gap-2">
         <button
@@ -101,9 +107,9 @@ export function InterviewsCalendar() {
           className="inline-flex h-9 items-center gap-2 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70 disabled:opacity-50"
         >
           <IconDownload className="size-4" />
-          Exporter
+          {t("export")}
         </button>
-        <div role="tablist" aria-label="Période affichée" className="inline-flex rounded-full bg-page p-1">
+        <div role="tablist" aria-label={t("shownPeriod")} className="inline-flex rounded-full bg-page p-1">
           {MODES.map((m) => (
             <button
               key={m.key}
@@ -116,7 +122,7 @@ export function InterviewsCalendar() {
                 mode === m.key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {m.label}
+              {t(`modes.${m.key}`)}
             </button>
           ))}
         </div>
@@ -126,7 +132,7 @@ export function InterviewsCalendar() {
       {query.isLoading && <Skeleton className="h-[480px] w-full rounded-2xl" />}
       {!query.isLoading && !query.data && (
         <p className="rounded-2xl bg-page p-6 text-muted-foreground">
-          {friendlyError(query.error, "Vos entretiens sont indisponibles pour le moment.")}
+          {friendlyError(query.error, ti("page.unavailable"))}
         </p>
       )}
       {query.data && (
@@ -155,7 +161,7 @@ export function InterviewsCalendar() {
 
       <Dialog open={Boolean(shown)} onOpenChange={(next) => !next && setOpen(null)}>
         <DialogContent className="w-[calc(100vw-2rem)] max-w-md gap-0 rounded-3xl border-0 bg-card p-0 shadow-soft">
-          <DialogTitle className="sr-only">{shown ? `Entretien avec ${shown.candidateName}` : "Entretien"}</DialogTitle>
+          <DialogTitle className="sr-only">{shown ? t("withName", { name: shown.candidateName }) : t("interview")}</DialogTitle>
           {shown && (
             <ul className="max-h-[85svh] overflow-y-auto">
               <InterviewCard interview={shown} past={isPast(shown)} />
@@ -183,9 +189,9 @@ function NavButton({ label, onClick, children }: Readonly<{ label: string; onCli
 /** The colour of an entry: its status, neutral once over, faded for a time only offered. */
 function tone(e: CalendarEntry): string {
   const i = e.interview;
-  if (i.status === "CANCELLED") return cn(STATUS.CANCELLED.chip, "line-through");
+  if (i.status === "CANCELLED") return cn(STATUS_CHIP.CANCELLED, "line-through");
   if (i.endedAt) return "bg-foreground/[0.07] text-muted-foreground";
-  return cn(STATUS[i.status].chip, e.offered && "opacity-70");
+  return cn(STATUS_CHIP[i.status], e.offered && "opacity-70");
 }
 
 function EntryLabel({ e, withTime = true }: Readonly<{ e: CalendarEntry; withTime?: boolean }>) {
@@ -201,12 +207,16 @@ function EntryLabel({ e, withTime = true }: Readonly<{ e: CalendarEntry; withTim
   );
 }
 
-function entryTitle(e: CalendarEntry): string {
-  const what = e.offered ? "créneau proposé" : STATUS[e.interview.status].label.toLowerCase();
+function entryTitle(e: CalendarEntry, t: ReturnType<typeof useTranslations<"interviews">>): string {
+  const what = e.offered ? t("calendar.offered") : t(`status.${e.interview.status}`).toLowerCase();
   return `${hhmm(e.start)} · ${e.interview.candidateName} · ${e.interview.jobTitle} (${what})`;
 }
 
-const WEEKDAYS = ["lun.", "mar.", "mer.", "jeu.", "ven.", "sam.", "dim."];
+/** Monday first, in the reader's language (« lun. », « Mon »). */
+function weekdays(locale: Locale): string[] {
+  // 2024-01-01 was a Monday.
+  return Array.from({ length: 7 }, (_, i) => format(new Date(2024, 0, 1 + i), "EEE", { locale: DATE_FNS_LOCALE[locale] }));
+}
 
 function MonthGrid({
   days,
@@ -221,6 +231,9 @@ function MonthGrid({
   onOpen: (i: Interview) => void;
   onDay: (d: Date) => void;
 }>) {
+  const t = useTranslations("interviews");
+  const locale = useLocale() as Locale;
+  const WEEKDAYS = weekdays(locale);
   return (
     <div className="space-y-1.5">
       <div className="grid grid-cols-7 gap-1.5">
@@ -242,7 +255,7 @@ function MonthGrid({
               <button
                 type="button"
                 onClick={() => onDay(day)}
-                aria-label={`Voir la semaine du ${format(day, "d MMMM", { locale: fr })}`}
+                aria-label={t("calendar.seeWeek", { date: format(day, "d MMMM", { locale: DATE_FNS_LOCALE[locale] }) })}
                 className={cn(
                   "flex size-7 items-center justify-center self-start rounded-full font-medium text-sm tabular-nums hover:bg-card",
                   isToday(day) && "bg-brand-lime text-[#0f2414] hover:bg-brand-lime",
@@ -254,7 +267,7 @@ function MonthGrid({
                 <button
                   key={e.key}
                   type="button"
-                  title={entryTitle(e)}
+                  title={entryTitle(e, t)}
                   onClick={() => onOpen(e.interview)}
                   className={cn("flex items-center gap-1.5 rounded-lg px-2 py-1 text-left text-xs", tone(e))}
                 >
@@ -267,7 +280,7 @@ function MonthGrid({
                   onClick={() => onDay(day)}
                   className="rounded-lg px-2 py-0.5 text-left font-medium text-muted-foreground text-xs hover:text-foreground"
                 >
-                  +{more} {more > 1 ? "autres" : "autre"}
+                  {t("calendar.others", { count: more })}
                 </button>
               )}
             </div>
@@ -279,6 +292,8 @@ function MonthGrid({
 }
 
 function WeekGrid({ days, entries, onOpen }: Readonly<{ days: Date[]; entries: CalendarEntry[]; onOpen: (i: Interview) => void }>) {
+  const t = useTranslations("interviews");
+  const locale = useLocale() as Locale;
   const hours = Array.from({ length: LAST_HOUR - FIRST_HOUR }, (_, i) => FIRST_HOUR + i);
   const height = hours.length * HOUR_PX;
   const now = useNow();
@@ -294,7 +309,7 @@ function WeekGrid({ days, entries, onOpen }: Readonly<{ days: Date[]; entries: C
         {days.map((day) => (
           <div key={day.toISOString()} className="space-y-1 px-1">
             <p className="flex items-baseline gap-1.5">
-              <span className="font-medium text-muted-foreground text-xs uppercase">{format(day, "EEE", { locale: fr })}</span>
+              <span className="font-medium text-muted-foreground text-xs uppercase">{format(day, "EEE", { locale: DATE_FNS_LOCALE[locale] })}</span>
               <span
                 className={cn(
                   "flex size-7 items-center justify-center rounded-full font-semibold tabular-nums",
@@ -308,7 +323,7 @@ function WeekGrid({ days, entries, onOpen }: Readonly<{ days: Date[]; entries: C
               <button
                 key={e.key}
                 type="button"
-                title={entryTitle(e)}
+                title={entryTitle(e, t)}
                 onClick={() => onOpen(e.interview)}
                 className={cn("flex w-full items-center gap-1.5 rounded-lg px-2 py-1 text-left text-xs", tone(e))}
               >
@@ -344,7 +359,7 @@ function WeekGrid({ days, entries, onOpen }: Readonly<{ days: Date[]; entries: C
                   <button
                     key={e.key}
                     type="button"
-                    title={entryTitle(e)}
+                    title={entryTitle(e, t)}
                     onClick={() => onOpen(e.interview)}
                     className={cn("absolute overflow-hidden rounded-lg px-1.5 py-1 text-left text-xs", tone(e))}
                     style={{
@@ -378,12 +393,14 @@ function WeekGrid({ days, entries, onOpen }: Readonly<{ days: Date[]; entries: C
 
 /** The phone: the days that have something, one under the other. */
 function Agenda({ days, entries, onOpen }: Readonly<{ days: Date[]; entries: CalendarEntry[]; onOpen: (i: Interview) => void }>) {
+  const t = useTranslations("interviews");
+  const locale = useLocale() as Locale;
   const busy = days.map((d) => ({ day: d, here: entriesOn(entries, d) })).filter((x) => x.here.length > 0);
   if (busy.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-2xl bg-page px-6 py-12 text-center">
         <IconCalendarEvent className="size-6 text-muted-foreground" />
-        <p className="font-medium">Aucun entretien sur cette période</p>
+        <p className="font-medium">{t("calendar.noneHere")}</p>
       </div>
     );
   }
@@ -392,7 +409,7 @@ function Agenda({ days, entries, onOpen }: Readonly<{ days: Date[]; entries: Cal
       {busy.map(({ day, here }) => (
         <li key={day.toISOString()} className="space-y-2">
           <p className={cn("font-semibold text-sm capitalize", isToday(day) && "text-whatsapp-dark")}>
-            {format(day, "EEEE d MMMM", { locale: fr })}
+            {format(day, "EEEE d MMMM", { locale: DATE_FNS_LOCALE[locale] })}
           </p>
           {here.map((e) => (
             <button
@@ -409,7 +426,7 @@ function Agenda({ days, entries, onOpen }: Readonly<{ days: Date[]; entries: Cal
                   {e.interview.candidateName}
                 </span>
                 <span className="block truncate text-muted-foreground text-xs">
-                  {e.interview.jobTitle} · {e.offered ? "créneau proposé" : STATUS[e.interview.status].label}
+                  {e.interview.jobTitle} · {e.offered ? t("calendar.offered") : t(`status.${e.interview.status}`)}
                 </span>
               </span>
             </button>

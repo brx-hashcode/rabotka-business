@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
@@ -17,7 +18,7 @@ import {
 
 import { CardGridSkeleton, TilesSkeleton } from "#/components/page-skeletons";
 import { StatTile } from "#/features/home/components/stat-tile";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { interviewsKey, listInterviews } from "#/lib/api/interview-controller";
 import type { Interview } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
@@ -27,17 +28,16 @@ import { InterviewReportDialog } from "./interview-report-panel";
 import { InterviewsCalendar } from "./interviews-calendar";
 
 const VIEWS = [
-  { key: "calendrier", label: "Calendrier", icon: IconCalendarMonth },
-  { key: "liste", label: "Liste", icon: IconLayoutGrid },
+  { key: "calendrier", icon: IconCalendarMonth },
+  { key: "liste", icon: IconLayoutGrid },
 ] as const;
 
-const TABS = [
-  { key: "upcoming", label: "À venir" },
-  { key: "past", label: "Passés" },
-] as const;
+const TABS = [{ key: "upcoming" }, { key: "past" }] as const;
 
 /** The business's interviews as cards, in date order: who, when, how, and what the candidate answered. */
 export function InterviewsPage() {
+  const t = useTranslations("interviews.page");
+  const friendlyError = useFriendlyError();
   const [calendarOpen, setCalendarOpen] = useState(false);
   // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
   const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(["upcoming", "past"] as const).withDefault("upcoming"));
@@ -84,13 +84,11 @@ export function InterviewsPage() {
     <div className="w-full space-y-6 pt-2">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1.5">
-          <h1 className="font-semibold text-3xl tracking-tight">Entretiens</h1>
-          <p className="text-muted-foreground">
-            Les entretiens proposés à vos candidats, et leurs réponses. Planifiez-en depuis une analyse de CV ou une candidature.
-          </p>
+          <h1 className="font-semibold text-3xl tracking-tight">{t("title")}</h1>
+          <p className="text-muted-foreground">{t("intro")}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <div role="tablist" aria-label="Affichage" className="inline-flex h-12 items-center rounded-full bg-card p-1">
+          <div role="tablist" aria-label={t("display")} className="inline-flex h-12 items-center rounded-full bg-card p-1">
             {VIEWS.map((v) => (
               <button
                 key={v.key}
@@ -104,7 +102,7 @@ export function InterviewsPage() {
                 )}
               >
                 <v.icon className="size-4" />
-                {v.label}
+                {t(`views.${v.key}`)}
               </button>
             ))}
           </div>
@@ -114,7 +112,7 @@ export function InterviewsPage() {
             className="inline-flex h-12 items-center gap-2 rounded-full bg-card px-5 font-medium hover:bg-card/70"
           >
             <IconCalendarPlus className="size-4" />
-            Ajouter à mon agenda
+            {t("addToCalendar")}
           </button>
         </div>
       </div>
@@ -127,10 +125,10 @@ export function InterviewsPage() {
       ) : (
         upcoming.data && (
           <section className="grid grid-cols-2 gap-3 rounded-3xl bg-card p-6 sm:gap-4 sm:p-8 xl:grid-cols-4">
-            <StatTile icon={IconCalendarEvent} label="À venir" value={String(live.length)} />
-            <StatTile icon={IconCircleCheck} label="Confirmés" value={String(count("CONFIRMED"))} />
-            <StatTile icon={IconHourglass} label="En attente" value={String(count("PENDING"))} hint="sans réponse du candidat" />
-            <StatTile icon={IconCalendarRepeat} label="À replanifier" value={String(count("RESCHEDULE_REQUESTED"))} hint="autre moment demandé" />
+            <StatTile icon={IconCalendarEvent} label={t("upcoming")} value={String(live.length)} />
+            <StatTile icon={IconCircleCheck} label={t("confirmed")} value={String(count("CONFIRMED"))} />
+            <StatTile icon={IconHourglass} label={t("pending")} value={String(count("PENDING"))} hint={t("pendingHint")} />
+            <StatTile icon={IconCalendarRepeat} label={t("reschedule")} value={String(count("RESCHEDULE_REQUESTED"))} hint={t("rescheduleHint")} />
           </section>
         )
       )}
@@ -139,21 +137,21 @@ export function InterviewsPage() {
         <InterviewsCalendar />
       ) : (
       <section className="space-y-4">
-        <div role="tablist" aria-label="Période" className="inline-flex rounded-full bg-card p-1">
-          {TABS.map((t) => (
+        <div role="tablist" aria-label={t("period")} className="inline-flex rounded-full bg-card p-1">
+          {TABS.map((x) => (
             <button
-              key={t.key}
+              key={x.key}
               type="button"
               role="tab"
-              aria-selected={tab === t.key}
-              onClick={() => void setTab(t.key)}
+              aria-selected={tab === x.key}
+              onClick={() => void setTab(x.key)}
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 font-medium text-sm",
-                tab === t.key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
+                tab === x.key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {t.label}
-              {t.key === "upcoming" && upcoming.data && <span className="tabular-nums opacity-70">{live.length}</span>}
+              {t(`tabs.${x.key}`)}
+              {x.key === "upcoming" && upcoming.data && <span className="tabular-nums opacity-70">{live.length}</span>}
             </button>
           ))}
         </div>
@@ -162,25 +160,28 @@ export function InterviewsPage() {
           <CardGridSkeleton kind="mission" count={3} />
         ) : !query.data ? (
           <p className="rounded-3xl bg-card p-6 text-muted-foreground">
-            {friendlyError(query.error, "Vos entretiens sont indisponibles pour le moment.")}
+            {friendlyError(query.error, t("unavailable"))}
           </p>
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-3xl bg-card px-6 py-14 text-center">
             <span className="flex size-12 items-center justify-center rounded-2xl bg-page">
               <IconCalendarEvent className="size-6 text-muted-foreground" />
             </span>
-            <p className="font-medium">{tab === "upcoming" ? "Aucun entretien prévu" : "Aucun entretien passé"}</p>
+            <p className="font-medium">{tab === "upcoming" ? t("noneUpcoming") : t("nonePast")}</p>
             {tab === "upcoming" && (
               <p className="max-w-sm text-muted-foreground text-sm">
-                Depuis une{" "}
-                <Link href="/espace/analyse-cv" className="font-medium text-foreground underline underline-offset-2">
-                  analyse de CV
-                </Link>{" "}
-                ou une{" "}
-                <Link href="/espace/candidatures" className="font-medium text-foreground underline underline-offset-2">
-                  candidature
-                </Link>
-                , « Planifier un entretien » envoie l&apos;invitation au candidat.
+                {t.rich("howTo", {
+                  cv: (chunks) => (
+                    <Link href="/espace/analyse-cv" className="font-medium text-foreground underline underline-offset-2">
+                      {chunks}
+                    </Link>
+                  ),
+                  application: (chunks) => (
+                    <Link href="/espace/candidatures" className="font-medium text-foreground underline underline-offset-2">
+                      {chunks}
+                    </Link>
+                  ),
+                })}
               </p>
             )}
           </div>
