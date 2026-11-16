@@ -57,6 +57,8 @@ type Tab = (typeof TAB_KEYS)[number];
 export function TalentsPage() {
   const t = useTranslations("talents.page");
   const locale = useLocale();
+  // The search reads the trade as the card shows it, and as the server names it.
+  const trade = useTradeName();
   const friendlyError = useFriendlyError();
   const talents = useQuery({ queryKey: talentsKey, queryFn: listTalents });
   // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
@@ -74,7 +76,7 @@ export function TalentsPage() {
     (x) =>
       (tab === "all" || (tab === "kept" ? x.saved : x.missionsWithUs > 0)) &&
       (!tag || x.tags.includes(tag)) &&
-      (!q.trim() || fold(`${x.firstName} ${x.lastName} ${x.categoryName ?? ""} ${x.city ?? ""} ${x.description ?? ""} ${x.note ?? ""} ${x.tags.join(" ")}`).includes(fold(q.trim()))),
+      (!q.trim() || fold(`${x.firstName} ${x.lastName} ${x.categoryName ?? ""} ${x.categoryName ? trade(x.categoryName) : ""} ${x.city ?? ""} ${x.description ?? ""} ${x.note ?? ""} ${x.tags.join(" ")}`).includes(fold(q.trim()))),
   );
   const count = (k: Tab) => (k === "all" ? all.length : all.filter((x) => (k === "kept" ? x.saved : x.missionsWithUs > 0)).length);
 

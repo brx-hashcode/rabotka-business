@@ -79,8 +79,10 @@ describe("languages", () => {
     expect(locale(res)).toBe("en");
     expect(res.headers.get("x-middleware-rewrite")).toBe("https://business.rabotka.work/fonctionnalites/analyse-cv");
     expect(res.headers.get("set-cookie")).toContain("rb_lang=en");
-    // Not the public site: no English URL.
-    expect(locale(get("/en/espace"))).toBeNull();
+    // Not the public site: no English URL, so no rewrite (a 404, said in English).
+    const space = get("/en/espace");
+    expect(space.headers.get("x-middleware-rewrite")).toBeNull();
+    expect(locale(space)).toBe("en");
   });
 
   it("switches with ?lang and keeps the space's URLs", async () => {

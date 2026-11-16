@@ -446,7 +446,7 @@ function Conversation({
             <span className="w-11 shrink-0 pt-px font-mono text-muted-foreground text-xs tabular-nums">{hhmm(t.at, locale)}</span>
             <p className="min-w-0 flex-1 text-sm leading-relaxed">
               <span className={cn("font-medium", SPEAKER_TONE[t.role])}>{t.speaker}</span>
-              <span className="text-muted-foreground"> : </span>
+              <span className="text-muted-foreground">{locale === "fr" ? " : " : ": "}</span>
               {t.text}
             </p>
             <button
