@@ -30,6 +30,7 @@
 }
 
 :root {
+  --shadow-soft-value: 0 4px 20px -4px hsl(25 35% 15% / 0.08);
   /* Rabotka brand colors (aligned with rabotka-client) */
   --whatsapp: 142 70% 49%;
   --whatsapp-dark: 142 72% 42%;
@@ -360,7 +361,7 @@ a {
    * token behind it, so Tailwind emitted nothing and those surfaces have been
    * rendering flat.
    */
-  --shadow-soft: 0 4px 20px -4px hsl(25 35% 15% / 0.08);
+  --shadow-soft: var(--shadow-soft-value);
   --color-whatsapp: hsl(var(--whatsapp));
   --color-whatsapp-dark: hsl(var(--whatsapp-dark));
   --color-page: var(--page);
@@ -416,6 +417,12 @@ a {
 
 .dark {
   /* Neutral blacks and greys, as the admin's dark theme: no blue cast. */
+  /*
+   * A soft brown shadow is invisible on black: a menu over the page read as
+   * part of it. A darker drop, and a faint light edge drawn by the shadow
+   * itself (no border), so floating layers stand off the page.
+   */
+  --shadow-soft-value: 0 0 0 1px rgb(255 255 255 / 0.07), 0 10px 30px -8px rgb(0 0 0 / 0.7);
   --page: oklch(0.145 0 0);
   /* Buttons filled with ink stay readable on the dark page. */
   --ink: #2c7a45;
