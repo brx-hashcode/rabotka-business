@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { IconChevronDown, IconChevronUp, IconInfoCircle } from "@tabler/icons-react";
 
@@ -27,10 +28,11 @@ export function OfferDescriptionCard({ description, note }: Readonly<{ descripti
   }, [open, description]);
 
   const more = open || clipped || !!note;
+  const t = useTranslations("offers.share");
 
   return (
     <section className="space-y-3 rounded-3xl bg-card p-6">
-      <h2 className="font-semibold text-lg">Description</h2>
+      <h2 className="font-semibold text-lg">{t("description")}</h2>
       {/* Six lines high when closed: line-clamp only cuts a single block. */}
       <div ref={text} className={cn(!open && "max-h-[9.75rem] overflow-hidden")}>
         <DescriptionText text={description} className="text-muted-foreground" />
@@ -39,7 +41,7 @@ export function OfferDescriptionCard({ description, note }: Readonly<{ descripti
         <div className="space-y-2 rounded-2xl bg-page p-4">
           <h3 className="flex items-center gap-1.5 font-medium text-sm">
             <IconInfoCircle className="size-4" />
-            Note pour les candidats
+            {t("note")}
           </h3>
           <p className="whitespace-pre-line text-muted-foreground text-sm leading-relaxed">{note}</p>
         </div>
@@ -51,7 +53,7 @@ export function OfferDescriptionCard({ description, note }: Readonly<{ descripti
           onClick={() => setOpen(!open)}
           className="inline-flex items-center gap-1 font-medium text-sm text-whatsapp-dark hover:underline"
         >
-          {open ? "Voir moins" : "Voir plus"}
+          {open ? t("less") : t("more")}
           {open ? <IconChevronUp className="size-4" /> : <IconChevronDown className="size-4" />}
         </button>
       )}

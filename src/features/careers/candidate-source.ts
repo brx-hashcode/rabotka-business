@@ -1,9 +1,9 @@
-/** Where an outside candidate came from, in words. */
+import type { LabelsT } from "#/i18n/translator";
+
+/** Where an outside candidate came from, in words: a name as written, or labels.source.* . */
+const TRANSLATED = new Set(["agent", "carrieres", "direct", "qr"] as const);
 const LABEL: Record<string, string> = {
   rabotka: "Rabotka",
-  agent: "Agents Rabotka",
-  carrieres: "Page carrières",
-  direct: "Lien direct",
   google: "Google",
   bing: "Bing",
   facebook: "Facebook",
@@ -11,7 +11,6 @@ const LABEL: Record<string, string> = {
   linkedin: "LinkedIn",
   x: "X",
   whatsapp: "WhatsApp",
-  qr: "Affiche (QR code)",
   jooble: "Jooble",
   careerjet: "Careerjet",
   indeed: "Indeed",
@@ -23,7 +22,8 @@ const LABEL: Record<string, string> = {
 /** Session storage key: the offer page notes the source, the form sends it. */
 export const SOURCE_KEY = "careers-source";
 
-export function sourceLabel(source: string): string {
+export function sourceLabel(source: string, t: LabelsT): string {
+  if ((TRANSLATED as Set<string>).has(source)) return t(`source.${source as "agent" | "carrieres" | "direct" | "qr"}`);
   return LABEL[source] ?? source.charAt(0).toUpperCase() + source.slice(1);
 }
 

@@ -1,11 +1,15 @@
 "use client";
 
+import { useTradeName } from "#/lib/api/use-trade-name";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { IconCommand, IconSearch, IconStarFilled } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+
+import type { Locale } from "#/i18n/config";
+import { formatRating } from "#/i18n/format";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Bone } from "#/components/page-skeletons";
@@ -37,6 +41,8 @@ const plain = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerC
 export function CommandSearch() {
   const router = useRouter();
   const t = useTranslations("layout");
+  const locale = useLocale() as Locale;
+  const trade = useTradeName();
   const friendlyError = useFriendlyError();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -148,7 +154,7 @@ export function CommandSearch() {
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-medium">{name}</span>
                         <span className="block truncate text-muted-foreground text-xs">
-                          {c.categoryNames.slice(0, 3).join(" · ") || "—"}
+                          {c.categoryNames.slice(0, 3).map(trade).join(" · ") || "—"}
                         </span>
                         {c.description && (
                           <span className="mt-0.5 line-clamp-1 text-muted-foreground text-xs">{c.description}</span>
@@ -158,7 +164,7 @@ export function CommandSearch() {
                         {c.reliabilityScore !== null && <span>{t("search.reliability", { score: c.reliabilityScore })}</span>}
                         {c.ratingAvg !== null && (
                           <span className="inline-flex items-center gap-0.5">
-                            {c.ratingAvg.toFixed(1)}
+                            {formatRating(c.ratingAvg, locale)}
                             <IconStarFilled className="size-3 text-amber-400" />
                           </span>
                         )}

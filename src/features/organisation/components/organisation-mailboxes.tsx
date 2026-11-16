@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IconPlus } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
@@ -9,7 +10,7 @@ import { toast } from "sonner";
 import { ProviderTile } from "#/components/mail-provider-logos";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
 import { useConnectMailbox } from "#/features/cv-screening/components/mail-import";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { disconnectMailbox, listMailboxes, mailboxesKey, PROVIDER_LABEL, type Mailbox, type MailProviderSlug } from "#/lib/api/mailbox-controller";
 
 /**
@@ -17,9 +18,11 @@ import { disconnectMailbox, listMailboxes, mailboxesKey, PROVIDER_LABEL, type Ma
  * to connect or disconnect. Hidden while no mail service can be connected.
  */
 export function OrganisationMailboxes() {
+  const t = useTranslations("organisation.mailboxes");
+  const friendlyError = useFriendlyError();
   const queryClient = useQueryClient();
   const boxes = useQuery({ queryKey: mailboxesKey, queryFn: listMailboxes });
-  const { connect, pending } = useConnectMailbox((provider) => toast.success(`${PROVIDER_LABEL[provider]} connecté.`));
+  const { connect, pending } = useConnectMailbox((provider) => toast.success(t("connected", { provider: PROVIDER_LABEL[provider] })));
   const [confirm, setConfirm] = useState<Mailbox | null>(null);
   const disconnect = useMutation({
     mutationFn: disconnectMailbox,
@@ -27,7 +30,7 @@ export function OrganisationMailboxes() {
       setConfirm(null);
       void queryClient.invalidateQueries({ queryKey: mailboxesKey });
     },
-    onError: (err) => toast.error(friendlyError(err, "La messagerie n'a pas pu être déconnectée.")),
+    onError: (err) => toast.error(friendlyError(err, t("disconnectFailed"))),
   });
 
   const data = boxes.data;
@@ -39,9 +42,9 @@ export function OrganisationMailboxes() {
   return (
     <section className="space-y-4 rounded-3xl bg-card p-6">
       <div className="space-y-1">
-        <h2 className="font-semibold text-lg">Messageries connectées</h2>
+        <h2 className="font-semibold text-lg">{t("title")}</h2>
         <p className="text-muted-foreground text-sm">
-          Pour choisir des CV reçus par e-mail dans « Analyse de CV ». Rabotka ne lit que les pièces jointes que vous choisissez.
+          {t("text")}
         </p>
       </div>
 
@@ -54,7 +57,7 @@ export function OrganisationMailboxes() {
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium text-sm">{box.email}</span>
                   <span className={box.expired ? "block text-chip-amber-foreground text-xs" : "block text-muted-foreground text-xs"}>
-                    {box.expired ? "À reconnecter" : PROVIDER_LABEL[box.provider]}
+                    {box.expired ? t("expired") : PROVIDER_LABEL[box.provider]}
                   </span>
                 </span>
                 {box.expired && (
@@ -64,7 +67,7 @@ export function OrganisationMailboxes() {
                     onClick={() => void connect(box.provider)}
                     className="font-medium text-sm underline underline-offset-2 hover:no-underline disabled:opacity-50"
                   >
-                    Reconnecter
+                    {t("reconnect")}
                   </button>
                 )}
                 <button
@@ -73,7 +76,7 @@ export function OrganisationMailboxes() {
                   onClick={() => setConfirm(box)}
                   className="font-medium text-muted-foreground text-sm hover:text-foreground disabled:opacity-50"
                 >
-                  Déconnecter
+                  {t("disconnect")}
                 </button>
               </li>
             );
@@ -94,7 +97,7 @@ export function OrganisationMailboxes() {
               <ProviderTile provider={provider} />
               <span className="min-w-0 flex-1">
                 <span className="block font-medium text-sm">{PROVIDER_LABEL[provider]}</span>
-                <span className="block text-muted-foreground text-xs">Connecter votre compte</span>
+                <span className="block text-muted-foreground text-xs">{t("connectAccount")}</span>
               </span>
               <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-card text-muted-foreground group-hover:text-foreground">
                 {pending === provider ? <Loader className="size-4 animate-spin" /> : <IconPlus className="size-4" />}
@@ -116,10 +119,9 @@ export function OrganisationMailboxes() {
                 </span>
               </div>
               <div className="space-y-1">
-                <DialogTitle className="font-semibold text-xl">Déconnecter cette messagerie ?</DialogTitle>
+                <DialogTitle className="font-semibold text-xl">{t("confirmTitle")}</DialogTitle>
                 <DialogDescription className="text-muted-foreground text-sm">
-                  Vous ne pourrez plus y choisir de CV dans « Analyse de CV ». Les analyses déjà faites sont conservées, et vous
-                  pourrez la reconnecter à tout moment.
+                  {t("confirmText")}
                 </DialogDescription>
               </div>
               <div className="flex gap-2">
@@ -129,7 +131,7 @@ export function OrganisationMailboxes() {
                   onClick={() => setConfirm(null)}
                   className="h-12 flex-1 rounded-full bg-page font-medium hover:bg-page/70 disabled:opacity-50"
                 >
-                  Annuler
+                  {t("cancel")}
                 </button>
                 <button
                   type="button"
@@ -138,7 +140,7 @@ export function OrganisationMailboxes() {
                   className="inline-flex h-12 flex-[1.4] items-center justify-center gap-2 rounded-full bg-destructive font-medium text-white hover:bg-destructive/90 disabled:opacity-60"
                 >
                   {disconnect.isPending && <Loader className="size-4 animate-spin" />}
-                  Déconnecter
+                  {t("disconnect")}
                 </button>
               </div>
             </div>

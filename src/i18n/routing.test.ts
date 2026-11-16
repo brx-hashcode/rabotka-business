@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { LOCALES } from "./config";
-import { localizedPath, pickFromAcceptLanguage, preferredLocale, stripLocalePrefix } from "./routing";
+import { localHref, localizedPath, pickFromAcceptLanguage, preferredLocale, stripLocalePrefix } from "./routing";
 
 const BOTH = LOCALES;
 const FRENCH_ONLY = ["fr"] as const;
@@ -55,5 +55,19 @@ describe("preferredLocale", () => {
 
   it("offers no English while it is not live", () => {
     expect(preferredLocale("en", "en-US", FRENCH_ONLY)).toBe("fr");
+  });
+});
+
+describe("localHref", () => {
+  it("puts the public site's links at their English URL", () => {
+    expect(localHref("/contact", "en")).toBe("/en/contact");
+    expect(localHref("/#faq", "en")).toBe("/en#faq");
+    expect(localHref("/fonctionnalites/analyse-cv?x=1", "en")).toBe("/en/fonctionnalites/analyse-cv?x=1");
+  });
+
+  it("leaves the rest alone", () => {
+    expect(localHref("/auth/sign-in", "en")).toBe("/auth/sign-in");
+    expect(localHref("https://www.rabotka.work", "en")).toBe("https://www.rabotka.work");
+    expect(localHref("/contact", "fr")).toBe("/contact");
   });
 });

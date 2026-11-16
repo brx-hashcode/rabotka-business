@@ -4,13 +4,14 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { ActionDialog } from "#/components/action-dialog";
 import { showApplicationStatus, showExternalStatus } from "#/features/offers/application-cache";
 import { externalApplicationsKey } from "#/lib/api/careers-controller";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { offersKey, refuseApplications } from "#/lib/api/offer-controller";
-import { REFUSAL_TEMPLATES, RefusalMessageField } from "./refusal-message";
+import { RefusalMessageField, useDefaultRefusals } from "./refusal-message";
 
 /** « Refuser la sélection » / « Refuser les autres candidatures »: one message for all. */
 export function BulkRefuseDialog({
@@ -33,7 +34,10 @@ export function BulkRefuseDialog({
   onDone: () => void;
 }>) {
   const queryClient = useQueryClient();
-  const [message, setMessage] = useState<string>(mode === "remaining" ? REFUSAL_TEMPLATES[0].text : "");
+  const t = useTranslations("offers.refusal");
+  const friendlyError = useFriendlyError();
+  const firstTemplate = useDefaultRefusals()[0].text;
+  const [message, setMessage] = useState<string>(mode === "remaining" ? firstTemplate : "");
   const refuse = useMutation({
     // One request for both kinds: the server refuses the careers-page
     // candidates too, each the usual way, and counts those no longer waiting.
@@ -50,10 +54,9 @@ export function BulkRefuseDialog({
       void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
       void queryClient.invalidateQueries({ queryKey: ["business", "me", "stats"] });
       toast.success(
-        `${refused === 1 ? "1 candidature refusée" : `${refused} candidatures refusées`}, les candidats en sont prévenus.` +
-          (skipped ? ` ${skipped} n'étai${skipped > 1 ? "ent" : "t"} plus en attente.` : ""),
+        t("refused", { count: refused }) + (skipped ? t("skipped", { count: skipped }) : ""),
       );
-      if (failed) toast.error(`${failed} n'${failed > 1 ? "ont" : "a"} pas pu être refusée${failed > 1 ? "s" : ""} : réessayez.`);
+      if (failed) toast.error(t("failed", { count: failed }));
       onDone();
       onClose();
     },
@@ -71,7 +74,7 @@ export function BulkRefuseDialog({
       ctx?.undo();
       void queryClient.invalidateQueries({ queryKey: offersKey });
       void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
-      toast.error(friendlyError(err, "Les candidatures n'ont pas pu être refusées."));
+      toast.error(friendlyError(err, t("error")));
     },
   });
   return (
@@ -79,19 +82,15 @@ export function BulkRefuseDialog({
       open={mode !== null}
       onOpenChange={(o) => {
         if (!o) onClose();
-        else setMessage(mode === "remaining" ? REFUSAL_TEMPLATES[0].text : "");
+        else setMessage(mode === "remaining" ? firstTemplate : "");
       }}
       tone="warning"
       icon={<IconX className="size-5" />}
       title={
-        mode === "remaining"
-          ? `Refuser les ${count} autres candidatures ?`
-          : count === 1
-            ? "Refuser la candidature sélectionnée ?"
-            : `Refuser les ${count} candidatures sélectionnées ?`
+        mode === "remaining" ? t("remainingTitle", { count }) : count === 1 ? t("oneTitle") : t("selectedTitle", { count })
       }
-      description="Chaque candidat est prévenu, avec ce message."
-      confirmLabel="Refuser"
+      description={t("text")}
+      confirmLabel={t("confirm")}
       pending={refuse.isPending}
       onConfirm={() => refuse.mutate()}
     >

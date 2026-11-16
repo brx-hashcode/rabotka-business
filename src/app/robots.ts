@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 
+import { OFFERED_LOCALES } from "#/i18n/config";
+import { localizedPath } from "#/i18n/routing";
 import { MARKETING_PATHS } from "#/lib/seo/marketing";
 import { siteOrigin } from "#/lib/seo/site";
 
@@ -19,6 +21,9 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
       allow: [
         "/$",
         ...MARKETING_PATHS.filter((p) => p !== "/"),
+        // The same pages in English, once offered: the sitemap and hreflang
+        // send crawlers to /en/…, which nothing above lets them read.
+        ...(OFFERED_LOCALES.includes("en") ? ["/en$", ...MARKETING_PATHS.filter((p) => p !== "/").map((p) => localizedPath(p, "en"))] : []),
         "/carrieres",
         "/sitemap.xml",
         "/_next/",

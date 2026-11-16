@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -11,7 +12,8 @@ import { ActionDialog } from "#/components/action-dialog";
 import { BusinessLockup } from "#/components/business-lockup";
 import { Bone } from "#/components/page-skeletons";
 import { Button } from "#/components/ui/button";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { endInterview, interviewReportKey, interviewsKey, joinVisioAsGuest, joinVisioAsHost, markCallStarted } from "#/lib/api/interview-controller";
 import type { VisioJoin } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
@@ -27,8 +29,8 @@ const SCREEN_MIN = "min-h-[calc(100dvh-env(safe-area-inset-top))]";
 
 const visioLink = (room: string) => `${window.location.origin}/visio/${encodeURIComponent(room)}`;
 
-const when = (iso: string) =>
-  new Date(iso).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+const when = (iso: string, locale: Locale) =>
+  new Date(iso).toLocaleString(INTL_LOCALE[locale], { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
 
 
 const TOOLBAR = [
@@ -100,6 +102,10 @@ function Call({
   onGone: () => void;
   onApi?: (api: CallApi) => void;
 }>) {
+  // Jitsi's own buttons speak the page's language; the transcription is in the
+  // interview's (the job's), the same for the recruiter and the candidate; when
+  // the job does not tell (or an older server), the language this page is read in.
+  const locale = useLocale() as Locale;
   // Hidden by the page (« Terminer », a click outside Jitsi): gone at the latest after the grace.
   useEffect(() => {
     if (!hidden) return;
@@ -137,9 +143,10 @@ function Call({
       domain={v.domain}
       roomName={v.roomName}
       jwt={v.jwt}
-      lang="fr"
+      lang={locale}
       configOverwrite={{
         subject: v.jobTitle,
+        transcription: { useAppLanguage: false, preferredLanguage: INTL_LOCALE[v.language ?? locale] },
         prejoinConfig: { enabled: true, hideExtraJoinButtons: ["no-audio", "by-phone"] },
         toolbarButtons: TOOLBAR,
         recordings: { showPrejoinWarning: false },
@@ -183,6 +190,7 @@ function Notice({
   onEnd,
   ended = false,
 }: Readonly<{ v: VisioJoin; onRejoin: () => void; onReport?: () => void; onEnd?: () => void; ended?: boolean }>) {
+  const tv = useTranslations("interviews.visio");
   return (
     <div className="flex size-full items-center justify-center p-6">
       <div className="w-full max-w-sm space-y-5 text-center">
@@ -191,33 +199,33 @@ function Notice({
         </span>
         {v.provider === "jitsi" ? (
           <>
-            <p className="text-muted-foreground text-sm">La visio s&apos;ouvre dans un nouvel onglet.</p>
+            <p className="text-muted-foreground text-sm">{tv("newTab")}</p>
             <Button className="w-full rounded-full" render={<a href={v.url} target="_blank" rel="noreferrer" />}>
-              Rejoindre la visio
+              {tv("join")}
               <IconExternalLink className="size-4" />
             </Button>
           </>
         ) : (
           <>
             <div className="space-y-1">
-              <p className="font-medium">{ended ? "Entretien terminé." : "Vous avez quitté la visio."}</p>
-              {ended && <p className="text-muted-foreground text-sm">Son lien n&apos;ouvre plus la visio.</p>}
+              <p className="font-medium">{ended ? tv("ended") : tv("left")}</p>
+              {ended && <p className="text-muted-foreground text-sm">{tv("linkClosed")}</p>}
             </div>
             {onReport && (
               <Button className="w-full rounded-full" onClick={onReport}>
                 <IconFileText className="size-4" />
-                Ouvrir le compte rendu
+                {tv("openReport")}
               </Button>
             )}
             {!ended && (
               <Button variant="ghost" className="w-full rounded-full bg-page" onClick={onRejoin}>
-                Revenir dans la visio
+                {tv("rejoin")}
               </Button>
             )}
             {!ended && onEnd && (
               <Button variant="ghost" className="w-full rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={onEnd}>
                 <IconPlayerStop className="size-4" />
-                Terminer l&apos;entretien
+                {tv("end")}
               </Button>
             )}
           </>
@@ -262,19 +270,21 @@ function HostCallArea({
   onReport: () => void;
   onEnd: () => void;
 }>) {
+  const tv = useTranslations("interviews.visio");
+  const friendlyError = useFriendlyError();
   if (loading) return <Bone className="size-full rounded-none" />;
 
   if (!v) {
     return (
       <div className="flex size-full items-center justify-center p-6">
         <div className="max-w-sm space-y-2 text-center">
-          <p className="font-semibold">Visio indisponible</p>
+          <p className="font-semibold">{tv("unavailable")}</p>
           <p className="text-muted-foreground text-sm">
-            {friendlyError(error, "Cette visio n'appartient pas à un entretien de votre organisation.")}
+            {friendlyError(error, tv("notYours"))}
           </p>
           {canJoinAsGuest && (
             <Link href={`/visio/${encodeURIComponent(room)}?invite=1`} className="inline-block pt-2 font-medium text-sm underline underline-offset-2">
-              Rejoindre en invité
+              {tv("joinAsGuest")}
             </Link>
           )}
         </div>
@@ -313,6 +323,9 @@ function HostCallArea({
 }
 
 export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
+  const tv = useTranslations("interviews.visio");
+  const locale = useLocale() as Locale;
+  const friendlyError = useFriendlyError();
   const [left, setLeft] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const query = useQuery(visioQuery(room, true));
@@ -350,7 +363,7 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
     onError: (err) => {
       // Not recorded as ended: « Rejoindre » and « Terminer » stay offered.
       setEndedNow(false);
-      toast.error(friendlyError(err, "L'entretien n'a pas pu être terminé."));
+      toast.error(friendlyError(err, tv("endFailed")));
     },
   });
   const rejoin = () => {
@@ -367,7 +380,7 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
           variant="ghost"
           size="icon"
           className="shrink-0 rounded-full bg-card"
-          aria-label="Retour aux entretiens"
+          aria-label={tv("back")}
           render={<Link href="/espace/entretiens" />}
         >
           <IconArrowLeft className="size-4" />
@@ -375,28 +388,28 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
         <div className="min-w-0">
           {v ? (
             <>
-              <h1 className="truncate font-semibold text-lg leading-tight">Entretien avec {v.candidateName}</h1>
+              <h1 className="truncate font-semibold text-lg leading-tight">{tv("with", { name: v.candidateName })}</h1>
               <p className="truncate text-muted-foreground text-sm">
-                {v.jobTitle} · {when(v.startsAt)} · {v.durationMinutes} min
+                {v.jobTitle} · {when(v.startsAt, locale)} · {v.durationMinutes} min
               </p>
             </>
           ) : (
-            <h1 className="font-semibold text-lg">Visio</h1>
+            <h1 className="font-semibold text-lg">{tv("title")}</h1>
           )}
         </div>
         {v?.interviewId && !ended && (
           <div className="ml-auto flex min-w-0 items-center gap-2">
-            <span title={videoPlan.allowed ? "Partager la visio" : "Partager la visio : inclus dans les formules supérieures"}>
+            <span title={videoPlan.allowed ? tv("share") : tv("shareLocked")}>
               <Button
                 type="button"
                 variant="ghost"
                 className="h-10 shrink-0 rounded-full bg-card px-4 text-sm sm:h-10"
-                aria-label="Partager la visio"
+                aria-label={tv("share")}
                 disabled={!videoPlan.allowed}
                 onClick={() => setSharing(true)}
               >
                 {videoPlan.allowed ? <IconUserPlus className="size-4" /> : <IconLock className="size-4" />}
-                <span className="hidden lg:inline">Partager</span>
+                <span className="hidden lg:inline">{tv("shareShort")}</span>
               </Button>
             </span>
             {v.provider === "hosted" && !left && (
@@ -407,7 +420,7 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
                 onClick={() => setConfirmEnd(true)}
               >
                 <IconPlayerStop className="size-4" />
-                <span className="hidden lg:inline">Terminer</span>
+                <span className="hidden lg:inline">{tv("endShort")}</span>
               </Button>
             )}
           </div>
@@ -416,7 +429,7 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
         {v?.interviewId && !ended && (
           <Button type="button" className="h-10 shrink-0 rounded-full px-4 text-sm" onClick={() => setReportOpen(true)}>
             <IconNotes className="size-4" />
-            Notes et compte rendu
+            {tv("notes")}
           </Button>
         )}
       </div>
@@ -460,9 +473,9 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
         open={confirmEnd}
         onOpenChange={setConfirmEnd}
         tone="warning"
-        title="Terminer l'entretien ?"
-        description="La visio se ferme pour tout le monde : son lien ne l'ouvrira plus, et la transcription s'arrête. Le compte rendu s'ouvre ensuite."
-        confirmLabel="Terminer l'entretien"
+        title={tv("endTitle")}
+        description={tv("endText")}
+        confirmLabel={tv("end")}
         onConfirm={() => end.mutate()}
         pending={end.isPending}
       />
@@ -485,6 +498,9 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
  * invitation, or someone the business invited by their personal link.
  */
 export function VisioPage({ room, guestToken }: Readonly<{ room: string; guestToken?: string }>) {
+  const tv = useTranslations("interviews.visio");
+  const locale = useLocale() as Locale;
+  const friendlyError = useFriendlyError();
   const [left, setLeft] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const query = useQuery(visioQuery(room, false, guestToken));
@@ -518,7 +534,7 @@ export function VisioPage({ room, guestToken }: Readonly<{ room: string; guestTo
           <div className="min-w-0">
             <p className="truncate font-semibold text-sm">{v.jobTitle}</p>
             <p className="truncate text-muted-foreground text-xs">
-              {v.businessName} · {when(v.startsAt)}
+              {v.businessName} · {when(v.startsAt, locale)}
             </p>
           </div>
           <span className="hidden shrink-0 sm:block">
@@ -542,7 +558,7 @@ export function VisioPage({ room, guestToken }: Readonly<{ room: string; guestTo
                     <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive/60" />
                     <span className="relative inline-flex size-2 rounded-full bg-destructive" />
                   </span>
-                  <span>Entretien transcrit pour le compte rendu</span>
+                  <span>{tv("transcribed")}</span>
                 </span>
               </div>
             )}
@@ -569,9 +585,9 @@ export function VisioPage({ room, guestToken }: Readonly<{ room: string; guestTo
           )}
           {!query.isLoading && !v && (
             <div className="space-y-2">
-              <h1 className="font-semibold text-lg">Visio indisponible</h1>
+              <h1 className="font-semibold text-lg">{tv("unavailable")}</h1>
               <p className="text-muted-foreground text-sm">
-                {friendlyError(query.error, "Ce lien de visio n'est plus valable. Utilisez le dernier e-mail reçu.")}
+                {friendlyError(query.error, tv("invalidLink"))}
               </p>
             </div>
           )}
@@ -580,7 +596,7 @@ export function VisioPage({ room, guestToken }: Readonly<{ room: string; guestTo
               <div className="space-y-1">
                 <h1 className="font-semibold text-lg">{v.jobTitle}</h1>
                 <p className="text-muted-foreground text-sm">
-                  {v.businessName} · {when(v.startsAt)}
+                  {v.businessName} · {when(v.startsAt, locale)}
                 </p>
               </div>
               {closed ? (
@@ -592,7 +608,7 @@ export function VisioPage({ room, guestToken }: Readonly<{ room: string; guestTo
                     // Asked again: an interview ended by the business no longer opens.
                     void query.refetch().then((r) => {
                       if (r.isError) {
-                        setClosed(friendlyError(r.error, "Cet entretien est terminé."));
+                        setClosed(friendlyError(r.error, tv("over")));
                         return;
                       }
                       setAttempt((n) => n + 1);

@@ -1,0 +1,139 @@
+{
+  "title": "Dashboard",
+  "greeting": "{named, select, yes {Hello {firstName}, here is how} other {Here is how}} {hasBusiness, select, yes {hiring at {business} has gone} other {your hiring has gone}} over the last {days} days.",
+  "period": "Period",
+  "days": "{days} days",
+  "report": {
+    "title": "Hiring report",
+    "subtitle": "{name} · last {days} days",
+    "yourOrganisation": "Your organisation",
+    "fileName": "hiring-report-{days}-days.pdf",
+    "unavailable": "The report could not be created. Try again in a moment."
+  },
+  "tiles": {
+    "received": "Applications received",
+    "toReview": "To review",
+    "overdue": "including {count} waiting for more than 48 h",
+    "recent": "all received less than 48 h ago",
+    "noneWaiting": "no application waiting",
+    "hires": "Candidates hired",
+    "openPositions": "Open positions",
+    "onOffers": "across {count, plural, one {# live job} other {# live jobs}}"
+  },
+  "trend": "vs the previous {days} days",
+  "trendStable": "stable",
+  "unavailable": "This information is unavailable right now. Try again in a moment.",
+  "perDay": {
+    "title": "Applications per day",
+    "perOffer": "{n} per job on average",
+    "less": "Less",
+    "more": "More",
+    "caption": "Applications and hires per day",
+    "day": "Day",
+    "applications": "Applications",
+    "hires": "Hired",
+    "applicationsCount": "{count, plural, one {# application} other {# applications}}",
+    "hiresCount": "{count, plural, one {# hired} other {# hired}}"
+  },
+  "funnel": {
+    "title": "Where your applications stand",
+    "received": "Received",
+    "viewed": "Viewed",
+    "hired": "Hired",
+    "started": "Mission started",
+    "completed": "Mission completed",
+    "empty": "No applications received in this period.",
+    "note": "Applications received in the period, and how far they went."
+  },
+  "delays": {
+    "title": "Timing",
+    "firstApplicant": "First candidate",
+    "firstApplicantHint": "after a job is published",
+    "response": "Response time",
+    "responseHint": "before opening or replying",
+    "hire": "Time to hire",
+    "hireHint": "from publication to hire",
+    "note": "Average over the period, compared with the previous one.",
+    "underHour": "< 1 h",
+    "hours": "{n} h",
+    "days": "{n, plural, one {# day} other {# days}}"
+  },
+  "results": {
+    "title": "Results",
+    "filled": "Positions filled",
+    "filledHint": "{filled, plural, one {# position filled} other {# positions filled}} out of {proposed}",
+    "noShows": "No-shows",
+    "noShowsHint": "out of {count, plural, one {# completed mission} other {# completed missions}}",
+    "noMissionEnded": "no completed mission",
+    "ratingGiven": "Rating given",
+    "ratingGivenHint": "average of your {count, plural, one {# review} other {# reviews}}",
+    "ratingReceived": "Rating received",
+    "ratingReceivedHint": "{count, plural, one {# review} other {# reviews}} from candidates"
+  },
+  "subscription": {
+    "title": "Subscription",
+    "none": "No current plan: you pay for each contact and you can't publish jobs.",
+    "choose": "Choose a plan",
+    "manage": "Manage",
+    "trial": "Trial",
+    "active": "Active",
+    "trialUntil": "Trial until <strong>{date}</strong>",
+    "until": "Until <strong>{date}</strong>",
+    "contacts": "Contacts included",
+    "offers": "Jobs published",
+    "cvs": "CVs included",
+    "unlocked": "{count, plural, one {# contact obtained} other {# contacts obtained}} over the last {days} days.",
+    "daysLeftLabel": "{left, plural, one {# day left} other {# days left}} out of {total}",
+    "daysLeft": "{left, plural, one {day<br></br>left} other {days<br></br>left}}",
+    "unlimited": "unlimited",
+    "overContacts": "{used} contacts for {limit, plural, one {# included} other {# included}}: change plan to go beyond.",
+    "overOffers": "{used} jobs for {limit, plural, one {# included} other {# included}}: change plan to go beyond.",
+    "overCvs": "{used} CVs for {limit, plural, one {# included} other {# included}}: change plan to go beyond."
+  },
+  "offers": {
+    "title": "Jobs to follow",
+    "all": "All jobs",
+    "empty": "You haven't published any jobs yet.",
+    "publish": "Publish a job",
+    "applications": "{count, plural, one {# application} other {# applications}}",
+    "filled": "{filled}/{quantity, plural, one {# position filled} other {# positions filled}}",
+    "toReview": "{count} to review",
+    "upToDate": "Up to date"
+  },
+  "categories": {
+    "title": "Most requested trades",
+    "note": "Applications received in the period, by the job's trade."
+  },
+  "sources": {
+    "title": "Sources",
+    "hired": "{count, plural, one {# hired} other {# hired}}",
+    "note": "Where the period's applications come from."
+  },
+  "nextSteps": {
+    "title": "Next steps",
+    "done": "{done}/{total} done",
+    "logo": "Add your organisation's logo",
+    "documents": "Get your documents accepted",
+    "verified": "Get your organisation verified",
+    "plan": "Choose a plan",
+    "firstOffer": "Publish your first job"
+  },
+  "export": {
+    "pending": "Exporting…",
+    "button": "Export",
+    "failed": "The export could not be created. Try again in a moment.",
+    "pdf": "PDF report",
+    "pdfHint": "To read, print or send",
+    "xlsx": "Excel (.xlsx)",
+    "xlsxHint": "One sheet per section, every job",
+    "csv": "CSV",
+    "csvHint": "The same figures, for any other tool",
+    "hr": "HR exports",
+    "staffRegister": "Staff register",
+    "staffRegisterHint": "The people hired, in Excel",
+    "acpe": "Jobs to declare (ACPE)",
+    "acpeHint": "All your jobs, ready to declare",
+    "higherPlans": "Included in higher plans",
+    "sheetFile": "recruitment-report.{ext}"
+  }
+}

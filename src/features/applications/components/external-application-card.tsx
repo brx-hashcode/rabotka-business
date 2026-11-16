@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -29,18 +30,16 @@ import { cvScreeningsKey, getCvScreening } from "#/lib/api/cv-screening-controll
 import { sourceLabel } from "#/features/careers/candidate-source";
 import { showExternalStatus } from "#/features/offers/application-cache";
 import { useConfirmedShortlist } from "#/features/offers/use-shortlist";
-import { APPLICATION_STATUS, statusClass, type ApplicationStage } from "#/features/offers/offer-labels";
+import { applicationStatusLabel, statusClass, type ApplicationStage } from "#/features/offers/offer-labels";
 import { DescriptionText } from "#/features/careers/components/description-text";
 import { canSchedule } from "#/features/applications/can-schedule";
 import { downloadFile } from "#/lib/api/download";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { cn, getInitials } from "#/lib/utils";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
 import { TeamOpinionButton } from "#/features/team/components/team-opinion";
 import type { Verdict } from "#/lib/api/candidate-notes-controller";
-
-const YES_NO: Record<string, string> = { yes: "Oui", no: "Non" };
 
 /** The analysis has more to show than its score and summary. */
 export function hasInsight(a: CvAnalysis) {
@@ -84,6 +83,9 @@ export function ExternalApplicationCard({
   /** The analysis and answers shown from the start (the board's window). */
   detailsOpen?: boolean;
 }>) {
+  const tLabels = useTranslations("labels");
+  const t = useTranslations("offers.candidate");
+  const friendlyError = useFriendlyError();
   const queryClient = useQueryClient();
   const name = `${a.firstName} ${a.lastName}`;
   // Deciding is for those who hire; an Évaluateur reads and gives its opinion.
@@ -121,19 +123,19 @@ export function ExternalApplicationCard({
       ? [
           {
             key: "cv",
-            label: canShow ? "CV du candidat" : "Télécharger le CV du candidat",
+            label: canShow ? t("cv") : t("downloadCv"),
             icon: canShow ? IconFileText : IconDownload,
             onSelect: () => (canShow ? setReading(true) : void saveCv()),
           },
         ]
       : []),
-    { key: "opinion", label: opinionLabel(opinions), icon: IconUsers, onSelect: () => setOpinionOpen(true) },
+    { key: "opinion", label: opinionLabel(opinions, t), icon: IconUsers, onSelect: () => setOpinionOpen(true) },
     // The business's own step before deciding; the candidate is not told.
     ...(hire && a.status === "PENDING" && recruiting(a)
       ? [
           {
             key: "shortlist",
-            label: a.shortlistedAt ? "Retirer de la présélection" : "Présélectionner",
+            label: a.shortlistedAt ? t("unshortlist") : t("shortlist"),
             icon: a.shortlistedAt ? IconStarOff : IconStar,
             onSelect: () => shortlist.ask({ targets: { rabotka: [], external: [a.id] }, shortlisted: !a.shortlistedAt, who: name }),
             disabled: shortlist.isPending,
@@ -142,11 +144,11 @@ export function ExternalApplicationCard({
       : []),
     // With or without a CV analysis: the address they applied with is enough.
     ...(hire && canSchedule(a)
-      ? [{ key: "interview", label: "Planifier un entretien", icon: IconCalendarPlus, onSelect: () => setScheduling(true) }]
+      ? [{ key: "interview", label: t("schedule"), icon: IconCalendarPlus, onSelect: () => setScheduling(true) }]
       : []),
     // A mistaken « Retenir », or a candidate who fell through: the post is freed.
     ...(hire && a.status === "RETAINED"
-      ? [{ key: "unretain", label: "Annuler « retenu »", icon: IconArrowBackUp, onSelect: () => setUnretaining(true) }]
+      ? [{ key: "unretain", label: t("unretain"), icon: IconArrowBackUp, onSelect: () => setUnretaining(true) }]
       : []),
   ];
 
@@ -167,9 +169,9 @@ export function ExternalApplicationCard({
     onMutate: decide("REFUSED", () => setRefusing(false)),
     onSuccess: () => {
       refreshList();
-      toast.success(`${name} est prévenu par e-mail.`);
+      toast.success(t("notified", { name }));
     },
-    onError: failed("Le refus n'a pas pu être envoyé."),
+    onError: failed(t("refuseFailed")),
   });
 
   const analyse = useMutation({
@@ -178,7 +180,7 @@ export function ExternalApplicationCard({
       refreshList();
       setAnalysing(false);
     },
-    onError: (err) => toast.error(friendlyError(err, "Ce CV n'a pas pu être analysé.")),
+    onError: (err) => toast.error(friendlyError(err, t("analyseFailed"))),
   });
 
   const retain = useMutation({
@@ -186,9 +188,9 @@ export function ExternalApplicationCard({
     onMutate: decide("RETAINED", () => setRetaining(false)),
     onSuccess: () => {
       refreshList();
-      toast.success(`${name} est prévenu par e-mail.`);
+      toast.success(t("notified", { name }));
     },
-    onError: failed("La candidature n'a pas pu être retenue."),
+    onError: failed(t("retainFailed")),
   });
 
   const unretain = useMutation({
@@ -196,9 +198,9 @@ export function ExternalApplicationCard({
     onMutate: decide("PENDING", () => setUnretaining(false)),
     onSuccess: () => {
       refreshList();
-      toast.success("Décision annulée : la personne est prévenue par e-mail.");
+      toast.success(t("unretained"));
     },
-    onError: failed("La décision n'a pas pu être annulée."),
+    onError: failed(t("unretainFailed")),
   });
 
   async function saveCv() {
@@ -206,7 +208,7 @@ export function ExternalApplicationCard({
       await downloadFile(cvUrl, a.cvFileName);
       refreshList();
     } catch (err) {
-      toast.error(friendlyError(err, "Ce CV n'a pas pu être ouvert."));
+      toast.error(friendlyError(err, t("openFailed")));
     }
   }
 
@@ -223,7 +225,7 @@ export function ExternalApplicationCard({
               checked={compare.selected}
               disabled={compare.disabled}
               onCheckedChange={compare.onToggle}
-              aria-label={`Comparer ${name}`}
+              aria-label={t("compareAria", { name })}
               className="size-5 rounded-md"
             />
           </label>
@@ -239,25 +241,25 @@ export function ExternalApplicationCard({
           <p className="truncate font-semibold">{name}</p>
           <p className="mt-1 flex flex-wrap gap-1.5">
             {score !== null && <VerdictChip score={score} />}
-            <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px]">Page carrières</span>
+            <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px]">{t("careersPage")}</span>
             {a.source && a.source !== "direct" && (
-              <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px] text-muted-foreground">via {sourceLabel(a.source)}</span>
+              <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px] text-muted-foreground">{t("via", { source: sourceLabel(a.source, tLabels) })}</span>
             )}
           </p>
-          {a.analysis?.status === "QUEUED" && <p className="mt-1 text-muted-foreground text-xs">Analyse du CV en cours…</p>}
+          {a.analysis?.status === "QUEUED" && <p className="mt-1 text-muted-foreground text-xs">{t("analysing")}</p>}
           {a.analysis && a.analysis.status !== "QUEUED" && score === null && (
-            <p className="mt-1 text-muted-foreground text-xs">Ce CV n&apos;a pas pu être lu.</p>
+            <p className="mt-1 text-muted-foreground text-xs">{t("unreadable")}</p>
           )}
         </div>
         {/* Where it stands, in the words and colours of a Rabotka applicant's card. */}
         <span className={cn("shrink-0 rounded-full px-2.5 py-1 font-medium text-xs", statusClass(STAGE_STATUS[externalStage(a)]))}>
-          {APPLICATION_STATUS[STAGE_STATUS[externalStage(a)]]}
+          {applicationStatusLabel(STAGE_STATUS[externalStage(a)], tLabels)}
         </span>
       </div>
 
       {!onOfferPage && (
         <Link href={`/espace/offres/${a.offer.id}`} className="group space-y-0.5 rounded-2xl bg-card p-3">
-          <span className="block text-muted-foreground text-[11px] uppercase tracking-wide">Pour l&apos;offre</span>
+          <span className="block text-muted-foreground text-[11px] uppercase tracking-wide">{t("forOffer")}</span>
           <span className="line-clamp-1 font-medium text-sm group-hover:underline">{a.offer.title}</span>
         </Link>
       )}
@@ -278,7 +280,7 @@ export function ExternalApplicationCard({
       {a.knockedOut && (
         <p className="flex items-center gap-1.5 text-chip-amber-foreground text-xs">
           <IconAlertTriangle className="size-3.5 shrink-0" />
-          Ne remplit pas un critère éliminatoire
+          {t("knockedOut")}
         </p>
       )}
 
@@ -291,7 +293,7 @@ export function ExternalApplicationCard({
             onClick={() => setShowDetails(!showDetails)}
             className="mr-auto inline-flex h-10 shrink-0 items-center gap-1 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70"
           >
-            {detailsLabel(insight, a.answers.length > 0)}
+            {detailsLabel(insight, a.answers.length > 0, t)}
             <IconChevronDown className={cn("size-4 transition-transform", showDetails && "rotate-180")} />
           </button>
         )}
@@ -301,7 +303,7 @@ export function ExternalApplicationCard({
             onClick={() => setAnalysing(true)}
             className="inline-flex h-10 shrink-0 items-center rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70"
           >
-            Analyser le CV
+            {t("analyse")}
           </button>
         )}
         {score !== null && (
@@ -311,7 +313,7 @@ export function ExternalApplicationCard({
             onClick={() => setChatting(true)}
             className="inline-flex h-10 shrink-0 items-center rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm disabled:opacity-60"
           >
-            Interroger le CV
+            {t("ask")}
           </button>
         )}
         {hire && a.status === "PENDING" && (
@@ -322,7 +324,7 @@ export function ExternalApplicationCard({
               className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70"
             >
               <IconX className="size-4" />
-              Refuser
+              {t("refuse")}
             </button>
             {recruiting(a) && (
               <button
@@ -331,7 +333,7 @@ export function ExternalApplicationCard({
                 className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-ink px-4 font-medium text-sm text-white"
               >
                 <IconCheck className="size-4" />
-                Retenir
+                {t("retain")}
               </button>
             )}
           </>
@@ -350,12 +352,12 @@ export function ExternalApplicationCard({
 
       {showDetails && a.answers.length > 0 && (
         <dl className="space-y-2 rounded-2xl bg-card p-4 text-sm">
-          <p className="font-medium text-sm">Réponses aux questions</p>
+          <p className="font-medium text-sm">{t("answers")}</p>
           {a.answers.map((answer) => (
             <div key={answer.label}>
               <dt className="text-muted-foreground">{answer.label}</dt>
               <dd className="font-medium">
-                <DescriptionText text={YES_NO[answer.value] ?? answer.value} />
+                <DescriptionText text={answer.value === "yes" ? t("yes") : answer.value === "no" ? t("no") : answer.value} />
               </dd>
             </div>
           ))}
@@ -366,7 +368,7 @@ export function ExternalApplicationCard({
           strengths={a.analysis.strengths ?? []}
           gaps={a.analysis.gaps ?? []}
           criteria={CRITERIA.filter((k) => typeof a.analysis?.criteria?.[k.key] === "number").map((k) => ({
-            label: k.label,
+            label: tLabels(`criterion.${k.key}`),
             value: a.analysis?.criteria?.[k.key] ?? 0,
           }))}
         />
@@ -385,15 +387,15 @@ export function ExternalApplicationCard({
         src={cvUrl}
         kind={previewKind ?? "pdf"}
         fileName={a.cvFileName}
-        unavailable="Ce CV n'est plus disponible."
+        unavailable={t("cvGone")}
       />
 
       <ActionDialog
         open={analysing}
         onOpenChange={setAnalysing}
-        title={`Analyser le CV de ${name} ?`}
-        description="Son CV est lu et noté pour cette offre. Cela utilise 1 CV inclus de votre formule."
-        confirmLabel="Analyser"
+        title={t("analyseTitle", { name })}
+        description={t("analyseText")}
+        confirmLabel={t("analyseConfirm")}
         pending={analyse.isPending}
         onConfirm={() => analyse.mutate()}
       />
@@ -424,9 +426,9 @@ export function ExternalApplicationCard({
       <ActionDialog
         open={retaining}
         onOpenChange={setRetaining}
-        title={`Retenir ${name} ?`}
-        description="La personne est prévenue par e-mail, et compte dans vos postes pourvus."
-        confirmLabel="Retenir"
+        title={t("retainTitle", { name })}
+        description={t("retainText")}
+        confirmLabel={t("retain")}
         pending={retain.isPending}
         onConfirm={() => retain.mutate()}
       />
@@ -434,9 +436,9 @@ export function ExternalApplicationCard({
       <ActionDialog
         open={unretaining}
         onOpenChange={setUnretaining}
-        title={`Ne plus retenir ${name} ?`}
-        description="Le poste est libéré et l'offre recrute de nouveau. La personne est prévenue par e-mail que sa candidature reste à l'étude."
-        confirmLabel="Ne plus retenir"
+        title={t("unretainTitle", { name })}
+        description={t("unretainText")}
+        confirmLabel={t("unretainConfirm")}
         tone="warning"
         pending={unretain.isPending}
         onConfirm={() => unretain.mutate()}
@@ -445,14 +447,14 @@ export function ExternalApplicationCard({
       <ActionDialog
         open={refusing}
         onOpenChange={setRefusing}
-        title={`Refuser ${name} ?`}
-        description="La personne est prévenue par e-mail."
-        confirmLabel="Refuser"
+        title={t("refuseTitle", { name })}
+        description={t("refuseText")}
+        confirmLabel={t("refuse")}
         tone="warning"
         pending={refuse.isPending}
         onConfirm={() => refuse.mutate()}
       >
-        <Textarea value={message} maxLength={500} onChange={(e) => setMessage(e.target.value)} placeholder="Un mot pour la personne (facultatif)" className="rounded-xl border-0 bg-page shadow-none" />
+        <Textarea value={message} maxLength={500} onChange={(e) => setMessage(e.target.value)} placeholder={t("refuseNote")} className="rounded-xl border-0 bg-page shadow-none" />
       </ActionDialog>
     </li>
   );

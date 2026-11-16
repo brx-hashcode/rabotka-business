@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { trialLocks } from "#/features/subscription/trial-lock";
 import { cvOutOfReach } from "#/features/subscription/packs";
 import { usePackOnSale } from "#/features/subscription/use-packs";
@@ -30,11 +31,12 @@ import { Textarea } from "#/components/ui/textarea";
 import { Combobox } from "#/features/sign-up/components/combobox";
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
 import { addCvScreeningFiles, CV_ACCEPT, createCvScreening, cvScreeningsKey } from "#/lib/api/cv-screening-controller";
-import { friendlyError } from "#/lib/api/friendly-error";
+import type { Locale } from "#/i18n/config";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { listOffers, offersKey } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
 import { kindFromName, pickKey, type MailPick } from "../mail-picks";
-import { refusedLines } from "../refused-files";
+import { refusedLines, type RefusedFile } from "../refused-files";
 import { CHUNK_MAX_FILES, chunkCvBatch, mailRefs, sendRest } from "../send-cv-batch";
 import { CvLocked, CvUsedUp, fileSize } from "./cv-bits";
 import { MailImport } from "./mail-import";
@@ -68,6 +70,9 @@ const KIND = {
  */
 export function NewCvScreeningPage() {
   const router = useRouter();
+  const t = useTranslations("cv.new");
+  const tRefused = useTranslations("cv.refused");
+  const friendlyError = useFriendlyError();
   const queryClient = useQueryClient();
   const subscription = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   const offers = useQuery({ queryKey: [...offersKey, "cv-picker"], queryFn: () => listOffers({ pageSize: 100 }) });
@@ -78,7 +83,7 @@ export function NewCvScreeningPage() {
   const [jobText, setJobText] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [mails, setMails] = useState<MailPick[]>([]);
-  const [refused, setRefused] = useState<{ name: string; reason: string }[]>([]);
+  const [refused, setRefused] = useState<RefusedFile[]>([]);
   const [dragging, setDragging] = useState(false);
   const input = useRef<HTMLInputElement>(null);
 
@@ -98,12 +103,12 @@ export function NewCvScreeningPage() {
   function add(list: FileList | File[]) {
     if (!e) return;
     const next = [...files];
-    const out: { name: string; reason: string }[] = [];
+    const out: RefusedFile[] = [];
     for (const file of Array.from(list)) {
-      if (!kindOf(file)) out.push({ name: file.name, reason: "type non pris en charge" });
-      else if (file.size > e.cvFileMaxMb * 1024 * 1024) out.push({ name: file.name, reason: `plus de ${e.cvFileMaxMb} Mo` });
+      if (!kindOf(file)) out.push({ name: file.name, reason: { kind: "type" } });
+      else if (file.size > e.cvFileMaxMb * 1024 * 1024) out.push({ name: file.name, reason: { kind: "size", mb: e.cvFileMaxMb } });
       else if (next.some((f) => f.name === file.name && f.size === file.size)) continue;
-      else if (next.length + mails.length >= room) out.push({ name: file.name, reason: `${room} CV au plus pour cette analyse` });
+      else if (next.length + mails.length >= room) out.push({ name: file.name, reason: { kind: "over", limit: room } });
       else next.push(file);
     }
     setFiles(next);
@@ -133,21 +138,21 @@ export function NewCvScreeningPage() {
       void queryClient.invalidateQueries({ queryKey: cvScreeningsKey });
       void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
       if (failed > 0) {
-        toast.error(`${failed} CV n'${failed > 1 ? "ont" : "a"} pas pu être envoyé${failed > 1 ? "s" : ""} : ajoutez-les à nouveau dans une nouvelle analyse.`);
+        toast.error(t("sendFailed", { count: failed }));
       }
       router.push(`/espace/analyse-cv/${screening.id}`);
     },
-    onError: (err) => toast.error(friendlyError(err, "L'analyse n'a pas pu démarrer. Réessayez dans un instant.")),
+    onError: (err) => toast.error(friendlyError(err, t("startFailed"))),
   });
 
   if (subscription.isLoading) return <FormPageSkeleton back />;
 
   return (
     <div className="w-full space-y-6 pt-2">
-      <BackLink href="/espace/analyse-cv" label="Analyse de CV" current={"Nouvelle analyse"} />
+      <BackLink href="/espace/analyse-cv" label={t("back")} current={t("title")} />
       <div className="space-y-1.5">
-        <h1 className="font-semibold text-3xl tracking-tight">Nouvelle analyse</h1>
-        <p className="text-muted-foreground">Le poste, puis les CV : Rabotka lit chacun et le note par rapport au poste.</p>
+        <h1 className="font-semibold text-3xl tracking-tight">{t("title")}</h1>
+        <p className="text-muted-foreground">{t("intro")}</p>
       </div>
 
       {!e || cvOutOfReach(e) ? (
@@ -164,12 +169,12 @@ export function NewCvScreeningPage() {
             }}
             className="min-w-0 space-y-8 rounded-3xl bg-card p-5 sm:p-8"
           >
-            <Section title="Le poste">
-              <div role="radiogroup" aria-label="Poste" className="inline-flex rounded-full bg-page p-1">
+            <Section title={t("role")}>
+              <div role="radiogroup" aria-label={t("roleLabel")} className="inline-flex rounded-full bg-page p-1">
                 {(
                   [
-                    ["offer", "Une de mes offres"],
-                    ["custom", "Autre poste"],
+                    ["offer", t("myOffer")],
+                    ["custom", t("other")],
                   ] as const
                 ).map(([key, label]) => (
                   <button
@@ -191,37 +196,37 @@ export function NewCvScreeningPage() {
               {source === "offer" ? (
                 <div className="space-y-2">
                   <label className="font-medium text-sm" htmlFor="cv-offer">
-                    Offre
+                    {t("offer")}
                   </label>
                   <Combobox
                     value={offerId}
                     onChange={setOfferId}
                     options={offerOptions}
-                    placeholder={offers.isLoading ? "Chargement…" : "Choisir une offre"}
-                    searchPlaceholder="Rechercher une offre…"
-                    emptyText="Aucune offre. Choisissez « Autre poste »."
+                    placeholder={offers.isLoading ? t("loading") : t("chooseOffer")}
+                    searchPlaceholder={t("searchOffer")}
+                    emptyText={t("noOffer")}
                     disabled={offers.isLoading}
                   />
-                  <p className="text-muted-foreground text-xs">Les CV sont notés d&apos;après l&apos;intitulé, la description, le métier et le lieu de l&apos;offre.</p>
+                  <p className="text-muted-foreground text-xs">{t("offerHint")}</p>
                 </div>
               ) : (
                 <div className="space-y-5">
                   <div className="space-y-2">
                     <label className="font-medium text-sm" htmlFor="cv-title">
-                      Intitulé du poste
+                      {t("jobTitle")}
                     </label>
                     <Input
                       id="cv-title"
                       value={jobTitle}
                       onChange={(ev) => setJobTitle(ev.target.value)}
                       maxLength={120}
-                      placeholder="Ex. : Caissier en supermarché"
+                      placeholder={t("jobTitlePlaceholder")}
                       className="h-12 rounded-xl border-0 bg-page px-4 text-base shadow-none md:text-[15px]"
                     />
                   </div>
                   <div className="space-y-2">
                     <label className="font-medium text-sm" htmlFor="cv-text">
-                      Missions et profil recherché
+                      {t("jobText")}
                     </label>
                     <Textarea
                       id="cv-text"
@@ -229,16 +234,16 @@ export function NewCvScreeningPage() {
                       onChange={(ev) => setJobText(ev.target.value)}
                       rows={6}
                       maxLength={8000}
-                      placeholder="Les missions, l'expérience et les diplômes attendus, le lieu, les langues…"
+                      placeholder={t("jobTextPlaceholder")}
                       className="min-h-36 rounded-xl border-0 bg-page px-4 py-3 text-base shadow-none md:text-[15px]"
                     />
-                    <p className="text-muted-foreground text-xs">Plus la description est précise, plus le classement l&apos;est.</p>
+                    <p className="text-muted-foreground text-xs">{t("jobTextHint")}</p>
                   </div>
                 </div>
               )}
             </Section>
 
-            <Section title="Les CV">
+            <Section title={t("cvs")}>
               <CvDrop
                 items={items}
                 room={room === Number.POSITIVE_INFINITY ? e.cvBatchMax : room}
@@ -280,7 +285,7 @@ export function NewCvScreeningPage() {
                 <div className="flex gap-3 rounded-2xl bg-chip-amber px-4 py-3 text-chip-amber-foreground text-sm">
                   <IconAlertTriangle className="mt-0.5 size-4 shrink-0" />
                   <ul className="space-y-1">
-                    {refusedLines(refused).map((line) => (
+                    {refusedLines(refused, tRefused).map((line) => (
                       <li key={line.key}>
                         {line.name ? <span className="font-medium">{line.name}</span> : null}
                         {line.text}
@@ -293,7 +298,7 @@ export function NewCvScreeningPage() {
 
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <Link href="/espace/analyse-cv" className="inline-flex h-12 items-center justify-center rounded-full bg-page px-6 font-medium hover:bg-page/70">
-                Annuler
+                {t("cancel")}
               </Link>
               <button
                 type="submit"
@@ -302,39 +307,37 @@ export function NewCvScreeningPage() {
               >
                 {start.isPending
                   ? count > CHUNK_MAX_FILES
-                    ? `Envoi des CV… ${sent} / ${count}`
-                    : "Envoi des CV…"
-                  : `Lancer l'analyse${count ? ` de ${count} CV` : ""}`}
+                    ? t("sendingCount", { sent, count })
+                    : t("sending")
+                  : t("start", { count: count ? String(count) : "none" })}
               </button>
             </div>
           </form>
 
           <aside className="space-y-6 lg:sticky lg:top-24">
             <section className="space-y-4 rounded-3xl bg-card p-6">
-              <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Votre analyse</p>
+              <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("yours")}</p>
               <h2 className={cn("break-words font-semibold text-xl leading-snug", !(offerTitle || jobTitle.trim()) && "text-muted-foreground")}>
-                {(source === "offer" ? offerTitle : jobTitle.trim()) || "Poste à choisir"}
+                {(source === "offer" ? offerTitle : jobTitle.trim()) || t("toChoose")}
               </h2>
               <dl className="grid grid-cols-2 gap-3 text-sm">
                 <div className="rounded-2xl bg-page p-3">
-                  <dt className="text-muted-foreground text-xs">CV ajoutés</dt>
+                  <dt className="text-muted-foreground text-xs">{t("added")}</dt>
                   <dd className="font-semibold text-xl tabular-nums">{count}</dd>
                 </div>
                 <div className="rounded-2xl bg-page p-3">
-                  <dt className="text-muted-foreground text-xs">CV inclus restants</dt>
-                  <dd className="font-semibold text-xl tabular-nums">{e.cvRemaining === null ? "illimité" : Math.max(0, e.cvRemaining - count)}</dd>
+                  <dt className="text-muted-foreground text-xs">{t("left")}</dt>
+                  <dd className="font-semibold text-xl tabular-nums">{e.cvRemaining === null ? t("unlimited") : Math.max(0, e.cvRemaining - count)}</dd>
                 </div>
               </dl>
             </section>
             <section className="space-y-3 rounded-3xl bg-card p-6">
-              <p className="font-medium text-sm">Et ensuite</p>
+              <p className="font-medium text-sm">{t("next")}</p>
               <ul className="space-y-2.5 text-muted-foreground text-sm">
-                <Step icon={IconClock}>Une dizaine de secondes par CV ; vous pouvez quitter la page.</Step>
-                <Step icon={IconBell}>Une notification vous prévient quand le classement est prêt.</Step>
-                <Step icon={IconFileText}>Un CV illisible ou qui n&apos;en est pas un n&apos;est pas décompté.</Step>
-                <Step icon={IconShieldLock}>
-                  Les fichiers et les coordonnées sont supprimés au bout de {e.cvRetentionDays} jours ; les notes restent.
-                </Step>
+                <Step icon={IconClock}>{t("step1")}</Step>
+                <Step icon={IconBell}>{t("step2")}</Step>
+                <Step icon={IconFileText}>{t("step3")}</Step>
+                <Step icon={IconShieldLock}>{t("step4", { days: e.cvRetentionDays })}</Step>
               </ul>
             </section>
           </aside>
@@ -414,7 +417,11 @@ function CvDrop({
   };
   // Flat like every card here: a drop is shown by the fill and a ring, not a border.
   const surface = dragging ? "bg-chip-green ring-2 ring-whatsapp-dark" : "bg-page hover:bg-page/70";
-  const hint = `PDF, Word (.docx) ou photo · ${maxMb} Mo au plus par fichier`;
+  const t = useTranslations("cv.new");
+  const tc = useTranslations("cv");
+  const locale = useLocale() as Locale;
+  const kindLabel = (label: string) => (label === "Photo" ? t("photo") : label);
+  const hint = t("hint", { mb: maxMb });
 
   if (items.length === 0) {
     return (
@@ -429,20 +436,20 @@ function CvDrop({
           <IconUpload className="size-6" />
         </span>
         <span className="space-y-1">
-          <span className="block font-medium">Déposez les CV ici</span>
+          <span className="block font-medium">{t("drop")}</span>
           <span className="block text-muted-foreground text-sm">
-            ou <span className="font-medium text-foreground underline underline-offset-4">choisissez-les</span> sur votre appareil
+            {t.rich("orPick", { u: (chunks) => <span className="font-medium text-foreground underline underline-offset-4">{chunks}</span> })}
           </span>
         </span>
         <span className="flex flex-wrap justify-center gap-1.5 pt-1">
           {Object.values(KIND).map((k) => (
             <span key={k.label} className={cn("rounded-full px-2.5 py-1 font-medium text-xs", k.tile)}>
-              {k.label}
+              {kindLabel(k.label)}
             </span>
           ))}
         </span>
         <span className="text-muted-foreground text-xs">
-          {maxMb} Mo au plus par fichier · {room} CV au plus
+          {t("limits", { mb: maxMb, room })}
         </span>
       </button>
     );
@@ -457,7 +464,7 @@ function CvDrop({
             <span className="font-semibold tabular-nums">
               {items.length} / {room}
             </span>{" "}
-            <span className="text-muted-foreground">CV · {fileSize(total)}</span>
+            <span className="text-muted-foreground">{t("count", { size: fileSize(total, tc, locale) })}</span>
           </p>
           <div className="h-1.5 max-w-64 overflow-hidden rounded-full bg-page">
             <div className="h-full rounded-full bg-whatsapp-dark transition-[width]" style={{ width: `${Math.min(100, (items.length / room) * 100)}%` }} />
@@ -469,7 +476,7 @@ function CvDrop({
           disabled={disabled}
           className="font-medium text-muted-foreground text-sm hover:text-foreground disabled:opacity-50"
         >
-          Tout retirer
+          {t("clear")}
         </button>
       </div>
 
@@ -486,14 +493,14 @@ function CvDrop({
                   {file.name}
                 </span>
                 <span className="flex items-center gap-1 truncate text-muted-foreground text-xs">
-                  {file.from !== undefined && <IconMail className="size-3.5 shrink-0" aria-label="Depuis votre messagerie" />}
-                  {k.label} · {fileSize(file.size)}
+                  {file.from !== undefined && <IconMail className="size-3.5 shrink-0" aria-label={t("fromMail")} />}
+                  {kindLabel(k.label)} · {fileSize(file.size, tc, locale)}
                   {file.from ? ` · ${file.from}` : ""}
                 </span>
               </span>
               <button
                 type="button"
-                aria-label={`Retirer ${file.name}`}
+                aria-label={t("remove", { name: file.name })}
                 onClick={() => onRemove(file.key)}
                 disabled={disabled}
                 className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-card hover:text-foreground"
@@ -510,7 +517,7 @@ function CvDrop({
           onClick={() => setUnfolded(!unfolded)}
           className="font-medium text-muted-foreground text-sm hover:text-foreground"
         >
-          {unfolded ? "Réduire la liste" : `Afficher les ${items.length - LIST_SHOWN} autres`}
+          {unfolded ? t("fold") : t("more", { count: items.length - LIST_SHOWN })}
         </button>
       )}
 
@@ -526,9 +533,9 @@ function CvDrop({
             <IconFilePlus className="size-4" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block font-medium text-sm">Ajouter des CV</span>
+            <span className="block font-medium text-sm">{t("add")}</span>
             <span className="block truncate text-muted-foreground text-xs">
-              Encore {room - items.length} possible{room - items.length > 1 ? "s" : ""} · {hint}
+              {t("room", { count: room - items.length, hint })}
             </span>
           </span>
         </button>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -27,15 +28,13 @@ import {
   getOpinions,
   getTimeline,
   setOpinion,
-  VERDICT_LABEL,
   type ApplicationKind,
   type CandidateNote,
   type Opinions,
   type Verdict,
 } from "#/lib/api/candidate-notes-controller";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { timeAgo } from "#/lib/api/notification-controller";
-import { ROLE_LABEL } from "#/lib/api/team-controller";
 import { cn, getInitials } from "#/lib/utils";
 import { timelineLabel } from "../timeline-labels";
 
@@ -68,6 +67,7 @@ export function TeamOpinionButton({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }>) {
+  const t = useTranslations("team.opinion");
   const [own, setOwn] = useState(false);
   const open = controlled ?? own;
   const setOpen = onOpenChange ?? setOwn;
@@ -81,7 +81,7 @@ export function TeamOpinionButton({
         className={cn("inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70", className)}
       >
         <IconUsers className="size-4" />
-        Avis de l&apos;équipe
+        {t("button")}
         {total > 0 && summary && (
           <span className="flex items-center gap-1 text-xs tabular-nums">
             {summary.YES > 0 && <span className="rounded-full bg-chip-green px-1.5 text-chip-green-foreground">{summary.YES}</span>}
@@ -94,8 +94,8 @@ export function TeamOpinionButton({
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="right" className="w-full gap-0 overflow-y-auto border-0 bg-card p-0 sm:max-w-lg">
           <div className="space-y-1 px-6 pt-6 pb-4">
-            <SheetTitle className="font-semibold text-xl">Avis de l&apos;équipe</SheetTitle>
-            <SheetDescription>{name} · visible de votre équipe seulement, jamais du candidat.</SheetDescription>
+            <SheetTitle className="font-semibold text-xl">{t("title")}</SheetTitle>
+            <SheetDescription>{t("description", { name })}</SheetDescription>
           </div>
           {open && <TeamPanel kind={kind} id={id} />}
         </SheetContent>
@@ -105,6 +105,11 @@ export function TeamOpinionButton({
 }
 
 function TeamPanel({ kind, id }: Readonly<{ kind: ApplicationKind; id: string }>) {
+  const t = useTranslations("team.opinion");
+  const tTeam = useTranslations("team");
+  const tTimeline = useTranslations("team.timeline");
+  const locale = useLocale();
+  const friendlyError = useFriendlyError();
   const queryClient = useQueryClient();
   const key = candidateKey(kind, id);
   const opinions = useQuery({ queryKey: [...key, "opinions"], queryFn: () => getOpinions(kind, id) });
@@ -122,7 +127,7 @@ function TeamPanel({ kind, id }: Readonly<{ kind: ApplicationKind; id: string }>
       queryClient.setQueryData([...key, "opinions"], next);
       after();
     },
-    onError: (err) => toast.error(friendlyError(err, "Votre avis n'a pas pu être enregistré.")),
+    onError: (err) => toast.error(friendlyError(err, t("saveFailed"))),
   });
   const [draft, setDraft] = useState("");
   const add = useMutation({
@@ -132,7 +137,7 @@ function TeamPanel({ kind, id }: Readonly<{ kind: ApplicationKind; id: string }>
       setDraft("");
       after();
     },
-    onError: (err) => toast.error(friendlyError(err, "La note n'a pas pu être ajoutée.")),
+    onError: (err) => toast.error(friendlyError(err, t("noteAddFailed"))),
   });
 
   const mine = opinions.data?.mine ?? null;
@@ -140,7 +145,7 @@ function TeamPanel({ kind, id }: Readonly<{ kind: ApplicationKind; id: string }>
   return (
     <div className="space-y-6 px-6 pb-8">
       <section className="space-y-3">
-        <p className="font-medium text-sm">Mon avis</p>
+        <p className="font-medium text-sm">{t("mine")}</p>
         <div className="grid grid-cols-3 gap-2">
           {VERDICTS.map(({ v, icon: Icon, on }) => (
             <button
@@ -155,7 +160,7 @@ function TeamPanel({ kind, id }: Readonly<{ kind: ApplicationKind; id: string }>
               )}
             >
               <Icon className="size-5" />
-              {VERDICT_LABEL[v]}
+              {tTeam(`verdict.${v}`)}
             </button>
           ))}
         </div>
@@ -168,7 +173,7 @@ function TeamPanel({ kind, id }: Readonly<{ kind: ApplicationKind; id: string }>
                   <span className="flex size-5 items-center justify-center rounded-full bg-card/70 font-semibold text-[10px] text-foreground">
                     {getInitials(o.member.name)}
                   </span>
-                  <span className="font-medium">{o.member.name}</span>· {VERDICT_LABEL[o.verdict]}
+                  <span className="font-medium">{o.member.name}</span>· {tTeam(`verdict.${o.verdict}`)}
                 </li>
               );
             })}
@@ -179,12 +184,12 @@ function TeamPanel({ kind, id }: Readonly<{ kind: ApplicationKind; id: string }>
       <section className="space-y-3">
         <p className="flex items-center gap-2 font-medium text-sm">
           <IconMessage2 className="size-4" />
-          Notes
+          {t("notes")}
         </p>
         {notes.isLoading ? (
           <Bone className="h-20 rounded-2xl" />
         ) : (notes.data ?? []).length === 0 ? (
-          <p className="text-muted-foreground text-sm">Aucune note pour l&apos;instant.</p>
+          <p className="text-muted-foreground text-sm">{t("noNotes")}</p>
         ) : (
           <ul className="space-y-2">
             {notes.data!.map((n) => (
@@ -204,7 +209,7 @@ function TeamPanel({ kind, id }: Readonly<{ kind: ApplicationKind; id: string }>
             onChange={(e) => setDraft(e.target.value)}
             maxLength={4000}
             rows={3}
-            placeholder="Ce que l'équipe doit savoir : entretien, références, points à vérifier…"
+            placeholder={t("notePlaceholder")}
             className="min-h-20 rounded-2xl border-0 bg-page px-4 py-3 shadow-none focus-visible:ring-2 focus-visible:ring-whatsapp/40"
           />
           <div className="flex justify-end">
@@ -213,7 +218,7 @@ function TeamPanel({ kind, id }: Readonly<{ kind: ApplicationKind; id: string }>
               disabled={!draft.trim() || add.isPending}
               className="h-10 rounded-full bg-ink px-5 font-medium text-sm text-white disabled:opacity-50"
             >
-              Ajouter la note
+              {t("addNote")}
             </button>
           </div>
         </form>
@@ -222,7 +227,7 @@ function TeamPanel({ kind, id }: Readonly<{ kind: ApplicationKind; id: string }>
       <section className="space-y-3">
         <p className="flex items-center gap-2 font-medium text-sm">
           <IconHistory className="size-4" />
-          Historique
+          {t("history")}
         </p>
         {timeline.isLoading ? (
           <Bone className="h-24 rounded-2xl" />
@@ -232,8 +237,8 @@ function TeamPanel({ kind, id }: Readonly<{ kind: ApplicationKind; id: string }>
             {(timeline.data ?? []).map((e, i) => (
               <li key={`${e.kind}-${e.at}-${i}`} className="relative">
                 <span aria-hidden className="-left-[1.2rem] absolute top-1.5 size-2 rounded-full bg-whatsapp-dark" />
-                <p className="text-sm">{timelineLabel(e)}</p>
-                <p className="text-muted-foreground text-xs">{timeAgo(e.at)}</p>
+                <p className="text-sm">{timelineLabel(e, tTimeline, locale)}</p>
+                <p className="text-muted-foreground text-xs">{timeAgo(e.at, locale)}</p>
               </li>
             ))}
           </ol>
@@ -249,6 +254,10 @@ function NoteItem({
   id,
   onChanged,
 }: Readonly<{ note: CandidateNote; kind: ApplicationKind; id: string; onChanged: () => void }>) {
+  const t = useTranslations("team.opinion");
+  const tLabels = useTranslations("labels");
+  const locale = useLocale();
+  const friendlyError = useFriendlyError();
   const queryClient = useQueryClient();
   const key = [...candidateKey(kind, id), "notes"];
   const [editing, setEditing] = useState(false);
@@ -259,7 +268,7 @@ function NoteItem({
       queryClient.setQueryData(key, next);
       setEditing(false);
     },
-    onError: (err) => toast.error(friendlyError(err, "La note n'a pas pu être modifiée.")),
+    onError: (err) => toast.error(friendlyError(err, t("noteEditFailed"))),
   });
   const remove = useMutation({
     mutationFn: () => deleteNote(kind, id, note.id),
@@ -267,7 +276,7 @@ function NoteItem({
       queryClient.setQueryData(key, next);
       onChanged();
     },
-    onError: (err) => toast.error(friendlyError(err, "La note n'a pas pu être supprimée.")),
+    onError: (err) => toast.error(friendlyError(err, t("noteDeleteFailed"))),
   });
 
   return (
@@ -279,18 +288,18 @@ function NoteItem({
         <p className="min-w-0 flex-1 truncate text-xs">
           <span className="font-medium text-sm">{note.author.name}</span>{" "}
           <span className="text-muted-foreground">
-            {ROLE_LABEL[note.author.role]} · {timeAgo(note.createdAt)}
-            {note.edited && " · modifiée"}
+            {tLabels(`role.${note.author.role}`)} · {timeAgo(note.createdAt, locale)}
+            {note.edited && ` · ${t("edited")}`}
           </span>
         </p>
         {note.mine && !editing && (
           <span className="flex shrink-0 gap-1">
-            <button type="button" aria-label="Modifier la note" onClick={() => setEditing(true)} className="rounded-full p-1.5 text-muted-foreground hover:bg-card hover:text-foreground">
+            <button type="button" aria-label={t("editNote")} onClick={() => setEditing(true)} className="rounded-full p-1.5 text-muted-foreground hover:bg-card hover:text-foreground">
               <IconPencil className="size-4" />
             </button>
             <button
               type="button"
-              aria-label="Supprimer la note"
+              aria-label={t("deleteNote")}
               disabled={remove.isPending}
               onClick={() => remove.mutate()}
               className="rounded-full p-1.5 text-muted-foreground hover:bg-card hover:text-destructive"
@@ -311,7 +320,7 @@ function NoteItem({
           />
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => (setEditing(false), setText(note.body))} className="h-9 rounded-full px-4 text-muted-foreground text-sm">
-              Annuler
+              {t("cancel")}
             </button>
             <button
               type="button"
@@ -319,7 +328,7 @@ function NoteItem({
               onClick={() => save.mutate()}
               className="h-9 rounded-full bg-ink px-4 font-medium text-sm text-white disabled:opacity-50"
             >
-              Enregistrer
+              {t("save")}
             </button>
           </div>
         </div>

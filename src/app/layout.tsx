@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { cookies, headers } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale } from "next-intl/server";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 
 import { Providers } from "#/app/providers";
 import { OG_LOCALE } from "#/i18n/config";
@@ -9,8 +9,6 @@ import { REFRESH_COOKIE } from "#/lib/auth/cookies";
 import "./globals.css";
 
 const TITLE = "Rabotka Business";
-const DESCRIPTION =
-  "Le recrutement des organisations au même endroit : offres rédigées en quelques mots, CV lus et classés pour chaque poste (même depuis Gmail), candidatures triées, entretiens synchronisés avec votre agenda.";
 
 /**
  * Social previews need absolute image URLs. The base is the host the request
@@ -23,6 +21,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const proto =
     h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
   const locale = await getLocale();
+  const t = await getTranslations("pages.site");
+  const DESCRIPTION = t("description");
 
   return {
     metadataBase: new URL(`${proto}://${host}`),
@@ -44,12 +44,12 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       siteName: "Rabotka",
       locale: OG_LOCALE[locale],
-      title: "Recrutez avec Rabotka",
+      title: t("shareTitle"),
       description: DESCRIPTION,
     },
     twitter: {
       card: "summary_large_image",
-      title: "Recrutez avec Rabotka",
+      title: t("shareTitle"),
       description: DESCRIPTION,
     },
     // Keep Chrome from machine-translating the page: its <font> wrappers break
@@ -74,6 +74,8 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children, modal }: LayoutProps<"/">) {
   const isAuthenticated = (await cookies()).has(REFRESH_COOKIE);
   const locale = await getLocale();
+  // Everything but the public site's long copy, which its own layout adds.
+  const messages = Object.fromEntries(Object.entries(await getMessages()).filter(([namespace]) => namespace !== "siteCopy"));
 
   return (
     // The document background is the browser chrome's colour: Safari (iOS 26+)
@@ -92,7 +94,7 @@ export default async function RootLayout({ children, modal }: LayoutProps<"/">) 
         />
         <div className="min-h-svh bg-page pt-[env(safe-area-inset-top)]">
           {/* The request's language and messages, for client components. */}
-          <NextIntlClientProvider>
+          <NextIntlClientProvider messages={messages}>
             <Providers isAuthenticated={isAuthenticated}>
               {children}
               {modal}

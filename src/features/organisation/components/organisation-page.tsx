@@ -1,7 +1,9 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { IconAlertTriangle, IconClock, IconLock } from "@tabler/icons-react";
 import { toast } from "sonner";
 
@@ -9,7 +11,7 @@ import { Bone } from "#/components/page-skeletons";
 import { useBusinessCatalog } from "#/hooks/use-business-catalog";
 import { OrganisationStep, type OrganisationValues } from "#/features/sign-up/components/organisation-step";
 import { getMyBusiness, myBusinessKey, updateMyBusiness } from "#/lib/api/business-controller";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import type { MyBusiness, UpdateMyBusiness } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { sessionUserKey } from "#/hooks/use-session-user";
@@ -55,6 +57,8 @@ function changes(before: OrganisationValues, after: OrganisationValues): UpdateM
  * — is locked: a change goes through the team (Aide).
  */
 export function OrganisationPage() {
+  const t = useTranslations("organisation.page");
+  const friendlyError = useFriendlyError();
   const queryClient = useQueryClient();
   const { data: business, isLoading, error } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
   // The papers' names in the organisation's country's words.
@@ -73,19 +77,17 @@ export function OrganisationPage() {
     onSuccess: ({ business: next, reopened }) => {
       setBusiness(next);
       toast.success(
-        reopened
-          ? "Modifications enregistrées. Elles seront vérifiées par notre équipe."
-          : "Modifications enregistrées.",
+        reopened ? t("savedReview") : t("saved"),
       );
     },
-    onError: (err) => toast.error(friendlyError(err, "Vos modifications n'ont pas pu être enregistrées.")),
+    onError: (err) => toast.error(friendlyError(err, t("saveFailed"))),
   });
 
   return (
     <div className="w-full space-y-6 pt-2">
       <div className="space-y-1.5">
-        <h1 className="font-semibold text-3xl tracking-tight">Organisation</h1>
-        <p className="text-muted-foreground">Les informations et documents de votre organisation, et leur vérification.</p>
+        <h1 className="font-semibold text-3xl tracking-tight">{t("title")}</h1>
+        <p className="text-muted-foreground">{t("intro")}</p>
       </div>
 
       {isLoading ? (
@@ -116,7 +118,7 @@ export function OrganisationPage() {
         </div>
       ) : !business ? (
         <p className="rounded-3xl bg-card p-6 text-muted-foreground">
-          {friendlyError(error, "Ce compte n'est pas un compte entreprise.")}
+          {friendlyError(error, t("notBusiness"))}
         </p>
       ) : (
         <>
@@ -126,17 +128,12 @@ export function OrganisationPage() {
               <OrganisationLogo name={business.name} logoUrl={business.logoUrl} onUploaded={setLogo} />
               <div aria-hidden className="h-px bg-page" />
               <div className="space-y-1">
-                <h2 className="font-semibold text-lg">Informations</h2>
+                <h2 className="font-semibold text-lg">{t("details")}</h2>
                 {verified && (
                   <p className="flex items-start gap-2 rounded-2xl bg-page px-4 py-3 text-muted-foreground text-sm">
                     <IconLock className="mt-0.5 size-4 shrink-0" />
                     <span>
-                      Votre organisation est vérifiée : son identité, ses identifiants officiels et ses documents ne se
-                      modifient plus ici. Pour un changement,{" "}
-                      <Link href="/espace/reclamations/nouvelle" className="font-medium text-foreground underline underline-offset-2">
-                        faites une demande à l&apos;équipe
-                      </Link>
-                      . Le siège, l&apos;effectif et la présentation restent modifiables.
+                      {t.rich("locked", { link: RequestLink })}
                     </span>
                   </p>
                 )}
@@ -146,13 +143,13 @@ export function OrganisationPage() {
                 key={`${business.id}:${business.name}:${business.category}:${business.address}:${business.countryCode}:${business.city}`}
                 defaultValues={toValues(business)}
                 heading={false}
-                submitLabel="Enregistrer"
+                submitLabel={t("save")}
                 pending={save.isPending}
                 lockIdentity={verified}
                 onDone={(values) => {
                   const body = changes(toValues(business), values);
                   if (Object.keys(body).length === 0) {
-                    toast("Aucune modification à enregistrer.");
+                    toast(t("nothing"));
                     return;
                   }
                   save.mutate(body);
@@ -172,8 +169,17 @@ export function OrganisationPage() {
   );
 }
 
+function RequestLink(chunks: ReactNode) {
+  return (
+    <Link href="/espace/reclamations/nouvelle" className="font-medium text-foreground underline underline-offset-2">
+      {chunks}
+    </Link>
+  );
+}
+
 /** Where the review stands and what to do — shown only while there is something to do. */
 function ReviewBanner({ business }: Readonly<{ business: MyBusiness }>) {
+  const t = useTranslations("organisation.review");
   const refusedDocs = business.documents.some((d) => d.verificationStatus === "REJECTED");
   // Verified and nothing to fix: nothing to say — the page is just the details.
   if (business.verificationStatus === "VERIFIED" && !refusedDocs) return null;
@@ -182,8 +188,8 @@ function ReviewBanner({ business }: Readonly<{ business: MyBusiness }>) {
         ? {
             icon: IconAlertTriangle,
             tone: "bg-destructive/8 text-destructive",
-            title: "Vérification refusée",
-            text: `${business.rejectionReason ? `Motif : ${business.rejectionReason}. ` : ""}Corrigez vos informations ou remplacez les documents concernés : la vérification reprendra automatiquement.`,
+            title: t("refusedTitle"),
+            text: t("refusedText", { reason: business.rejectionReason || "none" }),
           }
         : refusedDocs && business.verificationStatus === "VERIFIED"
           ? {
@@ -191,21 +197,21 @@ function ReviewBanner({ business }: Readonly<{ business: MyBusiness }>) {
               // refuses it): the team does it on request.
               icon: IconAlertTriangle,
               tone: "bg-chip-amber text-chip-amber-foreground",
-              title: "Un document a été refusé",
-              text: "Votre organisation est vérifiée. Pour remplacer ce document, faites une demande à l'équipe Rabotka depuis Aide.",
+              title: t("docRefusedTitle"),
+              text: t("docRefusedText"),
             }
           : refusedDocs
           ? {
               icon: IconAlertTriangle,
               tone: "bg-chip-amber text-chip-amber-foreground",
-              title: "Des documents sont à remplacer",
-              text: "Envoyez une nouvelle version des documents refusés pour que la vérification se poursuive.",
+              title: t("replaceTitle"),
+              text: t("replaceText"),
             }
           : {
               icon: IconClock,
               tone: "bg-chip-amber text-chip-amber-foreground",
-              title: "Vérification en cours",
-              text: "Notre équipe examine vos documents. Vous serez prévenu par e-mail et dans votre espace.",
+              title: t("pendingTitle"),
+              text: t("pendingText"),
             };
   const Icon = state.icon;
 

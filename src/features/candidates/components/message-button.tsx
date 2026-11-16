@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { IconMessageCircle } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
@@ -8,7 +9,7 @@ import { toast } from "sonner";
 import { useOpenDiscussionWithProfile } from "#/features/discussions/use-discussions";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { cn } from "#/lib/utils";
 
 const button =
@@ -23,6 +24,8 @@ const button =
  */
 export function MessageButton({ workerId, name, className }: Readonly<{ workerId: string; name: string; className?: string }>) {
   const router = useRouter();
+  const t = useTranslations("candidates.message");
+  const friendlyError = useFriendlyError();
   const { role } = useMember();
   const open = useOpenDiscussionWithProfile();
   if (!canHire(role)) return null;
@@ -34,10 +37,10 @@ export function MessageButton({ workerId, name, className }: Readonly<{ workerId
       onClick={() =>
         open.mutate(workerId, {
           onSuccess: ({ conversation }) => router.push(`/espace/discussions/${conversation.id}`),
-          onError: (err) => toast.error(friendlyError(err, "La conversation n'a pas pu être ouverte.")),
+          onError: (err) => toast.error(friendlyError(err, t("failed"))),
         })
       }
-      aria-label={`Envoyer un message à ${name}`}
+      aria-label={t("sendTo", { name })}
       className={cn(button, "bg-brand-lime text-ink hover:brightness-95 active:scale-[0.98] disabled:opacity-60", className)}
     >
       {open.isPending ? (
@@ -45,7 +48,7 @@ export function MessageButton({ workerId, name, className }: Readonly<{ workerId
       ) : (
         <IconMessageCircle className="size-4 shrink-0" strokeWidth={2.25} />
       )}
-      {open.isPending ? "Ouverture…" : "Envoyer un message"}
+      {open.isPending ? t("opening") : t("send")}
     </button>
   );
 }

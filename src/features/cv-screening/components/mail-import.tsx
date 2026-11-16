@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog as SheetPrimitive } from "radix-ui";
@@ -11,7 +12,8 @@ import { ActionDialog } from "#/components/action-dialog";
 import { ProviderTile } from "#/components/mail-provider-logos";
 import { PreviewSheet, type PreviewKind } from "#/components/preview-sheet";
 import { Input } from "#/components/ui/input";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { INTL_LOCALE } from "#/i18n/config";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import {
   connectMailbox,
   disconnectMailbox,
@@ -30,9 +32,9 @@ import { fileSize } from "./cv-bits";
 
 
 const KIND_TILE = {
-  pdf: { label: "PDF", tile: "bg-destructive/10 text-destructive" },
-  docx: { label: "Word", tile: "bg-chip-violet text-chip-violet-foreground" },
-  image: { label: "Photo", tile: "bg-chip-amber text-chip-amber-foreground" },
+  pdf: { label: "pdf", tile: "bg-destructive/10 text-destructive" },
+  docx: { label: "word", tile: "bg-chip-violet text-chip-violet-foreground" },
+  image: { label: "photo", tile: "bg-chip-amber text-chip-amber-foreground" },
 } as const;
 
 /** Waits for the typing to settle before searching. */
@@ -51,6 +53,8 @@ function useDebounced<T>(value: T, ms = 400): T {
  */
 export function useConnectMailbox(onConnected: (provider: MailProviderSlug) => void) {
   const queryClient = useQueryClient();
+  const t = useTranslations("cv.mail");
+  const friendlyError = useFriendlyError();
   const [pending, setPending] = useState<MailProviderSlug | null>(null);
   const handler = useRef<((ev: MessageEvent) => void) | null>(null);
 
@@ -72,7 +76,7 @@ export function useConnectMailbox(onConnected: (provider: MailProviderSlug) => v
     } catch (err) {
       popup?.close();
       setPending(null);
-      toast.error(friendlyError(err, "La connexion n'a pas pu commencer. Réessayez dans un instant."));
+      toast.error(friendlyError(err, t("connectFailed")));
       return;
     }
 
@@ -87,11 +91,11 @@ export function useConnectMailbox(onConnected: (provider: MailProviderSlug) => v
       if (status === "connected") {
         void queryClient.invalidateQueries({ queryKey: mailboxesKey }).then(() => onConnected(provider));
       } else if (status === "scope") {
-        toast.error(`L'accès à vos e-mails n'a pas été autorisé : reconnectez ${PROVIDER_LABEL[provider]} et cochez la case qui permet à Rabotka de lire vos e-mails.`);
+        toast.error(t("scope", { provider: PROVIDER_LABEL[provider] }));
       } else if (status === "api_disabled") {
-        toast.error(`La lecture des e-mails ${PROVIDER_LABEL[provider]} n'est pas encore activée pour Rabotka. Réessayez plus tard.`);
+        toast.error(t("apiDisabled", { provider: PROVIDER_LABEL[provider] }));
       } else if (status !== "denied") {
-        toast.error(`La connexion à ${PROVIDER_LABEL[provider]} n'a pas abouti. Réessayez.`);
+        toast.error(t("connectError", { provider: PROVIDER_LABEL[provider] }));
       }
     };
     handler.current = onMessage;
@@ -124,6 +128,7 @@ export function MailImport({
   disabled: boolean;
   onChange: (picks: MailPick[]) => void;
 }>) {
+  const t = useTranslations("cv.mail");
   const boxes = useQuery({ queryKey: mailboxesKey, queryFn: listMailboxes, staleTime: 60_000 });
   const queryClient = useQueryClient();
   const [openId, setOpenId] = useState<string | null>(null);
@@ -145,7 +150,7 @@ export function MailImport({
     <div className="space-y-3">
       <div className="flex items-center gap-3 text-muted-foreground text-xs">
         <span aria-hidden className="h-px flex-1 bg-page" />
-        ou depuis votre messagerie
+        {t("orFromMail")}
         <span aria-hidden className="h-px flex-1 bg-page" />
       </div>
       <div className={cn("grid gap-2.5", providers.length > 1 && "sm:grid-cols-2")}>
@@ -169,7 +174,7 @@ export function MailImport({
                       <span className="truncate">{box.email}</span>
                     </>
                   ) : (
-                    "Connecter votre compte"
+                    t("connectAccount")
                   )}
                 </span>
               </span>
@@ -231,6 +236,11 @@ function MailCvSheet({
   onReconnect: () => void;
 }>) {
   const queryClient = useQueryClient();
+  const t = useTranslations("cv.mail");
+  const tc = useTranslations("cv");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  const friendlyError = useFriendlyError();
   const [q, setQ] = useState("");
   const search = useDebounced(q.trim());
   const [chosen, setChosen] = useState<MailPick[]>(picks);
@@ -261,9 +271,9 @@ function MailCvSheet({
       setConfirmDisconnect(false);
       void queryClient.invalidateQueries({ queryKey: mailboxesKey });
       onDone(picks.filter((p) => p.mailboxId !== mailbox.id));
-      toast.success(`${PROVIDER_LABEL[mailbox.provider]} déconnecté.`);
+      toast.success(t("disconnected", { provider: PROVIDER_LABEL[mailbox.provider] }));
     },
-    onError: (err) => toast.error(friendlyError(err, "La messagerie n'a pas pu être déconnectée.")),
+    onError: (err) => toast.error(friendlyError(err, t("disconnectFailed"))),
   });
 
   return (
@@ -277,7 +287,7 @@ function MailCvSheet({
           <header className="flex items-center gap-3 px-5 pt-5 pb-4 sm:px-6">
             <ProviderTile provider={mailbox.provider} className="size-11 rounded-2xl" />
             <div className="min-w-0 flex-1">
-              <SheetPrimitive.Title className="font-semibold text-lg leading-tight">CV reçus par e-mail</SheetPrimitive.Title>
+              <SheetPrimitive.Title className="font-semibold text-lg leading-tight">{t("title")}</SheetPrimitive.Title>
               <p className="flex min-w-0 items-center gap-1.5 text-muted-foreground text-sm">
                 <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-whatsapp-dark" />
                 <span className="truncate">{mailbox.email}</span>
@@ -285,8 +295,8 @@ function MailCvSheet({
             </div>
             <button
               type="button"
-              aria-label="Actualiser les e-mails"
-              title="Actualiser"
+              aria-label={t("refreshLabel")}
+              title={t("refresh")}
               disabled={refreshing || mails.isLoading || expired}
               onClick={() => void mails.refetch()}
               className="flex size-9 shrink-0 items-center justify-center rounded-full bg-page text-muted-foreground hover:text-foreground disabled:opacity-60"
@@ -300,9 +310,9 @@ function MailCvSheet({
               className="hidden h-9 shrink-0 items-center gap-1.5 rounded-full bg-page px-3.5 font-medium text-muted-foreground text-sm hover:text-foreground disabled:opacity-50 sm:inline-flex"
             >
               <IconPlugOff className="size-4" />
-              Déconnecter
+              {t("disconnect")}
             </button>
-            <SheetPrimitive.Close aria-label="Fermer" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-page hover:bg-page/70">
+            <SheetPrimitive.Close aria-label={tCommon("close")} className="flex size-9 shrink-0 items-center justify-center rounded-full bg-page hover:bg-page/70">
               <IconX className="size-4" />
             </SheetPrimitive.Close>
           </header>
@@ -313,8 +323,8 @@ function MailCvSheet({
               <Input
                 value={q}
                 onChange={(ev) => setQ(ev.target.value)}
-                placeholder="Rechercher : nom, poste, objet…"
-                aria-label="Rechercher dans les e-mails"
+                placeholder={t("searchPlaceholder")}
+                aria-label={t("searchLabel")}
                 className="h-11 rounded-full border-0 bg-page pr-4 pl-11 shadow-none"
               />
             </div>
@@ -325,35 +335,35 @@ function MailCvSheet({
               className="inline-flex items-center gap-1.5 font-medium text-muted-foreground text-xs hover:text-foreground disabled:opacity-50 sm:hidden"
             >
               <IconPlugOff className="size-3.5" />
-              Déconnecter {PROVIDER_LABEL[mailbox.provider]}
+              {t("disconnectProvider", { provider: PROVIDER_LABEL[mailbox.provider] })}
             </button>
           </div>
 
           <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto px-5 pb-4 sm:px-6">
             {expired ? (
               <div className="space-y-3 rounded-2xl bg-chip-amber p-4 text-chip-amber-foreground text-sm">
-                <p>{PROVIDER_LABEL[mailbox.provider]} ne répond plus : connectez votre messagerie de nouveau pour retrouver vos e-mails.</p>
+                <p>{t("expired", { provider: PROVIDER_LABEL[mailbox.provider] })}</p>
                 <button
                   type="button"
                   onClick={onReconnect}
                   className="inline-flex h-10 items-center gap-2 rounded-full bg-card px-4 font-medium text-foreground hover:bg-card/70"
                 >
                   <ProviderTile provider={mailbox.provider} className="size-6 rounded-md [&>svg]:size-3.5" />
-                  Reconnecter {PROVIDER_LABEL[mailbox.provider]}
+                  {t("reconnect", { provider: PROVIDER_LABEL[mailbox.provider] })}
                 </button>
               </div>
             ) : mails.isLoading ? (
               Array.from({ length: 5 }, (_, i) => <div key={i} className="h-24 animate-pulse rounded-2xl bg-page" />)
             ) : mails.isError ? (
               <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-destructive text-sm">
-                {friendlyError(mails.error, "Vos e-mails n'ont pas pu être lus. Réessayez dans un instant.")}
+                {friendlyError(mails.error, t("readFailed"))}
               </p>
             ) : list.length === 0 && !mails.hasNextPage ? (
             // Empty only when nothing is left: a page with no CV but more after it shows « Charger plus ».
               <div className="flex flex-col items-center gap-2 rounded-2xl bg-page px-6 py-10 text-center">
                 <IconMail className="size-6 text-muted-foreground" />
-                <p className="font-medium">{search ? "Aucun e-mail ne correspond" : "Aucun CV reçu ces 4 derniers mois"}</p>
-                <p className="text-muted-foreground text-sm">Seuls les e-mails avec un PDF, un fichier Word ou une photo en pièce jointe apparaissent.</p>
+                <p className="font-medium">{search ? t("noMatch") : t("empty")}</p>
+                <p className="text-muted-foreground text-sm">{t("emptyText")}</p>
               </div>
             ) : (
               <>
@@ -368,9 +378,9 @@ function MailCvSheet({
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline justify-between gap-3">
-                          <p className="min-w-0 truncate font-medium text-sm">{mail.fromName || "Expéditeur inconnu"}</p>
+                          <p className="min-w-0 truncate font-medium text-sm">{mail.fromName || t("unknownSender")}</p>
                           <time className="shrink-0 text-muted-foreground text-xs" dateTime={mail.date}>
-                            {new Date(mail.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                            {new Date(mail.date).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "short" })}
                           </time>
                         </div>
                         {mail.subject && <p className="truncate text-muted-foreground text-xs">{mail.subject}</p>}
@@ -405,22 +415,22 @@ function MailCvSheet({
                               >
                                 {on && <IconCheck className="size-3.5" strokeWidth={3} />}
                               </span>
-                              <span className={cn("shrink-0 rounded-md px-1.5 py-0.5 font-semibold text-[10px]", k.tile)}>{k.label}</span>
+                              <span className={cn("shrink-0 rounded-md px-1.5 py-0.5 font-semibold text-[10px]", k.tile)}>{t(`kind.${k.label}`)}</span>
                               <span className="min-w-0 flex-1 truncate font-medium text-sm" title={a.name}>
                                 {a.name}
                               </span>
                               {looksLikeCv(a.name, mail.subject) && (
                                 <span className="hidden shrink-0 rounded-full bg-page px-2 py-0.5 font-medium text-[11px] text-whatsapp-dark sm:inline">
-                                  CV probable
+                                  {t("likelyCv")}
                                 </span>
                               )}
-                              <span className={cn("shrink-0 text-xs tabular-nums", on ? "opacity-70" : "text-muted-foreground")}>{fileSize(a.size)}</span>
+                              <span className={cn("shrink-0 text-xs tabular-nums", on ? "opacity-70" : "text-muted-foreground")}>{fileSize(a.size, tc, locale)}</span>
                             </button>
                             <button
                               type="button"
                               onClick={() => setPreview({ pick, kind, from: mail.fromName })}
-                              aria-label={`Aperçu de ${a.name}`}
-                              title="Aperçu"
+                              aria-label={t("previewOf", { name: a.name })}
+                              title={t("preview")}
                               className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-card text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
                             >
                               <IconEye className="size-4" />
@@ -439,7 +449,7 @@ function MailCvSheet({
                     className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-page font-medium text-sm hover:bg-page/70 disabled:opacity-60"
                   >
                     {mails.isFetchingNextPage && <Loader className="size-4 animate-spin" />}
-                    Charger plus
+                    {t("loadMore")}
                   </button>
                 )}
               </>
@@ -449,7 +459,7 @@ function MailCvSheet({
           <footer className="space-y-3 px-5 pt-3 pb-5 sm:px-6">
             <p className="flex items-start gap-2 text-muted-foreground text-xs">
               <IconShieldLock className="mt-px size-4 shrink-0" />
-              Rabotka lit uniquement les pièces jointes que vous choisissez ; rien n&apos;est envoyé depuis votre messagerie.
+              {t("privacy")}
             </p>
             <div className="flex items-center gap-4">
               <div className="min-w-0 flex-1 space-y-1.5">
@@ -457,7 +467,7 @@ function MailCvSheet({
                   <span className="font-semibold tabular-nums">
                     {chosen.length} / {total}
                   </span>{" "}
-                  <span className="text-muted-foreground">CV choisis</span>
+                  <span className="text-muted-foreground">{t("chosen", { count: chosen.length })}</span>
                 </p>
                 {/* One segment per CV while it reads; a single bar for a large analysis. */}
                 {total <= 10 ? (
@@ -477,7 +487,7 @@ function MailCvSheet({
                 onClick={() => onDone(chosen)}
                 className="h-12 shrink-0 rounded-full bg-ink px-6 font-medium text-white hover:bg-ink/90"
               >
-                {added > 0 ? `Ajouter ${added} CV` : "Valider"}
+                {added > 0 ? t("add", { count: added }) : t("confirm")}
               </button>
             </div>
           </footer>
@@ -489,16 +499,16 @@ function MailCvSheet({
             src={preview ? mailAttachmentUrl(preview.pick) : undefined}
             kind={preview?.kind ?? "pdf"}
             fileName={preview?.pick.name}
-            unavailable="Cette pièce jointe n'a pas pu être affichée."
+            unavailable={t("unavailable")}
           />
           <ActionDialog
             open={confirmDisconnect}
             onOpenChange={setConfirmDisconnect}
             tone="warning"
             icon={<IconPlugOff className="size-5" />}
-            title="Déconnecter cette messagerie ?"
-            description="Vous ne pourrez plus y choisir de CV. Les analyses déjà faites sont conservées, et vous pourrez la reconnecter à tout moment."
-            confirmLabel="Déconnecter"
+            title={t("disconnectTitle")}
+            description={t("disconnectText")}
+            confirmLabel={t("disconnect")}
             pending={disconnect.isPending}
             onConfirm={() => disconnect.mutate()}
           >

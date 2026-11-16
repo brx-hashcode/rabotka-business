@@ -3,5 +3,10 @@
  * A plan's name is the admin's, so it is read as written (no h rule).
  */
 export function de(name: string): string {
-  return /^[aeiouyàâäéèêëîïôöùûü]/i.test(name.trim()) ? `d'${name}` : `de ${name}`;
+  return startsWithVowel(name) ? `d'${name}` : `de ${name}`;
+}
+
+/** For messages that elide: `{elision, select, vowel {d'…} other {de …}}`. */
+export function startsWithVowel(name: string): boolean {
+  return /^[aeiouyàâäéèêëîïôöùûü]/i.test(name.trim());
 }

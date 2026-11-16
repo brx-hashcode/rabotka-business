@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import type { Interview } from "#/lib/api/types";
 import { toEntries } from "./calendar-grid";
-import { csvCell, interviewsCsv } from "./interviews-csv";
+import { createTranslator } from "next-intl";
+
+import { MESSAGES } from "#/i18n/messages";
+import { csvCell, interviewsCsv as csvIn } from "./interviews-csv";
+
+const fr = createTranslator({ locale: "fr", messages: MESSAGES.fr, namespace: "interviews" });
+const interviewsCsv = (entries: Parameters<typeof csvIn>[0]) => csvIn(entries, fr, "fr");
 
 const interview = (over: Partial<Interview> = {}): Interview => ({
   id: "i1",

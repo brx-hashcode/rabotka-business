@@ -1,6 +1,12 @@
+import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 
+import { MESSAGES } from "#/i18n/messages";
+
 import { activityLabel, activityOfferId } from "./activity-labels";
+
+const t = createTranslator({ locale: "fr", messages: MESSAGES.fr, namespace: "team.activity" });
+const en = createTranslator({ locale: "en", messages: MESSAGES.en, namespace: "team.activity" });
 
 describe("activity labels", () => {
   it.each([
@@ -16,11 +22,15 @@ describe("activity labels", () => {
     ["PATCH /business/me", "a modifié l'organisation"],
     ["POST /business/me/team", "a invité un membre"],
   ])("%s → %s", (action, label) => {
-    expect(activityLabel(action)).toBe(label);
+    expect(activityLabel(action, t)).toBe(label);
   });
 
   it("still shows a change nobody worded yet", () => {
-    expect(activityLabel("POST /business/me/something-new")).toBe("a fait une modification");
+    expect(activityLabel("POST /business/me/something-new", t)).toBe("a fait une modification");
+  });
+
+  it("words them in English too", () => {
+    expect(activityLabel("POST /job-offers", en)).toBe("published a job");
   });
 
   it("links a line to its offer only when it is about one", () => {

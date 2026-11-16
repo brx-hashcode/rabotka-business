@@ -1,6 +1,7 @@
 "use client";
 
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { copyText } from "#/lib/clipboard";
 import type { LinkedinOffer } from "./components/linkedin-post-dialog";
@@ -15,6 +16,7 @@ import { offerShareLinks, offerShareUrl } from "./share-url";
  *   text is copied first, to paste there.
  */
 export function useOfferShare(slug: string, offer: LinkedinOffer) {
+  const t = useTranslations("offers.share");
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   const url = (source?: string) => offerShareUrl(origin, slug, offer.reference, source);
   const text = (source: string, hashtags = true) => defaultLinkedinText({ ...offer, url: url(source) }, { hashtags });
@@ -26,7 +28,7 @@ export function useOfferShare(slug: string, offer: LinkedinOffer) {
     const copied = copyText(body);
     open(href);
     void copied.then((ok) =>
-      ok ? toast.success(`Texte de l'offre copié : collez-le dans votre publication ${pasteWhere}.`) : toast.error("Le texte n'a pas pu être copié."),
+      ok ? toast.success(t("textCopied", { network: pasteWhere })) : toast.error(t("textFailed")),
     );
   };
 
@@ -36,8 +38,8 @@ export function useOfferShare(slug: string, offer: LinkedinOffer) {
     tiktok: () => copyThenOpen(text("tiktok"), "https://www.tiktok.com/", "TikTok"),
     copyLink: async () => {
       const ok = await copyText(url());
-      if (ok) toast.success("Lien de l'offre copié.");
-      else toast.error("Le lien n'a pas pu être copié.");
+      if (ok) toast.success(t("linkCopied"));
+      else toast.error(t("linkFailed"));
     },
     linkedinShareBox: () => links().linkedin,
   };

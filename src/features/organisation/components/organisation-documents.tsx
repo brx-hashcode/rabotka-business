@@ -1,12 +1,13 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { IconEye, IconFileText, IconPlus, IconRefresh } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
 import { DocumentPreviewDialog } from "#/features/sign-up/components/document-preview";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { myBusinessDocumentUrl, uploadMyBusinessDocument } from "#/lib/api/business-controller";
 import type { BusinessCatalog, MyBusiness, VerificationStatus } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
@@ -16,16 +17,16 @@ const MAX_BYTES = 10 * 1024 * 1024;
 
 type Doc = MyBusiness["documents"][number];
 
-const STATUS: Record<VerificationStatus, { label: string; className: string }> = {
-  PENDING: { label: "En attente", className: "bg-chip-amber text-chip-amber-foreground" },
-  VERIFIED: { label: "Accepté", className: "bg-chip-green text-chip-green-foreground" },
-  REJECTED: { label: "Refusé", className: "bg-destructive/10 text-destructive" },
+const STATUS: Record<VerificationStatus, string> = {
+  PENDING: "bg-chip-amber text-chip-amber-foreground",
+  VERIFIED: "bg-chip-green text-chip-green-foreground",
+  REJECTED: "bg-destructive/10 text-destructive",
 };
 
 export function StatusPill({ status }: Readonly<{ status: VerificationStatus }>) {
-  const { label, className } = STATUS[status];
+  const t = useTranslations("organisation.documents.status");
   return (
-    <span className={cn("inline-flex shrink-0 rounded-full px-2.5 py-1 font-medium text-xs", className)}>{label}</span>
+    <span className={cn("inline-flex shrink-0 rounded-full px-2.5 py-1 font-medium text-xs", STATUS[status])}>{t(status)}</span>
   );
 }
 
@@ -44,6 +45,7 @@ export function OrganisationDocuments({
   catalog: BusinessCatalog | undefined;
   onChange: (next: MyBusiness) => void;
 }>) {
+  const t = useTranslations("organisation.documents");
   const [viewing, setViewing] = useState<Doc | null>(null);
   const [showOptional, setShowOptional] = useState(false);
   const label = new Map(catalog?.documentTypes.map((d) => [d.value, d.label]));
@@ -60,13 +62,13 @@ export function OrganisationDocuments({
   return (
     <section className="space-y-4 rounded-3xl bg-card p-5 sm:p-6">
       <div className="space-y-1">
-        <h2 className="font-semibold text-lg">Documents</h2>
+        <h2 className="font-semibold text-lg">{t("title")}</h2>
         <p className="text-muted-foreground text-sm">
           {locked
-            ? "Ceux de votre vérification. Pour en ajouter un, faites une demande à l'équipe. Vos documents restent confidentiels."
+            ? t("lockedText")
             : refused > 0
-              ? `${refused} document${refused > 1 ? "s" : ""} à remplacer.`
-              : "PDF, JPG, PNG ou WEBP, 10 Mo maximum. Vos documents restent confidentiels."}
+              ? t("toReplace", { count: refused })
+              : t("formats")}
         </p>
       </div>
 
@@ -80,8 +82,8 @@ export function OrganisationDocuments({
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-sm">{doc.label}</p>
                 <p className="truncate text-muted-foreground text-xs">
-                  {doc.fileName ?? "Document"}
-                  {doc.resubmitted && doc.verificationStatus === "PENDING" ? " · nouvelle version envoyée" : ""}
+                  {doc.fileName ?? t("file")}
+                  {doc.resubmitted && doc.verificationStatus === "PENDING" ? ` · ${t("resubmitted")}` : ""}
                 </p>
               </div>
               <StatusPill status={doc.verificationStatus} />
@@ -89,7 +91,7 @@ export function OrganisationDocuments({
 
             {doc.verificationStatus === "REJECTED" && (
               <p className="rounded-xl bg-destructive/8 px-3 py-2 text-destructive text-sm">
-                Motif : {doc.rejectionReason || "non précisé"}
+                {t("reason", { reason: doc.rejectionReason || t("noReason") })}
               </p>
             )}
 
@@ -100,13 +102,13 @@ export function OrganisationDocuments({
                 className="inline-flex h-9 items-center gap-1.5 rounded-full bg-card px-4 font-medium text-sm transition-colors hover:bg-card/70"
               >
                 <IconEye className="size-4" />
-                Voir
+                {t("view")}
               </button>
               {!locked && doc.verificationStatus !== "VERIFIED" && (
                 <UploadButton
                   documentType={doc.documentType}
                   replacesId={doc.id}
-                  label="Remplacer"
+                  label={t("replace")}
                   icon="replace"
                   primary={doc.verificationStatus === "REJECTED"}
                   onUploaded={onChange}
@@ -120,8 +122,8 @@ export function OrganisationDocuments({
       {!locked && recommended.length > 0 && (
         <div className="space-y-3 rounded-2xl bg-page p-4">
           <p className="font-medium text-sm">
-            Documents recommandés{" "}
-            <span className="font-normal text-muted-foreground">: ils accélèrent la vérification</span>
+            {t("recommended")}{" "}
+            <span className="font-normal text-muted-foreground">{t("recommendedHint")}</span>
           </p>
           <div className="flex flex-wrap gap-2">
             {recommended.map((d) => (
@@ -135,7 +137,7 @@ export function OrganisationDocuments({
         (showOptional ? (
           <div className="space-y-2">
             <p className="font-medium text-sm">
-              Documents complémentaires <span className="font-normal text-muted-foreground">(facultatif)</span>
+              {t("extra")} <span className="font-normal text-muted-foreground">{t("optional")}</span>
             </p>
             <div className="flex flex-wrap gap-2">
               {optional.map((type) => (
@@ -156,7 +158,7 @@ export function OrganisationDocuments({
             className="inline-flex items-center gap-2 rounded-full bg-page px-4 py-2.5 font-medium text-sm transition-colors hover:bg-page/70"
           >
             <IconPlus className="size-4" />
-            Ajouter un document complémentaire
+            {t("addExtra")}
           </button>
         ))}
 
@@ -197,25 +199,27 @@ function UploadButton({
   primary?: boolean;
   onUploaded: (next: MyBusiness) => void;
 }>) {
+  const t = useTranslations("organisation.documents");
+  const friendlyError = useFriendlyError();
   const input = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState(false);
   const Icon = icon === "add" ? IconPlus : IconRefresh;
 
   async function send(file: File) {
     if (!ACCEPT.split(",").includes(file.type)) {
-      toast.error("Format non accepté : envoyez un PDF, JPG, PNG ou WEBP.");
+      toast.error(t("badType"));
       return;
     }
     if (file.size > MAX_BYTES) {
-      toast.error("Fichier trop lourd : 10 Mo maximum.");
+      toast.error(t("tooBig"));
       return;
     }
     setPending(true);
     try {
       onUploaded(await uploadMyBusinessDocument(file, documentType, replacesId));
-      toast.success(replacesId ? "Nouvelle version envoyée : elle sera vérifiée." : "Document ajouté : il sera vérifié.");
+      toast.success(replacesId ? t("replaced") : t("added"));
     } catch (err) {
-      toast.error(friendlyError(err, "Le document n'a pas pu être envoyé. Réessayez."));
+      toast.error(friendlyError(err, t("failed")));
     } finally {
       setPending(false);
     }
@@ -244,7 +248,7 @@ function UploadButton({
         )}
       >
         {pending ? (
-          <Loader aria-label="Envoi" className={cn("size-4 animate-spin", primary && "text-white")} />
+          <Loader aria-label={t("sending")} className={cn("size-4 animate-spin", primary && "text-white")} />
         ) : (
           <Icon className="size-4" />
         )}

@@ -22,7 +22,8 @@
     "soonTitle": "Coming soon",
     "homeLabel": "{name} — dashboard",
     "menu": "Menu",
-    "openMenu": "Open the menu"
+    "openMenu": "Open the menu",
+    "builtAt": "Built on {date} UTC"
   },
   "theme": {
     "label": "Theme",
@@ -42,14 +43,12 @@
     "verifying": "Verification in progress",
     "trial": "Free trial",
     "active": "Active",
-    "plan": "{name} plan",
-    "noPlan": "No subscription",
     "trialUntil": "Trial until {date}",
     "until": "Until {date}",
     "choosePlan": "Choose a plan",
     "emails": "Receive emails",
-    "emailsOn": "You will receive the space's emails.",
-    "emailsOff": "You will no longer receive the space's emails.",
+    "emailsOn": "You will receive emails from your workspace.",
+    "emailsOff": "You will no longer receive emails from your workspace.",
     "emailsFailed": "The setting could not be saved.",
     "signOut": "Sign out"
   },
@@ -66,9 +65,9 @@
     "candidates": "Candidates",
     "searching": "Searching",
     "planRequired": "Profile search is included in some plans: see “Subscription”.",
-    "seePlans": "See the plans",
+    "seePlans": "See plans",
     "unavailable": "Search is unavailable right now.",
-    "none": "No candidate for “{query}”.",
+    "none": "No candidates for “{query}”.",
     "reliability": "Reliability {score}",
     "hint": "Describe the profile you need: a trade, a skill, a know-how (at least 2 letters).",
     "pages": "Pages"

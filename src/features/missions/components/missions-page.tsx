@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
@@ -10,9 +11,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Bone, CardGridSkeleton, TilesSkeleton } from "#/components/page-skeletons";
 import { StatTile } from "#/features/home/components/stat-tile";
 import { ApplicationActions } from "#/features/offers/components/application-actions";
-import { APPLICATION_STATUS, fcfa, PAYMENT_SUFFIX, statusClass, STATUS } from "#/features/offers/offer-labels";
+import { applicationStatusLabel, fcfa, offerChip, statusClass } from "#/features/offers/offer-labels";
 import { allPages } from "#/lib/api/all-pages";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import {
   getOfferApplicants,
   listOffers,
@@ -33,6 +35,8 @@ const HIRED = new Set(["ACCEPTED", "WAITING_PAYMENT", "STARTED", "END"]);
  */
 export function MissionsPage() {
   // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
+  const t = useTranslations("missions");
+  const friendlyError = useFriendlyError();
   const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(["current", "done"] as const).withDefault("current"));
   const offers = useQuery({
     queryKey: [...offersKey, "list", "missions"],
@@ -70,8 +74,8 @@ export function MissionsPage() {
   return (
     <div className="w-full space-y-6 pt-2">
       <div className="space-y-1.5">
-        <h1 className="font-semibold text-3xl tracking-tight">Missions</h1>
-        <p className="text-muted-foreground">Vos recrutements sur le terrain : qui vient, qui est en mission, qui a terminé — et qui noter.</p>
+        <h1 className="font-semibold text-3xl tracking-tight">{t("title")}</h1>
+        <p className="text-muted-foreground">{t("intro")}</p>
       </div>
 
       {loading ? (
@@ -83,23 +87,23 @@ export function MissionsPage() {
         </>
       ) : !offers.data || !received.data ? (
         <p className="rounded-3xl bg-card p-6 text-muted-foreground">
-          {friendlyError(offers.error ?? received.error, "Vos missions sont indisponibles pour le moment.")}
+          {friendlyError(offers.error ?? received.error, t("unavailable"))}
         </p>
       ) : (
         <>
           <section className="grid grid-cols-2 gap-3 rounded-3xl bg-card p-6 sm:gap-4 sm:p-8 xl:grid-cols-4">
-            <StatTile icon={IconCalendarEvent} label="Missions en cours" value={String(current.length)} />
-            <StatTile icon={IconUsers} label="Attendus" value={String(coming)} hint="retenus, mission à venir" />
-            <StatTile icon={IconCalendarCheck} label="En mission" value={String(onIt)} />
-            <StatTile icon={IconStar} label="Terminées" value={String(finished)} hint="personnes ayant fini leur mission" />
+            <StatTile icon={IconCalendarEvent} label={t("current")} value={String(current.length)} />
+            <StatTile icon={IconUsers} label={t("coming")} value={String(coming)} hint={t("comingHint")} />
+            <StatTile icon={IconCalendarCheck} label={t("onIt")} value={String(onIt)} />
+            <StatTile icon={IconStar} label={t("finished")} value={String(finished)} hint={t("finishedHint")} />
           </section>
 
           <section className="space-y-4">
             <div role="tablist" className="inline-flex rounded-full bg-card p-1">
               {(
                 [
-                  ["current", "En cours et à venir", current.length],
-                  ["done", "Terminées", done.length],
+                  ["current", t("tabCurrent"), current.length],
+                  ["done", t("tabDone"), done.length],
                 ] as const
               ).map(([key, label, n]) => (
                 <button
@@ -124,12 +128,12 @@ export function MissionsPage() {
                 <span className="flex size-12 items-center justify-center rounded-2xl bg-page">
                   <IconCalendarCheck className="size-6 text-muted-foreground" />
                 </span>
-                <p className="font-medium">{tab === "current" ? "Aucune mission en cours" : "Aucune mission terminée"}</p>
+                <p className="font-medium">{tab === "current" ? t("noneCurrent") : t("noneDone")}</p>
                 <p className="max-w-sm text-muted-foreground text-sm">
-                  {tab === "current" ? "Retenez un candidat sur l'une de vos offres : la mission apparaît ici." : "Vos missions terminées apparaîtront ici."}
+                  {tab === "current" ? t("noneCurrentHint") : t("noneDoneHint")}
                 </p>
                 <Link href="/espace/candidatures" className="mt-1 font-medium text-sm text-whatsapp-dark hover:underline">
-                  Voir les candidatures
+                  {t("seeApplications")}
                 </Link>
               </div>
             ) : (
@@ -148,12 +152,15 @@ export function MissionsPage() {
 
 function MissionCard({ offer: o }: Readonly<{ offer: OfferListItem }>) {
   // The offer page's own query: the same rows, with whether each was rated.
+  const tLabels = useTranslations("labels");
+  const t = useTranslations("missions");
+  const locale = useLocale() as Locale;
   const team = useQuery({ queryKey: [...offersKey, o.id, "applicants"], queryFn: () => getOfferApplicants(o.id) });
   const hired = (team.data ?? []).filter((a) => HIRED.has(a.status));
   const toRate = hired.filter((a) => a.status === "END" && !a.ratedByEmployer).length;
   const at = o.scheduledAt ? new Date(o.scheduledAt) : null;
   const days = at ? Math.ceil((at.getTime() - new Date().setHours(0, 0, 0, 0)) / DAY_MS) - 1 : null;
-  const place = o.isRemote ? "À distance" : [o.city, o.countryName].filter(Boolean).join(", ");
+  const place = o.isRemote ? tLabels("offer.remote") : [o.city, o.countryName].filter(Boolean).join(", ");
   const filled = Math.min(hired.length, o.quantity);
 
   return (
@@ -161,18 +168,18 @@ function MissionCard({ offer: o }: Readonly<{ offer: OfferListItem }>) {
       <div className="flex items-start gap-3.5">
         <div className="flex w-14 shrink-0 flex-col items-center rounded-2xl bg-brand-lime py-2 text-[#0f2414]">
           <span className="font-semibold text-xl leading-none">{at ? at.getDate() : "—"}</span>
-          <span className="mt-1 font-medium text-[11px] uppercase">{at ? at.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "") : ""}</span>
+          <span className="mt-1 font-medium text-[11px] uppercase">{at ? at.toLocaleDateString(INTL_LOCALE[locale], { month: "short" }).replace(".", "") : ""}</span>
         </div>
         <div className="min-w-0 flex-1 space-y-1">
           <Link href={`/espace/offres/${o.id}`} className="line-clamp-2 font-semibold leading-snug hover:underline">
             {o.title}
           </Link>
           <p className="truncate text-muted-foreground text-xs">
-            {at ? at.toLocaleString("fr-FR", { weekday: "short", hour: "2-digit", minute: "2-digit" }) : ""}
+            {at ? at.toLocaleString(INTL_LOCALE[locale], { weekday: "short", hour: "2-digit", minute: "2-digit" }) : ""}
             {place && ` · ${place}`}
           </p>
         </div>
-        <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 font-medium text-xs", STATUS[o.status].className)}>{STATUS[o.status].label}</span>
+        <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 font-medium text-xs", offerChip(o, tLabels).className)}>{offerChip(o, tLabels).label}</span>
       </div>
 
       {(o.description || o.amount !== null || o.address) && (
@@ -182,8 +189,8 @@ function MissionCard({ offer: o }: Readonly<{ offer: OfferListItem }>) {
             {o.amount !== null && (
               <span className="inline-flex items-center gap-1 font-semibold">
                 <IconCash className="size-3.5 text-muted-foreground" />
-                {fcfa(o.amount)}
-                {o.paymentFlow && <span className="font-normal text-muted-foreground">{PAYMENT_SUFFIX[o.paymentFlow]}</span>}
+                {fcfa(o.amount, locale)}
+                {o.paymentFlow && <span className="font-normal text-muted-foreground">{tLabels(`paymentSuffix.${o.paymentFlow}`)}</span>}
               </span>
             )}
             {!o.isRemote && o.address && (
@@ -200,13 +207,13 @@ function MissionCard({ offer: o }: Readonly<{ offer: OfferListItem }>) {
         <div className="flex flex-wrap gap-1.5">
           {days !== null && days >= 0 && o.status !== "COMPLETED" && (
             <span className="rounded-full bg-page px-2.5 py-0.5 font-medium text-xs">
-              {days === 0 ? "Aujourd'hui" : days === 1 ? "Demain" : `Dans ${days} jours`}
+              {days === 0 ? tLabels("when.today") : days === 1 ? tLabels("when.tomorrow") : tLabels("when.inDays", { days })}
             </span>
           )}
           {toRate > 0 && (
             <span className="inline-flex items-center gap-1 rounded-full bg-chip-amber px-2.5 py-0.5 font-medium text-chip-amber-foreground text-xs">
               <IconStar className="size-3" />
-              {toRate} à noter
+              {t("toRate", { count: toRate })}
             </span>
           )}
         </div>
@@ -214,9 +221,9 @@ function MissionCard({ offer: o }: Readonly<{ offer: OfferListItem }>) {
 
       <div className="space-y-1.5">
         <div className="flex items-baseline justify-between text-xs">
-          <span className="text-muted-foreground">Équipe</span>
+          <span className="text-muted-foreground">{t("team")}</span>
           <span className="font-medium tabular-nums">
-            {team.isLoading ? "…" : filled}/{o.quantity} poste{o.quantity > 1 ? "s" : ""}
+            {team.isLoading ? `…/${o.quantity}` : t("positions", { filled, quantity: o.quantity })}
           </span>
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-page">
@@ -241,7 +248,7 @@ function MissionCard({ offer: o }: Readonly<{ offer: OfferListItem }>) {
         <ul className="space-y-1.5">
           {hired.map((a) => {
             const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
-            const stage = a.status === "END" && a.ratedByEmployer ? "Terminée · notée" : (APPLICATION_STATUS[a.status] ?? a.status);
+            const stage = a.status === "END" && a.ratedByEmployer ? t("doneRated") : applicationStatusLabel(a.status, tLabels);
             return (
               <li key={a.applicationId} className="flex items-center gap-2.5 rounded-2xl bg-page p-2 pl-2.5">
                 <Link href={`/espace/candidats/${a.worker.id}`} className="group flex min-w-0 flex-1 items-center gap-2.5">
@@ -262,7 +269,7 @@ function MissionCard({ offer: o }: Readonly<{ offer: OfferListItem }>) {
       )}
 
       <Link href={`/espace/offres/${o.id}`} className="mt-auto inline-flex items-center gap-1 font-medium text-sm text-whatsapp-dark hover:underline">
-        Voir la mission
+        {t("see")}
         <IconChevronRight className="size-4" />
       </Link>
     </article>

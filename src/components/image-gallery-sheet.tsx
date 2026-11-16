@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { PreviewSheet } from "./preview-sheet";
@@ -14,6 +15,7 @@ export function ImageGallerySheet({
   title,
   onClose,
 }: Readonly<{ images: string[]; index: number; title: string; onClose: () => void }>) {
+  const t = useTranslations("ui");
   const [i, setI] = useState(index);
   const many = images.length > 1;
   const go = (d: number) => setI((x) => (x + d + images.length) % images.length);
@@ -22,7 +24,7 @@ export function ImageGallerySheet({
       open
       onOpenChange={(o) => !o && onClose()}
       title={title}
-      subtitle={many ? undefined : "Photo"}
+      subtitle={many ? undefined : t("photo")}
       src={images[i]}
       kind="image"
       fileName={`photo-${i + 1}`}

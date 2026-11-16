@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import Link from "next/link";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -25,7 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { Input } from "#/components/ui/input";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { timeAgo } from "#/lib/api/notification-controller";
 import {
   activityKey,
@@ -34,8 +35,6 @@ import {
   inviteMember,
   removeMember,
   resendInvite,
-  ROLE_HINT,
-  ROLE_LABEL,
   setMemberRole,
   teamKey,
   type InvitedRole,
@@ -49,7 +48,6 @@ import { isAdmin } from "../member-access";
 import { useMember } from "../use-member";
 
 const INVITED: InvitedRole[] = ["RECRUITER", "REVIEWER"];
-const PLURAL: Record<InvitedRole, string> = { RECRUITER: "Recruteurs", REVIEWER: "Évaluateurs" };
 
 /**
  * « Équipe »: the people who work in the space, and who did what. The account
@@ -57,15 +55,16 @@ const PLURAL: Record<InvitedRole, string> = { RECRUITER: "Recruteurs", REVIEWER:
  * each up to its plan's limit.
  */
 export function TeamPage() {
+  const t = useTranslations("team.page");
   const { role, isLoading } = useMember();
   const [tab, setTab] = useState<"members" | "activity">("members");
 
   return (
     <div className="w-full space-y-6 pt-2">
       <div className="space-y-1.5">
-        <h1 className="font-semibold text-3xl tracking-tight">Équipe</h1>
+        <h1 className="font-semibold text-3xl tracking-tight">{t("title")}</h1>
         <p className="text-muted-foreground">
-          Invitez vos collègues : chacun se connecte avec sa propre adresse e-mail, avec le rôle que vous lui donnez.
+          {t("intro")}
         </p>
       </div>
 
@@ -77,20 +76,15 @@ export function TeamPage() {
             <IconLock className="size-5" />
           </span>
           <div className="space-y-1">
-            <p className="font-semibold">Réservé à l&apos;administrateur</p>
-            <p className="text-muted-foreground text-sm">Le responsable du compte gère l&apos;équipe et les rôles.</p>
+            <p className="font-semibold">{t("adminOnly")}</p>
+            <p className="text-muted-foreground text-sm">{t("adminOnlyText")}</p>
           </div>
         </div>
       ) : (
         <>
           <div className="flex flex-wrap items-center justify-between gap-3">
-          <div role="tablist" aria-label="Équipe" className="inline-flex rounded-full bg-card p-1">
-            {(
-              [
-                ["members", "Membres"],
-                ["activity", "Activité"],
-              ] as const
-            ).map(([key, label]) => (
+          <div role="tablist" aria-label={t("title")} className="inline-flex rounded-full bg-card p-1">
+            {(["members", "activity"] as const).map((key) => (
               <button
                 key={key}
                 type="button"
@@ -102,7 +96,7 @@ export function TeamPage() {
                   tab === key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {label}
+                {t(`tabs.${key}`)}
               </button>
             ))}
           </div>
@@ -118,6 +112,8 @@ export function TeamPage() {
 // ── Members ────────────────────────────────────────────────────────────
 
 function Members() {
+  const t = useTranslations("team.members");
+  const friendlyError = useFriendlyError();
   const queryClient = useQueryClient();
   const team = useQuery({ queryKey: teamKey, queryFn: getTeam });
   const [removing, setRemoving] = useState<TeamMember | null>(null);
@@ -126,16 +122,16 @@ function Members() {
   const remove = useMutation({
     mutationFn: (id: string) => removeMember(id),
     onSuccess: () => {
-      toast.success(`${removing?.name ?? "Le membre"} n'a plus accès à l'espace.`);
+      toast.success(t("removed", { name: removing?.name ?? t("aMember") }));
       setRemoving(null);
       refresh();
     },
-    onError: (err) => toast.error(friendlyError(err, "Le membre n'a pas pu être retiré.")),
+    onError: (err) => toast.error(friendlyError(err, t("removeFailed"))),
   });
 
   if (team.isLoading) return <MembersBones />;
   if (!team.data) {
-    return <p className="rounded-3xl bg-card p-6 text-muted-foreground">{friendlyError(team.error, "L'équipe n'a pas pu être chargée.")}</p>;
+    return <p className="rounded-3xl bg-card p-6 text-muted-foreground">{friendlyError(team.error, t("loadFailed"))}</p>;
   }
   const { members, seats } = team.data;
 
@@ -145,7 +141,7 @@ function Members() {
 
       <section className="overflow-hidden rounded-3xl bg-card">
         <p className="px-5 pt-4 pb-1 font-semibold">
-          Membres <span className="font-normal text-muted-foreground">({members.length})</span>
+          {t("heading")} <span className="font-normal text-muted-foreground">({members.length})</span>
         </p>
         <ul className="divide-y divide-page">
           {members.map((m) => (
@@ -158,9 +154,9 @@ function Members() {
               <IconUserPlus className="size-5" />
             </span>
             <div className="min-w-0">
-              <p className="font-medium text-sm">Vous êtes seul dans l&apos;espace</p>
+              <p className="font-medium text-sm">{t("alone")}</p>
               <p className="text-muted-foreground text-sm">
-                Un recruteur publie et trie avec vous ; un évaluateur donne son avis sur les candidats.
+                {t("aloneText")}
               </p>
             </div>
           </div>
@@ -172,9 +168,9 @@ function Members() {
         onOpenChange={(open) => !open && setRemoving(null)}
         tone="warning"
         icon={<IconUserMinus className="size-5" />}
-        title={`Retirer ${removing?.name ?? ""} de l'équipe ?`}
-        description="Sa session s'arrête aussitôt. Ce qu'il a fait reste : offres, décisions, notes."
-        confirmLabel="Retirer"
+        title={t("removeTitle", { name: removing?.name ?? "" })}
+        description={t("removeText")}
+        confirmLabel={t("remove")}
         pending={remove.isPending}
         onConfirm={() => removing && remove.mutate(removing.id)}
       />
@@ -184,10 +180,9 @@ function Members() {
 
 const hasPlace = (s: Seats) => s.limit === null || s.used < s.limit;
 
-const ROLE_PLURAL: Record<InvitedRole, string> = { RECRUITER: "recruteurs", REVIEWER: "évaluateurs" };
-
 /** « Inviter », beside the tabs: off when the plan has no place left. */
 function InviteButton() {
+  const t = useTranslations("team.members");
   const queryClient = useQueryClient();
   const team = useQuery({ queryKey: teamKey, queryFn: getTeam });
   const [open, setOpen] = useState(false);
@@ -199,11 +194,11 @@ function InviteButton() {
         type="button"
         onClick={() => setOpen(true)}
         disabled={!anyPlace}
-        title={seats && !anyPlace ? "Toutes les places de votre formule sont prises" : undefined}
+        title={seats && !anyPlace ? t("allTaken") : undefined}
         className="inline-flex h-11 items-center gap-2 rounded-full bg-ink px-5 font-medium text-sm text-white disabled:opacity-40"
       >
         <IconUserPlus className="size-4" />
-        Inviter un collègue
+        {t("invite")}
       </button>
       {seats && (
         <InviteDialog
@@ -223,6 +218,7 @@ function InviteButton() {
  * take out; with none left, the way to more.
  */
 function Places({ seats }: Readonly<{ seats: Team["seats"] }>) {
+  const t = useTranslations("team.members");
   const anyPlace = INVITED.some((r) => hasPlace(seats[r]));
   const none = INVITED.every((r) => seats[r].limit === 0);
   const over = INVITED.map((r) => ({ role: r, extra: seats[r].limit === null ? 0 : seats[r].used - seats[r].limit! })).filter(
@@ -230,7 +226,7 @@ function Places({ seats }: Readonly<{ seats: Team["seats"] }>) {
   );
   return (
     <section className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-3xl bg-card px-5 py-4">
-      <p className="font-medium text-sm">Places dans votre équipe</p>
+      <p className="font-medium text-sm">{t("places")}</p>
       <div className="flex flex-wrap gap-2">
         {INVITED.map((r) => (
           <SeatPill key={r} role={r} used={seats[r].used} limit={seats[r].limit} />
@@ -238,16 +234,14 @@ function Places({ seats }: Readonly<{ seats: Team["seats"] }>) {
       </div>
       {over.length > 0 && (
         <p className="w-full rounded-2xl bg-chip-amber px-4 py-3 text-chip-amber-foreground text-sm">
-          Votre équipe dépasse votre formule (
-          {over.map(({ role, extra }) => `${extra} ${extra > 1 ? ROLE_PLURAL[role] : ROLE_LABEL[role].toLowerCase()} en trop`).join(", ")}
-          ). Retirez des membres ou changez de formule.
+          {t("over", { list: over.map(({ role, extra }) => t("overOne", { role, count: extra })).join(", ") })}
         </p>
       )}
       {!anyPlace && over.length === 0 && (
         <p className="flex flex-wrap items-center gap-x-2 text-muted-foreground text-sm sm:ml-auto">
-          {none ? "Votre formule n'inclut pas de membres d'équipe." : "Toutes les places sont prises : retirez un membre pour en libérer une, ou changez de formule."}
+          {none ? t("noSeats") : t("full")}
           <Link href="/espace/abonnement" className="font-medium text-foreground underline underline-offset-2">
-            Changer de formule
+            {t("changePlan")}
           </Link>
         </p>
       )}
@@ -256,6 +250,7 @@ function Places({ seats }: Readonly<{ seats: Team["seats"] }>) {
 }
 
 function SeatPill({ role, used, limit }: Readonly<{ role: InvitedRole; used: number; limit: number | null }>) {
+  const t = useTranslations("team");
   const full = limit !== null && used >= limit;
   return (
     <span
@@ -264,8 +259,8 @@ function SeatPill({ role, used, limit }: Readonly<{ role: InvitedRole; used: num
         full ? "bg-page text-muted-foreground" : "bg-selected text-selected-foreground",
       )}
     >
-      {PLURAL[role]}
-      <span className="font-semibold tabular-nums">{limit === null ? `${used} · illimité` : `${used} / ${limit}`}</span>
+      {t(`rolePlural.${role}`)}
+      <span className="font-semibold tabular-nums">{limit === null ? t("members.unlimited", { used }) : `${used} / ${limit}`}</span>
     </span>
   );
 }
@@ -276,18 +271,23 @@ function MemberRow({
   onRemove,
   onChanged,
 }: Readonly<{ member: TeamMember; seats: Team["seats"]; onRemove: () => void; onChanged: () => void }>) {
+  const t = useTranslations("team.members");
+  const tTeam = useTranslations("team");
+  const tLabels = useTranslations("labels");
+  const locale = useLocale();
+  const friendlyError = useFriendlyError();
   const resend = useMutation({
     mutationFn: () => resendInvite(member.id),
-    onSuccess: () => toast.success(`Invitation renvoyée à ${member.email}.`),
-    onError: (err) => toast.error(friendlyError(err, "L'invitation n'a pas pu être renvoyée.")),
+    onSuccess: () => toast.success(t("resent", { email: member.email })),
+    onError: (err) => toast.error(friendlyError(err, t("resendFailed"))),
   });
   const role = useMutation({
     mutationFn: (next: InvitedRole) => setMemberRole(member.id, next),
     onSuccess: (m) => {
-      toast.success(`${m.name} est maintenant ${ROLE_LABEL[m.role].toLowerCase()}.`);
+      toast.success(t("roleChanged", { name: m.name, role: m.role }));
       onChanged();
     },
-    onError: (err) => toast.error(friendlyError(err, "Le rôle n'a pas pu être changé.")),
+    onError: (err) => toast.error(friendlyError(err, t("roleFailed"))),
   });
   const invited = member.status === "INVITED";
 
@@ -301,16 +301,18 @@ function MemberRow({
       <div className="min-w-0 flex-1">
         <p className="flex items-center gap-1.5 truncate font-medium">
           <span className="truncate">{member.name}</span>
-          {member.isOwner && <IconCrown className="size-4 shrink-0 text-chip-amber-foreground" aria-label="Responsable du compte" />}
+          {member.isOwner && <IconCrown className="size-4 shrink-0 text-chip-amber-foreground" aria-label={t("owner")} />}
         </p>
         <p className="truncate text-muted-foreground text-xs">
           {member.email}
           {" · "}
           {invited
-            ? `invité ${member.invitedAt ? timeAgo(member.invitedAt) : ""}`
+            ? member.invitedAt
+              ? t("invitedAgo", { ago: timeAgo(member.invitedAt, locale) })
+              : t("invitedNoDate")
             : member.lastSeenAt
-              ? `vu ${timeAgo(member.lastSeenAt)}`
-              : "actif"}
+              ? t("seenAgo", { ago: timeAgo(member.lastSeenAt, locale) })
+              : t("active")}
         </p>
       </div>
       <span
@@ -319,12 +321,12 @@ function MemberRow({
           invited ? "bg-chip-amber text-chip-amber-foreground" : "bg-page text-muted-foreground",
         )}
       >
-        {invited ? "Invitation envoyée" : member.isOwner ? "Responsable du compte" : ROLE_LABEL[member.role]}
+        {invited ? t("inviteSent") : member.isOwner ? t("owner") : tLabels(`role.${member.role}`)}
       </span>
       {!member.isOwner && (
         <DropdownMenu>
           <DropdownMenuTrigger
-            aria-label={`Actions pour ${member.name}`}
+            aria-label={t("actionsFor", { name: member.name })}
             className="flex size-9 shrink-0 items-center justify-center rounded-full bg-page hover:bg-page/70"
           >
             <IconDots className="size-4" />
@@ -339,8 +341,8 @@ function MemberRow({
                   onSelect={() => role.mutate(r)}
                   className="cursor-pointer flex-col items-start gap-0 rounded-xl px-3 py-2"
                 >
-                  <span className="font-medium text-sm">Passer {ROLE_LABEL[r].toLowerCase()}</span>
-                  <span className="text-muted-foreground text-xs">{full ? "Toutes les places sont prises" : ROLE_HINT[r]}</span>
+                  <span className="font-medium text-sm">{t("makeRole", { role: r })}</span>
+                  <span className="text-muted-foreground text-xs">{full ? t("seatsTaken") : tTeam(`roleHint.${r}`)}</span>
                 </DropdownMenuItem>
               );
             })}
@@ -351,12 +353,12 @@ function MemberRow({
                 className="cursor-pointer gap-2 rounded-xl px-3 py-2 text-sm"
               >
                 <IconSend className="size-4" />
-                Renvoyer l&apos;invitation
+                {t("resend")}
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onSelect={onRemove} className="cursor-pointer gap-2 rounded-xl px-3 py-2 text-destructive text-sm focus:text-destructive">
               <IconUserMinus className="size-4" />
-              Retirer de l&apos;équipe
+              {t("removeFromTeam")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -371,6 +373,10 @@ function InviteDialog({
   seats,
   onInvited,
 }: Readonly<{ open: boolean; onOpenChange: (open: boolean) => void; seats: Team["seats"]; onInvited: () => void }>) {
+  const t = useTranslations("team.invite");
+  const tTeam = useTranslations("team");
+  const tLabels = useTranslations("labels");
+  const friendlyError = useFriendlyError();
   const free = (r: InvitedRole) => seats[r].limit === null || seats[r].used < seats[r].limit!;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -378,13 +384,13 @@ function InviteDialog({
   const invite = useMutation({
     mutationFn: () => inviteMember({ name: name.trim(), email: email.trim(), role }),
     onSuccess: (m) => {
-      toast.success(`Invitation envoyée à ${m.email}.`);
+      toast.success(t("sent", { email: m.email }));
       setName("");
       setEmail("");
       onOpenChange(false);
       onInvited();
     },
-    onError: (err) => toast.error(friendlyError(err, "L'invitation n'a pas pu être envoyée.")),
+    onError: (err) => toast.error(friendlyError(err, t("failed"))),
   });
   const valid = name.trim().length > 0 && /^\S+@\S+\.\S+$/.test(email.trim()) && free(role);
 
@@ -393,9 +399,9 @@ function InviteDialog({
       open={open}
       onOpenChange={onOpenChange}
       icon={<IconMail className="size-5" />}
-      title="Inviter un collègue"
-      description="Il reçoit un e-mail pour rejoindre l'espace, et se connecte avec cette adresse."
-      confirmLabel="Envoyer l'invitation"
+      title={t("title")}
+      description={t("text")}
+      confirmLabel={t("confirm")}
       confirmDisabled={!valid}
       pending={invite.isPending}
       onConfirm={() => valid && invite.mutate()}
@@ -404,21 +410,21 @@ function InviteDialog({
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Nom et prénom"
+          placeholder={t("name")}
           maxLength={120}
-          aria-label="Nom et prénom"
+          aria-label={t("name")}
           className="h-12 rounded-xl border-0 bg-page px-4 shadow-none"
         />
         <Input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Adresse e-mail professionnelle"
+          placeholder={t("emailPlaceholder")}
           maxLength={200}
-          aria-label="Adresse e-mail"
+          aria-label={t("email")}
           className="h-12 rounded-xl border-0 bg-page px-4 shadow-none"
         />
-        <div role="radiogroup" aria-label="Rôle" className="grid gap-2 sm:grid-cols-2">
+        <div role="radiogroup" aria-label={t("role")} className="grid gap-2 sm:grid-cols-2">
           {INVITED.map((r) => (
             <button
               key={r}
@@ -432,9 +438,9 @@ function InviteDialog({
                 role === r ? "bg-selected text-selected-foreground" : "bg-page hover:bg-page/70",
               )}
             >
-              <span className="block font-medium text-sm">{ROLE_LABEL[r]}</span>
+              <span className="block font-medium text-sm">{tLabels(`role.${r}`)}</span>
               <span className={cn("block text-xs", role === r ? "opacity-80" : "text-muted-foreground")}>
-                {free(r) ? ROLE_HINT[r] : "Toutes les places sont prises"}
+                {free(r) ? tTeam(`roleHint.${r}`) : tTeam("members.seatsTaken")}
               </span>
             </button>
           ))}
@@ -447,6 +453,9 @@ function InviteDialog({
 // ── Activity ───────────────────────────────────────────────────────────
 
 function Activity() {
+  const t = useTranslations("team.activity");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
   const team = useQuery({ queryKey: teamKey, queryFn: getTeam });
   const [memberId, setMemberId] = useState<string | undefined>(undefined);
   const activity = useInfiniteQuery({
@@ -462,7 +471,7 @@ function Activity() {
     <div className="space-y-4">
       {people.length > 1 && (
         <div className="flex flex-wrap gap-2">
-          {[{ id: undefined, name: "Tout le monde" }, ...people].map((p) => (
+          {[{ id: undefined, name: t("everyone") }, ...people].map((p) => (
             <button
               key={p.id ?? "all"}
               type="button"
@@ -487,7 +496,7 @@ function Activity() {
         </div>
       ) : items.length === 0 ? (
         <p className="rounded-3xl bg-card px-6 py-10 text-center text-muted-foreground text-sm">
-          Rien pour l&apos;instant : chaque offre publiée, candidat retenu ou entretien proposé apparaîtra ici, avec qui l&apos;a fait.
+          {t("empty")}
         </p>
       ) : (
         <ul className="divide-y divide-page overflow-hidden rounded-3xl bg-card">
@@ -501,17 +510,17 @@ function Activity() {
                   </AvatarFallback>
                 </Avatar>
                 <p className="min-w-0 flex-1 text-sm">
-                  <span className="font-medium">{it.member?.name ?? "Un ancien membre"}</span> {activityLabel(it.action)}
+                  <span className="font-medium">{it.member?.name ?? t("formerMember")}</span> {activityLabel(it.action, t)}
                   {offerId && (
                     <>
                       {" · "}
                       <Link href={`/espace/offres/${offerId}`} className="font-medium underline underline-offset-2">
-                        voir l&apos;offre
+                        {t("seeOffer")}
                       </Link>
                     </>
                   )}
                 </p>
-                <span className="shrink-0 text-muted-foreground text-xs">{timeAgo(it.at)}</span>
+                <span className="shrink-0 text-muted-foreground text-xs">{timeAgo(it.at, locale)}</span>
               </li>
             );
           })}
@@ -525,7 +534,7 @@ function Activity() {
           className="mx-auto flex h-10 items-center gap-2 rounded-full bg-card px-5 font-medium text-sm"
         >
           <IconPlus className="size-4" />
-          Voir plus
+          {tCommon("seeMore")}
         </button>
       )}
     </div>

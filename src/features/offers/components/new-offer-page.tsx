@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { PACKS_HREF } from "#/features/subscription/packs";
 import { usePackOnSale } from "#/features/subscription/use-packs";
@@ -15,7 +16,7 @@ import { getMyBusiness, getMySubscription, myBusinessKey, mySubscriptionKey } fr
 import { getLinkedin, linkedinKey, postOnLinkedin } from "#/lib/api/linkedin-controller";
 import { defaultLinkedinText } from "../linkedin-post";
 import { offerShareUrl } from "../share-url";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { createOffer, getJobCategories, offersKey } from "#/lib/api/offer-controller";
 import type { MySubscription } from "#/lib/api/types";
 import { OfferForm, offerFormValues, toOfferInput, type OfferFormValues } from "./offer-form";
@@ -24,6 +25,8 @@ import { offersFull, offersUsed } from "#/features/subscription/offers-quota";
 /** Publishing an offer. Past the plan's limit the server refuses, with its message. */
 export function NewOfferPage() {
   const router = useRouter();
+  const t = useTranslations("offers.new");
+  const friendlyError = useFriendlyError();
   const queryClient = useQueryClient();
   const subscription = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   const { data: business } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
@@ -59,30 +62,30 @@ export function NewOfferPage() {
           url: offerShareUrl(window.location.origin, business.publicSlug, reference, "linkedin"),
         });
         postOnLinkedin(id, text).catch((err) =>
-          toast.error(friendlyError(err, "L'offre n'a pas pu être publiée sur LinkedIn : réessayez depuis « Partager ».")),
+          toast.error(friendlyError(err, t("linkedinFailed"))),
         );
       }
       void queryClient.invalidateQueries({ queryKey: offersKey });
       void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
-      toast.success("Offre publiée. Les candidats correspondants sont prévenus.");
+      toast.success(t("published"));
       // `publiee`: the offer page opens on « faites-la connaître » (LinkedIn first).
       router.push(`/espace/offres/${id}?publiee=1`);
     },
-    onError: (err) => toast.error(friendlyError(err, "L'offre n'a pas pu être publiée.")),
+    onError: (err) => toast.error(friendlyError(err, t("failed"))),
   });
 
   return (
     <div className="w-full space-y-6 pt-2">
       <div className="space-y-1.5">
-        <h1 className="font-semibold text-3xl tracking-tight">Nouvelle offre</h1>
-        <p className="text-muted-foreground">Décrivez le poste : les candidats correspondants en sont prévenus dès sa publication.</p>
+        <h1 className="font-semibold text-3xl tracking-tight">{t("title")}</h1>
+        <p className="text-muted-foreground">{t("intro")}</p>
       </div>
       <OfferForm
         // Placed where the organisation is, once known (it is cached by then
         // almost always: the sidebar reads it).
         key={business ? "home" : "blank"}
         defaultValues={offerFormValues(undefined, business)}
-        submitLabel="Publier l'offre"
+        submitLabel={t("submit")}
         pending={create.isPending}
         aside={
           <>
@@ -93,10 +96,10 @@ export function NewOfferPage() {
                 <span className="min-w-0 space-y-1">
                   <span className="flex items-center gap-1.5 font-medium text-sm">
                     <IconBrandLinkedin className="size-4 text-[#0a66c2]" />
-                    Publier aussi sur LinkedIn
+                    {t("alsoLinkedin")}
                   </span>
                   <span className="block text-muted-foreground text-xs">
-                    Sur le compte de {linkedin?.account?.name}. Les candidats postulent sur votre page carrières.
+                    {t("linkedinAccount", { name: linkedin?.account?.name ?? "" })}
                   </span>
                 </span>
               </label>
@@ -117,15 +120,24 @@ function PlanCard({ subscription }: Readonly<{ subscription: MySubscription }>) 
   const used = offersUsed(e);
   const full = offersFull(e);
   const packOnSale = usePackOnSale("OFFER");
+  const t = useTranslations("offers.new");
+  const link = (href: string) =>
+    function LinkChunk(chunks: React.ReactNode) {
+      return (
+        <Link href={href} className="font-medium underline">
+          {chunks}
+        </Link>
+      );
+    };
   return (
     <section className="space-y-4 rounded-3xl bg-card p-6">
       <div className="flex items-baseline justify-between gap-3">
-        <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Votre formule</p>
-        <p className="font-semibold text-sm">{e.plan?.name ?? "Aucune"}</p>
+        <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("yourPlan")}</p>
+        <p className="font-semibold text-sm">{e.plan?.name ?? t("none")}</p>
       </div>
       <div className="space-y-2">
         <div className="flex items-baseline justify-between gap-3 text-sm">
-          <span>Offres publiées cette période</span>
+          <span>{t("publishedThisPeriod")}</span>
           <span className="font-semibold tabular-nums">
             {used}
             {limit === null ? "" : `/${limit}`}
@@ -142,26 +154,14 @@ function PlanCard({ subscription }: Readonly<{ subscription: MySubscription }>) 
       </div>
       {full ? (
         <p className="rounded-2xl bg-chip-amber p-3 text-chip-amber-foreground text-sm">
-          {e.plan ? "Toutes les offres de la période sont publiées : attendez la prochaine" : "Il faut une formule pour publier : "}
-          {e.plan && packOnSale && (
-            <>
-              {", "}
-              <Link href={PACKS_HREF} className="font-medium underline">
-                ajoutez un pack d&apos;offres
-              </Link>
-            </>
-          )}
-          {e.plan && " ou "}
-          <Link href="/espace/abonnement" className="font-medium underline">
-            {e.plan ? "changez de formule" : "choisissez-en une"}
-          </Link>
-          .
+          {t.rich(!e.plan ? "noPlan" : packOnSale ? "fullWithPack" : "full", {
+            pack: link(PACKS_HREF),
+            plan: link("/espace/abonnement"),
+          })}
         </p>
       ) : (
         <p className="text-muted-foreground text-sm">
-          {e.priorityVisibility
-            ? "Votre offre sera mise en avant auprès des candidats."
-            : "Les candidats correspondants sont prévenus dès la publication."}
+          {e.priorityVisibility ? t("priority") : t("notified")}
         </p>
       )}
     </section>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { IconCheck, IconSelector } from "@tabler/icons-react";
 
@@ -47,10 +48,12 @@ export function CountryPicker({
   countries: readonly PayCountry[];
   payerCountry: string | null;
 }>) {
+  const t = useTranslations("subscription.country");
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const selected = countries.find((c) => c.code === value) ?? null;
   const own = countries.find((c) => c.code === payerCountry) ?? null;
-  const others = countries.filter((c) => c !== own).sort((a, b) => a.name.localeCompare(b.name, "fr"));
+  const others = countries.filter((c) => c !== own).sort((a, b) => a.name.localeCompare(b.name, locale));
 
   const row = (c: PayCountry) => (
     <CommandItem
@@ -88,11 +91,11 @@ export function CountryPicker({
             <Flag country={selected} />
             <span className="min-w-0 flex-1 truncate">{selected.name}</span>
             {currencyLabel(selected.currency) && (
-              <span className="shrink-0 text-muted-foreground text-sm">Payé en {currencyLabel(selected.currency)}</span>
+              <span className="shrink-0 text-muted-foreground text-sm">{t("paidIn", { currency: currencyLabel(selected.currency) ?? "" })}</span>
             )}
           </>
         ) : (
-          <span className="flex-1 text-muted-foreground">Choisir un pays</span>
+          <span className="flex-1 text-muted-foreground">{t("choose")}</span>
         )}
         <IconSelector className="size-4 shrink-0 text-muted-foreground" />
       </PopoverTrigger>
@@ -103,11 +106,11 @@ export function CountryPicker({
         className="w-(--anchor-width) min-w-72 rounded-2xl border-0 bg-card shadow-soft before:hidden"
       >
         <Command className={COMMAND_STYLE} filter={filter}>
-          <CommandInput placeholder="Rechercher un pays ou un indicatif…" />
+          <CommandInput placeholder={t("search")} />
           <CommandList className="max-h-80 overscroll-contain pr-1">
-            <CommandEmpty>Aucun pays ne correspond.</CommandEmpty>
-            {own && <CommandGroup heading="Votre pays">{row(own)}</CommandGroup>}
-            <CommandGroup heading={own ? "Autres pays" : undefined}>{others.map(row)}</CommandGroup>
+            <CommandEmpty>{t("empty")}</CommandEmpty>
+            {own && <CommandGroup heading={t("yours")}>{row(own)}</CommandGroup>}
+            <CommandGroup heading={own ? t("others") : undefined}>{others.map(row)}</CommandGroup>
           </CommandList>
         </Command>
       </PopoverContent>

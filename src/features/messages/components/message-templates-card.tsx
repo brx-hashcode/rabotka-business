@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
@@ -11,12 +12,11 @@ import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import {
   createMessageTemplate,
   deleteMessageTemplate,
   listMessageTemplates,
-  MESSAGE_KIND_LABEL,
   messageTemplatesKey,
   PLACEHOLDERS,
   updateMessageTemplate,
@@ -36,6 +36,8 @@ const BODY_MAX = 1000;
  * hire write them. Ready-made ones show for the kinds not written yet.
  */
 export function MessageTemplatesCard() {
+  const t = useTranslations("discussions.templates");
+  const friendlyError = useFriendlyError();
   const queryClient = useQueryClient();
   const hire = canHire(useMember().role);
   const { data } = useQuery({ queryKey: messageTemplatesKey, queryFn: listMessageTemplates });
@@ -48,9 +50,9 @@ export function MessageTemplatesCard() {
     onSuccess: () => {
       setRemoving(null);
       refresh();
-      toast.success("Modèle supprimé.");
+      toast.success(t("deleted"));
     },
-    onError: (err) => toast.error(friendlyError(err, "Le modèle n'a pas pu être supprimé.")),
+    onError: (err) => toast.error(friendlyError(err, t("deleteFailed"))),
   });
 
   if (!data) return null;
@@ -60,14 +62,14 @@ export function MessageTemplatesCard() {
     <section className="space-y-4 rounded-3xl bg-card p-6">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
-          <h2 className="font-semibold text-lg">Modèles de messages</h2>
-          <p className="text-muted-foreground text-sm">Écrits une fois, envoyés avec un refus ou à plusieurs candidats à la fois.</p>
+          <h2 className="font-semibold text-lg">{t("title")}</h2>
+          <p className="text-muted-foreground text-sm">{t("subtitle")}</p>
         </div>
         {hire && (
           <button
             type="button"
             onClick={() => setEditing({ input: { kind: "INVITATION", title: "", body: "" } })}
-            aria-label="Ajouter un modèle"
+            aria-label={t("add")}
             className="flex size-9 shrink-0 items-center justify-center rounded-full bg-page hover:bg-page/70"
           >
             <IconPlus className="size-4" />
@@ -77,29 +79,29 @@ export function MessageTemplatesCard() {
 
       {own.length > 0 && (
         <ul className="space-y-2">
-          {own.map((t) => (
-            <li key={t.id} className="group flex items-start gap-3 rounded-2xl bg-page p-3">
+          {own.map((tpl) => (
+            <li key={tpl.id} className="group flex items-start gap-3 rounded-2xl bg-page p-3">
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-2">
-                  <span className="truncate font-medium text-sm">{t.title}</span>
-                  <span className="shrink-0 rounded-full bg-card px-2 py-0.5 text-muted-foreground text-[11px]">{MESSAGE_KIND_LABEL[t.kind]}</span>
+                  <span className="truncate font-medium text-sm">{tpl.title}</span>
+                  <span className="shrink-0 rounded-full bg-card px-2 py-0.5 text-muted-foreground text-[11px]">{t(`kind.${tpl.kind}`)}</span>
                 </span>
-                <span className="mt-0.5 line-clamp-2 block text-muted-foreground text-xs">{t.body}</span>
+                <span className="mt-0.5 line-clamp-2 block text-muted-foreground text-xs">{tpl.body}</span>
               </span>
               {hire && (
                 <span className="flex shrink-0 gap-1">
                   <button
                     type="button"
-                    onClick={() => setEditing({ id: t.id, input: { kind: t.kind, title: t.title, body: t.body } })}
-                    aria-label={`Modifier « ${t.title} »`}
+                    onClick={() => setEditing({ id: tpl.id, input: { kind: tpl.kind, title: tpl.title, body: tpl.body } })}
+                    aria-label={t("editNamed", { title: tpl.title })}
                     className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-card hover:text-foreground"
                   >
                     <IconPencil className="size-4" />
                   </button>
                   <button
                     type="button"
-                    onClick={() => setRemoving(t)}
-                    aria-label={`Supprimer « ${t.title} »`}
+                    onClick={() => setRemoving(tpl)}
+                    aria-label={t("deleteNamed", { title: tpl.title })}
                     className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-card hover:text-destructive"
                   >
                     <IconTrash className="size-4" />
@@ -113,26 +115,26 @@ export function MessageTemplatesCard() {
 
       {data.suggested.length > 0 && (
         <div className="space-y-2">
-          <p className="text-muted-foreground text-xs">{own.length > 0 ? "Aussi proposés" : "Proposés pour commencer"}</p>
+          <p className="text-muted-foreground text-xs">{own.length > 0 ? t("alsoSuggested") : t("suggested")}</p>
           <ul className="space-y-2">
-            {data.suggested.map((t) => (
-              <li key={t.key} className="flex items-start gap-3 rounded-2xl bg-page/60 p-3">
+            {data.suggested.map((tpl) => (
+              <li key={tpl.key} className="flex items-start gap-3 rounded-2xl bg-page/60 p-3">
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-2">
-                    <span className="truncate font-medium text-sm">{t.title}</span>
+                    <span className="truncate font-medium text-sm">{tpl.title}</span>
                     <span className="shrink-0 rounded-full bg-card px-2 py-0.5 text-muted-foreground text-[11px]">
-                      {MESSAGE_KIND_LABEL[t.kind]}
+                      {t(`kind.${tpl.kind}`)}
                     </span>
                   </span>
-                  <span className="mt-0.5 line-clamp-2 block text-muted-foreground text-xs">{t.body}</span>
+                  <span className="mt-0.5 line-clamp-2 block text-muted-foreground text-xs">{tpl.body}</span>
                 </span>
                 {hire && (
                   <button
                     type="button"
-                    onClick={() => setEditing({ input: { kind: t.kind, title: t.title, body: t.body } })}
+                    onClick={() => setEditing({ input: { kind: tpl.kind, title: tpl.title, body: tpl.body } })}
                     className="shrink-0 rounded-full px-3 py-1.5 font-medium text-xs hover:bg-card"
                   >
-                    Adapter
+                    {t("adapt")}
                   </button>
                 )}
               </li>
@@ -148,9 +150,9 @@ export function MessageTemplatesCard() {
         onOpenChange={(o) => !o && setRemoving(null)}
         tone="warning"
         icon={<IconTrash className="size-5" />}
-        title={`Supprimer « ${removing?.title ?? ""} » ?`}
-        description="Les messages déjà envoyés ne changent pas."
-        confirmLabel="Supprimer"
+        title={t("deleteTitle", { title: removing?.title ?? "" })}
+        description={t("deleteText")}
+        confirmLabel={t("delete")}
         pending={remove.isPending}
         onConfirm={() => removing && remove.mutate(removing.id)}
       />
@@ -163,6 +165,8 @@ function TemplateEditor({
   onClose,
   onSaved,
 }: Readonly<{ initial: { id?: string; input: MessageTemplateInput }; onClose: () => void; onSaved: () => void }>) {
+  const t = useTranslations("discussions.templates");
+  const friendlyError = useFriendlyError();
   const [input, setInput] = useState(initial.input);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const save = useMutation({
@@ -170,9 +174,9 @@ function TemplateEditor({
     onSuccess: () => {
       onSaved();
       onClose();
-      toast.success("Modèle enregistré.");
+      toast.success(t("saved"));
     },
-    onError: (err) => toast.error(friendlyError(err, "Le modèle n'a pas pu être enregistré.")),
+    onError: (err) => toast.error(friendlyError(err, t("saveFailed"))),
   });
   // A placeholder goes where the cursor is.
   const insert = (token: string) => {
@@ -192,9 +196,9 @@ function TemplateEditor({
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="w-[calc(100vw-2rem)] gap-5 rounded-3xl border-0 bg-card p-6 shadow-soft sm:max-w-xl">
         <div className="space-y-1">
-          <DialogTitle className="font-semibold text-xl">{initial.id ? "Modifier le modèle" : "Nouveau modèle"}</DialogTitle>
+          <DialogTitle className="font-semibold text-xl">{initial.id ? t("editTitle") : t("newTitle")}</DialogTitle>
           <DialogDescription className="text-muted-foreground text-sm">
-            Les mots entre accolades sont remplacés pour chaque candidat.
+            {t("editorHint")}
           </DialogDescription>
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -209,7 +213,7 @@ function TemplateEditor({
                 input.kind === k ? "bg-selected text-selected-foreground" : "bg-page text-muted-foreground hover:text-foreground",
               )}
             >
-              {MESSAGE_KIND_LABEL[k]}
+              {t(`kind.${k}`)}
             </button>
           ))}
         </div>
@@ -217,7 +221,7 @@ function TemplateEditor({
           value={input.title}
           onChange={(e) => setInput((v) => ({ ...v, title: e.target.value }))}
           maxLength={TITLE_MAX}
-          placeholder="Nom du modèle, ex. « Proposer une rencontre »"
+          placeholder={t("namePlaceholder")}
           className="h-11 rounded-xl border-0 bg-page px-4 shadow-none"
         />
         <div className="space-y-2">
@@ -227,11 +231,11 @@ function TemplateEditor({
             onChange={(e) => setInput((v) => ({ ...v, body: e.target.value }))}
             maxLength={BODY_MAX}
             rows={6}
-            placeholder="Bonjour {prenom}, …"
+            placeholder={t("bodyPlaceholder", { token: "{prenom}" })}
             className="min-h-36 rounded-xl border-0 bg-page px-4 py-3 shadow-none"
           />
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-muted-foreground text-xs">Insérer :</span>
+            <span className="text-muted-foreground text-xs">{t("insert")}</span>
             {PLACEHOLDERS.map((p) => (
               <button
                 key={p.token}
@@ -239,7 +243,7 @@ function TemplateEditor({
                 onClick={() => insert(p.token)}
                 className="rounded-full bg-page px-2.5 py-1 font-medium text-xs hover:bg-page/70"
               >
-                {p.label}
+                {t(`placeholders.${p.key}`)}
               </button>
             ))}
             <span className="ml-auto text-muted-foreground text-xs tabular-nums">
@@ -247,12 +251,12 @@ function TemplateEditor({
             </span>
           </div>
           <p className="text-muted-foreground text-xs">
-            Aux candidats Rabotka, le message arrive dans Messages : pas de téléphone, d&apos;e-mail ni de lien.
+            {t("noContact")}
           </p>
         </div>
         <div className="flex justify-end gap-2">
           <button type="button" onClick={onClose} className="h-10 rounded-full px-4 font-medium text-sm hover:bg-page">
-            Annuler
+            {t("cancel")}
           </button>
           <button
             type="button"
@@ -260,7 +264,7 @@ function TemplateEditor({
             onClick={() => save.mutate()}
             className="h-10 rounded-full bg-ink px-5 font-medium text-sm text-white hover:bg-ink/90 disabled:opacity-50"
           >
-            Enregistrer
+            {t("save")}
           </button>
         </div>
       </DialogContent>

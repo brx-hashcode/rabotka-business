@@ -33,7 +33,7 @@
     "done": {
       "kicker": "Request sent",
       "title": "Welcome to Rabotka Business",
-      "text": "Our team is reviewing your organisation. You can already explore your space."
+      "text": "Our team is reviewing your organisation. You can already explore your workspace."
     }
   },
   "progress": {
@@ -73,7 +73,7 @@
     "email": "Work email address",
     "emailPlaceholder": "firstname.lastname@organisation.com",
     "phone": "Phone",
-    "phonePlaceholder": "0712 345 678 (or with the country code, +254…)",
+    "phonePlaceholder": "06 123 45 67 (or with the country code, +237…)",
     "submit": "Get the code"
   },
   "verify": {
@@ -120,7 +120,7 @@
     "presentation": "About",
     "website": "Website",
     "description": "About the organisation",
-    "descriptionPlaceholder": "Activity, mission, values: what candidates should know about you.",
+    "descriptionPlaceholder": "What you do, your mission, your values: what candidates should know about you.",
     "size": "Headcount",
     "employees": "employees",
     "groups": {
@@ -168,13 +168,13 @@
     "legalForm": "Legal form",
     "size": "Headcount",
     "employees": "{size} employees",
-    "registrationNumber": "Registration no.",
-    "taxId": "Tax ID",
+    "registrationNumber": "RCCM no.",
+    "taxId": "NIF (tax ID)",
     "address": "Address",
     "country": "Country",
     "website": "Website",
     "documents": "Documents",
-    "noDocuments": "None yet: you can add them from your space.",
+    "noDocuments": "None yet: you can add them from your workspace.",
     "terms": "I accept Rabotka's <terms>terms of use</terms> and <privacy>privacy policy</privacy>, and certify that I am authorised to represent this organisation.",
     "submit": "Send my request",
     "edit": "Edit",
@@ -184,19 +184,19 @@
   "done": {
     "title": "Your business account is created",
     "signIn": "All that's left is to sign in: enter the code we just sent by email.",
-    "thanks": "Thank you! Our team is now reviewing your organisation's documents. You will be told by email as soon as your account is activated.",
+    "thanks": "Thank you! Our team is now reviewing your organisation's documents. You will be notified by email as soon as your account is activated.",
     "next": "Next steps",
     "checkTitle": "Your organisation is checked",
     "checkText": "Our team reviews your supporting documents.",
     "activationTitle": "Your account is activated",
-    "activationText": "You are notified by email and in your space.",
+    "activationText": "You are notified by email and in your workspace.",
     "hireTitle": "Your first hires",
-    "hireText": "Publish your jobs and receive pre-selected profiles.",
-    "enter": "Explore my business space"
+    "hireText": "Publish your jobs and receive pre-screened profiles.",
+    "enter": "Explore my business workspace"
   },
   "inlineSignIn": {
     "sendFailed": "The sign-in code could not be sent.",
-    "title": "Go to your space",
+    "title": "Go to your workspace",
     "text": "We just sent a sign-in code to <strong>{email}</strong>.",
     "submit": "Sign in"
   }

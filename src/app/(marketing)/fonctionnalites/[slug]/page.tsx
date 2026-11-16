@@ -1,31 +1,33 @@
 import type { Metadata } from "next";
+import { getSiteCopy, type SiteCopy } from "#/features/landing/copy";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { IconCheck } from "@tabler/icons-react";
+import { getTranslations } from "next-intl/server";
 
 import { DemoBlock } from "#/features/landing/components/demo-block";
 import { PipelinePosition } from "#/features/landing/components/feature-stages";
 import { PageHero } from "#/features/landing/components/page-hero";
 import { SectionHeading } from "#/features/landing/components/section-heading";
-import { FEATURES } from "#/features/landing/content";
+import { features, FEATURE_SLUGS } from "#/features/landing/content";
 import { FeatureMockup } from "#/features/landing/mockups/mockups";
-import { FEATURE_PAGES } from "#/features/landing/site-content";
+import { featurePage } from "#/features/landing/site-content";
 import { marketingMetadata } from "#/lib/seo/marketing";
 
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return FEATURES.map((f) => ({ slug: f.slug }));
+  return FEATURE_SLUGS.map((slug) => ({ slug }));
 }
 
-function find(slug: string) {
-  const feature = FEATURES.find((f) => f.slug === slug);
+function find(slug: string, copy: SiteCopy) {
+  const feature = features(copy).find((f) => f.slug === slug);
   if (!feature || feature.id === "pipeline") return null;
-  return { feature, page: FEATURE_PAGES[feature.id] };
+  return { feature, page: featurePage(copy, feature.id) };
 }
 
 export async function generateMetadata({ params }: PageProps<"/fonctionnalites/[slug]">): Promise<Metadata> {
-  const found = find((await params).slug);
+  const found = find((await params).slug, await getSiteCopy());
   if (!found) return {};
   return marketingMetadata({
     title: found.page.metaTitle,
@@ -36,7 +38,8 @@ export async function generateMetadata({ params }: PageProps<"/fonctionnalites/[
 
 /** One tool: what it does, where it sits in the hire (a link to the others), the demo. */
 export default async function FeaturePage({ params }: PageProps<"/fonctionnalites/[slug]">) {
-  const found = find((await params).slug);
+  const found = find((await params).slug, await getSiteCopy());
+  const t = await getTranslations("site.pages.feature");
   if (!found) notFound();
   const { feature, page } = found;
 
@@ -47,7 +50,7 @@ export default async function FeaturePage({ params }: PageProps<"/fonctionnalite
       {page.steps && (
         <section className="py-20 md:py-28">
           <div className="mx-auto w-full max-w-7xl space-y-14 px-4 sm:px-6">
-            <SectionHeading kicker={feature.label} title="Comment ça se passe" />
+            <SectionHeading kicker={feature.label} title={t("how")} />
             <ol className="space-y-16 md:space-y-24">
               {page.steps.map((s, n) => (
                 <li key={s.title} className="grid items-center gap-8 md:grid-cols-2 md:gap-14">
@@ -79,7 +82,7 @@ export default async function FeaturePage({ params }: PageProps<"/fonctionnalite
 
       <section className="bg-card py-20 md:py-28">
         <div className="mx-auto w-full max-w-7xl space-y-14 px-4 sm:px-6">
-          <SectionHeading kicker={feature.label} title="Ce que vous y gagnez" />
+          <SectionHeading kicker={feature.label} title={t("gains")} />
           {/* Six benefits sit in two rows of three, four in one row. */}
           <div className={`grid gap-4 sm:grid-cols-2 ${page.benefits.length % 3 === 0 ? "lg:grid-cols-3" : "lg:grid-cols-4"}`}>
             {page.benefits.map((b, n) => (
@@ -93,7 +96,7 @@ export default async function FeaturePage({ params }: PageProps<"/fonctionnalite
             ))}
           </div>
           <div className="space-y-4">
-            <p className="font-medium text-sm">Dans votre pipeline de recrutement</p>
+            <p className="font-medium text-sm">{t("inPipeline")}</p>
             <PipelinePosition featureId={feature.id} />
           </div>
         </div>

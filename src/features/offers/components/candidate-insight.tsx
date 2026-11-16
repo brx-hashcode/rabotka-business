@@ -1,4 +1,7 @@
+import { useTranslations } from "next-intl";
+
 import { CriterionBar, Points } from "#/features/cv-screening/components/cv-bits";
+import type { Translator } from "#/i18n/translator";
 
 /**
  * Why a candidate got their score: what fits, what to check, and the score by
@@ -16,13 +19,14 @@ export function CandidateInsight({
   gaps: string[];
   criteria: { label: string; value: number }[];
 }>) {
+  const t = useTranslations("offers.candidate");
   if (!summary && strengths.length + gaps.length + criteria.length === 0) return null;
   return (
     <div className="mt-4 space-y-4">
       {summary && <p className="text-sm leading-relaxed">{summary}</p>}
       <div className="grid gap-5 md:grid-cols-[1fr_1fr_14rem]">
-        <Points title="Points forts" items={strengths} tone="good" />
-        <Points title="Points à vérifier" items={gaps} tone="gap" />
+        <Points title={t("strengths")} items={strengths} tone="good" />
+        <Points title={t("gaps")} items={gaps} tone="gap" />
         {criteria.length > 0 && (
           <div className="space-y-2.5 rounded-2xl bg-card p-4">
             {criteria.map((c) => (
@@ -36,7 +40,7 @@ export function CandidateInsight({
 }
 
 /** The one toggle that opens a candidate's analysis and answers, on both cards. */
-export function detailsLabel(analysis: boolean, answers: boolean): string {
-  if (analysis && answers) return "Analyse et réponses";
-  return analysis ? "Voir l'analyse" : "Voir les réponses";
+export function detailsLabel(analysis: boolean, answers: boolean, t: Translator<"offers.candidate">): string {
+  if (analysis && answers) return t("analysisAndAnswers");
+  return analysis ? t("seeAnalysis") : t("seeAnswers");
 }

@@ -1,0 +1,128 @@
+{
+  "topics": {
+    "candidate": {
+      "label": "Candidat ou mission",
+      "hint": "Absence, retard, travail mal fait…"
+    },
+    "payment": {
+      "label": "Paiement ou facture",
+      "hint": "Montant, prélèvement, facture…"
+    },
+    "plan": {
+      "label": "Abonnement",
+      "hint": "Formule, contacts inclus…"
+    },
+    "account": {
+      "label": "Compte et documents",
+      "hint": "Vérification, informations…"
+    },
+    "bug": {
+      "label": "Problème technique",
+      "hint": "Une page ou une action qui ne marche pas"
+    },
+    "other": {
+      "label": "Autre",
+      "hint": "Une question, une idée…"
+    }
+  },
+  "status": {
+    "CREATED": "Envoyée",
+    "IN_PROGRESS": "En cours",
+    "COMPLETED": "Résolue",
+    "REJECTED": "Refusée"
+  },
+  "photos": {
+    "wrongType": "{name} : seules les photos JPG, PNG ou WEBP sont acceptées.",
+    "tooBig": "{name} dépasse 5 Mo.",
+    "tooMany": "{max} photos au plus.",
+    "remove": "Retirer la photo",
+    "add": "Ajouter des photos"
+  },
+  "list": {
+    "title": "Aide",
+    "intro": "Un souci avec un candidat, un paiement, une facture ? L'équipe Rabotka vous répond ici.",
+    "new": "Nouvelle demande",
+    "open": "En cours",
+    "openHint": "demandes ouvertes",
+    "waiting": "En attente de l'équipe",
+    "waitingHint": "pas encore prises en charge",
+    "closed": "Terminées",
+    "closedHint": "résolues ou fermées",
+    "loadFailed": "Vos demandes sont indisponibles pour le moment.",
+    "emptyOpen": "Aucune demande en cours",
+    "emptyClosed": "Aucune demande terminée",
+    "emptyText": "Décrivez votre souci, joignez des photos si besoin : l'équipe vous répond ici.",
+    "another": "Un autre souci ?",
+    "anotherText": "Ouvrez une nouvelle demande",
+    "request": "Demande",
+    "sentOn": "Envoyée le {date}",
+    "updated": "Mise à jour {ago}",
+    "ago": {
+      "justNow": "à l'instant",
+      "minutes": "il y a {n} min",
+      "hours": "il y a {n} h",
+      "yesterday": "hier",
+      "days": "il y a {n} jours",
+      "on": "le {date}"
+    }
+  },
+  "form": {
+    "title": "Nouvelle demande",
+    "intro": "Dites-nous ce qui ne va pas : l'équipe Rabotka vous répond dans votre espace.",
+    "errors": {
+      "topic": "Choisissez un sujet",
+      "titleRequired": "Objet requis",
+      "titleTooLong": "Objet trop long",
+      "descriptionMin": "10 caractères au moins",
+      "descriptionMax": "1 800 caractères au plus"
+    },
+    "noOffer": "Aucune en particulier",
+    "noCandidate": "Aucun en particulier",
+    "sent": "Demande envoyée. L'équipe Rabotka vous répond ici.",
+    "sendFailed": "La demande n'a pas pu être envoyée.",
+    "topicSection": "Le sujet",
+    "topic": "Sujet",
+    "concernsSection": "Ce que la demande concerne",
+    "offer": "Offre",
+    "offerPlaceholder": "Choisir une offre",
+    "offerSearch": "Rechercher une offre…",
+    "candidate": "Candidat",
+    "candidatePlaceholder": "Choisir un candidat",
+    "candidateSearch": "Rechercher un candidat…",
+    "candidateEmpty": "Aucun candidat.",
+    "requestSection": "Votre demande",
+    "subject": "Objet",
+    "subjectPlaceholder": "Ex. : candidat absent le jour de la mission",
+    "description": "Description",
+    "descriptionPlaceholder": "Ce qui s'est passé, quand, ce que vous attendez de nous…",
+    "photos": "Photos",
+    "photosHint": "Jusqu'à 3 photos, JPG, PNG ou WEBP, 5 Mo chacune.",
+    "send": "Envoyer",
+    "descriptionCheck": "Description (10 caractères au moins)",
+    "preview": "Aperçu de la demande",
+    "subjectEmpty": "Objet de la demande",
+    "photoCount": "{count, plural, one {# photo} other {# photos}}",
+    "noPhoto": "Aucune",
+    "ready": "Prête à envoyer",
+    "toComplete": "À compléter",
+    "next": "Et ensuite",
+    "next1": "L'équipe Rabotka vous répond dans la demande, depuis Aide.",
+    "next2": "Une notification vous prévient à chaque réponse.",
+    "notFilled": "Non renseigné"
+  },
+  "detail": {
+    "sendFailed": "Le message n'a pas pu être envoyé.",
+    "notFound": "Cette demande est introuvable.",
+    "thread": "Échanges avec l'équipe Rabotka",
+    "threadText": "Réponse dans votre espace, et une notification à chaque message.",
+    "empty": "Aucune réponse pour le moment. Ajoutez une précision si besoin : l'équipe la verra.",
+    "closed": "Cette demande est {status, select, COMPLETED {résolue} other {refusée}} : vous ne pouvez plus y répondre.",
+    "placeholder": "Écrivez à l'équipe…",
+    "message": "Votre message",
+    "send": "Envoyer",
+    "sentOn": "Envoyée le {date}",
+    "photos": "Photos",
+    "team": "Équipe Rabotka",
+    "enlarge": "Agrandir l'image"
+  }
+}

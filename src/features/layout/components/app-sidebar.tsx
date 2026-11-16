@@ -2,14 +2,15 @@
 
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 
 import { BusinessLockup } from "#/components/business-lockup";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { pageAllowed } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
-import { builtAtTitle, versionLabel } from "#/lib/app-version";
+import type { Locale } from "#/i18n/config";
+import { builtAt, versionLabel } from "#/lib/app-version";
 import { getMyBusiness, myBusinessKey } from "#/lib/api/business-controller";
 import { cn, getInitials } from "#/lib/utils";
 import { isActive, NAV_GROUPS } from "./nav-items";
@@ -22,6 +23,8 @@ import { isActive, NAV_GROUPS } from "./nav-items";
 export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>) {
   const pathname = usePathname();
   const t = useTranslations("layout.nav");
+  const locale = useLocale() as Locale;
+  const built = builtAt(locale);
   const { data: business } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
   // Each person sees the pages its role uses (the API refuses the rest anyway).
   const { role } = useMember();
@@ -110,8 +113,8 @@ export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>
       </nav>
 
       <div className="pt-4">
-        <p className="px-3 text-[11px] text-muted-foreground/70 tabular-nums" title={builtAtTitle()}>
-          {versionLabel()}
+        <p className="px-3 text-[11px] text-muted-foreground/70 tabular-nums" title={built && t("builtAt", { date: built })}>
+          {versionLabel(undefined, undefined, locale)}
         </p>
       </div>
     </div>

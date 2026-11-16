@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { IconBriefcase, IconChevronRight, IconExternalLink } from "@tabler/icons-react";
 
 import { offerPlace } from "#/features/careers/components/careers-shell";
@@ -31,6 +32,7 @@ export function CareersPreview({
   offers,
   address,
 }: Readonly<{ company: PreviewCompany; offers: CareersOfferSummary[] | undefined; address: string }>) {
+  const t = useTranslations("careersEditor");
   const shown = offers?.slice(0, MAX_OFFERS) ?? [];
   const more = (offers?.length ?? 0) - shown.length;
 
@@ -74,7 +76,7 @@ export function CareersPreview({
             {company.description ? (
               <p className="line-clamp-6 whitespace-pre-line text-foreground/85 text-sm leading-relaxed">{company.description}</p>
             ) : (
-              <p className="text-muted-foreground/70 text-sm italic">Votre présentation apparaîtra ici.</p>
+              <p className="text-muted-foreground/70 text-sm italic">{t("presentation.empty")}</p>
             )}
           </div>
           {company.benefits.length > 0 && (

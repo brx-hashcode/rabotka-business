@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { IconFileText, IconLock } from "@tabler/icons-react";
 
@@ -28,6 +29,7 @@ export function OwnCvButton({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }>) {
+  const t = useTranslations("candidates.ownCv");
   const [own, setOwn] = useState(false);
   const open = controlled ?? own;
   const setOpen = onOpenChange ?? setOwn;
@@ -36,14 +38,14 @@ export function OwnCvButton({
     if (controlled !== undefined) return null;
     return (
       <span
-        title="Le CV que le candidat a joint s'ouvre une fois son contact obtenu ou sa candidature retenue."
+        title={t("lockedHint")}
         className={cn(
           "inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 font-medium text-muted-foreground text-sm",
           className,
         )}
       >
         <IconLock className="size-4" />
-        CV du candidat · après déblocage
+        {t("locked")}
       </span>
     );
   }
@@ -60,18 +62,18 @@ export function OwnCvButton({
         )}
       >
         <IconFileText className="size-4" />
-        CV du candidat
+        {t("label")}
       </button>
       )}
       <PreviewSheet
         open={open}
         onOpenChange={setOpen}
-        title={`CV de ${name}`}
-        subtitle="Joint par le candidat à sa candidature"
+        title={t("sheetTitle", { name })}
+        subtitle={t("sheetSubtitle")}
         src={applicationCvUrl(applicationId)}
         kind={previewKindOf(cv.mimeType) ?? "pdf"}
         fileName={cv.fileName}
-        unavailable="Ce CV n'a pas pu être chargé."
+        unavailable={t("unavailable")}
       />
     </>
   );

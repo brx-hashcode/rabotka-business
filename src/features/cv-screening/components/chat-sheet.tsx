@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
 import { IconArrowUp, IconFileTypePdf, IconInfoCircle, IconPlayerStopFilled, IconX } from "@tabler/icons-react";
@@ -14,7 +15,7 @@ import { trialLocks } from "#/features/subscription/trial-lock";
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
 import type { AskResult } from "#/lib/api/cv-screening-controller";
 import { downloadFile } from "#/lib/api/download";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import type { CvChat, CvChatMessage } from "#/lib/api/types";
 
 export type ChatAsk = (
@@ -68,6 +69,9 @@ export function ChatSheet({
   pdfUrl?: () => string | null;
 }>) {
   const queryClient = useQueryClient();
+  const t = useTranslations("cv.sheet");
+  const tCommon = useTranslations("common");
+  const friendlyError = useFriendlyError();
   const key = queryKey;
   const chat = useQuery({ queryKey: key, queryFn: load, enabled: open });
   // No question at all on this plan: why, and where to change it.
@@ -113,7 +117,7 @@ export function ChatSheet({
     try {
       await downloadFile(url, "conversation.pdf");
     } catch (err) {
-      toast.error(friendlyError(err, "Le PDF n'a pas pu être créé. Réessayez dans un instant."));
+      toast.error(friendlyError(err, t("pdfFailed")));
     } finally {
       setExporting(false);
     }
@@ -137,7 +141,7 @@ export function ChatSheet({
         setRefused((r) => [...r, { id: `refused-${Date.now()}`, question: q, answer: offTopic, at: new Date().toISOString() }]);
       }
     } catch (err) {
-      if (!controller.signal.aborted) setError(friendlyError(err, "La réponse n'a pas pu être rédigée. Réessayez dans un instant."));
+      if (!controller.signal.aborted) setError(friendlyError(err, t("answerFailed")));
     } finally {
       await queryClient.invalidateQueries({ queryKey: key });
       setLive(null);
@@ -162,7 +166,7 @@ export function ChatSheet({
                 {meta}
                 {data && (
                   <span className="text-muted-foreground text-xs tabular-nums">
-                    {remaining} question{remaining > 1 ? "s" : ""} restante{remaining > 1 ? "s" : ""} sur {data.limit}
+                    {t("remaining", { count: remaining, limit: data.limit })}
                   </span>
                 )}
               </div>
@@ -173,16 +177,16 @@ export function ChatSheet({
                 onClick={() => void exportPdf()}
                 // Nothing to print before the first question, nor while an answer is being written.
                 disabled={exporting || !!live || !data?.messages.length}
-                title="Télécharger la conversation en PDF"
+                title={t("pdfTitle")}
                 className="flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-page px-3.5 font-medium text-sm hover:bg-page/70 disabled:opacity-40"
               >
                 {exporting ? <Loader className="size-4 animate-spin" /> : <IconFileTypePdf className="size-4" />}
-                <span className="hidden sm:inline">{exporting ? "Préparation…" : "PDF"}</span>
-                <span className="sr-only sm:hidden">Télécharger en PDF</span>
+                <span className="hidden sm:inline">{exporting ? t("preparing") : "PDF"}</span>
+                <span className="sr-only sm:hidden">{t("pdfShort")}</span>
               </button>
             )}
             <SheetPrimitive.Close
-              aria-label="Fermer"
+              aria-label={tCommon("close")}
               className="flex size-10 shrink-0 items-center justify-center rounded-full bg-page hover:bg-page/70"
             >
               <IconX className="size-5" />
@@ -196,7 +200,7 @@ export function ChatSheet({
                 <Bone className="h-24 w-5/6 rounded-2xl" />
               </div>
             ) : !data ? (
-              <p className="text-muted-foreground text-sm">{friendlyError(chat.error, "La conversation est indisponible pour le moment.")}</p>
+              <p className="text-muted-foreground text-sm">{friendlyError(chat.error, t("loadFailed"))}</p>
             ) : (
               <div className="space-y-4">
                 {thread.length === 0 && !live && <Intro intro={intro} suggestions={suggestions} available={data.available} onPick={(q) => void ask(q)} disabled={!canAsk} />}
@@ -223,10 +227,10 @@ export function ChatSheet({
             ) : data && data.limit === 0 ? (
               <p className="rounded-2xl bg-page px-4 py-3 text-muted-foreground text-sm">
                 {chatTrialLocked
-                  ? "Les questions aux CV arrivent avec une formule payante, après votre essai gratuit."
-                  : "Les questions aux CV ne sont pas incluses dans votre formule."}{" "}
+                  ? t("trialLocked")
+                  : t("notInPlan")}{" "}
                 <Link href="/espace/abonnement" className="font-medium text-foreground underline underline-offset-2">
-                  Voir les formules
+                  {t("seePlans")}
                 </Link>
               </p>
             ) : data && data.remaining === 0 ? (
@@ -253,7 +257,7 @@ export function ChatSheet({
                   rows={1}
                   maxLength={1000}
                   placeholder={placeholder}
-                  aria-label="Votre question"
+                  aria-label={t("questionLabel")}
                   disabled={!data}
                   className="field-sizing-content max-h-36 min-h-10 flex-1 resize-none bg-transparent px-3 py-2 text-[15px] outline-none placeholder:text-muted-foreground"
                 />
@@ -261,7 +265,7 @@ export function ChatSheet({
                   <button
                     type="button"
                     onClick={() => abort.current?.abort()}
-                    aria-label="Arrêter la réponse"
+                    aria-label={t("stop")}
                     className="flex size-10 shrink-0 items-center justify-center rounded-full bg-ink text-white hover:bg-ink/90"
                   >
                     <IconPlayerStopFilled className="size-4" />
@@ -269,7 +273,7 @@ export function ChatSheet({
                 ) : (
                   <button
                     type="submit"
-                    aria-label="Envoyer"
+                    aria-label={t("send")}
                     disabled={!canAsk || !draft.trim()}
                     className="flex size-10 shrink-0 items-center justify-center rounded-full bg-ink text-white hover:bg-ink/90 disabled:opacity-30"
                   >
@@ -279,7 +283,7 @@ export function ChatSheet({
               </form>
             )}
             <p className="px-2 text-center text-muted-foreground text-xs">
-              Les réponses s&apos;appuient sur le CV et l&apos;offre ; vérifiez les points importants en entretien.
+              {t("disclaimer")}
             </p>
           </footer>
         </SheetPrimitive.Content>
@@ -359,10 +363,11 @@ function Bubble({ role, text, writing, note }: Readonly<{ role: "user" | "assist
 
 /** While the first words are on their way. */
 function Thinking() {
+  const t = useTranslations("cv.sheet");
   return (
     <div className="flex" aria-live="polite">
       <div className="flex items-center gap-1.5 rounded-3xl rounded-tl-lg bg-card px-4 py-3.5">
-        <span className="sr-only">Lecture du CV…</span>
+        <span className="sr-only">{t("reading")}</span>
         {[0, 1, 2].map((i) => (
           <span key={i} className="size-1.5 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: `${i * 150}ms` }} />
         ))}

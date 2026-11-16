@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 
 import { getMyBusiness, myBusinessKey } from "#/lib/api/business-controller";
@@ -21,6 +22,7 @@ export function useDisplayCurrency(): {
    */
   ready: boolean;
 } {
+  const locale = useLocale();
   const business = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
   const country = business.data?.countryCode ?? null;
   const rate = useQuery({
@@ -31,5 +33,5 @@ export function useDisplayCurrency(): {
   });
   const currency = rate.data ?? XAF;
   const ready = !business.isPending && (!country || !rate.isPending);
-  return { currency, price: (xaf) => formatPrice(xaf, currency), ready };
+  return { currency, price: (xaf) => formatPrice(xaf, currency, locale), ready };
 }

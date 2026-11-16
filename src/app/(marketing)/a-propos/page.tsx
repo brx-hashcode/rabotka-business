@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { Illustration } from "#/components/illustration";
 import { DemoBlock } from "#/features/landing/components/demo-block";
@@ -6,52 +7,49 @@ import { TrustSection } from "#/features/landing/components/landing-sections";
 import { flagUrl } from "#/features/landing/globe/country-places";
 import { PageHero } from "#/features/landing/components/page-hero";
 import { SectionHeading } from "#/features/landing/components/section-heading";
+import { countryName } from "#/features/landing/country-name";
+import type { Locale } from "#/i18n/config";
 import { businessCountriesServer } from "#/lib/api/catalog-server";
 import { jsonLd, marketingMetadata, organizationLd } from "#/lib/seo/marketing";
 import { siteOrigin } from "#/lib/seo/site";
 
-export function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("site.pages.about");
   return marketingMetadata({
-    title: "À propos",
-    description:
-      "Rabotka Business est l'espace de recrutement de Rabotka pour les entreprises et organisations : un ATS pensé pour le marché de l'emploi africain.",
+    title: t("metaTitle"),
+    description: t("metaDescription"),
     path: "/a-propos",
   });
 }
 
-const BELIEFS = [
-  {
-    illustration: "job-hunt" as const,
-    title: "Le bon candidat existe souvent déjà",
-    text: "Il est dans la pile de CV, dans votre messagerie ou sur WhatsApp. Notre travail : qu'il ne passe plus inaperçu.",
-  },
-  {
-    illustration: "team" as const,
-    title: "Un recrutement se décide en équipe",
-    text: "Le responsable du poste, les RH, la direction : chacun doit voir les mêmes candidats et donner son avis au même endroit.",
-  },
-  {
-    illustration: "mobile" as const,
-    title: "Des outils faits pour ici",
-    text: "Les pièces officielles de votre pays, le paiement par mobile money, les candidats joints là où ils sont : sur leur téléphone.",
-  },
-];
+/** Beside each belief (site.pages.about.beliefs), in order. */
+const BELIEF_ILLUSTRATIONS = ["job-hunt", "team", "mobile"] as const;
 
 export default async function AboutPage() {
-  const [countries, { origin }] = await Promise.all([businessCountriesServer(), siteOrigin()]);
+  const [countries, { origin }, t, tSeo, locale] = await Promise.all([
+    businessCountriesServer(),
+    siteOrigin(),
+    getTranslations("site.pages.about"),
+    getTranslations("site.pages.seo"),
+    getLocale() as Promise<Locale>,
+  ]);
+  const BELIEFS = (t.raw("beliefs") as { title: string; text: string }[]).map((b, i) => ({
+    ...b,
+    illustration: BELIEF_ILLUSTRATIONS[i],
+  }));
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(organizationLd(origin)) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(organizationLd(origin, tSeo("orgDescription"))) }} />
       <PageHero
-        title="Le recrutement des organisations africaines, enfin outillé"
-        text="Rabotka met en relation les personnes qui cherchent un emploi et celles qui recrutent, jusque sur WhatsApp. Rabotka Business est son espace pour les entreprises, institutions et organisations : un ATS complet, pensé pour le marché de l'emploi africain."
+        title={t("title")}
+        text={t("text")}
       />
 
       <section className="bg-card py-20 md:py-28">
         <div className="mx-auto w-full max-w-7xl space-y-12 px-4 sm:px-6">
           <SectionHeading
-            kicker="Ce qui nous guide"
-            title="Trois convictions derrière chaque fonctionnalité"
+            kicker={t("kicker")}
+            title={t("heading")}
           />
           <div className="grid gap-4 md:grid-cols-3">
             {BELIEFS.map((b, i) => (
@@ -73,16 +71,16 @@ export default async function AboutPage() {
       <section className="py-20 md:py-28">
         <div className="mx-auto w-full max-w-7xl space-y-10 px-4 sm:px-6">
           <SectionHeading
-            kicker="Où nous sommes"
-            title={`Disponible dans ${countries.length} pays d'Afrique`}
-            text="Les pièces demandées, les villes et la diffusion de vos offres sont celles de votre pays ; votre formule se règle par mobile money, dans votre monnaie."
+            kicker={t("whereKicker")}
+            title={t("whereTitle", { count: countries.length })}
+            text={t("whereText")}
           />
           <ul className="flex flex-wrap gap-2">
             {countries.map((c) => (
               <li key={c.code} className="inline-flex items-center gap-2 rounded-full bg-card py-2 pr-4 pl-2 font-medium text-sm">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={flagUrl(c.code, 80)} alt="" className="size-6 rounded-full object-cover" />
-                {c.name}
+                {countryName(c, locale)}
               </li>
             ))}
           </ul>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   IconBrandFacebook,
   IconBrandLinkedin,
@@ -32,6 +33,7 @@ export function ShareOfferMenu({ slug, offer }: Readonly<{ slug: string; offer: 
   const { id: offerId, reference, title } = offer;
   // Each network with the offer's details and its tagged link (use-offer-share.ts).
   const share = useOfferShare(slug, offer);
+  const t = useTranslations("offers.share");
 
   const [posterOpen, setPosterOpen] = useState(false);
   // LinkedIn: published from the recruiter's account, or its share box (the dialog decides).
@@ -42,7 +44,7 @@ export function ShareOfferMenu({ slug, offer }: Readonly<{ slug: string; offer: 
       <DropdownMenu>
         <DropdownMenuTrigger className="inline-flex h-10 items-center gap-2 rounded-full bg-page px-4 font-medium text-sm outline-none hover:bg-page/70">
           <IconShare className="size-4" />
-          Partager
+          {t("share")}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56 rounded-2xl border-0 bg-card p-1.5 shadow-soft">
           <DropdownMenuItem
@@ -72,11 +74,11 @@ export function ShareOfferMenu({ slug, offer }: Readonly<{ slug: string; offer: 
           </DropdownMenuItem>
           <DropdownMenuItem className={ITEM} onSelect={() => void share.copyLink()}>
             <IconLink className="size-4" />
-            Copier le lien
+            {t("copyLink")}
           </DropdownMenuItem>
           <DropdownMenuItem className={ITEM} onSelect={() => setPosterOpen(true)}>
             <IconPrinter className="size-4" />
-            Affiche à imprimer
+            {t("poster")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -90,12 +92,12 @@ export function ShareOfferMenu({ slug, offer }: Readonly<{ slug: string; offer: 
       <PreviewSheet
         open={posterOpen}
         onOpenChange={setPosterOpen}
-        title="Affiche à imprimer"
+        title={t("poster")}
         subtitle={title}
         src={`${appConfig.apiUrl}/business/me/job-offers/${encodeURIComponent(offerId)}/poster.pdf`}
         kind="pdf"
-        fileName={`affiche-${reference}.pdf`}
-        unavailable="L'affiche n'a pas pu être créée. Réessayez dans un instant."
+        fileName={t("posterFile", { reference })}
+        unavailable={t("posterFailed")}
       />
     </>
   );

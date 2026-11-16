@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -25,29 +26,31 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { cancelInterview, interviewsKey } from "#/lib/api/interview-controller";
 import type { Interview } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
-import { MODES, StatusChip, modeLabel } from "./interview-bits";
+import { MODES, StatusChip, modeLabel, whenLabel } from "./interview-bits";
 import { ScheduleInterviewDialog } from "./schedule-interview-dialog";
 import { InviteGuestDialog } from "./invite-guest-dialog";
 import { InterviewReportDialog } from "./interview-report-panel";
 import { useVideoPlan } from "../use-video-plan";
 
 /** « aujourd'hui », « demain », or the weekday: the card already shows the date. */
-function dayWord(at: Date): string {
+function dayWord(at: Date, t: (key: "today" | "tomorrow") => string, locale: Locale): string {
   const today = new Date();
   const tomorrow = new Date();
   tomorrow.setDate(today.getDate() + 1);
-  if (at.toDateString() === today.toDateString()) return "aujourd'hui";
-  if (at.toDateString() === tomorrow.toDateString()) return "demain";
-  return at.toLocaleDateString("fr-FR", { weekday: "long" });
+  if (at.toDateString() === today.toDateString()) return t("today");
+  if (at.toDateString() === tomorrow.toDateString()) return t("tomorrow");
+  return at.toLocaleDateString(INTL_LOCALE[locale], { weekday: "long" });
 }
 
-const time = (iso: string) => new Date(iso).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+const time = (iso: string, locale: Locale) =>
+  new Date(iso).toLocaleTimeString(INTL_LOCALE[locale], { hour: "2-digit", minute: "2-digit" });
 
 const initials = (name: string) => {
   const parts = name.trim().split(/\s+/);
@@ -57,6 +60,10 @@ const initials = (name: string) => {
 /** One interview: when, who, how, the answer, and what to do with it. */
 export function InterviewCard({ interview: i, past, focused = false }: Readonly<{ interview: Interview; past: boolean; focused?: boolean }>) {
   const queryClient = useQueryClient();
+  const t = useTranslations("interviews.card");
+  const ti = useTranslations("interviews");
+  const locale = useLocale() as Locale;
+  const friendlyError = useFriendlyError();
   const [moving, setMoving] = useState(false);
   // Moving or cancelling is the hiring side's: an Évaluateur only reads.
   const hire = canHire(useMember().role);
@@ -68,10 +75,10 @@ export function InterviewCard({ interview: i, past, focused = false }: Readonly<
     mutationFn: () => cancelInterview(i.id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: interviewsKey });
-      toast.success(`Entretien annulé : ${i.candidateName} est prévenu.`);
+      toast.success(t("cancelled", { name: i.candidateName }));
       setConfirm(false);
     },
-    onError: (err) => toast.error(friendlyError(err, "L'entretien n'a pas pu être annulé.")),
+    onError: (err) => toast.error(friendlyError(err, t("cancelFailed"))),
   });
   const Mode = MODES.find((m) => m.key === i.mode)?.icon ?? IconCalendarEvent;
   const cancelled = i.status === "CANCELLED";
@@ -97,21 +104,21 @@ export function InterviewCard({ interview: i, past, focused = false }: Readonly<
       <div className="flex items-start gap-3.5">
         <div className="flex w-14 shrink-0 flex-col items-center rounded-2xl bg-brand-lime py-2 text-[#0f2414]">
           <span className="font-semibold text-xl leading-none">{at.getDate()}</span>
-          <span className="mt-1 font-medium text-[11px] uppercase">{at.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "")}</span>
+          <span className="mt-1 font-medium text-[11px] uppercase">{at.toLocaleDateString(INTL_LOCALE[locale], { month: "short" }).replace(".", "")}</span>
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-xl tabular-nums leading-tight">{time(i.startsAt)}</p>
+          <p className="font-semibold text-xl tabular-nums leading-tight">{time(i.startsAt, locale)}</p>
           <p className="text-muted-foreground text-xs">
-            {options.length > 0 ? `${options.length} créneaux proposés` : dayWord(at)} · {i.durationMinutes} min
+            {options.length > 0 ? t("slots", { count: options.length }) : dayWord(at, t, locale)} · {i.durationMinutes} min
           </p>
         </div>
         {options.length > 0 && i.status === "PENDING" ? (
           <span className="shrink-0 rounded-full bg-chip-amber px-2.5 py-1 font-medium text-chip-amber-foreground text-xs">
-            Au choix du candidat
+            {t("candidateChoice")}
           </span>
         ) : (
           i.endedAt ? (
-            <span className="shrink-0 rounded-full bg-chip-green px-2.5 py-1 font-medium text-chip-green-foreground text-xs">Terminé</span>
+            <span className="shrink-0 rounded-full bg-chip-green px-2.5 py-1 font-medium text-chip-green-foreground text-xs">{t("ended")}</span>
           ) : (
             <StatusChip status={i.status} />
           )
@@ -148,45 +155,45 @@ export function InterviewCard({ interview: i, past, focused = false }: Readonly<
             <Mode className="size-4 text-muted-foreground" />
           </span>
           <span className="min-w-0 flex-1 truncate">
-            {i.mode === "VIDEO" && i.location ? (isRabotkaVisio(i.location) ? "Visio dans Rabotka" : "Visio · lien externe") : modeLabel(i)}
+            {i.mode === "VIDEO" && i.location ? (isRabotkaVisio(i.location) ? t("rabotkaVideo") : t("externalVideo")) : modeLabel(i, ti)}
           </span>
           {/* The call, where the format is said: the one thing to do on the day. */}
           {join &&
             (roomLocked ? (
               <span
                 aria-disabled
-                title="Visio dans Rabotka : incluse dans les formules supérieures"
+                title={t("videoLocked")}
                 className={cn(JOIN, "cursor-not-allowed opacity-50")}
               >
                 <IconLock className="size-4" />
-                Rejoindre
+                {t("join")}
               </span>
             ) : join.internal ? (
               <Link href={join.href} className={JOIN}>
                 <IconVideo className="size-4" />
-                Rejoindre
+                {t("join")}
               </Link>
             ) : (
               <a href={join.href} target="_blank" rel="noreferrer" className={JOIN}>
                 <IconVideo className="size-4" />
-                Rejoindre
+                {t("join")}
                 <IconExternalLink className="size-3.5" />
               </a>
             ))}
         </div>
         {options.length > 0 && (
           <ul className="space-y-1 rounded-xl bg-card px-3 py-2">
-            <li className="text-muted-foreground text-xs">En attente du choix du candidat :</li>
+            <li className="text-muted-foreground text-xs">{t("waitingChoice")}</li>
             {options.map((o) => (
               <li key={o.id} className="font-medium tabular-nums">
-                {new Date(o.startsAt).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })} à {time(o.startsAt)}
+                {whenLabel(o.startsAt, ti, locale)}
               </li>
             ))}
           </ul>
         )}
         {i.responseNote && (
           <p className="rounded-xl bg-card px-3 py-2">
-            <span className="text-muted-foreground">Message du candidat : </span>
+            <span className="text-muted-foreground">{t("candidateMessage")}</span>
             {i.responseNote}
           </p>
         )}
@@ -201,7 +208,7 @@ export function InterviewCard({ interview: i, past, focused = false }: Readonly<
               className="flex h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-page px-3 font-medium text-sm hover:bg-page/70"
             >
               <IconFileText className="size-4 shrink-0 text-muted-foreground" />
-              <span className="truncate">Compte rendu</span>
+              <span className="truncate">{t("report")}</span>
             </button>
             {editable && (
               <button
@@ -210,28 +217,28 @@ export function InterviewCard({ interview: i, past, focused = false }: Readonly<
                 className="flex h-10 items-center justify-center gap-2 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70"
               >
                 <IconPencil className="size-4 text-muted-foreground" />
-                Modifier
+                {t("edit")}
               </button>
             )}
             {(join || editable) && (
               <DropdownMenu>
                 <DropdownMenuTrigger
-                  aria-label="Plus d'actions"
+                  aria-label={t("more")}
                   className="flex size-10 shrink-0 items-center justify-center rounded-full bg-page text-muted-foreground outline-none hover:bg-page/70 hover:text-foreground"
                 >
                   <IconDots className="size-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64 rounded-2xl border-0 bg-card p-1.5 shadow-soft">
                   {join && i.location && !roomLocked && (
-                    <DropdownMenuItem onSelect={() => copyLink(i.location!, join.internal)} className={MENU_ITEM}>
+                    <DropdownMenuItem onSelect={() => copyLink(i.location!, join.internal, t)} className={MENU_ITEM}>
                       <IconLink className="size-4" />
-                      Copier le lien de la visio
+                      {t("copyLink")}
                     </DropdownMenuItem>
                   )}
                   {editable && join?.internal && (
                     <DropdownMenuItem disabled={!videoPlan.allowed} onSelect={() => setInviting(true)} className={MENU_ITEM}>
                       {videoPlan.allowed ? <IconUserPlus className="size-4" /> : <IconLock className="size-4" />}
-                      Partager la visio
+                      {t("shareVideo")}
                     </DropdownMenuItem>
                   )}
                   {editable && (
@@ -239,7 +246,7 @@ export function InterviewCard({ interview: i, past, focused = false }: Readonly<
                       {join && <DropdownMenuSeparator className="my-1" />}
                       <DropdownMenuItem onSelect={() => setConfirm(true)} className={cn(MENU_ITEM, "text-destructive focus:text-destructive")}>
                         <IconX className="size-4" />
-                        Annuler l&apos;entretien
+                        {t("cancel")}
                       </DropdownMenuItem>
                     </>
                   )}
@@ -274,9 +281,9 @@ export function InterviewCard({ interview: i, past, focused = false }: Readonly<
         open={confirm}
         onOpenChange={setConfirm}
         tone="warning"
-        title={`Annuler l'entretien avec ${i.candidateName} ?`}
-        description="Le candidat est prévenu par e-mail, et l'entretien est retiré de son agenda."
-        confirmLabel="Annuler l'entretien"
+        title={t("cancelTitle", { name: i.candidateName })}
+        description={t("cancelText")}
+        confirmLabel={t("cancel")}
         onConfirm={() => cancel.mutate()}
         pending={cancel.isPending}
       />
@@ -287,14 +294,12 @@ export function InterviewCard({ interview: i, past, focused = false }: Readonly<
 const MENU_ITEM = "gap-2 rounded-xl px-3 py-2";
 
 /** The room's link is the candidate's: someone else is invited by their own. */
-async function copyLink(url: string, rabotka: boolean) {
+async function copyLink(url: string, rabotka: boolean, t: (key: "candidateLink" | "linkCopied" | "copyFailed") => string) {
   try {
     await navigator.clipboard.writeText(url);
-    toast.success(
-      rabotka ? "Lien copié : c'est celui du candidat. Pour un collègue, utilisez « Partager la visio »." : "Lien de la visio copié.",
-    );
+    toast.success(rabotka ? t("candidateLink") : t("linkCopied"));
   } catch {
-    toast.error("Le lien n'a pas pu être copié.");
+    toast.error(t("copyFailed"));
   }
 }
 

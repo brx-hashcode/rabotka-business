@@ -1,58 +1,68 @@
+import type { Translator } from "#/i18n/translator";
+
 /**
  * How a line of « Activité » reads: the API logs `METHOD /route/:pattern`
  * (stable), the space words it. Ordered: the first rule that matches wins.
  * A change not listed here still shows, as « a fait une modification ».
+ * The words are the `team.activity.did` messages.
  */
-const RULES: [RegExp, string][] = [
+const RULES = [
   // Offers
-  [/^POST \/job-offers$/, "a publié une offre"],
-  [/^POST \/job-offers\/:\w+\/close$/, "a fermé une offre"],
-  [/^POST \/job-offers\/:\w+\/republish$/, "a republié une offre"],
-  [/^PATCH \/profile\/job-offers\/:\w+$/, "a modifié une offre"],
-  [/^DELETE \/profile\/job-offers\/:\w+$/, "a supprimé une offre"],
-  [/^POST \/profile\/job-offers\/:\w+\/confirm-hire$/, "a confirmé une embauche"],
+  [/^POST \/job-offers$/, "offerPublished"],
+  [/^POST \/job-offers\/:\w+\/close$/, "offerClosed"],
+  [/^POST \/job-offers\/:\w+\/republish$/, "offerRepublished"],
+  [/^PATCH \/profile\/job-offers\/:\w+$/, "offerEdited"],
+  [/^DELETE \/profile\/job-offers\/:\w+$/, "offerDeleted"],
+  [/^POST \/profile\/job-offers\/:\w+\/confirm-hire$/, "hireConfirmed"],
   // Candidates
-  [/^POST \/profile\/applications\/:\w+\/accept$/, "a retenu un candidat"],
-  [/^POST \/business\/me\/external-applications\/:\w+\/retain$/, "a retenu un candidat"],
-  [/^POST \/profile\/applications\/:\w+\/reject$/, "a refusé un candidat"],
-  [/^POST \/business\/me\/external-applications\/:\w+\/refuse$/, "a refusé un candidat"],
-  [/^POST \/business\/me\/offers\/:\w+\/applications\/refuse$/, "a refusé des candidats"],
-  [/^POST \/profile\/applications\/:\w+\/rate$/, "a noté un candidat"],
-  [/\/unlock\//, "a obtenu un contact"],
-  [/^POST \/business\/me\/contacts\/:\w+$/, "a obtenu un contact"],
-  [/^POST \/business\/me\/applications\/:\w+\/:\w+\/notes$/, "a laissé une note"],
-  [/^PATCH \/business\/me\/applications\/:\w+\/:\w+\/notes\/:\w+$/, "a modifié une note"],
-  [/^DELETE \/business\/me\/applications\/:\w+\/:\w+\/notes\/:\w+$/, "a supprimé une note"],
-  [/^PUT \/business\/me\/applications\/:\w+\/:\w+\/opinion$/, "a donné son avis"],
-  [/^DELETE \/business\/me\/applications\/:\w+\/:\w+\/opinion$/, "a retiré son avis"],
+  [/^POST \/profile\/applications\/:\w+\/accept$/, "candidateRetained"],
+  [/^POST \/business\/me\/external-applications\/:\w+\/retain$/, "candidateRetained"],
+  [/^POST \/profile\/applications\/:\w+\/reject$/, "candidateRefused"],
+  [/^POST \/business\/me\/external-applications\/:\w+\/refuse$/, "candidateRefused"],
+  [/^POST \/business\/me\/offers\/:\w+\/applications\/refuse$/, "candidatesRefused"],
+  [/^POST \/profile\/applications\/:\w+\/rate$/, "candidateRated"],
+  [/\/unlock\//, "contactObtained"],
+  [/^POST \/business\/me\/contacts\/:\w+$/, "contactObtained"],
+  [/^POST \/business\/me\/applications\/:\w+\/:\w+\/notes$/, "noteAdded"],
+  [/^PATCH \/business\/me\/applications\/:\w+\/:\w+\/notes\/:\w+$/, "noteEdited"],
+  [/^DELETE \/business\/me\/applications\/:\w+\/:\w+\/notes\/:\w+$/, "noteDeleted"],
+  [/^PUT \/business\/me\/applications\/:\w+\/:\w+\/opinion$/, "opinionGiven"],
+  [/^DELETE \/business\/me\/applications\/:\w+\/:\w+\/opinion$/, "opinionRemoved"],
   // Interviews
-  [/^POST \/business\/me\/interviews\/calendar\/reset$/, "a changé le lien de l'agenda"],
-  [/^POST \/business\/me\/interviews$/, "a proposé un entretien"],
-  [/^PATCH \/business\/me\/interviews\/:\w+$/, "a déplacé un entretien"],
-  [/^POST \/business\/me\/interviews\/:\w+\/cancel$/, "a annulé un entretien"],
+  [/^POST \/business\/me\/interviews\/calendar\/reset$/, "calendarReset"],
+  [/^POST \/business\/me\/interviews$/, "interviewProposed"],
+  [/^PATCH \/business\/me\/interviews\/:\w+$/, "interviewMoved"],
+  [/^POST \/business\/me\/interviews\/:\w+\/cancel$/, "interviewCancelled"],
   // CVs and profiles
-  [/^POST \/business\/me\/cv-screenings\/:\w+\/comparisons$/, "a comparé des CV"],
-  [/^POST \/business\/me\/(cv-screenings|external-applications\/analyse)$/, "a lancé une analyse de CV"],
-  [/^DELETE \/business\/me\/cv-screenings\/:\w+$/, "a supprimé une analyse de CV"],
-  [/^PUT \/business\/me\/talents\/:\w+$/, "a ajouté un profil à Mes profils"],
-  [/^DELETE \/business\/me\/talents\/:\w+$/, "a retiré un profil de Mes profils"],
-  [/^POST \/business\/me\/talents\/:\w+\/invite$/, "a invité un profil à postuler"],
-  [/^POST \/business\/me\/mailboxes\/:\w+\/connect$/, "a connecté une messagerie"],
-  [/^DELETE \/business\/me\/mailboxes\/:\w+$/, "a déconnecté une messagerie"],
+  [/^POST \/business\/me\/cv-screenings\/:\w+\/comparisons$/, "cvCompared"],
+  [/^POST \/business\/me\/(cv-screenings|external-applications\/analyse)$/, "cvScreeningStarted"],
+  [/^DELETE \/business\/me\/cv-screenings\/:\w+$/, "cvScreeningDeleted"],
+  [/^PUT \/business\/me\/talents\/:\w+$/, "talentKept"],
+  [/^DELETE \/business\/me\/talents\/:\w+$/, "talentRemoved"],
+  [/^POST \/business\/me\/talents\/:\w+\/invite$/, "talentInvited"],
+  [/^POST \/business\/me\/mailboxes\/:\w+\/connect$/, "mailboxConnected"],
+  [/^DELETE \/business\/me\/mailboxes\/:\w+$/, "mailboxDisconnected"],
   // The account
-  [/^POST \/business\/me\/team$/, "a invité un membre"],
-  [/^POST \/business\/me\/team\/:\w+\/resend$/, "a renvoyé une invitation"],
-  [/^PATCH \/business\/me\/team\/:\w+$/, "a changé un rôle"],
-  [/^DELETE \/business\/me\/team\/:\w+$/, "a retiré un membre"],
-  [/^\w+ \/business\/me\/careers-page/, "a modifié la page carrières"],
-  [/^POST \/business\/me\/documents$/, "a envoyé un document"],
-  [/^POST \/profile\/avatar$/, "a changé le logo"],
-  [/^PATCH \/business\/me$/, "a modifié l'organisation"],
-  [/^POST \/business\/me\/subscription/, "a choisi une formule"],
-];
+  [/^POST \/business\/me\/team$/, "memberInvited"],
+  [/^POST \/business\/me\/team\/:\w+\/resend$/, "inviteResent"],
+  [/^PATCH \/business\/me\/team\/:\w+$/, "roleChanged"],
+  [/^DELETE \/business\/me\/team\/:\w+$/, "memberRemoved"],
+  [/^\w+ \/business\/me\/careers-page/, "careersPageEdited"],
+  [/^POST \/business\/me\/documents$/, "documentSent"],
+  [/^POST \/profile\/avatar$/, "logoChanged"],
+  [/^PATCH \/business\/me$/, "organisationEdited"],
+  [/^POST \/business\/me\/subscription/, "planChosen"],
+] as const satisfies readonly (readonly [RegExp, string])[];
 
-export function activityLabel(action: string): string {
-  return RULES.find(([r]) => r.test(action))?.[1] ?? "a fait une modification";
+export type ActivityDid = (typeof RULES)[number][1] | "other";
+
+/** Which change a logged action is. */
+export function activityDid(action: string): ActivityDid {
+  return RULES.find(([r]) => r.test(action))?.[1] ?? "other";
+}
+
+export function activityLabel(action: string, t: Translator<"team.activity">): string {
+  return t(`did.${activityDid(action)}`);
 }
 
 /** The offer a line is about, to link to it; null when it is about something else. */

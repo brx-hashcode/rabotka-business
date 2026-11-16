@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { IconFileCv } from "@tabler/icons-react";
 
@@ -25,6 +26,7 @@ export function ResumeButton({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }>) {
+  const t = useTranslations("candidates.resume");
   const [own, setOwn] = useState(false);
   const open = controlled ?? own;
   const setOpen = onOpenChange ?? setOwn;
@@ -37,18 +39,18 @@ export function ResumeButton({
         className={cn("inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70", className)}
       >
         <IconFileCv className="size-4" />
-        CV Rabotka
+        {t("label")}
       </button>
       )}
       <PreviewSheet
         open={open}
         onOpenChange={setOpen}
-        title={`CV de ${name}`}
-        subtitle="Généré par Rabotka à partir de son profil et de ses missions"
+        title={t("sheetTitle", { name })}
+        subtitle={t("sheetSubtitle")}
         src={candidateResumeUrl(workerId)}
         kind="pdf"
-        fileName={`CV ${name}.pdf`}
-        unavailable="Le CV n'a pas pu être chargé."
+        fileName={t("fileName", { name })}
+        unavailable={t("unavailable")}
       />
     </>
   );

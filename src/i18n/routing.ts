@@ -57,3 +57,24 @@ export function preferredLocale(
   if (isOffered(cookie, offered)) return cookie;
   return pickFromAcceptLanguage(acceptLanguage, offered) ?? DEFAULT_LOCALE;
 }
+
+/** The public site beyond the landing: features, resources, about, contact, demo. */
+const MARKETING_PREFIXES = ["/fonctionnalites", "/ressources", "/a-propos", "/contact", "/demo"];
+
+export function isMarketingPath(pathname: string): boolean {
+  return MARKETING_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
+/** The landing and the marketing pages: one URL per language. */
+export function isPublicSitePath(pathname: string): boolean {
+  return pathname === "/" || isMarketingPath(pathname);
+}
+
+/** A link of the site in `locale`: `/contact#form` → `/en/contact#form`; other paths as they are. */
+export function localHref(href: string, locale: Locale): string {
+  if (!href.startsWith("/") || href.startsWith("//")) return href;
+  const cut = href.search(/[?#]/);
+  const path = cut === -1 ? href : href.slice(0, cut);
+  const rest = cut === -1 ? "" : href.slice(cut);
+  return isPublicSitePath(path) ? localizedPath(path, locale) + rest : href;
+}

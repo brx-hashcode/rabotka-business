@@ -1,9 +1,10 @@
 import Image from "next/image";
-import Link from "next/link";
+import { useSiteCopy } from "../copy";
 import { IconArrowRight } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
-import { FEATURES } from "../content";
-import { FEATURE_PAGES } from "../site-content";
+import { LocalLink as Link } from "#/components/local-link";
+import { featurePage } from "../site-content";
 import { SectionHeading } from "./section-heading";
 
 /**
@@ -12,20 +13,21 @@ import { SectionHeading } from "./section-heading";
  * and the way to that page.
  */
 export function InterviewsSpotlight() {
-  const steps = FEATURE_PAGES.interviews.steps ?? [];
-  const href = FEATURES.find((f) => f.id === "interviews")?.href ?? "/fonctionnalites/entretiens";
+  const t = useTranslations("site.spotlight");
+  const steps = featurePage(useSiteCopy(), "interviews").steps ?? [];
+  const href = "/fonctionnalites/entretiens";
   if (steps.length === 0) return null;
   return (
     <section id="entretiens" className="bg-card py-20 md:py-28">
       <div className="mx-auto w-full max-w-7xl space-y-12 px-4 sm:px-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <SectionHeading
-            kicker="Entretiens"
-            title="Vos entretiens, de la visio au compte rendu"
-            text="L'appel s'ouvre dans Rabotka, la voix de chacun devient du texte, et le compte rendu se rédige pendant que vous passez à autre chose."
+            kicker={t("kicker")}
+            title={t("title")}
+            text={t("text")}
           />
           <Link href={href} className="group inline-flex items-center gap-1.5 font-medium underline-offset-4 hover:underline">
-            Découvrir les entretiens
+            {t("discover")}
             <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>

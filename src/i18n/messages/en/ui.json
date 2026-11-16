@@ -1,0 +1,22 @@
+{
+  "cancel": "Cancel",
+  "breadcrumb": "Breadcrumb",
+  "loading": "Loading",
+  "imageUnavailable": "Image unavailable",
+  "photo": "Photo",
+  "preview": {
+    "unavailable": "The preview is no longer available.",
+    "printFailed": "Printing couldn't open.",
+    "previous": "Previous",
+    "next": "Next",
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in",
+    "download": "Download",
+    "print": "Print",
+    "close": "Close",
+    "failed": "The file couldn't be displayed. Try again in a moment."
+  },
+  "backTo": "Back: {label}",
+  "close": "Close",
+  "logoAlt": "Rabotka logo"
+}

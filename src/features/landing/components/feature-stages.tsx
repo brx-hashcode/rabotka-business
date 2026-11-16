@@ -1,33 +1,40 @@
-import Link from "next/link";
 import { IconArrowRight } from "@tabler/icons-react";
+import { type SiteCopy, useSiteCopy } from "../copy";
+import { useTranslations } from "next-intl";
 
-import { FEATURE_GROUPS, FEATURES, FEATURES_HREF } from "../content";
+import { LocalLink as Link } from "#/components/local-link";
+import { featureGroups, features, FEATURES_HREF } from "../content";
 import { SectionHeading } from "./section-heading";
 import { IconTile } from "./icon-tile";
 
 /** The groups with their features, numbered: the hire's four stages. */
-export const STAGES = FEATURE_GROUPS.map((group, i) => ({
-  ...group,
-  number: String(i + 1).padStart(2, "0"),
-  features: group.ids.map((id) => FEATURES.find((f) => f.id === id)).filter((f) => f !== undefined),
-}));
+export function stages(copy: SiteCopy) {
+  const all = features(copy);
+  return featureGroups(copy).map((group, i) => ({
+    ...group,
+    number: String(i + 1).padStart(2, "0"),
+    features: group.ids.map((id) => all.find((f) => f.id === id)).filter((f) => f !== undefined),
+  }));
+}
 
 /** The home page's product overview: four stages, two tools each, each a link to its page. */
 export function FeatureStages() {
+  const t = useTranslations("site.stages");
+  const STAGES = stages(useSiteCopy());
   return (
     <section id="fonctionnalites" className="py-20 md:py-28">
       <div className="mx-auto w-full max-w-7xl space-y-12 px-4 sm:px-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <SectionHeading
-            kicker="Fonctionnalités"
-            title="Un outil pour chaque étape du recrutement"
-            text="Attirer, trier, évaluer, décider : chaque outil prépare l'étape suivante."
+            kicker={t("kicker")}
+            title={t("title")}
+            text={t("text")}
           />
           <Link
             href={FEATURES_HREF}
             className="group inline-flex items-center gap-1.5 font-medium underline-offset-4 hover:underline"
           >
-            Toutes les fonctionnalités en détail
+            {t("allDetails")}
             <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
@@ -65,6 +72,7 @@ export function FeatureStages() {
 
 /** Where a feature sits in the hire: the four stages, its own lit, the other tools one click away. */
 export function PipelinePosition({ featureId }: Readonly<{ featureId: string }>) {
+  const STAGES = stages(useSiteCopy());
   return (
     <ol className="grid grid-cols-2 gap-2 md:grid-cols-4">
       {STAGES.map((stage) => {

@@ -1,3 +1,4 @@
+import type { Translator } from "#/i18n/translator";
 import type { MySubscription } from "#/lib/api/types";
 
 type Entitlements = MySubscription["entitlements"];
@@ -15,6 +16,6 @@ export function offersFull(e: Entitlements): boolean {
 }
 
 /** « 3 offres par période », for a plan's list of what it includes. */
-export function offersPerPeriodLabel(limit: number | null): string {
-  return limit === null ? "Offres illimitées" : `${limit} offre${limit > 1 ? "s" : ""} à publier par période`;
+export function offersPerPeriodLabel(limit: number | null, t: Translator<"subscription">): string {
+  return limit === null ? t("lines.offersUnlimited") : t("lines.offersPerPeriod", { count: limit });
 }

@@ -1,16 +1,12 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { askCvChat, cvChatPdfUrl, cvScreeningsKey, getCvChat } from "#/lib/api/cv-screening-controller";
 import type { CvResume } from "#/lib/api/types";
 import { ChatSheet } from "./chat-sheet";
 import { ScoreRing, VerdictChip } from "./cv-bits";
 
-const SUGGESTIONS = [
-  "Résumez son parcours en quelques lignes.",
-  "Quelles questions lui poser en entretien ?",
-  "Quels points vérifier avant de le retenir ?",
-  "Son expérience correspond-elle au niveau demandé ?",
-];
+
 
 /** The conversation about one analysed CV. Kept per CV; the plan sets how many questions one CV allows. */
 export function CvChatSheet({
@@ -26,6 +22,8 @@ export function CvChatSheet({
   jobTitle: string;
   resume: CvResume;
 }>) {
+  const t = useTranslations("cv.chat");
+  const SUGGESTIONS = t.raw("suggestions") as string[];
   const name = resume.candidate?.name ?? resume.fileName;
   return (
     <ChatSheet
@@ -40,13 +38,13 @@ export function CvChatSheet({
       lead={resume.score !== null && <ScoreRing score={resume.score} size={48} />}
       meta={resume.score !== null && <VerdictChip score={resume.score} />}
       intro={{
-        title: `Interrogez le CV de ${name}`,
-        text: "Parcours, compétences, points à vérifier, questions d'entretien : Rabotka répond d'après le CV et l'offre.",
+        title: t("introTitle", { name }),
+        text: t("intro"),
       }}
       suggestions={SUGGESTIONS}
-      placeholder={`Une question sur ${name.split(" ")[0]}…`}
-      usedUp={(limit) => `Vous avez posé les ${limit} questions prévues pour ce CV.`}
-      unavailable="Ce CV a été supprimé à la fin de sa durée de conservation : la conversation reste lisible, sans nouvelle question."
+      placeholder={t("placeholder", { name: name.split(" ")[0] })}
+      usedUp={(limit) => t("usedUp", { limit })}
+      unavailable={t("gone")}
     />
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useRef } from "react";
 
 import { askCvComparison, cvComparisonPdfUrl, cvScreeningsKey, openCvComparison } from "#/lib/api/cv-screening-controller";
@@ -7,12 +8,7 @@ import type { CvResume } from "#/lib/api/types";
 import { ChatSheet } from "./chat-sheet";
 import { ScoreRing } from "./cv-bits";
 
-const SUGGESTIONS = [
-  "Qui est le plus adapté au poste, et pourquoi ?",
-  "Classez-les pour un premier entretien.",
-  "Comparez leur expérience pratique.",
-  "Quel est le principal point faible de chacun ?",
-];
+
 
 const firstName = (r: CvResume) => (r.candidate?.name ?? r.fileName).split(" ")[0];
 
@@ -34,6 +30,8 @@ export function CvCompareSheet({
   /** Best first, as on the page. */
   resumes: CvResume[];
 }>) {
+  const t = useTranslations("cv.compare");
+  const SUGGESTIONS = t.raw("suggestions") as string[];
   const ids = resumes.map((r) => r.id).sort();
   // The conversation's id, known once it is opened.
   const comparisonId = useRef<string | null>(null);
@@ -50,10 +48,10 @@ export function CvCompareSheet({
       }}
       pdfUrl={() => (comparisonId.current ? cvComparisonPdfUrl(screeningId, comparisonId.current) : null)}
       ask={(question, opts) => {
-        if (!comparisonId.current) return Promise.reject(new Error("Comparaison non ouverte"));
+        if (!comparisonId.current) return Promise.reject(new Error(t("notOpen")));
         return askCvComparison(screeningId, comparisonId.current, question, opts);
       }}
-      title={`Comparer ${resumes.length} candidats`}
+      title={t("title", { count: resumes.length })}
       subtitle={jobTitle}
       lead={
         <span className="flex shrink-0 -space-x-2">
@@ -70,13 +68,13 @@ export function CvCompareSheet({
         </span>
       }
       intro={{
-        title: `Comparez ${resumes.map(firstName).join(", ")}`,
-        text: "Qui retenir en premier, sur quels points ils se distinguent, que vérifier en entretien : Rabotka répond d'après leurs CV et l'offre.",
+        title: t("introTitle", { names: resumes.map(firstName).join(", ") }),
+        text: t("intro"),
       }}
       suggestions={SUGGESTIONS}
-      placeholder="Une question sur ces candidats…"
-      usedUp={(limit) => `Vous avez posé les ${limit} questions prévues pour cette comparaison.`}
-      unavailable="Ces CV ont été supprimés à la fin de leur durée de conservation : la conversation reste lisible, sans nouvelle question."
+      placeholder={t("placeholder")}
+      usedUp={(limit) => t("usedUp", { limit })}
+      unavailable={t("gone")}
     />
   );
 }

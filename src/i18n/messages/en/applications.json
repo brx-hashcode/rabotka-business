@@ -1,0 +1,28 @@
+{
+  "tabs": {
+    "new": "To review",
+    "viewed": "Viewed",
+    "hired": "Hired",
+    "closed": "Declined or cancelled",
+    "all": "All",
+    "shortlisted": "Shortlisted"
+  },
+  "title": "Applications",
+  "intro": "Every application to your jobs, in one place: hire, decline, write.",
+  "search": "Search for a candidate, a job…",
+  "offer": "Job",
+  "allOffers": "All jobs",
+  "stage": "Stage",
+  "unavailable": "Your applications are unavailable right now.",
+  "noneYet": "No applications yet",
+  "noneHere": "No applications here",
+  "noneYetHint": "Publish a job: matching profiles are told about it and their applications arrive here.",
+  "allAnswered": "You've replied to everyone.",
+  "changeFilter": "Change the stage or filter to see others.",
+  "reliability": "Reliability {score}/100",
+  "forOffer": "For the job",
+  "waiting": "Waiting for your reply for {days, plural, one {# day} other {# days}}",
+  "plan": "Schedule an interview",
+  "loadingMore": "Loading…",
+  "loadOlder": "Load older ones ({count})"
+}

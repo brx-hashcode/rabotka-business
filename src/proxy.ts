@@ -4,14 +4,16 @@ import { ACCESS_COOKIE, REFRESH_COOKIE } from "#/lib/auth/cookies";
 import { safeRedirectPath } from "#/lib/safe-redirect";
 import { appConfig } from "#/config";
 import { DEFAULT_LOCALE, isOffered, LOCALE_COOKIE, LOCALE_HEADER, LOCALE_PARAM, type Locale } from "#/i18n/config";
-import { localizedPath, preferredLocale, stripLocalePrefix } from "#/i18n/routing";
+import { isMarketingPath, isPublicSitePath, localizedPath, preferredLocale, stripLocalePrefix } from "#/i18n/routing";
+
+export { isMarketingPath };
 
 const HOME = appConfig.homePath;
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const locale = preferredLocale(request.cookies.get(LOCALE_COOKIE)?.value, request.headers.get("accept-language"));
-  if (pathname.startsWith("/api/")) return forwardApi(request, locale);
+  if (pathname.startsWith("/api/")) return forwardApi(request, fromCandidatePage(request) ? DEFAULT_LOCALE : locale);
   // Socket.IO's long-polling transport is plain HTTP: it goes the same way,
   // so the socket is authenticated by the same cookie-to-bearer swap. Next
   // redirects away a trailing slash, so it arrives without the one the
@@ -35,6 +37,20 @@ export function proxy(request: NextRequest) {
   return requireSession(request) ?? page(request, locale);
 }
 
+/**
+ * A call made from a candidate's page: answered in that page's language, not
+ * the visitor's browser's, or an error would read English on a French page.
+ */
+function fromCandidatePage(request: NextRequest): boolean {
+  const referer = request.headers.get("referer");
+  if (!referer) return false;
+  try {
+    return isCandidatePath(new URL(referer).pathname);
+  } catch {
+    return false;
+  }
+}
+
 function isCandidatePath(pathname: string): boolean {
   return (
     pathname.startsWith("/entretien/") ||
@@ -42,18 +58,6 @@ function isCandidatePath(pathname: string): boolean {
     pathname === "/carrieres" ||
     pathname.startsWith("/carrieres/")
   );
-}
-
-/** The landing and the marketing pages: one URL per language. */
-export function isPublicSitePath(pathname: string): boolean {
-  return pathname === "/" || isMarketingPath(pathname);
-}
-
-/** The public site beyond the landing: features, resources, about, contact, demo. */
-const MARKETING_PREFIXES = ["/fonctionnalites", "/ressources", "/a-propos", "/contact", "/demo"];
-
-export function isMarketingPath(pathname: string): boolean {
-  return MARKETING_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
 function forwardApi(request: NextRequest, locale: Locale, path = request.nextUrl.pathname) {
@@ -133,7 +137,9 @@ function publicPage(request: NextRequest, locale: Locale) {
  * it is not offered — has no /en URL: Next answers 404.
  */
 function englishPublicPage(request: NextRequest, pathname: string) {
-  if (!isOffered("en") || !isPublicSitePath(pathname)) return NextResponse.next();
+  // No such page: Next answers 404, in English when English is offered.
+  if (!isOffered("en")) return NextResponse.next();
+  if (!isPublicSitePath(pathname)) return page(request, "en");
   const res = (pathname === "/" && landing(request)) || page(request, "en", pathname);
   return remember(request, res, "en");
 }

@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useSiteCopy } from "../copy";
 import Image from "next/image";
-import Link from "next/link";
 import { IconArrowRight, IconChevronDown, IconClock, IconLayoutKanban, IconMenu2 } from "@tabler/icons-react";
 
+import { useTranslations } from "next-intl";
+
 import { BusinessLockup } from "#/components/business-lockup";
+import { LocalLink as Link } from "#/components/local-link";
 import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
@@ -17,42 +20,46 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "#/components/ui/s
 import {
   DEMO_HREF,
   FEATURES_HREF,
-  RESOURCE_LINKS,
+  resourceLinks,
   SIGN_IN_HREF,
   SIGN_UP_HREF,
-  SOLUTION_LINKS,
+  solutionLinks,
   type NavLink,
 } from "../content";
-import { GUIDES } from "../site-content";
-import { STAGES } from "./feature-stages";
+import { guides } from "../site-content";
+import { stages } from "./feature-stages";
 import { SmartLink } from "./smart-link";
 import { IconTile } from "./icon-tile";
 
-const MENUS: { label: string; links: NavLink[]; wide?: boolean }[] = [
-  { label: "Fonctionnalités", links: SOLUTION_LINKS, wide: true },
-  { label: "Ressources", links: RESOURCE_LINKS },
-];
+type Menu = { label: string; links: NavLink[]; wide?: boolean };
 
-/** Pages reached in one click, after the menus. */
-const PAGES: NavLink[] = [
-  { href: "/a-propos", label: "À propos" },
-  { href: "/contact", label: "Contact" },
-];
+/** The two menus, then the pages reached in one click after them. */
+function useNav() {
+  const t = useTranslations("site.header");
+  const copy = useSiteCopy();
+  const menus: Menu[] = [
+    { label: t("features"), links: solutionLinks(copy), wide: true },
+    { label: t("resources"), links: resourceLinks(copy) },
+  ];
+  const pages: NavLink[] = [
+    { href: "/a-propos", label: t("about") },
+    { href: "/contact", label: t("contact") },
+  ];
+  return { menus, pages };
+}
 
-/**
- * The public site's header: brand, the Fonctionnalités and Ressources menus,
- * two pages, then the ways in, « Demander une démo » first. Sticky on the
- * lime band; on phones the menus fold into a sheet.
- */
+
 export function LandingHeader() {
+  const t = useTranslations("site.header");
+  const { menus: MENUS, pages: PAGES } = useNav();
   return (
     <header data-site-header className="sticky top-[env(safe-area-inset-top)] z-40 bg-header/95 text-header-foreground backdrop-blur">
       <div className="mx-auto flex h-18 w-full max-w-7xl items-center gap-6 px-4 sm:px-6">
-        <Link href="/" aria-label="Rabotka Business — accueil" className="shrink-0">
+        <Link href="/" aria-label={t("home")} className="shrink-0">
           <BusinessLockup compact />
         </Link>
 
-        <nav aria-label="Navigation principale" className="hidden items-center gap-1 lg:flex">
+        <nav aria-label={t("nav")} className="hidden items-center gap-1 lg:flex">
           {MENUS.map((menu) => (
             <DesktopMenu key={menu.label} {...menu} />
           ))}
@@ -73,22 +80,22 @@ export function LandingHeader() {
             render={<Link href={SIGN_IN_HREF} />}
             className="hidden h-12 rounded-full px-5 py-3 text-[15px] hover:bg-black/5 xl:inline-flex xl:h-12 xl:text-[15px]"
           >
-            Se connecter
+            {t("signIn")}
           </Button>
           <Button
             variant="ghost"
             render={<Link href={SIGN_UP_HREF} />}
             className="hidden h-12 rounded-full bg-card/70 px-5 py-3 text-[15px] hover:bg-card md:inline-flex md:h-12 md:text-[15px]"
           >
-            Ouvrir un compte
+            {t("signUp")}
           </Button>
           <Button
             variant="ghost"
             render={<Link href={DEMO_HREF} />}
             className="h-10 rounded-full bg-ink px-4 py-2 text-sm text-white hover:bg-ink/90 sm:h-12 sm:px-6 sm:py-3 sm:text-[15px]"
           >
-            <span className="sm:hidden">Démo</span>
-            <span className="hidden sm:inline">Demander une démo</span>
+            <span className="sm:hidden">{t("demoShort")}</span>
+            <span className="hidden sm:inline">{t("demo")}</span>
           </Button>
           <MobileMenu />
         </div>
@@ -109,13 +116,13 @@ function DesktopMenu({ label, links, wide }: Readonly<{ label: string; links: Na
   );
 }
 
-const GROUPS = STAGES;
-
 /**
  * The Fonctionnalités mega-menu, read as the pipeline: four stages of a hire,
  * two tools each; a bar to the overview; and a featured card for the demo.
  */
 function SolutionsPanel() {
+  const t = useTranslations("site.header");
+  const GROUPS = stages(useSiteCopy());
   return (
     <DropdownMenuContent
       align="start"
@@ -166,14 +173,12 @@ function SolutionsPanel() {
                 <IconLayoutKanban className="size-4" />
               </span>
               <span className="min-w-0">
-                <span className="block font-medium text-sm">Un ATS complet, six étapes</span>
-                <span className="block truncate text-muted-foreground text-xs">
-                  De la diffusion de l&apos;offre au contrat, dans un seul pipeline
-                </span>
+                <span className="block font-medium text-sm">{t("atsTitle")}</span>
+                <span className="block truncate text-muted-foreground text-xs">{t("atsText")}</span>
               </span>
             </span>
             <span className="inline-flex shrink-0 items-center gap-1.5 font-medium text-sm">
-              Toutes les fonctionnalités
+              {t("allFeatures")}
               <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </span>
           </Link>
@@ -194,17 +199,13 @@ function SolutionsPanel() {
           />
           <span className="absolute inset-0 bg-linear-to-t from-black/90 via-black/45 to-black/10" />
           <span className="relative w-fit rounded-full bg-header px-2.5 py-1 font-semibold text-[11px] text-header-foreground">
-            ATS nouvelle génération
+            {t("nextGen")}
           </span>
           <span className="relative space-y-3">
-            <span className="block font-semibold text-lg leading-snug">
-              Voyez Rabotka sur vos propres postes
-            </span>
-            <span className="block text-white/75 text-xs leading-snug">
-              30 minutes avec notre équipe, réponse sous 24 h ouvrées.
-            </span>
+            <span className="block font-semibold text-lg leading-snug">{t("demoTitle")}</span>
+            <span className="block text-white/75 text-xs leading-snug">{t("demoText")}</span>
             <span className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-full bg-white font-medium text-ink text-sm">
-              Demander une démo
+              {t("demo")}
               <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </span>
           </span>
@@ -219,7 +220,8 @@ function SolutionsPanel() {
  * beside them, so the menu itself offers something to read.
  */
 function ResourcesPanel({ links }: Readonly<{ links: NavLink[] }>) {
-  const guide = GUIDES[0];
+  const t = useTranslations("site.header");
+  const guide = guides(useSiteCopy())[0];
   return (
     <DropdownMenuContent
       align="start"
@@ -257,13 +259,13 @@ function ResourcesPanel({ links }: Readonly<{ links: NavLink[] }>) {
         <Link href={`/ressources/${guide.slug}`}>
           <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-card/70 px-2.5 py-1 font-medium text-[11px]">
             <IconClock className="size-3.5" />
-            Guide · {guide.minutes} min
+            {t("guideMinutes", { minutes: guide.minutes })}
           </span>
           <span className="space-y-3">
             <span className="block font-semibold text-lg leading-snug">{guide.title}</span>
             <span className="block text-header-muted text-xs leading-snug">{guide.description}</span>
             <span className="inline-flex items-center gap-1.5 font-medium text-sm">
-              Lire le guide
+              {t("readGuide")}
               <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </span>
           </span>
@@ -275,20 +277,23 @@ function ResourcesPanel({ links }: Readonly<{ links: NavLink[] }>) {
 
 function MobileMenu() {
   const [open, setOpen] = useState(false);
+  const t = useTranslations("site.header");
+  const GROUPS = stages(useSiteCopy());
+  const { menus: MENUS, pages: PAGES } = useNav();
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
-        aria-label="Menu"
+        aria-label={t("menu")}
         className="inline-flex size-10 items-center justify-center rounded-full hover:bg-black/5 lg:hidden"
       >
         <IconMenu2 className="size-5" />
       </SheetTrigger>
       <SheetContent side="right" className="w-full gap-0 overflow-y-auto border-0 bg-card p-6 sm:max-w-sm">
-        <SheetTitle className="sr-only">Menu</SheetTitle>
+        <SheetTitle className="sr-only">{t("menu")}</SheetTitle>
         <div className="mt-8 flex flex-col gap-6">
           <div className="space-y-3">
-            <p className="px-3 font-medium text-muted-foreground text-xs">Fonctionnalités</p>
+            <p className="px-3 font-medium text-muted-foreground text-xs">{t("features")}</p>
             {GROUPS.map((group) => (
               <div key={group.step} className="space-y-0.5">
                 <p className="flex items-center gap-2 px-3 pb-0.5">
@@ -315,7 +320,7 @@ function MobileMenu() {
               onClick={() => setOpen(false)}
               className="flex items-center gap-1.5 rounded-2xl px-3 py-2 font-medium text-sm hover:bg-page"
             >
-              Toutes les fonctionnalités
+              {t("allFeatures")}
               <IconArrowRight className="size-4" />
             </Link>
           </div>
@@ -353,21 +358,21 @@ function MobileMenu() {
               render={<Link href={DEMO_HREF} onClick={() => setOpen(false)} />}
               className="h-11 w-full rounded-full bg-ink text-base text-white hover:bg-ink/90"
             >
-              Demander une démo
+              {t("demo")}
             </Button>
             <Button
               variant="ghost"
               render={<Link href={SIGN_UP_HREF} onClick={() => setOpen(false)} />}
               className="h-11 w-full rounded-full bg-page text-base"
             >
-              Ouvrir un compte
+              {t("signUp")}
             </Button>
             <Button
               variant="ghost"
               render={<Link href={SIGN_IN_HREF} onClick={() => setOpen(false)} />}
               className="h-11 w-full rounded-full text-base"
             >
-              Se connecter
+              {t("signIn")}
             </Button>
           </div>
         </div>

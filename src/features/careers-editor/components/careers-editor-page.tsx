@@ -1,5 +1,8 @@
 "use client";
 
+import type { Locale } from "#/i18n/config";
+import { contentLocale, contentMessages } from "#/i18n/content";
+import { useTranslations } from "next-intl";
 import { useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -36,7 +39,7 @@ import {
 } from "#/lib/api/business-controller";
 import { getCareersCompany } from "#/lib/api/careers-controller";
 import { copyText } from "#/lib/clipboard";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import type { MyBusiness, UpdateMyBusiness } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { CareersPreview } from "./careers-preview";
@@ -45,18 +48,6 @@ const MAX_PHOTOS = 6;
 const MAX_BENEFITS = 8;
 const MAX_BYTES = 8 * 1024 * 1024;
 const MAX_DESCRIPTION = 2000;
-
-/** Common benefits, one tap to add. */
-const BENEFIT_IDEAS = [
-  "Repas offert",
-  "Transport",
-  "Formation",
-  "Assurance santé",
-  "Primes",
-  "Horaires flexibles",
-  "Tenue fournie",
-  "Télétravail",
-];
 
 type Busy = "cover" | "photo" | "remove" | "benefits";
 
@@ -71,6 +62,7 @@ function useOrigin(): string {
 
 /** One image picked from the device, checked before it is sent. */
 function usePicker(onFile: (file: File) => void) {
+  const t = useTranslations("careersEditor");
   const input = useRef<HTMLInputElement>(null);
   const element = (
     <input
@@ -82,7 +74,7 @@ function usePicker(onFile: (file: File) => void) {
         const file = e.target.files?.[0];
         e.target.value = "";
         if (!file) return;
-        if (file.size > MAX_BYTES) toast.error("Cette photo dépasse 8 Mo.");
+        if (file.size > MAX_BYTES) toast.error(t("photoTooBig"));
         else onFile(file);
       }}
     />
@@ -96,15 +88,17 @@ function usePicker(onFile: (file: File) => void) {
  * verified (that is when it gets its address).
  */
 export function CareersEditorPage() {
+  const t = useTranslations("careersEditor");
+  const friendlyError = useFriendlyError();
   const { data: business, isLoading, error } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
 
   return (
     <div className="w-full space-y-6 pt-2">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1.5">
-          <h1 className="font-semibold text-3xl tracking-tight">Page carrières</h1>
+          <h1 className="font-semibold text-3xl tracking-tight">{t("title")}</h1>
           <p className="text-muted-foreground">
-            La page publique de votre organisation : vos offres ouvertes, vos photos et ce que vous offrez.
+            {t("subtitle")}
           </p>
         </div>
         {business?.publicSlug && business.verificationStatus === "VERIFIED" && (
@@ -115,7 +109,7 @@ export function CareersEditorPage() {
             className="inline-flex h-11 items-center gap-2 rounded-full bg-ink px-5 font-medium text-sm text-white"
           >
             <IconExternalLink className="size-4" />
-            Voir la page
+            {t("seePage")}
           </a>
         )}
       </div>
@@ -124,7 +118,7 @@ export function CareersEditorPage() {
         <EditorBones />
       ) : !business ? (
         <p className="rounded-3xl bg-card p-6 text-muted-foreground">
-          {friendlyError(error, "Ce compte n'est pas un compte entreprise.")}
+          {friendlyError(error, t("notBusiness"))}
         </p>
       ) : business.verificationStatus !== "VERIFIED" || !business.publicSlug ? (
         <div className="flex items-start gap-4 rounded-3xl bg-card p-6">
@@ -132,13 +126,12 @@ export function CareersEditorPage() {
             <IconLock className="size-5" />
           </span>
           <div className="space-y-2">
-            <p className="font-semibold">Votre page s&apos;ouvre dès que votre organisation est vérifiée.</p>
+            <p className="font-semibold">{t("lockedTitle")}</p>
             <p className="text-muted-foreground text-sm">
-              Vous pourrez alors y ajouter une photo de couverture, votre présentation, des photos et vos avantages,
-              et partager son lien.
+              {t("lockedText")}
             </p>
             <Link href="/espace/organisation" className="inline-flex font-medium text-sm underline underline-offset-2">
-              Voir où en est la vérification
+              {t("lockedLink")}
             </Link>
           </div>
         </div>
@@ -150,6 +143,8 @@ export function CareersEditorPage() {
 }
 
 function Editor({ business, slug }: Readonly<{ business: MyBusiness; slug: string }>) {
+  const t = useTranslations("careersEditor");
+  const friendlyError = useFriendlyError();
   const queryClient = useQueryClient();
   const origin = useOrigin();
   const [view, setView] = useState<"edit" | "preview">("edit");
@@ -159,19 +154,19 @@ function Editor({ business, slug }: Readonly<{ business: MyBusiness; slug: strin
   const saveBusiness = useMutation({
     mutationFn: (body: UpdateMyBusiness) => updateMyBusiness(body),
     onSuccess: ({ business: next }) => queryClient.setQueryData(myBusinessKey, next),
-    onError: (err) => toast.error(friendlyError(err, "Vos modifications n'ont pas pu être enregistrées.")),
+    onError: (err) => toast.error(friendlyError(err, t("saveFailed"))),
   });
   const savePage = useMutation({
     mutationFn: ({ run }: { busy: Busy; run: () => Promise<CareersPage> }) => run(),
     onSuccess: (next) => queryClient.setQueryData(careersPageKey, next),
-    onError: (err) => toast.error(friendlyError(err, "La page n'a pas pu être mise à jour.")),
+    onError: (err) => toast.error(friendlyError(err, t("updateFailed"))),
   });
   const busy = savePage.isPending ? savePage.variables?.busy : undefined;
 
   if (page.isError)
     return (
       <p className="rounded-3xl bg-card p-6 text-muted-foreground">
-        {friendlyError(page.error, "Votre page carrières n'a pas pu être chargée.")}
+        {friendlyError(page.error, t("loadFailed"))}
       </p>
     );
   if (!page.data) return <EditorBones />;
@@ -179,20 +174,20 @@ function Editor({ business, slug }: Readonly<{ business: MyBusiness; slug: strin
   const path = `/carrieres/${slug}`;
 
   const steps = [
-    { label: "Logo", done: !!business.logoUrl, href: "/espace/organisation" },
-    { label: "Couverture", done: !!data.coverUrl, href: "#couverture" },
-    { label: "Présentation", done: !!business.description?.trim(), href: "#presentation" },
-    { label: "Photos", done: data.photos.length > 0, href: "#photos" },
-    { label: "Avantages", done: data.benefits.length > 0, href: "#avantages" },
+    { label: t("steps.logo"), done: !!business.logoUrl, href: "/espace/organisation" },
+    { label: t("steps.cover"), done: !!data.coverUrl, href: "#couverture" },
+    { label: t("steps.presentation"), done: !!business.description?.trim(), href: "#presentation" },
+    { label: t("steps.photos"), done: data.photos.length > 0, href: "#photos" },
+    { label: t("steps.benefits"), done: data.benefits.length > 0, href: "#avantages" },
   ];
 
   return (
     <>
-      <div role="tablist" aria-label="Affichage" className="inline-flex rounded-full bg-card p-1 lg:hidden">
+      <div role="tablist" aria-label={t("view")} className="inline-flex rounded-full bg-card p-1 lg:hidden">
         {(
           [
-            ["edit", "Modifier"],
-            ["preview", "Aperçu"],
+            ["edit", t("edit")],
+            ["preview", t("preview")],
           ] as const
         ).map(([key, label]) => (
           <button
@@ -215,7 +210,7 @@ function Editor({ business, slug }: Readonly<{ business: MyBusiness; slug: strin
         <div className={cn("space-y-6", view === "preview" && "hidden lg:block")}>
           <Progress steps={steps} />
 
-          <Section title="Adresse de la page" hint="Partagez-la où sont vos candidats : WhatsApp, Facebook, affiche, site web.">
+          <Section title={t("address.title")} hint={t("address.hint")}>
             <div className="flex items-center gap-2 rounded-2xl bg-page py-1.5 pr-1.5 pl-4">
               <IconWorldWww className="size-4 shrink-0 text-muted-foreground" />
               <span className="min-w-0 flex-1 truncate text-sm">{`${origin.replace(/^https?:\/\//, "")}${path}`}</span>
@@ -223,13 +218,13 @@ function Editor({ business, slug }: Readonly<{ business: MyBusiness; slug: strin
                 type="button"
                 onClick={async () => {
                   const copied = await copyText(`${window.location.origin}${path}`);
-                  if (copied) toast.success("Lien copié.");
-                  else toast.error("Le lien n'a pas pu être copié.");
+                  if (copied) toast.success(t("address.copied"));
+                  else toast.error(t("address.copyFailed"));
                 }}
                 className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-ink px-3 font-medium text-sm text-white"
               >
                 <IconCopy className="size-4" />
-                Copier
+                {t("address.copy")}
               </button>
             </div>
             <DistributeSwitch
@@ -241,7 +236,7 @@ function Editor({ business, slug }: Readonly<{ business: MyBusiness; slug: strin
                   {
                     onSuccess: () =>
                       toast.success(
-                        distributeOffers ? "Vos offres sont diffusées." : "Vos offres ne sont plus diffusées.",
+                        distributeOffers ? t("distribute.on") : t("distribute.off"),
                       ),
                   },
                 )
@@ -264,7 +259,7 @@ function Editor({ business, slug }: Readonly<{ business: MyBusiness; slug: strin
             onSave={(description) =>
               saveBusiness.mutate(
                 { description: description || null },
-                { onSuccess: () => toast.success("Présentation enregistrée.") },
+                { onSuccess: () => toast.success(t("presentation.saved")) },
               )
             }
           />
@@ -278,6 +273,8 @@ function Editor({ business, slug }: Readonly<{ business: MyBusiness; slug: strin
 
           <BenefitsSection
             benefits={data.benefits}
+            // The public page is French until the business chooses its language: French unless it presents itself in another.
+            language={contentLocale([business.description])}
             pending={busy === "benefits"}
             onChange={(benefits) => savePage.mutate({ busy: "benefits", run: () => setCareersBenefits(benefits) })}
           />
@@ -285,8 +282,8 @@ function Editor({ business, slug }: Readonly<{ business: MyBusiness; slug: strin
 
         <aside className={cn("space-y-3 lg:sticky lg:top-24", view === "edit" && "hidden lg:block")}>
           <div className="space-y-0.5 px-1">
-            <p className="font-semibold">Aperçu</p>
-            <p className="text-muted-foreground text-sm">Ce que voient les candidats.</p>
+            <p className="font-semibold">{t("preview")}</p>
+            <p className="text-muted-foreground text-sm">{t("previewHint")}</p>
           </div>
           <CareersPreview
             address={`${origin.replace(/^https?:\/\//, "")}${path}`}
@@ -340,17 +337,18 @@ function Count({ n, max }: Readonly<{ n: number; max: number }>) {
 
 /** How complete the page is, each missing piece one tap away. */
 function Progress({ steps }: Readonly<{ steps: { label: string; done: boolean; href: string }[] }>) {
+  const t = useTranslations("careersEditor");
   const done = steps.filter((s) => s.done).length;
   const complete = done === steps.length;
   return (
     <section className="space-y-4 rounded-3xl bg-card p-5 sm:p-6">
       <div className="flex items-center justify-between gap-3">
         <div className="space-y-0.5">
-          <h2 className="font-semibold text-lg">{complete ? "Votre page est complète" : "Complétez votre page"}</h2>
+          <h2 className="font-semibold text-lg">{complete ? t("progress.completeTitle") : t("progress.title")}</h2>
           <p className="text-muted-foreground text-sm">
             {complete
-              ? "Les candidats voient qui vous êtes avant de postuler."
-              : "Une page complète inspire confiance et attire plus de candidats."}
+              ? t("progress.completeText")
+              : t("progress.text")}
           </p>
         </div>
         <span className="shrink-0 font-semibold text-2xl tabular-nums">
@@ -393,6 +391,7 @@ function DistributeSwitch({
   pending,
   onChange,
 }: Readonly<{ on: boolean; pending: boolean; onChange: (on: boolean) => void }>) {
+  const t = useTranslations("careersEditor");
   return (
     <button
       type="button"
@@ -411,9 +410,9 @@ function DistributeSwitch({
         />
       </span>
       <span className="space-y-0.5">
-        <span className="block font-medium text-sm">Diffuser mes offres sur Google et les sites d&apos;emploi</span>
+        <span className="block font-medium text-sm">{t("distribute.label")}</span>
         <span className="block text-muted-foreground text-xs">
-          Vos offres ouvertes apparaissent dans les recherches d&apos;emploi. Les candidatures arrivent ici, comme les autres.
+          {t("distribute.text")}
         </span>
       </span>
     </button>
@@ -435,10 +434,11 @@ function CoverSection({
   onUpload,
   onRemove,
 }: Readonly<{ coverUrl: string | null; busy: Busy | undefined; onUpload: (file: File) => void; onRemove: () => void }>) {
+  const t = useTranslations("careersEditor");
   const picker = usePicker(onUpload);
   const working = busy === "cover";
   return (
-    <Section id="couverture" title="Photo de couverture" hint="En haut de la page, au format large : vos locaux, votre équipe, votre chantier.">
+    <Section id="couverture" title={t("cover.title")} hint={t("cover.hint")}>
       {coverUrl ? (
         <div className="relative overflow-hidden rounded-2xl">
           {/* eslint-disable-next-line @next/next/no-img-element -- the business's own upload */}
@@ -452,11 +452,11 @@ function CoverSection({
               className="inline-flex h-9 items-center gap-1.5 rounded-full bg-card/90 px-3.5 font-medium text-sm backdrop-blur disabled:opacity-60"
             >
               <IconPhotoPlus className="size-4" />
-              Changer
+              {t("cover.change")}
             </button>
             <button
               type="button"
-              aria-label="Retirer la photo de couverture"
+              aria-label={t("cover.remove")}
               onClick={onRemove}
               disabled={!!busy}
               className="inline-flex size-9 items-center justify-center rounded-full bg-card/90 backdrop-blur disabled:opacity-60"
@@ -479,8 +479,8 @@ function CoverSection({
               <span className="flex size-11 items-center justify-center rounded-full bg-card">
                 <IconPhotoPlus className="size-5" />
               </span>
-              <span className="font-medium text-foreground text-sm">Ajouter une photo de couverture</span>
-              <span className="text-xs">Format large · JPG, PNG ou WEBP · 8 Mo au plus</span>
+              <span className="font-medium text-foreground text-sm">{t("cover.add")}</span>
+              <span className="text-xs">{t("cover.format")}</span>
             </>
           )}
         </button>
@@ -495,16 +495,17 @@ function PresentationSection({
   pending,
   onSave,
 }: Readonly<{ description: string; pending: boolean; onSave: (text: string) => void }>) {
+  const t = useTranslations("careersEditor");
   const [text, setText] = useState(description);
   const dirty = text.trim() !== description.trim();
   return (
-    <Section id="presentation" title="Présentation" hint="Activité, missions, valeurs : ce que les candidats doivent savoir de vous.">
+    <Section id="presentation" title={t("presentation.title")} hint={t("presentation.hint")}>
       <Textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
         maxLength={MAX_DESCRIPTION}
         rows={6}
-        placeholder="Ex. : Restaurant familial à Brazzaville depuis 2012, nous servons 300 couverts par jour…"
+        placeholder={t("presentation.placeholder")}
         className="min-h-36 rounded-2xl border-0 bg-page px-4 py-3 text-base shadow-none focus-visible:ring-2 focus-visible:ring-whatsapp/40 md:text-[15px]"
       />
       <div className="flex items-center justify-between gap-3">
@@ -519,7 +520,7 @@ function PresentationSection({
               disabled={pending}
               className="h-10 rounded-full px-4 font-medium text-muted-foreground text-sm hover:text-foreground"
             >
-              Annuler
+              {t("cancel")}
             </button>
           )}
           <button
@@ -529,7 +530,7 @@ function PresentationSection({
             className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-5 font-medium text-sm text-white disabled:opacity-50"
           >
             {pending && <Spinner className="size-4" />}
-            Enregistrer
+            {t("save")}
           </button>
         </div>
       </div>
@@ -543,12 +544,13 @@ function PhotosSection({
   onAdd,
   onRemove,
 }: Readonly<{ photos: string[]; busy: Busy | undefined; onAdd: (file: File) => void; onRemove: (index: number) => void }>) {
+  const t = useTranslations("careersEditor");
   const picker = usePicker(onAdd);
   return (
     <Section
       id="photos"
-      title="Photos"
-      hint="Le quotidien chez vous : l'équipe au travail, les lieux, un événement."
+      title={t("photos.title")}
+      hint={t("photos.hint")}
       aside={<Count n={photos.length} max={MAX_PHOTOS} />}
     >
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -558,7 +560,7 @@ function PhotosSection({
             <img src={src} alt="" className="aspect-[4/3] w-full object-cover" />
             <button
               type="button"
-              aria-label={`Retirer la photo ${i + 1}`}
+              aria-label={t("photos.remove", { n: i + 1 })}
               onClick={() => onRemove(i)}
               disabled={!!busy}
               className="absolute top-2 right-2 inline-flex size-8 items-center justify-center rounded-full bg-card/90 backdrop-blur transition-opacity disabled:opacity-60 sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
@@ -579,13 +581,13 @@ function PhotosSection({
             ) : (
               <>
                 <IconPlus className="size-5" />
-                <span className="font-medium text-sm">Ajouter</span>
+                <span className="font-medium text-sm">{t("add")}</span>
               </>
             )}
           </button>
         )}
       </div>
-      {busy === "remove" && <p className="text-muted-foreground text-xs">Suppression…</p>}
+      {busy === "remove" && <p className="text-muted-foreground text-xs">{t("photos.removing")}</p>}
       {picker.element}
     </Section>
   );
@@ -595,17 +597,25 @@ function BenefitsSection({
   benefits,
   pending,
   onChange,
-}: Readonly<{ benefits: string[]; pending: boolean; onChange: (next: string[]) => void }>) {
+  language,
+}: Readonly<{
+  benefits: string[];
+  pending: boolean;
+  onChange: (next: string[]) => void;
+  /** The language the business presents itself in: the ideas are added to its public page. */
+  language: Locale;
+}>) {
+  const t = useTranslations("careersEditor");
   const [text, setText] = useState("");
   const full = benefits.length >= MAX_BENEFITS;
   const has = (b: string) => benefits.some((x) => x.toLowerCase() === b.toLowerCase());
-  const ideas = BENEFIT_IDEAS.filter((b) => !has(b));
+  const ideas = (contentMessages(language).careersEditor.raw("benefits.ideas") as string[]).filter((b) => !has(b));
 
   const add = (value: string) => {
     const b = value.trim();
     if (!b || full) return;
     if (has(b)) {
-      toast("Cet avantage est déjà sur votre page.");
+      toast(t("benefits.already"));
       return;
     }
     onChange([...benefits, b]);
@@ -615,8 +625,8 @@ function BenefitsSection({
   return (
     <Section
       id="avantages"
-      title="Avantages"
-      hint="Ce que vous offrez en plus du salaire."
+      title={t("benefits.title")}
+      hint={t("benefits.hint")}
       aside={<Count n={benefits.length} max={MAX_BENEFITS} />}
     >
       {benefits.length > 0 && (
@@ -626,7 +636,7 @@ function BenefitsSection({
               {b}
               <button
                 type="button"
-                aria-label={`Retirer ${b}`}
+                aria-label={t("benefits.remove", { name: b })}
                 onClick={() => onChange(benefits.filter((x) => x !== b))}
                 disabled={pending}
                 className="rounded-full p-0.5 hover:bg-black/10"
@@ -650,7 +660,7 @@ function BenefitsSection({
               value={text}
               onChange={(e) => setText(e.target.value)}
               maxLength={80}
-              placeholder="Un avantage, par exemple : prime de fin d'année"
+              placeholder={t("benefits.placeholder")}
               className="h-11 rounded-xl border-0 bg-page px-4 shadow-none"
             />
             <button
@@ -658,12 +668,12 @@ function BenefitsSection({
               disabled={!text.trim() || pending}
               className="h-11 shrink-0 rounded-xl bg-ink px-4 font-medium text-sm text-white disabled:opacity-50"
             >
-              Ajouter
+              {t("add")}
             </button>
           </form>
           {ideas.length > 0 && (
             <div className="space-y-2">
-              <p className="text-muted-foreground text-xs">Idées</p>
+              <p className="text-muted-foreground text-xs">{t("benefits.ideasTitle")}</p>
               <div className="flex flex-wrap gap-2">
                 {ideas.map((b) => (
                   <button

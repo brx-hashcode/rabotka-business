@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IconAddressBook, IconCheck, IconDots, IconMessageCircle, IconStar, IconStarFilled, IconCircleCheckFilled, IconCircleDashed, IconLockOpen, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
+import { useLocale, useTranslations } from "next-intl";
 
 import { ActionDialog } from "#/components/action-dialog";
 import { chattableApplicationId } from "#/features/discussions/chattable";
@@ -30,7 +31,8 @@ import {
   rejectApplication,
 } from "#/lib/api/application-controller";
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { offersKey, type OfferApplicant } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
 import { showApplicationStatus } from "../application-cache";
@@ -58,8 +60,8 @@ const TONE: Record<Action["tone"], string> = {
 
 const button = "inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3.5 font-medium text-sm transition-colors";
 
-/** Beside other buttons, on a row or a card: the long labels stay for the menu and the dialogs. */
-const SHORT: Record<string, string> = { cancel: "Annuler", unlock: "Suivi", contact: "Contact" };
+/** Beside other buttons, on a row or a card: the long labels stay for the menu and the dialogs (offers.actions.short). */
+const SHORT = new Set(["cancel", "unlock", "contact"] as const);
 
 function ActionButton({ action: a, label }: Readonly<{ action: Action; label?: string }>) {
   const className = cn(button, TONE[a.tone]);
@@ -92,6 +94,8 @@ function ActionButton({ action: a, label }: Readonly<{ action: Action; label?: s
 export function useApplicationChat(applicant: Pick<OfferApplicant, "applicationId" | "status">) {
   const router = useRouter();
   const openChat = useOpenDiscussion();
+  const t = useTranslations("offers.actions");
+  const friendlyError = useFriendlyError();
   const chatId = chattableApplicationId(applicant.applicationId, applicant.status);
   return {
     available: !!chatId,
@@ -100,7 +104,7 @@ export function useApplicationChat(applicant: Pick<OfferApplicant, "applicationI
       if (!chatId) return;
       openChat.mutate(chatId, {
         onSuccess: ({ conversation }) => router.push(`/espace/discussions/${conversation.id}`),
-        onError: (err) => toast.error(friendlyError(err, "La conversation n'a pas pu être ouverte.")),
+        onError: (err) => toast.error(friendlyError(err, t("chatFailed"))),
       });
     },
   };
@@ -134,6 +138,8 @@ function Actions({
   const queryClient = useQueryClient();
   const router = useRouter();
   const openChat = useOpenDiscussion();
+  const t = useTranslations("offers.actions");
+  const friendlyError = useFriendlyError();
   const [dialog, setDialog] = useState<Dialog>(null);
   // Set during render, not in an effect: each new request opens its dialog once.
   const [handled, setHandled] = useState<number | null>(null);
@@ -174,29 +180,29 @@ function Actions({
     onSuccess: (d) => {
       // The server's own word: accepted, or waiting for a payment.
       showApplicationStatus(queryClient, id, d.status);
-      done(`Candidature de ${name} retenue.`);
+      done(t("retained", { name }));
       // Straight to what happens next: who still has to pay.
       if (d.unlock) setDialog("unlock");
     },
-    onError: failed("La candidature n'a pas pu être retenue."),
+    onError: failed(t("retainFailed")),
   });
   const reject = useMutation({
     mutationFn: () => rejectApplication(id, reason.trim() || undefined),
     onMutate: decide("REJECTED"),
-    onSuccess: () => done("Candidature refusée. Le candidat en est prévenu."),
-    onError: failed("La candidature n'a pas pu être refusée."),
+    onSuccess: () => done(t("rejected")),
+    onError: failed(t("rejectFailed")),
   });
   const cancel = useMutation({
     mutationFn: () => cancelApplication(id, reason.trim() || undefined),
     onMutate: decide("CANCELLED"),
-    onSuccess: () => done("Recrutement annulé. Le candidat en est prévenu."),
-    onError: failed("Le recrutement n'a pas pu être annulé."),
+    onSuccess: () => done(t("cancelled")),
+    onError: failed(t("cancelFailed")),
   });
 
   const rate = useMutation({
     mutationFn: ({ score, note }: { score: number; note?: string }) => rateWorker(id, score, note),
-    onSuccess: () => done(`Merci : votre note pour ${name} est enregistrée.`),
-    onError: (err) => toast.error(friendlyError(err, "La note n'a pas pu être enregistrée.")),
+    onSuccess: () => done(t("rated", { name })),
+    onError: (err) => toast.error(friendlyError(err, t("rateFailed"))),
   });
 
   const status = applicant.status;
@@ -207,20 +213,20 @@ function Actions({
   const actions: Action[] = [];
   if (status === "PENDING" || status === "VIEWED") {
     if (recruiting) {
-      actions.push({ key: "accept", label: "Retenir", icon: IconCheck, tone: "primary", onClick: () => setDialog("accept") });
+      actions.push({ key: "accept", label: t("retain"), icon: IconCheck, tone: "primary", onClick: () => setDialog("accept") });
     }
-    actions.push({ key: "reject", label: "Refuser", icon: IconX, tone: "danger", onClick: () => setDialog("reject") });
+    actions.push({ key: "reject", label: t("refuse"), icon: IconX, tone: "danger", onClick: () => setDialog("reject") });
   }
   if (status === "WAITING_PAYMENT") {
-    actions.push({ key: "unlock", label: "Voir l'avancement", icon: IconLockOpen, tone: "default", onClick: () => setDialog("unlock") });
-    actions.push({ key: "cancel", label: "Annuler le recrutement", icon: IconX, tone: "danger", onClick: () => setDialog("cancel") });
+    actions.push({ key: "unlock", label: t("progress"), icon: IconLockOpen, tone: "default", onClick: () => setDialog("unlock") });
+    actions.push({ key: "cancel", label: t("cancelHire"), icon: IconX, tone: "danger", onClick: () => setDialog("cancel") });
   }
   if (status === "END" && !applicant.ratedByEmployer) {
-    actions.push({ key: "rate", label: "Noter", icon: IconStar, tone: "accent", onClick: () => setDialog("rate") });
+    actions.push({ key: "rate", label: t("rate"), icon: IconStar, tone: "accent", onClick: () => setDialog("rate") });
   }
-  if (hired) actions.push({ key: "contact", label: "Voir le contact", icon: IconAddressBook, tone: "primary", onClick: () => setDialog("contact") });
+  if (hired) actions.push({ key: "contact", label: t("contact"), icon: IconAddressBook, tone: "primary", onClick: () => setDialog("contact") });
   if (status === "ACCEPTED") {
-    actions.push({ key: "cancel", label: "Annuler le recrutement", icon: IconX, tone: "danger", onClick: () => setDialog("cancel") });
+    actions.push({ key: "cancel", label: t("cancelHire"), icon: IconX, tone: "danger", onClick: () => setDialog("cancel") });
   }
 
   const chat = chatId && !hideChat && (
@@ -230,14 +236,14 @@ function Actions({
       onClick={() =>
         openChat.mutate(chatId, {
           onSuccess: ({ conversation }) => router.push(`/espace/discussions/${conversation.id}`),
-          onError: (err) => toast.error(friendlyError(err, "La conversation n'a pas pu être ouverte.")),
+          onError: (err) => toast.error(friendlyError(err, t("chatFailed"))),
         })
       }
-      aria-label={`Écrire à ${name}`}
+      aria-label={t("writeTo", { name })}
       className={cn(button, "shrink-0 bg-card hover:bg-card/70")}
     >
       <IconMessageCircle className="size-4" />
-      Message
+      {t("message")}
     </button>
   );
 
@@ -258,8 +264,8 @@ function Actions({
             <button
               type="button"
               onClick={contact.onClick}
-              aria-label={`Voir le contact de ${name}`}
-              title="Voir le contact"
+              aria-label={t("contactOf", { name })}
+              title={t("contact")}
               className={cn(button, "bg-card px-2.5 hover:bg-card/70")}
             >
               <IconAddressBook className="size-4" />
@@ -282,7 +288,7 @@ function Actions({
             ))}
           {rest.length > 0 && (
             <DropdownMenu>
-              <DropdownMenuTrigger aria-label="Plus d'actions" className={cn(button, "bg-card px-2.5 outline-none hover:bg-card/70")}>
+              <DropdownMenuTrigger aria-label={t("more")} className={cn(button, "bg-card px-2.5 outline-none hover:bg-card/70")}>
                 <IconDots className="size-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-60 rounded-2xl border-0 bg-card p-1.5 shadow-soft">
@@ -310,7 +316,7 @@ function Actions({
           {[...actions]
             .sort((a, b) => Number(b.tone === "danger") - Number(a.tone === "danger"))
             .map((a) => (
-              <ActionButton key={a.key} action={a} label={SHORT[a.key]} />
+              <ActionButton key={a.key} action={a} label={SHORT.has(a.key as "cancel") ? t(`short.${a.key as "cancel" | "unlock" | "contact"}`) : undefined} />
             ))}
         </div>
       )}
@@ -336,9 +342,9 @@ function Actions({
         onOpenChange={(o) => setDialog(o ? "reject" : null)}
         tone="warning"
         icon={<IconX className="size-5" />}
-        title={`Refuser la candidature de ${name} ?`}
-        description="Le candidat est prévenu, avec votre message s'il y en a un."
-        confirmLabel="Refuser"
+        title={t("refuseTitle", { name })}
+        description={t("refuseText")}
+        confirmLabel={t("refuse")}
         pending={reject.isPending}
         onConfirm={() => reject.mutate()}
       >
@@ -349,13 +355,13 @@ function Actions({
         open={dialog === "cancel"}
         onOpenChange={(o) => setDialog(o ? "cancel" : null)}
         tone="warning"
-        title={`Annuler le recrutement de ${name} ?`}
-        description="Le candidat est prévenu et le poste se libère. Une annulation tardive peut baisser votre note d'employeur."
-        confirmLabel="Annuler le recrutement"
+        title={t("cancelTitle", { name })}
+        description={t("cancelText")}
+        confirmLabel={t("cancelHire")}
         pending={cancel.isPending}
         onConfirm={() => cancel.mutate()}
       >
-        <ReasonField value={reason} onChange={setReason} placeholder="Ce qui a changé (facultatif)" />
+        <ReasonField value={reason} onChange={setReason} placeholder={t("cancelReason")} />
       </ActionDialog>
 
       <RateDialog
@@ -399,6 +405,7 @@ function AcceptDialog({
   onConfirm,
 }: Readonly<{ open: boolean; name: string; pending: boolean; onOpenChange: (o: boolean) => void; onConfirm: () => void }>) {
   const subscription = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription, enabled: open });
+  const t = useTranslations("offers.actions");
   const e = subscription.data?.entitlements;
   const covered = e?.plan && (e.unlocksRemaining === null || e.unlocksRemaining > 0);
 
@@ -407,9 +414,9 @@ function AcceptDialog({
       open={open}
       onOpenChange={onOpenChange}
       icon={<IconCheck className="size-5" />}
-      title={`Retenir ${name} ?`}
-      description="Le candidat est prévenu. Vous obtenez son contact dès qu'il a confirmé."
-      confirmLabel="Retenir"
+      title={t("retainTitle", { name })}
+      description={t("retainText")}
+      confirmLabel={t("retain")}
       pending={pending}
       onConfirm={onConfirm}
     >
@@ -417,17 +424,13 @@ function AcceptDialog({
         <Skeleton className="h-16 rounded-2xl" />
       ) : covered ? (
         <p className="rounded-2xl bg-chip-green p-4 text-chip-green-foreground text-sm">
-          Contact inclus dans votre formule {e.plan!.name}
-          {e.unlocksRemaining === null
-            ? "."
-            : ` : il vous restera ${e.unlocksRemaining - 1} contact${e.unlocksRemaining - 1 > 1 ? "s" : ""} inclus.`}
+          {t("included", { plan: e.plan!.name, left: e.unlocksRemaining === null ? "none" : e.unlocksRemaining - 1 })}
         </p>
       ) : (
         <p className="rounded-2xl bg-chip-amber p-4 text-chip-amber-foreground text-sm">
-          {e.plan ? "Vous avez utilisé tous les contacts inclus dans votre formule" : "Vous n'avez pas de formule en cours"} : ce
-          contact sera payant.{" "}
+          {e.plan ? t("noMoreContacts") : t("noPlan")}{" "}
           <Link href="/espace/abonnement" className="font-medium underline">
-            Voir les formules
+            {t("seePlans")}
           </Link>
         </p>
       )}
@@ -444,6 +447,9 @@ function UnlockDialog({
   onCancelHire,
 }: Readonly<{ open: boolean; applicationId: string; name: string; onOpenChange: (o: boolean) => void; onCancelHire: () => void }>) {
   const queryClient = useQueryClient();
+  const t = useTranslations("offers.actions");
+  const locale = useLocale() as Locale;
+  const friendlyError = useFriendlyError();
   const detail = useQuery({ queryKey: applicationKey(applicationId), queryFn: () => getApplication(applicationId), enabled: open });
   const u = detail.data?.unlock;
   const pay = useMutation({
@@ -451,9 +457,9 @@ function UnlockDialog({
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: offersKey });
       void queryClient.invalidateQueries({ queryKey: applicationKey(applicationId) });
-      toast.success("Paiement effectué.");
+      toast.success(t("paid"));
     },
-    onError: (err) => toast.error(friendlyError(err, "Le paiement n'a pas abouti.")),
+    onError: (err) => toast.error(friendlyError(err, t("payFailed"))),
   });
   const canPay = !!u && !u.employerPaid && u.walletBalance >= u.employerFee;
 
@@ -462,9 +468,9 @@ function UnlockDialog({
       open={open}
       onOpenChange={onOpenChange}
       icon={<IconLockOpen className="size-5" />}
-      title={`Contact de ${name} : avancement`}
-      description="Vous obtenez le contact dès que le candidat a confirmé."
-      confirmLabel={canPay ? `Payer ${fcfa(u.employerFee)} avec mon solde` : "Fermer"}
+      title={t("unlockTitle", { name })}
+      description={t("unlockText")}
+      confirmLabel={canPay ? t("pay", { amount: fcfa(u.employerFee, locale) }) : t("close")}
       pending={pay.isPending}
       onConfirm={() => (canPay ? pay.mutate() : onOpenChange(false))}
     >
@@ -473,37 +479,40 @@ function UnlockDialog({
       ) : !u ? (
         <p className="rounded-2xl bg-page p-4 text-muted-foreground text-sm">
           {detail.data?.status === "ACCEPTED"
-            ? "Le candidat a confirmé : son contact s'affiche avec « Contact »."
-            : friendlyError(detail.error, "Rien en attente pour cette candidature.")}
+            ? t("confirmed")
+            : friendlyError(detail.error, t("nothingPending"))}
         </p>
       ) : (
         <div className="space-y-3">
           <ul className="space-y-2 rounded-2xl bg-page p-4 text-sm">
             <Step
               done={u.employerPaid}
-              label="Vous"
-              hint={u.employerPaid ? (u.employerFee === 0 ? "inclus dans votre formule" : "payé") : `${fcfa(u.employerFee)} à payer`}
+              label={t("you")}
+              hint={u.employerPaid ? (u.employerFee === 0 ? t("includedShort") : t("paidShort")) : t("toPay", { amount: fcfa(u.employerFee, locale) })}
             />
-            <Step done={u.workerPaid} label="Le candidat" hint={u.workerPaid ? "a confirmé" : "confirmation en attente"} />
+            <Step done={u.workerPaid} label={t("candidate")} hint={u.workerPaid ? t("didConfirm") : t("waitingConfirm")} />
           </ul>
           {u.status !== "UNLOCKED" && (
             <p className="text-muted-foreground text-xs">
-              Sans confirmation avant le{" "}
-              {new Date(u.expiresAt).toLocaleString("fr-FR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}, la
-              candidature est annulée.
+              {t("expires", {
+                date: new Date(u.expiresAt).toLocaleString(INTL_LOCALE[locale], { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }),
+              })}
             </p>
           )}
           {!u.employerPaid && !canPay && (
             <p className="rounded-2xl bg-chip-amber p-3 text-chip-amber-foreground text-sm">
-              Solde insuffisant ({fcfa(u.walletBalance)}).{" "}
-              <Link href="/espace/abonnement" className="font-medium underline">
-                Passez à une formule qui couvre plus de contacts
-              </Link>
-              .
+              {t.rich("lowBalance", {
+                amount: fcfa(u.walletBalance, locale),
+                link: (chunks) => (
+                  <Link href="/espace/abonnement" className="font-medium underline">
+                    {chunks}
+                  </Link>
+                ),
+              })}
             </p>
           )}
           <button type="button" onClick={onCancelHire} className="text-destructive text-sm hover:underline">
-            Annuler ce recrutement
+            {t("cancelThis")}
           </button>
         </div>
       )}
@@ -535,28 +544,29 @@ function RateDialog({
 }: Readonly<{ open: boolean; name: string; pending: boolean; onOpenChange: (o: boolean) => void; onConfirm: (score: number, note?: string) => void }>) {
   const [score, setScore] = useState(0);
   const [note, setNote] = useState("");
-  const labels = ["", "Décevant", "Moyen", "Bien", "Très bien", "Excellent"];
+  const t = useTranslations("offers.actions");
+  const labels = ["", ...(t.raw("rateLabels") as string[])];
   return (
     <ActionDialog
       open={open}
       onOpenChange={onOpenChange}
       icon={<IconStar className="size-5" />}
-      title={`Noter ${name}`}
-      description="Votre note compte pour sa fiabilité et aide les autres employeurs."
-      confirmLabel="Enregistrer la note"
+      title={t("rateTitle", { name })}
+      description={t("rateText")}
+      confirmLabel={t("rateConfirm")}
       confirmDisabled={score === 0}
       pending={pending}
       onConfirm={() => onConfirm(score, note.trim() || undefined)}
     >
       <div className="space-y-3">
-        <div role="radiogroup" aria-label="Note" className="flex items-center gap-1">
+        <div role="radiogroup" aria-label={t("score")} className="flex items-center gap-1">
           {[1, 2, 3, 4, 5].map((n) => (
             <button
               key={n}
               type="button"
               role="radio"
               aria-checked={score === n}
-              aria-label={`${n} sur 5`}
+              aria-label={t("outOf", { n })}
               onClick={() => setScore(n)}
               className="rounded-lg p-1 transition-transform hover:scale-110"
             >
@@ -565,7 +575,7 @@ function RateDialog({
           ))}
           <span className="ml-2 font-medium text-sm">{labels[score]}</span>
         </div>
-        <ReasonField value={note} onChange={setNote} placeholder="Un mot sur la mission (facultatif)" />
+        <ReasonField value={note} onChange={setNote} placeholder={t("rateNote")} />
       </div>
     </ActionDialog>
   );

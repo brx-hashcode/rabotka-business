@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { Suspense, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -9,10 +10,10 @@ import { IconCheck, IconChecks, IconMessageCircle, IconSearch } from "@tabler/ic
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Input } from "#/components/ui/input";
 import { Skeleton } from "#/components/ui/skeleton";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import type { Discussion } from "#/lib/api/discussions-controller";
 import { cn, getInitials } from "#/lib/utils";
-import { discussionsContent } from "../content";
+import { useDiscussionsContent } from "../content";
 import { listTime } from "../list-time";
 import { useDiscussions } from "../use-discussions";
 
@@ -42,7 +43,9 @@ export function DiscussionsShell({ children }: Readonly<{ children: React.ReactN
 }
 
 function DiscussionList({ activeId }: Readonly<{ activeId?: string }>) {
-  const content = discussionsContent.list;
+  const content = useDiscussionsContent().list;
+  const t = useTranslations("discussions");
+  const friendlyError = useFriendlyError();
   const { data, isLoading, error } = useDiscussions();
   // In the URL (?q=, ?non-lues=), and carried to each conversation's link, so
   // opening one keeps the list as it was filtered.
@@ -100,7 +103,7 @@ function DiscussionList({ activeId }: Readonly<{ activeId?: string }>) {
             ))}
           </div>
         ) : !all ? (
-          <p className="px-3 py-6 text-muted-foreground text-sm">{friendlyError(error, "Vos messages sont indisponibles.")}</p>
+          <p className="px-3 py-6 text-muted-foreground text-sm">{friendlyError(error, t("listUnavailable"))}</p>
         ) : all.length === 0 ? (
           <div className="flex flex-col items-center gap-3 px-6 py-12 text-center">
             <span className="flex size-12 items-center justify-center rounded-2xl bg-page">
@@ -128,6 +131,9 @@ function DiscussionRow({
   active,
   search,
 }: Readonly<{ discussion: Discussion; active: boolean; search: string }>) {
+  const discussionsContent = useDiscussionsContent();
+  const tTime = useTranslations("common.time");
+  const locale = useLocale();
   const unread = d.unreadCount > 0;
   const preview = d.closed
     ? discussionsContent.list.closed
@@ -145,7 +151,7 @@ function DiscussionRow({
           <span className="flex items-baseline justify-between gap-2">
             <span className={cn("truncate", unread ? "font-semibold" : "font-medium")}>{d.counterpartName}</span>
             <span className={cn("shrink-0 text-xs tabular-nums", unread ? "font-semibold text-whatsapp-dark" : "text-muted-foreground")}>
-              {listTime(d.lastMessageAt)}
+              {listTime(d.lastMessageAt, locale, tTime("yesterday"))}
             </span>
           </span>
           {d.jobTitle && <span className="block truncate text-muted-foreground text-xs">{d.jobTitle}</span>}
@@ -176,6 +182,7 @@ export function CounterpartAvatar({
   online,
   className,
 }: Readonly<{ name: string; avatarUrl: string | null; online: boolean; className?: string }>) {
+  const t = useTranslations("discussions");
   return (
     <span className={cn("relative shrink-0", className)}>
       <Avatar className="size-12 rounded-2xl">
@@ -183,7 +190,7 @@ export function CounterpartAvatar({
         <AvatarFallback className="rounded-2xl bg-brand-lime font-semibold text-[#0f2414]">{getInitials(name)}</AvatarFallback>
       </Avatar>
       {online && (
-        <span aria-label="En ligne" className="absolute -right-0.5 -bottom-0.5 size-3.5 rounded-full bg-whatsapp ring-2 ring-card" />
+        <span aria-label={t("online")} className="absolute -right-0.5 -bottom-0.5 size-3.5 rounded-full bg-whatsapp ring-2 ring-card" />
       )}
     </span>
   );

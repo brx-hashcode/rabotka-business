@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -18,8 +19,9 @@ import {
 } from "#/components/ui/dropdown-menu";
 import type { DiscussionMessage } from "#/lib/api/discussions-controller";
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
-import { friendlyError } from "#/lib/api/friendly-error";
-import { discussionsContent } from "../content";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
+import { useDiscussionsContent } from "../content";
 import { mergeThread } from "../merge-thread";
 import {
   useDeleteDiscussionMessage,
@@ -35,13 +37,13 @@ import {
 import { CounterpartAvatar } from "./discussions-shell";
 import { MessageBubble } from "./message-bubble";
 
-const dayLabel = (iso: string) => {
+const dayLabel = (iso: string, locale: Locale, words: { today: string; yesterday: string }) => {
   const d = new Date(iso);
   const today = new Date();
   const days = Math.round((new Date(today.toDateString()).getTime() - new Date(d.toDateString()).getTime()) / 86_400_000);
-  if (days === 0) return "Aujourd'hui";
-  if (days === 1) return "Hier";
-  return d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+  if (days === 0) return words.today;
+  if (days === 1) return words.yesterday;
+  return d.toLocaleDateString(INTL_LOCALE[locale], { weekday: "long", day: "numeric", month: "long" });
 };
 
 /**
@@ -51,7 +53,13 @@ const dayLabel = (iso: string) => {
  */
 export function DiscussionThread({ id }: Readonly<{ id: string }>) {
   const router = useRouter();
+  const discussionsContent = useDiscussionsContent();
   const content = discussionsContent.thread;
+  const t = useTranslations("discussions");
+  const tTime = useTranslations("common.time");
+  const locale = useLocale();
+  const friendlyError = useFriendlyError();
+  const dayWords = { today: tTime("today"), yesterday: tTime("yesterday") };
   const header = useDiscussion(id);
   const thread = useDiscussionThread(id);
   const [historyWanted, setHistoryWanted] = useState(false);
@@ -106,7 +114,7 @@ export function DiscussionThread({ id }: Readonly<{ id: string }>) {
   return (
     <>
       <header className="flex items-center gap-3 border-page border-b-2 p-4 sm:px-6">
-        <Link href="/espace/discussions" aria-label="Retour aux messages" className="-ml-1 rounded-full p-2 hover:bg-page lg:hidden">
+        <Link href="/espace/discussions" aria-label={t("back")} className="-ml-1 rounded-full p-2 hover:bg-page lg:hidden">
           <IconArrowLeft className="size-5" />
         </Link>
         {d ? (
@@ -128,7 +136,7 @@ export function DiscussionThread({ id }: Readonly<{ id: string }>) {
               {content.viewProfile}
             </Link>
             <DropdownMenu>
-              <DropdownMenuTrigger aria-label="Plus d'actions" className="rounded-full p-2 outline-none hover:bg-page">
+              <DropdownMenuTrigger aria-label={t("more")} className="rounded-full p-2 outline-none hover:bg-page">
                 <IconDots className="size-5" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64 rounded-2xl border-0 bg-card p-1.5 shadow-soft">
@@ -177,7 +185,7 @@ export function DiscussionThread({ id }: Readonly<{ id: string }>) {
               <Skeleton className="h-16 w-3/5 rounded-2xl" />
             </div>
           ) : !thread.data ? (
-            <p className="py-10 text-center text-muted-foreground text-sm">{friendlyError(thread.error, "Cette conversation est indisponible.")}</p>
+            <p className="py-10 text-center text-muted-foreground text-sm">{friendlyError(thread.error, t("threadUnavailable"))}</p>
           ) : messages.length === 0 ? (
             <p className="py-10 text-center text-muted-foreground text-sm">{content.empty}</p>
           ) : (
@@ -205,7 +213,7 @@ export function DiscussionThread({ id }: Readonly<{ id: string }>) {
                   <div key={m.id}>
                     {newDay && (
                       <p className="my-4 text-center">
-                        <span className="rounded-full bg-page px-3 py-1 font-medium text-muted-foreground text-xs">{dayLabel(m.createdAt)}</span>
+                        <span className="rounded-full bg-page px-3 py-1 font-medium text-muted-foreground text-xs">{dayLabel(m.createdAt, locale, dayWords)}</span>
                       </p>
                     )}
                     <MessageBubble

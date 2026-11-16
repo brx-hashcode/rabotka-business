@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { IconFileText, IconLockOpen } from "@tabler/icons-react";
@@ -8,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/compone
 import { Skeleton } from "#/components/ui/skeleton";
 import { getMyContacts, myContactsKey } from "#/lib/api/business-controller";
 import { PreviewSheet } from "#/components/preview-sheet";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { applicationContractUrl } from "#/lib/api/offer-controller";
 import { ContactDetails } from "./contact-details";
 
@@ -32,6 +33,8 @@ export function ContactDialog({
   /** The retained application: its contract can be downloaded. */
   applicationId?: string;
 }>) {
+  const t = useTranslations("candidates.contact");
+  const friendlyError = useFriendlyError();
   const contacts = useQuery({ queryKey: myContactsKey, queryFn: getMyContacts, enabled: open });
   const [contractOpen, setContractOpen] = useState(false);
   const contact = contacts.data?.find((c) => c.workerId === workerId);
@@ -40,8 +43,8 @@ export function ContactDialog({
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[calc(100vw-2rem)] gap-0 rounded-3xl border-0 bg-card p-6 shadow-soft sm:max-w-md">
-        <DialogTitle className="sr-only">Contact de {name}</DialogTitle>
-        <DialogDescription className="sr-only">Téléphone et e-mail</DialogDescription>
+        <DialogTitle className="sr-only">{t("title", { name })}</DialogTitle>
+        <DialogDescription className="sr-only">{t("description")}</DialogDescription>
         {contacts.isLoading ? (
           <div className="space-y-4">
             <Skeleton className="h-14 w-2/3 rounded-2xl" />
@@ -54,11 +57,11 @@ export function ContactDialog({
             <span className="flex size-12 items-center justify-center rounded-2xl bg-page">
               <IconLockOpen className="size-6 text-muted-foreground" />
             </span>
-            <p className="font-medium">Coordonnées pas encore disponibles</p>
+            <p className="font-medium">{t("notYet")}</p>
             <p className="text-muted-foreground text-sm">
               {contacts.error
-                ? friendlyError(contacts.error, "Les coordonnées sont indisponibles pour le moment.")
-                : `Elles apparaissent dès que ${name} a confirmé.`}
+                ? friendlyError(contacts.error, t("unavailable"))
+                : t("appearWhen", { name })}
             </p>
           </div>
         )}
@@ -73,7 +76,7 @@ export function ContactDialog({
             className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-page font-medium hover:bg-page/70"
           >
             <IconFileText className="size-4" />
-            Voir le contrat
+            {t("seeContract")}
           </button>
         )}
       </DialogContent>
@@ -82,12 +85,12 @@ export function ContactDialog({
       <PreviewSheet
         open={contractOpen}
         onOpenChange={setContractOpen}
-        title={`Contrat de ${name}`}
-        subtitle="Contrat de prestation de services"
+        title={t("contractTitle", { name })}
+        subtitle={t("contractSubtitle")}
         src={applicationContractUrl(applicationId)}
         kind="pdf"
-        fileName={`contrat_${name.replaceAll(/\s+/g, "_")}.pdf`}
-        unavailable="Le contrat n'a pas pu être préparé. Réessayez dans un instant."
+        fileName={t("contractFile", { name: name.replaceAll(/\s+/g, "_") })}
+        unavailable={t("contractUnavailable")}
       />
     )}
     </>
