@@ -21,7 +21,7 @@
     "unavailable": "This CV couldn't be loaded."
   },
   "ownCv": {
-    "lockedHint": "The CV the candidate attached opens once you have their contact details or shortlist their application.",
+    "lockedHint": "The CV the candidate attached opens once you have their contact details or have hired them.",
     "locked": "Candidate's CV · after you get the contact",
     "label": "Candidate's CV",
     "sheetTitle": "{name}'s CV",
@@ -118,7 +118,7 @@
     "all": "All profiles",
     "count": "{count, plural, one {# profile} other {# profiles}}",
     "unavailable": "Search is unavailable right now.",
-    "noMatch": "No profile matches",
+    "noMatch": "No profiles match",
     "noMatchText": "Widen the search: another trade, another city, fewer criteria.",
     "loading": "Loading…",
     "more": "See more profiles ({count})"

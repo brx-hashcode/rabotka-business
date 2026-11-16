@@ -15,5 +15,8 @@
     "print": "Print",
     "close": "Close",
     "failed": "The file couldn't be displayed. Try again in a moment."
-  }
+  },
+  "backTo": "Back: {label}",
+  "close": "Close",
+  "logoAlt": "Rabotka logo"
 }

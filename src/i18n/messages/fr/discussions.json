@@ -38,7 +38,6 @@
     "actionsDeleted": "Message supprimé",
     "actionsDeleteFailed": "Le message n'a pas pu être supprimé",
     "sendFailed": "Le message n'a pas pu être envoyé",
-    "viewOffer": "Voir l'offre",
     "viewProfile": "Voir le profil"
   },
   "warning": {

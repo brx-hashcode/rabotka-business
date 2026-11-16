@@ -1,6 +1,6 @@
 {
   "title": "Dashboard",
-  "greeting": "{named, select, yes {Hello {firstName}, here is} other {Here is}} {hasBusiness, select, yes {the hiring at {business}} other {your hiring}} over the last {days} days.",
+  "greeting": "{named, select, yes {Hello {firstName}, here is how} other {Here is how}} {hasBusiness, select, yes {hiring at {business} has gone} other {your hiring has gone}} over the last {days} days.",
   "period": "Period",
   "days": "{days} days",
   "report": {
@@ -52,7 +52,7 @@
     "response": "Response time",
     "responseHint": "before opening or replying",
     "hire": "Time to hire",
-    "hireHint": "from publication to acceptance",
+    "hireHint": "from publication to hire",
     "note": "Average over the period, compared with the previous one.",
     "underHour": "< 1 h",
     "hours": "{n} h",
@@ -66,13 +66,13 @@
     "noShowsHint": "out of {count, plural, one {# completed mission} other {# completed missions}}",
     "noMissionEnded": "no completed mission",
     "ratingGiven": "Rating given",
-    "ratingGivenHint": "average of your {count} reviews",
+    "ratingGivenHint": "average of your {count, plural, one {# review} other {# reviews}}",
     "ratingReceived": "Rating received",
-    "ratingReceivedHint": "{count} reviews from candidates"
+    "ratingReceivedHint": "{count, plural, one {# review} other {# reviews}} from candidates"
   },
   "subscription": {
     "title": "Subscription",
-    "none": "No current plan: your contacts are paid one by one and you can't publish jobs.",
+    "none": "No current plan: you pay for each contact and you can't publish jobs.",
     "choose": "Choose a plan",
     "manage": "Manage",
     "trial": "Trial",
@@ -93,7 +93,7 @@
   "offers": {
     "title": "Jobs to follow",
     "all": "All jobs",
-    "empty": "You haven't published any job yet.",
+    "empty": "You haven't published any jobs yet.",
     "publish": "Publish a job",
     "applications": "{count, plural, one {# application} other {# applications}}",
     "filled": "{filled}/{quantity, plural, one {# position filled} other {# positions filled}}",

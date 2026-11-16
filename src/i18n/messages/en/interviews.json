@@ -130,7 +130,8 @@
     "offered": "time offered",
     "seeWeek": "See the week of {date}",
     "others": "+{count} more",
-    "noneHere": "No interviews in this period"
+    "noneHere": "No interviews in this period",
+    "hour": "{h}:00"
   },
   "schedule": {
     "location": {
@@ -170,7 +171,9 @@
     "cancel": "Cancel",
     "sending": "Sending…",
     "saveNotify": "Save and notify",
-    "send": "Send the invitation"
+    "send": "Send the invitation",
+    "minutes": "{n} min",
+    "hours": "{h} h{m, select, 0 {} other { {m} min}}"
   },
   "agenda": {
     "google": "Google Calendar",
@@ -216,7 +219,7 @@
     "guest": "Guest",
     "accessTitle": "Access",
     "onInvitation": "By invitation",
-    "onInvitationText": "Everyone joins with their own link, without an account, from the day before the interview to 2 hours after it ends. Your team joins from its space.",
+    "onInvitationText": "Everyone joins with their own link, without an account, from the day before the interview to 2 hours after it ends. Your team joins from its workspace.",
     "copyLink": "Copy the link",
     "removeTitle": "Remove {name}'s access?",
     "removeText": "Their link will no longer work: they won't be able to join the call. You can add them again.",
@@ -316,6 +319,8 @@
     "sendText": "By email, to the team members you choose.",
     "sendButton": "Send",
     "dialogTitle": "Report · {name}",
-    "practicalLine": "{label}: {value}"
+    "practicalLine": "{label}: {value}",
+    "transcriptNote": "Transcribed automatically during the video call: it may contain errors.",
+    "turn": "{speaker}: {text}"
   }
 }

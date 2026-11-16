@@ -225,7 +225,7 @@ export function ExternalApplicationCard({
               checked={compare.selected}
               disabled={compare.disabled}
               onCheckedChange={compare.onToggle}
-              aria-label={`Comparer ${name}`}
+              aria-label={t("compareAria", { name })}
               className="size-5 rounded-md"
             />
           </label>

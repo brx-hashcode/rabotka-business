@@ -1104,7 +1104,7 @@ function ApplicantRow({
               {score !== null && <VerdictChip score={score} />}
               {failed ? (
                 <span className="rounded-full bg-chip-amber px-2.5 py-1 font-medium text-chip-amber-foreground text-xs">
-                  Ne remplit pas : {failed}
+                  {t("fails", { what: failed })}
                 </span>
               ) : (
                 asked &&
@@ -1338,7 +1338,7 @@ function QuestionsCard({ offer: o }: Readonly<{ offer: Offer }>) {
             </p>
             <p className="flex flex-wrap items-center gap-1.5 text-muted-foreground text-xs">
               {tq(`kind.${q.kind}`)}
-              {q.kind === "CHOICE" && ` : ${q.options.join(", ")}`}
+              {q.kind === "CHOICE" && t("choiceOptions", { options: q.options.join(", ") })}
               {!q.required && t("optional")}
               {q.knockout && (
                 <span className="rounded-full bg-chip-amber px-2 py-0.5 font-medium text-chip-amber-foreground">

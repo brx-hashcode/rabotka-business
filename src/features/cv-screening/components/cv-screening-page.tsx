@@ -66,6 +66,7 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
   const router = useRouter();
   const t = useTranslations("cv.result");
   const tLabels = useTranslations("labels");
+  const locale = useLocale() as Locale;
   const friendlyError = useFriendlyError();
   const queryClient = useQueryClient();
   const query = useQuery({
@@ -138,7 +139,7 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
           )}
           <button
             type="button"
-            onClick={() => exportCsv(s, t, (k) => tLabels(`criterion.${k}`), (score) => tLabels(`verdict.${band(score).level}`))}
+            onClick={() => exportCsv(s, t, (k) => tLabels(`criterion.${k}`), (score) => tLabels(`verdict.${band(score).level}`), locale)}
             disabled={scored.length === 0}
             className="inline-flex h-11 items-center gap-2 rounded-full bg-card px-4 font-medium text-sm hover:bg-card/70 disabled:opacity-40"
           >
@@ -186,7 +187,7 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
                 onClick={() => setShowAll(true)}
                 className="h-11 w-full rounded-2xl bg-card font-medium text-sm hover:bg-card/70"
               >
-                Afficher les {scored.length - SCORED_SHOWN} autres CV
+                {t("showOthers", { count: scored.length - SCORED_SHOWN })}
               </button>
             )}
             {waiting.slice(0, WAITING_SHOWN).map((r, i) => (
@@ -194,7 +195,7 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
             ))}
             {waiting.length > WAITING_SHOWN && (
               <p className="rounded-2xl bg-card px-4 py-3 text-muted-foreground text-sm">
-                Et {waiting.length - WAITING_SHOWN} autres CV en attente : ils arrivent ici au fil de la lecture.
+                {t("moreWaiting", { count: waiting.length - WAITING_SHOWN })}
               </p>
             )}
           </section>
@@ -526,7 +527,7 @@ function ResumeCard({
           onClick={() => setChatOpen(true)}
           className="hidden h-10 shrink-0 items-center gap-2 rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm transition-colors hover:bg-brand-lime/80 sm:inline-flex"
         >
-          Interroger le CV
+          {t("ask")}
         </button>
       </div>
       {/* Phones: under the header, so the name and the career get the width. */}
@@ -535,7 +536,7 @@ function ResumeCard({
         onClick={() => setChatOpen(true)}
         className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full bg-brand-lime font-medium text-[#0f2414] text-sm transition-colors hover:bg-brand-lime/80 sm:hidden"
       >
-        Interroger le CV
+        {t("ask")}
       </button>
       {planning && (
         <ScheduleInterviewDialog
@@ -639,6 +640,7 @@ function exportCsv(
   t: Translator<"cv.result">,
   criterion: (key: (typeof CRITERIA)[number]["key"]) => string,
   verdict: (score: number) => string,
+  locale: Locale,
 ) {
   const cell = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
   const header = [
@@ -662,8 +664,9 @@ function exportCsv(
       r.summary,
       r.fileName,
     ]);
-  // Semicolons and a BOM: what a French Excel opens as columns, accents intact.
-  const csv = `﻿${[header, ...rows].map((line) => line.map(cell).join(";")).join("\r\n")}`;
+  // « ; » for a French Excel, « , » for an English one, and a BOM: columns as is, accents intact.
+  const separator = locale === "fr" ? ";" : ",";
+  const csv = `﻿${[header, ...rows].map((line) => line.map(cell).join(separator)).join("\r\n")}`;
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
   const a = document.createElement("a");
   a.href = url;

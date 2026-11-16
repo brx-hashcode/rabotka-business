@@ -19,7 +19,8 @@ import { CandidateCvSection } from "./candidate-cv";
 import { MessageButton } from "./message-button";
 import { ReachButton } from "./reach-button";
 import { SafeImage } from "#/components/safe-image";
-import { INTL_LOCALE } from "#/i18n/config";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import { formatRating } from "#/i18n/format";
 import { getInitials } from "#/lib/utils";
 
 /**
@@ -143,7 +144,7 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
             "—"
           ) : (
             <span className="inline-flex items-center gap-1">
-              {Number(c.ratingAvg).toFixed(1)}
+              {formatRating(c.ratingAvg, locale as Locale)}
               <IconStarFilled className="size-4 text-amber-400" />
             </span>
           )

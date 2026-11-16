@@ -15,5 +15,8 @@
     "print": "Imprimer",
     "close": "Fermer",
     "failed": "Le fichier n'a pas pu être affiché. Réessayez dans un instant."
-  }
+  },
+  "backTo": "Retour : {label}",
+  "close": "Fermer",
+  "logoAlt": "Logo Rabotka"
 }

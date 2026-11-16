@@ -21,6 +21,8 @@
   "changeFilter": "Change the stage or filter to see others.",
   "reliability": "Reliability {score}/100",
   "forOffer": "For the job",
-  "waiting": "Waiting for your reply for {days} days",
-  "plan": "Schedule an interview"
+  "waiting": "Waiting for your reply for {days, plural, one {# day} other {# days}}",
+  "plan": "Schedule an interview",
+  "loadingMore": "Loading…",
+  "loadOlder": "Load older ones ({count})"
 }

@@ -53,7 +53,8 @@
     "intro": "Qui retenir en premier, sur quels points ils se distinguent, que vérifier en entretien : Rabotka répond d'après leurs CV et l'offre.",
     "placeholder": "Une question sur ces candidats…",
     "usedUp": "Vous avez posé les {limit} questions prévues pour cette comparaison.",
-    "gone": "Ces CV ont été supprimés à la fin de leur durée de conservation : la conversation reste lisible, sans nouvelle question."
+    "gone": "Ces CV ont été supprimés à la fin de leur durée de conservation : la conversation reste lisible, sans nouvelle question.",
+    "introTitle": "Comparez {names}"
   },
   "chat": {
     "suggestions": [
@@ -65,7 +66,8 @@
     "intro": "Parcours, compétences, points à vérifier, questions d'entretien : Rabotka répond d'après le CV et l'offre.",
     "placeholder": "Une question sur {name}…",
     "usedUp": "Vous avez posé les {limit} questions prévues pour ce CV.",
-    "gone": "Ce CV a été supprimé à la fin de sa durée de conservation : la conversation reste lisible, sans nouvelle question."
+    "gone": "Ce CV a été supprimé à la fin de sa durée de conservation : la conversation reste lisible, sans nouvelle question.",
+    "introTitle": "Interrogez le CV de {name}"
   },
   "result": {
     "deleted": "Analyse supprimée, avec ses fichiers.",
@@ -142,7 +144,10 @@
         "Fichier"
       ],
       "file": "analyse-cv-{slug}.csv"
-    }
+    },
+    "showOthers": "Afficher les {count} autres CV",
+    "moreWaiting": "Et {count} autres CV en attente : ils arrivent ici au fil de la lecture.",
+    "ask": "Interroger le CV"
   },
   "list": {
     "todayAt": "Aujourd'hui à {time}",

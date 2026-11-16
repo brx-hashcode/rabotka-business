@@ -69,5 +69,3 @@ export const getOfferOpinions = c.offerOpinions.bind(c);
 
 export const candidateKey = (kind: ApplicationKind, id: string) => ["candidate-team", kind, id] as const;
 export const offerOpinionsKey = (offerId: string) => ["offer-opinions", offerId] as const;
-
-export const VERDICT_LABEL: Record<Verdict, string> = { YES: "Oui", MAYBE: "Peut-être", NO: "Non" };

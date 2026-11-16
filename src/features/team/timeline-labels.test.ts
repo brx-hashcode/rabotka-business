@@ -27,6 +27,6 @@ describe("timelineLabel", () => {
 
   it("words them in English too", () => {
     expect(timelineLabel({ at: "", kind: "OPINION", member: awa, verdict: "YES" }, en, "en")).toBe("Opinion of Awa: yes");
-    expect(timelineLabel({ at: "", kind: "RETAINED", member: awa }, en, "en")).toBe("Shortlisted by Awa");
+    expect(timelineLabel({ at: "", kind: "RETAINED", member: awa }, en, "en")).toBe("Hired by Awa");
   });
 });

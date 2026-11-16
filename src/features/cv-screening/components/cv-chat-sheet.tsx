@@ -38,7 +38,7 @@ export function CvChatSheet({
       lead={resume.score !== null && <ScoreRing score={resume.score} size={48} />}
       meta={resume.score !== null && <VerdictChip score={resume.score} />}
       intro={{
-        title: `Interrogez le CV de ${name}`,
+        title: t("introTitle", { name }),
         text: t("intro"),
       }}
       suggestions={SUGGESTIONS}

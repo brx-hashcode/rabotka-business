@@ -68,7 +68,7 @@ export function CvCompareSheet({
         </span>
       }
       intro={{
-        title: `Comparez ${resumes.map(firstName).join(", ")}`,
+        title: t("introTitle", { names: resumes.map(firstName).join(", ") }),
         text: t("intro"),
       }}
       suggestions={SUGGESTIONS}

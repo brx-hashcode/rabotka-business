@@ -34,7 +34,8 @@ import { Skeleton } from "#/components/ui/skeleton";
 import { Textarea } from "#/components/ui/textarea";
 import { CardGridSkeleton } from "#/components/page-skeletons";
 import { ReachButton } from "#/features/candidates/components/candidate-card";
-import { INTL_LOCALE } from "#/i18n/config";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import { formatRating } from "#/i18n/format";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { listOffers, offersKey } from "#/lib/api/offer-controller";
 import { inviteTalent, listTalents, removeTalent, saveTalent, talentsKey, type Talent } from "#/lib/api/talent-controller";
@@ -241,7 +242,7 @@ function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
             {t.ratingAvg !== null && t.ratingCount > 0 && (
               <span className="inline-flex items-center gap-1 font-medium">
                 <IconStarFilled className="size-3.5 text-amber-400" />
-                {Number(t.ratingAvg).toFixed(1)}
+                {formatRating(t.ratingAvg, locale as Locale)}
               </span>
             )}
             {t.reliabilityScore !== null && (

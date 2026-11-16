@@ -58,7 +58,7 @@
     "inviteTitle": "Invite {name} to apply",
     "inviteDescription": "The invitation arrives in their notifications, and by email if they have one: applying takes one tap.",
     "sendInvite": "Send the invitation",
-    "noOffer": "No open job.",
+    "noOffer": "No live jobs.",
     "publish": "Post a job",
     "offerLabel": "Job",
     "chooseOffer": "Choose an open job",
@@ -104,7 +104,7 @@
     "inviteTitle": "Invite {name} to apply",
     "inviteDescription": "An email with the link to the job on your careers page: applying takes a few minutes.",
     "sendInvite": "Send the invitation",
-    "noOtherOffer": "No other open job.",
+    "noOtherOffer": "No other live jobs.",
     "publish": "Post a job",
     "offerLabel": "Job",
     "chooseOffer": "Choose an open job"

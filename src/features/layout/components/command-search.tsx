@@ -6,7 +6,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { IconCommand, IconSearch, IconStarFilled } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+
+import type { Locale } from "#/i18n/config";
+import { formatRating } from "#/i18n/format";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Bone } from "#/components/page-skeletons";
@@ -38,6 +41,7 @@ const plain = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerC
 export function CommandSearch() {
   const router = useRouter();
   const t = useTranslations("layout");
+  const locale = useLocale() as Locale;
   const trade = useTradeName();
   const friendlyError = useFriendlyError();
   const [open, setOpen] = useState(false);
@@ -160,7 +164,7 @@ export function CommandSearch() {
                         {c.reliabilityScore !== null && <span>{t("search.reliability", { score: c.reliabilityScore })}</span>}
                         {c.ratingAvg !== null && (
                           <span className="inline-flex items-center gap-0.5">
-                            {c.ratingAvg.toFixed(1)}
+                            {formatRating(c.ratingAvg, locale)}
                             <IconStarFilled className="size-3 text-amber-400" />
                           </span>
                         )}

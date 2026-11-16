@@ -130,7 +130,8 @@
     "offered": "créneau proposé",
     "seeWeek": "Voir la semaine du {date}",
     "others": "+{count, plural, one {# autre} other {# autres}}",
-    "noneHere": "Aucun entretien sur cette période"
+    "noneHere": "Aucun entretien sur cette période",
+    "hour": "{h} h"
   },
   "schedule": {
     "location": {
@@ -170,7 +171,9 @@
     "cancel": "Annuler",
     "sending": "Envoi…",
     "saveNotify": "Enregistrer et prévenir",
-    "send": "Envoyer l'invitation"
+    "send": "Envoyer l'invitation",
+    "minutes": "{n} min",
+    "hours": "{h} h{m, select, 0 {} other { {m}}}"
   },
   "agenda": {
     "google": "Google Agenda",
@@ -316,6 +319,8 @@
     "sendText": "Par e-mail, aux membres de votre équipe que vous choisissez.",
     "sendButton": "Envoyer",
     "dialogTitle": "Compte rendu · {name}",
-    "practicalLine": "{label} : {value}"
+    "practicalLine": "{label} : {value}",
+    "transcriptNote": "Transcrite automatiquement pendant la visio : elle peut contenir des erreurs.",
+    "turn": "{speaker} : {text}"
   }
 }

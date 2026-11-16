@@ -202,7 +202,7 @@ export function ScheduleInterviewDialog({
                     duration === d ? "bg-ink text-white" : "bg-page text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  {d < 60 ? `${d} min` : `${d / 60} h${d % 60 ? ` ${d % 60}` : ""}`}
+                  {d < 60 ? t("minutes", { n: d }) : t("hours", { h: Math.floor(d / 60), m: d % 60 })}
                 </button>
               ))}
             </div>

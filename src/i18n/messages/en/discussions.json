@@ -6,8 +6,8 @@
   "online": "Online",
   "list": {
     "title": "Messages",
-    "emptyTitle": "No conversation",
-    "emptyDescription": "Write to a candidate from one of your jobs: your exchanges will appear here.",
+    "emptyTitle": "No conversations",
+    "emptyDescription": "Write to a candidate from one of your jobs: your conversations will appear here.",
     "closed": "Conversation ended",
     "searchPlaceholder": "Search a candidate, a job…",
     "filterAll": "All",
@@ -38,13 +38,12 @@
     "actionsDeleted": "Message deleted",
     "actionsDeleteFailed": "The message couldn't be deleted",
     "sendFailed": "The message couldn't be sent",
-    "viewOffer": "View the job",
     "viewProfile": "View the profile"
   },
   "warning": {
-    "header": "Phone numbers and emails don't go through here. Shortlist the candidate to get their contact details.",
+    "header": "Phone numbers and emails don't go through here. Hire the candidate to get their contact details.",
     "sender": "This part wasn't sent: contact details don't go through in messages.",
-    "recipient": "Phone numbers and emails don't go through here. Shortlist the candidate to get their contact details.",
+    "recipient": "Phone numbers and emails don't go through here. Hire the candidate to get their contact details.",
     "held": "This message wasn't sent: it contained contact details.",
     "reportCta": "Report a mistake",
     "reportConfirm": "Confirm the report",

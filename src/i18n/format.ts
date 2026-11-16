@@ -11,3 +11,8 @@ export function formatPercent(value: number, locale: Locale, { signed = false } 
     signDisplay: signed ? "exceptZero" : "auto",
   }).format(value / 100);
 }
+
+/** A rating out of five, one decimal: « 4,5 » in French, « 4.5 » in English. */
+export function formatRating(value: number | string, locale: Locale): string {
+  return Number(value).toLocaleString(INTL_LOCALE[locale], { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+}

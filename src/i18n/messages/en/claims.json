@@ -1,7 +1,7 @@
 {
   "topics": {
     "candidate": {
-      "label": "Candidate or job",
+      "label": "Candidate or mission",
       "hint": "No-show, lateness, poor work…"
     },
     "payment": {
@@ -40,7 +40,7 @@
   },
   "list": {
     "title": "Help",
-    "intro": "A problem with a candidate, a payment, an invoice? The Rabotka team answers you here.",
+    "intro": "A problem with a candidate, a payment, an invoice? The Rabotka team replies here.",
     "new": "New request",
     "open": "In progress",
     "openHint": "open requests",
@@ -49,9 +49,9 @@
     "closed": "Closed",
     "closedHint": "resolved or closed",
     "loadFailed": "Your requests are unavailable right now.",
-    "emptyOpen": "No request in progress",
-    "emptyClosed": "No closed request",
-    "emptyText": "Describe your problem, attach photos if needed: the team answers you here.",
+    "emptyOpen": "No requests in progress",
+    "emptyClosed": "No closed requests",
+    "emptyText": "Describe your problem, attach photos if needed: the team replies here.",
     "another": "Another problem?",
     "anotherText": "Open a new request",
     "request": "Request",
@@ -68,7 +68,7 @@
   },
   "form": {
     "title": "New request",
-    "intro": "Tell us what's wrong: the Rabotka team answers you in your space.",
+    "intro": "Tell us what's wrong: the Rabotka team replies in your workspace.",
     "errors": {
       "topic": "Choose a topic",
       "titleRequired": "Subject required",
@@ -78,21 +78,21 @@
     },
     "noOffer": "None in particular",
     "noCandidate": "None in particular",
-    "sent": "Request sent. The Rabotka team answers you here.",
+    "sent": "Request sent. The Rabotka team will reply here.",
     "sendFailed": "The request couldn't be sent.",
     "topicSection": "The topic",
     "topic": "Topic",
     "concernsSection": "What the request is about",
     "offer": "Job offer",
-    "offerPlaceholder": "Choose a job offer",
-    "offerSearch": "Search for a job offer…",
+    "offerPlaceholder": "Choose a job",
+    "offerSearch": "Search for a job…",
     "candidate": "Candidate",
     "candidatePlaceholder": "Choose a candidate",
     "candidateSearch": "Search for a candidate…",
     "candidateEmpty": "No candidate.",
     "requestSection": "Your request",
     "subject": "Subject",
-    "subjectPlaceholder": "E.g. candidate absent on the day of the job",
+    "subjectPlaceholder": "E.g. candidate absent on the day of the mission",
     "description": "Description",
     "descriptionPlaceholder": "What happened, when, what you expect from us…",
     "photos": "Photos",
@@ -106,7 +106,7 @@
     "ready": "Ready to send",
     "toComplete": "To complete",
     "next": "What happens next",
-    "next1": "The Rabotka team answers you in the request, from Help.",
+    "next1": "The Rabotka team replies in the request, under Help.",
     "next2": "A notification tells you about every answer.",
     "notFilled": "Not provided"
   },
@@ -114,7 +114,7 @@
     "sendFailed": "The message couldn't be sent.",
     "notFound": "This request can't be found.",
     "thread": "Conversation with the Rabotka team",
-    "threadText": "Answers in your space, and a notification for every message.",
+    "threadText": "Answers in your workspace, and a notification for every message.",
     "empty": "No answer yet. Add a detail if needed: the team will see it.",
     "closed": "This request is {status, select, COMPLETED {resolved} other {declined}}: you can no longer reply to it.",
     "placeholder": "Write to the team…",

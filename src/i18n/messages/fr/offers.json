@@ -74,7 +74,8 @@
     "unretainConfirm": "Ne plus retenir",
     "refuseTitle": "Refuser {name} ?",
     "refuseText": "La personne est prévenue par e-mail.",
-    "refuseNote": "Un mot pour la personne (facultatif)"
+    "refuseNote": "Un mot pour la personne (facultatif)",
+    "compareAria": "Comparer {name}"
   },
   "detail": {
     "back": "Offres",
@@ -168,7 +169,8 @@
     "reanalyse": "Nouveau CV · Réanalyser",
     "analysingCv": "Analyse du CV…",
     "failedTitle": "L'analyse de son CV a échoué ; elle sera relancée automatiquement.",
-    "redo": "Analyse du CV à refaire"
+    "redo": "Analyse du CV à refaire",
+    "fails": "Ne remplit pas : {what}"
   },
   "cards": {
     "questions": "Questions aux candidats",
@@ -193,7 +195,8 @@
     "people": "{count, plural, one {# personne} other {# personnes}}",
     "pay": "Rémunération",
     "toDiscuss": "À discuter avec le candidat",
-    "type": "Type et métier"
+    "type": "Type et métier",
+    "choiceOptions": " : {options}"
   },
   "questions": {
     "kind": {

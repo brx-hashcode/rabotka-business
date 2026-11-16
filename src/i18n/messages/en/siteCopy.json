@@ -62,9 +62,9 @@
       "label": "Missions and follow-up",
       "description": "Contracts, missions and hiring report.",
       "title": "From contract to review, everything stays in one place",
-      "text": "The contract is generated as soon as a candidate is hired, and opens in your space. Your missions, applications and hires are followed on a single dashboard.",
+      "text": "The contract is generated as soon as a candidate is hired, and opens in your workspace. Your missions, applications and hires are followed on a single dashboard.",
       "points": [
-        "Contract you can view and print from your space",
+        "Contract you can view and print from your workspace",
         "Dashboard over 7, 30 or 90 days",
         "Hiring report as a PDF, ready for your management"
       ]
@@ -84,7 +84,7 @@
       "label": "Hiring as a team",
       "description": "Recruiters, reviewers, shared opinions and notes.",
       "title": "Decide together, without losing track",
-      "text": "Invite your colleagues into the space: each one sees the candidates for their jobs, gives an opinion and leaves notes. Decisions are made on facts, not on scattered emails.",
+      "text": "Invite your colleagues into the workspace: each one sees the candidates for their jobs, gives an opinion and leaves notes. Decisions are made on facts, not on scattered emails.",
       "points": [
         "Clear roles: Administrator, Recruiter, Reviewer",
         "Everyone's opinion on a candidate: Yes, Maybe, No",
@@ -213,7 +213,7 @@
   "faq": [
     {
       "q": "What is Rabotka Business?",
-      "a": "Rabotka's hiring space for organisations: companies, NGOs, schools, health facilities, public bodies. You publish your jobs, receive and sort applications, run your interviews and decide as a team, all in one place. Your jobs reach Rabotka's candidates in your country, and your careers page receives applications from everywhere else."
+      "a": "Rabotka's hiring platform for organisations: companies, NGOs, schools, health facilities, public bodies. You publish your jobs, receive and sort applications, run your interviews and decide as a team, all in one place. Your jobs reach Rabotka's candidates in your country, and your careers page receives applications from everywhere else."
     },
     {
       "q": "What can I do with Rabotka Business?",
@@ -264,7 +264,7 @@
       "a": "They depend on your country and status: trade register entry (such as the RCCM) and tax number for a company, registration receipt and articles for an association or NGO, operating licence or accreditation for a school or health facility, founding act for a public body. The form tells you exactly which documents are expected."
     },
     {
-      "q": "How do I sign in to the business space?",
+      "q": "How do I sign in to the business workspace?",
       "a": "With the account's email address: a one-time code is sent each time you sign in. No password to manage."
     }
   ],
@@ -333,7 +333,7 @@
         },
         {
           "title": "A ranking to share",
-          "text": "Export the ranking and your questions as a PDF for your management or the hiring manager."
+          "text": "Export the ranking and your conversations as a PDF for your management or the hiring manager."
         }
       ]
     },
@@ -357,7 +357,7 @@
         },
         {
           "title": "Candidates kept informed",
-          "text": "If the pay, date or place changes, candidates already engaged are told. An expired job can be republished in one click."
+          "text": "If the pay, date or place changes, candidates who have already applied are told. An expired job can be republished in one click."
         }
       ]
     },
@@ -444,7 +444,7 @@
         {
           "kicker": "During the interview",
           "title": "Video calls in Rabotka",
-          "text": "On the day, the call opens in your space, with nothing to install. The candidate joins with the link in their invitation, on a computer or a phone, without an account.",
+          "text": "On the day, the call opens in your workspace, with nothing to install. The candidate joins with the link in their invitation, on a computer or a phone, without an account.",
           "points": [
             "A colleague or a manager invited, under their name",
             "A waiting page for the candidate, with the opening time",
@@ -484,7 +484,7 @@
       "benefits": [
         {
           "title": "The contract generated",
-          "text": "Viewable and printable from your space as soon as a candidate is hired."
+          "text": "Viewable and printable from your workspace as soon as a candidate is hired."
         },
         {
           "title": "Missions followed",
@@ -763,7 +763,7 @@
         }
       ],
       "reportTitle": "Report · Grâce Loubaki",
-      "reportText": "Warm welcome, comfortable at the till. Available from Monday.",
+      "reportText": "Polished customer greeting, comfortable at the till. Available from Monday.",
       "reportPoints": [
         "Supermarket experience",
         "Quick at giving change"

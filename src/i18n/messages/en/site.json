@@ -15,7 +15,7 @@
     "allFeatures": "All features",
     "nextGen": "Next-generation ATS",
     "demoTitle": "See Rabotka on your own roles",
-    "demoText": "30 minutes with our team, reply within 24 business hours.",
+    "demoText": "30 minutes with our team, reply within one business day.",
     "guideMinutes": "Guide · {minutes} min",
     "readGuide": "Read the guide",
     "menu": "Menu"
@@ -97,9 +97,9 @@
     },
     "about": {
       "metaTitle": "About",
-      "metaDescription": "Rabotka Business is Rabotka's hiring space for companies and organisations: an ATS built for the African job market.",
+      "metaDescription": "Rabotka Business is Rabotka's hiring platform for companies and organisations: an ATS built for the African job market.",
       "title": "Hiring for African organisations, finally equipped",
-      "text": "Rabotka connects people looking for work with those who hire, all the way to WhatsApp. Rabotka Business is its space for companies, institutions and organisations: a complete ATS, built for the African job market.",
+      "text": "Rabotka connects people looking for work with those who hire, all the way to WhatsApp. Rabotka Business is its workspace for companies, institutions and organisations: a complete ATS, built for the African job market.",
       "kicker": "What guides us",
       "heading": "Three beliefs behind every feature",
       "beliefs": [
@@ -125,20 +125,20 @@
       "metaDescription": "Contact the Rabotka Business team: a demo, a question about your account or your hiring.",
       "title": "Let's talk about your hiring",
       "text": "A demo, a question about your account or getting set up: our team will answer.",
-      "newTitle": "You're discovering Rabotka Business",
-      "newText": "Request a 30-minute demo: we get back to you within 24 business hours to show you Rabotka on your roles.",
+      "newTitle": "New to Rabotka Business?",
+      "newText": "Request a 30-minute demo: we get back to you within one business day to show you Rabotka on your roles.",
       "newCta": "Request a demo",
       "clientTitle": "You already have an account",
-      "clientText": "Sign in and open “Help” in your space: your request goes straight to our team, with its follow-up.",
+      "clientText": "Sign in and open “Help” in your workspace: your request goes straight to our team, with its follow-up.",
       "clientCta": "Sign in",
       "directTitle": "Reach us directly",
       "directText": "By email, by phone or at our offices."
     },
     "demo": {
       "metaTitle": "Request a demo",
-      "metaDescription": "30 minutes to see Rabotka Business on your real hiring. We get back to you within 24 business hours.",
+      "metaDescription": "30 minutes to see Rabotka Business on your real hiring. We get back to you within one business day.",
       "title": "30 minutes to see Rabotka on your real hiring",
-      "text": "A member of our team shows you the ATS on your open roles and answers your questions. We reply within 24 business hours.",
+      "text": "A member of our team shows you the ATS on your open roles and answers your questions. We reply within one business day.",
       "youWillSee": [
         "A job post written and published in minutes",
         "Your CVs read, scored and ranked for the role",
@@ -221,7 +221,7 @@
     "promises": [
       "30 minutes, by video or phone",
       "On your real roles and your real candidates",
-      "A reply within 24 business hours"
+      "A reply within one business day"
     ]
   },
   "connections": {
@@ -266,7 +266,7 @@
     "submit": "Request my demo",
     "privacy": "Your details are only used to contact you about Rabotka Business. See our <link>privacy policy</link>.",
     "sentTitle": "Thank you {firstName}, your request is sent",
-    "sentText": "A member of our team will get back to you within 24 business hours to set a time. A confirmation has just been sent to <strong>{email}</strong>.",
+    "sentText": "A member of our team will get back to you within one business day to set a time. A confirmation has just been sent to <strong>{email}</strong>.",
     "discover": "Explore the features in the meantime",
     "interestOptions": {
       "analyse-cv": "CV analysis",

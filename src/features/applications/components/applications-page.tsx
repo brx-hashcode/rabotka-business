@@ -216,7 +216,7 @@ export function ApplicationsPage() {
               disabled={query.isFetchingNextPage}
               className="rounded-full bg-page px-5 py-2 font-medium text-sm hover:bg-page/70"
             >
-              {query.isFetchingNextPage ? "Chargement…" : `Charger les plus anciennes (${total - all.length})`}
+              {query.isFetchingNextPage ? t("loadingMore") : t("loadOlder", { count: total - all.length })}
             </button>
           </div>
         )}

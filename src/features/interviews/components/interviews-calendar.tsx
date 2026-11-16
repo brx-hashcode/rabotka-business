@@ -338,7 +338,7 @@ function WeekGrid({ days, entries, onOpen }: Readonly<{ days: Date[]; entries: C
         <div className="relative" style={{ height }}>
           {hours.map((h, i) => (
             <span key={h} className="absolute right-1 -translate-y-1/2 text-muted-foreground text-xs tabular-nums" style={{ top: i * HOUR_PX }}>
-              {i === 0 ? "" : `${h} h`}
+              {i === 0 ? "" : t("calendar.hour", { h })}
             </span>
           ))}
         </div>

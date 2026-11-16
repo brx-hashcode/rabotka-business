@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 import { cn } from "#/lib/utils";
 
@@ -14,11 +15,12 @@ export function BrandLogo({
   tone = "light",
   className,
 }: Readonly<{ tone?: "light" | "dark" | "inverse"; className?: string }>) {
+  const t = useTranslations("ui");
   return (
     <span className={cn("flex items-center gap-1.5", className)}>
       <Image
         src="/rabotka-logo.png"
-        alt="Logo Rabotka"
+        alt={t("logoAlt")}
         width={36}
         height={36}
         unoptimized

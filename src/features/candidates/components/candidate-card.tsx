@@ -1,7 +1,10 @@
 "use client";
 
 import { useTradeName } from "#/lib/api/use-trade-name";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+
+import type { Locale } from "#/i18n/config";
+import { formatRating } from "#/i18n/format";
 import Link from "next/link";
 import { BadgeCheck } from "lucide-react";
 import { IconBriefcase, IconShieldCheck, IconStarFilled } from "@tabler/icons-react";
@@ -21,6 +24,7 @@ const button = "inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-
  */
 export function CandidateCard({ candidate: c, compact }: Readonly<{ candidate: Candidate; compact?: boolean }>) {
   const t = useTranslations("candidates.card");
+  const locale = useLocale() as Locale;
   const trade = useTradeName();
   const name = `${c.firstName} ${c.lastName}`.trim();
   return (
@@ -42,7 +46,7 @@ export function CandidateCard({ candidate: c, compact }: Readonly<{ candidate: C
             {c.ratingAvg !== null && c.ratingCount > 0 && (
               <span className="inline-flex items-center gap-1 font-medium">
                 <IconStarFilled className="size-3.5 text-amber-400" />
-                {Number(c.ratingAvg).toFixed(1)}
+                {formatRating(c.ratingAvg, locale)}
                 <span className="font-normal text-muted-foreground">({c.ratingCount})</span>
               </span>
             )}

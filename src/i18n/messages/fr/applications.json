@@ -22,5 +22,7 @@
   "reliability": "Fiabilité {score}/100",
   "forOffer": "Pour l'offre",
   "waiting": "En attente de votre réponse depuis {days} jours",
-  "plan": "Planifier un entretien"
+  "plan": "Planifier un entretien",
+  "loadingMore": "Chargement…",
+  "loadOlder": "Charger les plus anciennes ({count})"
 }

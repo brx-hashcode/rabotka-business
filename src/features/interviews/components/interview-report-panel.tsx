@@ -187,7 +187,7 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
             <Conversation
               turns={turns}
               onAdd={(t) => {
-                setDraft(joinText(notes, `${t.speaker} : ${t.text}`).slice(0, MAX_NOTES));
+                setDraft(joinText(notes, tr("turn", { speaker: t.speaker, text: t.text })).slice(0, MAX_NOTES));
                 toast.success(tr("added"));
               }}
             />
@@ -462,7 +462,7 @@ function Conversation({
         ))}
       </ol>
       <p className="px-4 pb-3 text-muted-foreground text-xs">
-        Transcrite automatiquement pendant la visio : elle peut contenir des erreurs.
+        {tr("transcriptNote")}
       </p>
     </>
   );

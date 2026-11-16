@@ -8,10 +8,10 @@
   "lines": {
     "contactsUnlimited": "Unlimited contacts",
     "contactsIncluded": "{count, plural, one {# contact included} other {# contacts included}}",
-    "offersUnlimited": "Unlimited job offers",
-    "offersPerPeriod": "{count, plural, one {# job offer to publish per period} other {# job offers to publish per period}}",
+    "offersUnlimited": "Unlimited jobs",
+    "offersPerPeriod": "{count, plural, one {# job to publish per period} other {# jobs to publish per period}}",
     "cvUnlimited": "Unlimited CV analysis",
-    "cvIncluded": "CV analysis: {count} CVs included",
+    "cvIncluded": "CV analysis: {count, plural, one {# CV} other {# CVs}} included",
     "team": "Team: {parts}",
     "and": "{a} and {b}",
     "recruiters": "{count, plural, one {# recruiter} other {# recruiters}}",
@@ -38,7 +38,7 @@
   },
   "current": {
     "noneTitle": "No plan running",
-    "noneText": "Choose a plan to publish your job offers. Without a plan, every contact is paid for.",
+    "noneText": "Choose a plan to publish your jobs. Without a plan, every contact is paid for.",
     "renewsMonth": "For this month, until {date}: the counter resets after that.",
     "renewsPeriod": "For the period, until {date}.",
     "trialUntil": "Trial until {date}",
@@ -57,16 +57,16 @@
   "upcoming": {
     "heading": "Coming next",
     "paid": "Already paid",
-    "granted": "Offered",
+    "granted": "Complimentary",
     "range": "From {start} to {end}{first, select, yes { · starts automatically when your plan ends} other {}}",
     "startNow": "Start now",
     "started": "{plan} has started: your counters reset until {date}.",
     "startFailed": "The plan couldn't start. Try again in a moment.",
     "confirmTitle": "Start {plan} now?",
     "confirmText": "{plan} starts today for {length, select, MONTHLY {1 month} ANNUAL {1 year} other {its whole length}}, with all its benefits at zero.",
-    "pausedTitle": "Your offered {plan} plan is paused.",
+    "pausedTitle": "Your complimentary {plan} plan is paused.",
     "pausedText": "{days, plural, one {Its # remaining day resumes} other {Its # remaining days resume}} when {plan} ends.",
-    "stopsToday": "Careful: your current plan stops today.",
+    "stopsToday": "Warning: your current plan stops today.",
     "lost": "What it has left is lost: {list}.",
     "nothingLeft": "It has nothing left to use.",
     "cancel": "Cancel",
@@ -74,7 +74,7 @@
       "contacts": "{count, plural, one {# contact included} other {# contacts included}}",
       "cv": "{count, plural, one {# CV included} other {# CVs included}}",
       "drafts": "{count, plural, one {# AI draft} other {# AI drafts}}",
-      "offers": "{count, plural, one {# job offer to publish} other {# job offers to publish}}",
+      "offers": "{count, plural, one {# job to publish} other {# jobs to publish}}",
       "days": "{count, plural, one {# day} other {# days}}"
     }
   },
@@ -90,7 +90,7 @@
     "yours": "Your plan",
     "yoursIn": "Your plan, billed {period, select, ANNUAL {yearly} other {monthly}}",
     "scheduled": "Scheduled",
-    "featured": "Most chosen",
+    "featured": "Most popular",
     "per": "/ {period, select, ANNUAL {year} other {month}}",
     "whenTrial": "Starts as soon as you pay: your free trial then stops.",
     "whenRenew": "The new period starts on {date}, {after, select, paid {after the periods already paid} other {at the end of the current period}}.",
@@ -113,9 +113,9 @@
     },
     "units": {
       "CV": "{count, plural, one {# CV to analyse} other {# CVs to analyse}}",
-      "OFFER": "{count, plural, one {# job offer to publish} other {# job offers to publish}}",
+      "OFFER": "{count, plural, one {# job to publish} other {# jobs to publish}}",
       "CONTACT": "{count, plural, one {# contact to get} other {# contacts to get}}",
-      "OFFER_DRAFT": "{count, plural, one {# job offer written by AI} other {# job offers written by AI}}"
+      "OFFER_DRAFT": "{count, plural, one {# job written by AI} other {# jobs written by AI}}"
     },
     "yours": "Your packs",
     "validity": "{partial, select, yes {Out of {quantity} · } other {}}until {date}",
@@ -127,14 +127,14 @@
     "buyFor": "Buy · {price}"
   },
   "banner": {
-    "noPlan": "Choose a plan to publish your job offers and get your included contacts.",
+    "noPlan": "Choose a plan to publish your jobs and get your included contacts.",
     "trial": "Your free trial of the {plan} plan ends on {date}.",
     "ending": "Your {plan} subscription ends on {date}. Renew it to keep your benefits."
   },
   "country": {
     "paidIn": "Paid in {currency}",
     "choose": "Choose a country",
-    "search": "Search for a country or a dial code…",
+    "search": "Search for a country or a dialling code…",
     "empty": "No country matches.",
     "yours": "Your country",
     "others": "Other countries"
@@ -214,7 +214,7 @@
       "OTHER": "Other"
     },
     "loadFailed": "Your invoices are unavailable right now.",
-    "emptyTitle": "No invoice yet",
+    "emptyTitle": "No invoices yet",
     "emptyText": "Every payment — your subscription, access to a contact — gets an invoice here.",
     "total": "Total invoiced",
     "totalYear": "Total {year}",

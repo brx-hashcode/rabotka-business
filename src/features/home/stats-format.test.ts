@@ -52,6 +52,6 @@ describe("home.greeting", () => {
     expect(frHome("greeting", { ...values, named: "no", business: "Pro", elision: "other" })).toBe(
       "Voici le recrutement de Pro sur les 30 derniers jours.",
     );
-    expect(enHome("greeting", values)).toBe("Hello Awa, here is the hiring at Essentiel over the last 30 days.");
+    expect(enHome("greeting", values)).toBe("Hello Awa, here is how hiring at Essentiel has gone over the last 30 days.");
   });
 });
