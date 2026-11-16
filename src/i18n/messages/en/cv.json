@@ -101,7 +101,7 @@
     "next": "will be read right after",
     "analysis": "The analysis",
     "ranked": "{count, plural, one {Ranked} other {Ranked}}",
-    "unreadCount": "Not read",
+    "unreadCount": "{count, plural, one {Not read} other {Not read}}",
     "created": "Created on",
     "best": "Best score",
     "files": "Files and contact details",
@@ -199,7 +199,7 @@
     "top": "Top: ",
     "cvs": "CVs",
     "mean": "Average",
-    "unreadCount": "Not read",
+    "unreadCount": "{count, plural, one {Not read} other {Not read}}",
     "purged": "Files deleted, scores kept",
     "kept": "Files kept {count, plural, one {# day} other {# days}}"
   },
