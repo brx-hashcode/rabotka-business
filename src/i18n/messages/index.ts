@@ -6,12 +6,14 @@ import enHome from "./en/home.json";
 import enLabels from "./en/labels.json";
 import enLayout from "./en/layout.json";
 import enSignUp from "./en/signUp.json";
+import enSite from "./en/site.json";
 import frAuth from "./fr/auth.json";
 import frCommon from "./fr/common.json";
 import frHome from "./fr/home.json";
 import frLabels from "./fr/labels.json";
 import frLayout from "./fr/layout.json";
 import frSignUp from "./fr/signUp.json";
+import frSite from "./fr/site.json";
 
 /**
  * Every message, one namespace per file and per feature (`common`, `offers`,
@@ -26,6 +28,7 @@ const fr = {
   labels: frLabels,
   layout: frLayout,
   signUp: frSignUp,
+  site: frSite,
 };
 
 export type Messages = typeof fr;
@@ -39,5 +42,6 @@ export const MESSAGES: Record<Locale, Messages> = {
     labels: enLabels,
     layout: enLayout,
     signUp: enSignUp,
+    site: enSite,
   },
 };

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { LOCALES } from "./config";
+import { SITE_COPY } from "#/features/landing/copy";
 import { MESSAGES } from "./messages";
 
 type Tree = { [key: string]: string | Tree };
@@ -22,6 +23,7 @@ function argumentsOf(message: string): string[] {
 }
 
 const source = leaves(MESSAGES.fr as unknown as Tree);
+const siteSource = leaves(SITE_COPY.fr as unknown as Tree);
 
 describe("messages", () => {
   for (const locale of LOCALES.filter((l) => l !== "fr")) {
@@ -43,6 +45,13 @@ describe("messages", () => {
 
     it(`${locale} leaves no message empty`, () => {
       for (const [key, message] of target) expect({ key, empty: message.trim() === "" }).toEqual({ key, empty: false });
+    });
+  }
+
+  for (const locale of LOCALES.filter((l) => l !== "fr")) {
+    it(`the site's copy in ${locale} has every French key, list for list`, () => {
+      const target = leaves(SITE_COPY[locale] as unknown as Tree);
+      expect([...target.keys()].sort()).toEqual([...siteSource.keys()].sort());
     });
   }
 });

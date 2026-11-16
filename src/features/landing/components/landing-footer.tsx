@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import {
   IconArrowRight,
   IconArrowUp,
@@ -18,41 +17,44 @@ import {
   type Icon,
 } from "@tabler/icons-react";
 
+import { useLocale, useTranslations } from "next-intl";
+
 import { BrandLogo } from "#/components/brand-logo";
+import { LocalLink as Link } from "#/components/local-link";
 import { LanguageSwitch } from "#/components/language-switch";
 import { useSupportContact } from "#/hooks/use-support-contact";
 import type { BusinessCountryName } from "#/lib/api/catalog-server";
 import type { SocialNetwork, SupportContact } from "#/lib/api/public-controller";
 import { flagUrl } from "../globe/country-places";
 import {
-  COMPANY_LINKS,
+  companyLinks,
   PUBLIC_SITE,
-  RESOURCE_LINKS,
+  resourceLinks,
   SIGN_IN_HREF,
   SIGN_UP_HREF,
-  SOLUTION_LINKS,
+  solutionLinks,
   type NavLink,
 } from "../content";
 import { FlickeringGrid } from "./flickering-grid";
 import { SmartLink } from "./smart-link";
 
-function contactCards(contact: SupportContact | undefined) {
+function contactCards(contact: SupportContact | undefined, t: (key: "email" | "call" | "visit") => string) {
   if (!contact) return [];
   return [
     contact.email && {
-      label: "Écrire à nos équipes",
+      label: t("email"),
       value: contact.email,
       href: `mailto:${contact.email}`,
       icon: IconMail,
     },
     contact.phone && {
-      label: "Nous appeler",
+      label: t("call"),
       value: contact.phone,
       href: `tel:${contact.phone.replace(/\s/g, "")}`,
       icon: IconPhone,
     },
     contact.address && {
-      label: "Nous rendre visite",
+      label: t("visit"),
       value: contact.address,
       href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.address)}`,
       icon: IconMapPin,
@@ -65,16 +67,17 @@ function contactCards(contact: SupportContact | undefined) {
  * field that is filled in, none of it in the code. On the home page and on
  * /contact.
  */
-export function ContactCards({ title = "Besoin d'un accompagnement ?", text = "Nos équipes vous conseillent et vous accompagnent dans la mise en place de votre compte." }: Readonly<{ title?: string; text?: string }>) {
+export function ContactCards({ title, text }: Readonly<{ title?: string; text?: string }>) {
   const { data: contact } = useSupportContact();
+  const t = useTranslations("site.footer");
 
   return (
     <div className="flex flex-col gap-4 md:flex-row">
       <div className="space-y-1 rounded-3xl bg-card p-6 md:flex-[1.2]">
-        <h3 className="font-semibold text-lg">{title}</h3>
-        <p className="text-muted-foreground text-sm">{text}</p>
+        <h3 className="font-semibold text-lg">{title ?? t("helpTitle")}</h3>
+        <p className="text-muted-foreground text-sm">{text ?? t("helpText")}</p>
       </div>
-      {contactCards(contact).map((card) => (
+      {contactCards(contact, t).map((card) => (
         <a
           key={card.label}
           href={card.href}
@@ -106,19 +109,23 @@ const SOCIALS: Record<SocialNetwork, { label: string; icon: Icon }> = {
 };
 
 /** Every link once; the demo block above every page asks for the demo. */
-const FOOTER_COLUMNS: { title: string; links: NavLink[] }[] = [
-  { title: "Fonctionnalités", links: SOLUTION_LINKS },
-  { title: "Ressources", links: RESOURCE_LINKS },
-  { title: "Entreprise", links: COMPANY_LINKS },
-  {
-    title: "Compte",
-    links: [
-      { href: SIGN_UP_HREF, label: "Ouvrir un compte entreprise" },
-      { href: SIGN_IN_HREF, label: "Se connecter" },
-      { href: PUBLIC_SITE, label: "Je cherche un emploi" },
-    ],
-  },
-];
+function useFooterColumns(): { title: string; links: NavLink[] }[] {
+  const t = useTranslations("site.footer");
+  const locale = useLocale();
+  return [
+    { title: t("features"), links: solutionLinks(locale) },
+    { title: t("resources"), links: resourceLinks(locale) },
+    { title: t("company"), links: companyLinks(locale) },
+    {
+      title: t("account"),
+      links: [
+        { href: SIGN_UP_HREF, label: t("openAccount") },
+        { href: SIGN_IN_HREF, label: t("signIn") },
+        { href: PUBLIC_SITE, label: t("jobSeeker") },
+      ],
+    },
+  ];
+}
 
 /** Flags shown side by side before « +N ». */
 const MAX_FLAGS = 7;
@@ -130,7 +137,9 @@ const MAX_FLAGS = 7;
  */
 export function LandingFooter({ countries }: Readonly<{ countries: BusinessCountryName[] }>) {
   const { data: contact } = useSupportContact();
-  const cards = contactCards(contact);
+  const t = useTranslations("site.footer");
+  const FOOTER_COLUMNS = useFooterColumns();
+  const cards = contactCards(contact, t);
   // Only networks this build knows an icon for.
   const socials = (contact?.socials ?? []).filter((s) => s.network in SOCIALS);
   const flags = countries.slice(0, MAX_FLAGS);
@@ -148,14 +157,14 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
         <div className="mx-auto w-full max-w-7xl px-5 pt-14 sm:px-8 md:pt-20">
           <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-end lg:gap-16">
             <div className="space-y-6">
-              <Link href="/" aria-label="Rabotka Business — accueil" className="inline-flex items-center gap-3">
+              <Link href="/" aria-label={t("home")} className="inline-flex items-center gap-3">
                 <BrandLogo tone="inverse" />
                 <span aria-hidden className="h-6 w-px bg-white/25" />
                 <span className="text-[17px]">Business</span>
               </Link>
               <p className="max-w-xl font-semibold text-3xl leading-tight tracking-tight sm:text-4xl">
-                Publier, trier, recevoir, décider.{" "}
-                <span className="text-white/40">Tout votre recrutement, au même endroit.</span>
+                {t("statement")}{" "}
+                <span className="text-white/40">{t("statementMuted")}</span>
               </p>
             </div>
 
@@ -181,9 +190,9 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
                     )}
                   </span>
                   <span className="text-sm">
-                    <span className="block font-medium">Disponible dans {countries.length} pays</span>
+                    <span className="block font-medium">{t("countries", { count: countries.length })}</span>
                     <span className="inline-flex items-center gap-1 text-white/50 transition-colors group-hover:text-white">
-                      Voir la carte
+                      {t("seeMap")}
                       <IconArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
                     </span>
                   </span>
@@ -206,7 +215,7 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
                 </ul>
               )}
               {socials.length > 0 && (
-                <ul aria-label="Suivez Rabotka" className="flex flex-wrap items-center gap-2">
+                <ul aria-label={t("follow")} className="flex flex-wrap items-center gap-2">
                   {socials.map(({ network, url }) => {
                     const { label, icon: Glyph } = SOCIALS[network];
                     return (
@@ -215,7 +224,7 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
                           href={url}
                           target="_blank"
                           rel="noreferrer"
-                          aria-label={`Rabotka sur ${label}`}
+                          aria-label={t("on", { network: label })}
                           title={label}
                           className="flex size-10 items-center justify-center rounded-full bg-white/6 text-white/80 transition-colors hover:bg-header hover:text-header-foreground"
                         >
@@ -256,13 +265,13 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
 
           <div aria-hidden className="h-px bg-white/10" />
           <div className="flex flex-col gap-4 py-6 text-sm text-white/50 md:flex-row md:items-center md:justify-between">
-            <p>© {new Date().getFullYear()} Rabotka. Tous droits réservés.</p>
+            <p>{t("rights", { year: new Date().getFullYear() })}</p>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
               <a href={`${PUBLIC_SITE}/terms`} className="transition-colors hover:text-white">
-                Conditions d&apos;utilisation
+                {t("terms")}
               </a>
               <a href={`${PUBLIC_SITE}/privacy`} className="transition-colors hover:text-white">
-                Politique de confidentialité
+                {t("privacy")}
               </a>
               <LanguageSwitch tone="inverse" />
               <button
@@ -271,7 +280,7 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
                 className="inline-flex items-center gap-1.5 rounded-full bg-white/6 py-1.5 pr-3 pl-2.5 text-white/70 transition-colors hover:bg-white/12 hover:text-white"
               >
                 <IconArrowUp className="size-4" />
-                Haut de page
+                {t("top")}
               </button>
             </div>
           </div>

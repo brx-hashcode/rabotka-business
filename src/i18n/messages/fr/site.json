@@ -1,0 +1,272 @@
+{
+  "header": {
+    "home": "Rabotka Business — accueil",
+    "nav": "Navigation principale",
+    "features": "Fonctionnalités",
+    "resources": "Ressources",
+    "about": "À propos",
+    "contact": "Contact",
+    "signIn": "Se connecter",
+    "signUp": "Ouvrir un compte",
+    "demoShort": "Démo",
+    "demo": "Demander une démo",
+    "atsTitle": "Un ATS complet, six étapes",
+    "atsText": "De la diffusion de l'offre au contrat, dans un seul pipeline",
+    "allFeatures": "Toutes les fonctionnalités",
+    "nextGen": "ATS nouvelle génération",
+    "demoTitle": "Voyez Rabotka sur vos propres postes",
+    "demoText": "30 minutes avec notre équipe, réponse sous 24 h ouvrées.",
+    "guideMinutes": "Guide · {minutes} min",
+    "readGuide": "Lire le guide",
+    "menu": "Menu"
+  },
+  "stages": {
+    "kicker": "Fonctionnalités",
+    "title": "Un outil pour chaque étape du recrutement",
+    "text": "Attirer, trier, évaluer, décider : chaque outil prépare l'étape suivante.",
+    "allDetails": "Toutes les fonctionnalités en détail"
+  },
+  "footer": {
+    "email": "Écrire à nos équipes",
+    "call": "Nous appeler",
+    "visit": "Nous rendre visite",
+    "helpTitle": "Besoin d'un accompagnement ?",
+    "helpText": "Nos équipes vous conseillent et vous accompagnent dans la mise en place de votre compte.",
+    "features": "Fonctionnalités",
+    "resources": "Ressources",
+    "company": "Entreprise",
+    "account": "Compte",
+    "openAccount": "Ouvrir un compte entreprise",
+    "signIn": "Se connecter",
+    "jobSeeker": "Je cherche un emploi",
+    "home": "Rabotka Business — accueil",
+    "statement": "Publier, trier, recevoir, décider.",
+    "statementMuted": "Tout votre recrutement, au même endroit.",
+    "countries": "Disponible dans {count} pays",
+    "seeMap": "Voir la carte",
+    "follow": "Suivez Rabotka",
+    "on": "Rabotka sur {network}",
+    "rights": "© {year} Rabotka. Tous droits réservés.",
+    "terms": "Conditions d'utilisation",
+    "privacy": "Politique de confidentialité",
+    "top": "Haut de page"
+  },
+  "pages": {
+    "home": {
+      "metaTitle": "Rabotka Business - l'ATS nouvelle génération pour recruter en Afrique",
+      "metaDescription": "Logiciel de recrutement complet : offres rédigées et diffusées partout, CV lus et classés pour chaque poste, pipeline suivi en équipe, entretiens en visio et comptes rendus partagés."
+    },
+    "features": {
+      "metaTitle": "Fonctionnalités",
+      "metaDescription": "Un ATS complet : rédaction et multidiffusion d'offres, analyse de CV, suivi des candidatures, entretiens, recrutement en équipe, contrats et tableau de bord.",
+      "title": "Un ATS complet, de l'offre au contrat",
+      "text": "Rabotka Business réunit tout ce qu'un recrutement demande : diffuser l'offre, trier les candidatures, rencontrer les meilleurs et décider en équipe.",
+      "kicker": "Fonctionnalités clés",
+      "heading": "Choisissez un outil, voyez ce qu'il fait",
+      "headingText": "Les outils sont rangés dans l'ordre d'un recrutement : de l'offre qui attire les candidats au contrat du candidat retenu."
+    },
+    "feature": {
+      "how": "Comment ça se passe",
+      "gains": "Ce que vous y gagnez",
+      "inPipeline": "Dans votre pipeline de recrutement"
+    },
+    "resources": {
+      "metaTitle": "Ressources",
+      "metaDescription": "Guides pratiques pour rédiger vos offres, trier vos candidatures et mener vos entretiens avec Rabotka Business.",
+      "title": "Recruter mieux, plus vite",
+      "text": "Des guides concrets pour rédiger vos offres, trier vos candidatures et mener vos entretiens.",
+      "kicker": "Guides du recruteur",
+      "heading": "Des méthodes, pas des promesses",
+      "readingTime": "{minutes} min de lecture",
+      "read": "Lire le guide"
+    },
+    "guide": {
+      "all": "Toutes les ressources",
+      "readingTime": "Guide · {minutes} min de lecture",
+      "inThisGuide": "Dans ce guide",
+      "others": "Autres guides",
+      "apply": "Appliquez cette méthode avec Rabotka"
+    },
+    "about": {
+      "metaTitle": "À propos",
+      "metaDescription": "Rabotka Business est l'espace de recrutement de Rabotka pour les entreprises et organisations : un ATS pensé pour le marché de l'emploi africain.",
+      "title": "Le recrutement des organisations africaines, enfin outillé",
+      "text": "Rabotka met en relation les personnes qui cherchent un emploi et celles qui recrutent, jusque sur WhatsApp. Rabotka Business est son espace pour les entreprises, institutions et organisations : un ATS complet, pensé pour le marché de l'emploi africain.",
+      "kicker": "Ce qui nous guide",
+      "heading": "Trois convictions derrière chaque fonctionnalité",
+      "beliefs": [
+        {
+          "title": "Le bon candidat existe souvent déjà",
+          "text": "Il est dans la pile de CV, dans votre messagerie ou sur WhatsApp. Notre travail : qu'il ne passe plus inaperçu."
+        },
+        {
+          "title": "Un recrutement se décide en équipe",
+          "text": "Le responsable du poste, les RH, la direction : chacun doit voir les mêmes candidats et donner son avis au même endroit."
+        },
+        {
+          "title": "Des outils faits pour ici",
+          "text": "Les pièces officielles de votre pays, le paiement par mobile money, les candidats joints là où ils sont : sur leur téléphone."
+        }
+      ],
+      "whereKicker": "Où nous sommes",
+      "whereTitle": "Disponible dans {count} pays d'Afrique",
+      "whereText": "Les pièces demandées, les villes et la diffusion de vos offres sont celles de votre pays ; votre formule se règle par mobile money, dans votre monnaie."
+    },
+    "contact": {
+      "metaTitle": "Contact",
+      "metaDescription": "Contactez l'équipe Rabotka Business : une démo, une question sur votre compte ou sur vos recrutements.",
+      "title": "Parlons de vos recrutements",
+      "text": "Une démo, une question sur votre compte ou sur la mise en place : nos équipes vous répondent.",
+      "newTitle": "Vous découvrez Rabotka Business",
+      "newText": "Demandez une démo de 30 minutes : nous vous recontactons sous 24 h ouvrées pour vous montrer Rabotka sur vos postes.",
+      "newCta": "Demander une démo",
+      "clientTitle": "Vous avez déjà un compte",
+      "clientText": "Connectez-vous et ouvrez « Aide » dans votre espace : votre demande arrive directement à nos équipes, avec son suivi.",
+      "clientCta": "Se connecter",
+      "directTitle": "Nous joindre directement",
+      "directText": "Par e-mail, par téléphone ou dans nos bureaux."
+    },
+    "demo": {
+      "metaTitle": "Demander une démo",
+      "metaDescription": "30 minutes pour voir Rabotka Business sur vos vrais recrutements. Nous vous recontactons sous 24 h ouvrées.",
+      "title": "30 minutes pour voir Rabotka sur vos vrais recrutements",
+      "text": "Un membre de notre équipe vous présente l'ATS sur vos postes à pourvoir, et répond à vos questions. Nous vous répondons sous 24 h ouvrées.",
+      "youWillSee": [
+        "Une offre rédigée et diffusée en quelques minutes",
+        "Vos CV lus, notés et classés pour le poste",
+        "Le pipeline de vos candidatures, de la réception au contrat",
+        "Les entretiens et les avis de votre équipe, au même endroit"
+      ]
+    },
+    "seo": {
+      "shareAlt": "Rabotka Business — l'ATS des organisations africaines",
+      "suffix": "{title} - Rabotka Business",
+      "orgDescription": "Logiciel de recrutement (ATS) des entreprises et organisations en Afrique : diffusion d'offres, analyse de CV, suivi des candidatures, entretiens et recrutement en équipe."
+    }
+  },
+  "hero": {
+    "title": "Recevez, triez et rencontrez <mark>les bons candidats</mark>, au même endroit",
+    "text": "Le logiciel de recrutement complet : vos offres diffusées, <mark>chaque CV lu et classé</mark>, vos entretiens en visio et leur compte rendu.",
+    "publishedOn": "Publiées sur",
+    "careersPage": "Votre page carrières",
+    "countries": "{count} pays d'Afrique"
+  },
+  "buttons": {
+    "demo": "Demander une démo",
+    "signUp": "Ouvrir un compte entreprise"
+  },
+  "ats": {
+    "kicker": "ATS nouvelle génération",
+    "title": "Tout le recrutement dans un seul pipeline",
+    "text": "Rabotka Business n'est pas un simple site d'annonces : c'est un logiciel de recrutement complet. Chaque candidat avance de la diffusion de l'offre jusqu'au contrat, et rien ne se perd en chemin.",
+    "allFeatures": "Voir toutes les fonctionnalités"
+  },
+  "tabs": {
+    "label": "Fonctionnalités",
+    "seeDetail": "Voir {label} en détail"
+  },
+  "spotlight": {
+    "kicker": "Entretiens",
+    "title": "Vos entretiens, de la visio au compte rendu",
+    "text": "L'appel s'ouvre dans Rabotka, la voix de chacun devient du texte, et le compte rendu se rédige pendant que vous passez à autre chose.",
+    "discover": "Découvrir les entretiens"
+  },
+  "trust": {
+    "kicker": "Sécurité et confidentialité",
+    "title": "Vos données et celles des candidats, protégées",
+    "text": "Recruter avec Rabotka, c'est aussi savoir ce qui est lu, gardé et supprimé."
+  },
+  "audiences": {
+    "kicker": "Secteurs",
+    "title": "Pour chaque type d'organisation",
+    "text": "Du statut juridique aux pièces justificatives, Rabotka s'adapte à la nature de votre structure.",
+    "roles": "Postes souvent recrutés",
+    "otherTitle": "Votre secteur n'apparaît pas ?",
+    "otherText": "Startups, coopératives, GIE, associations, fondations : ouvrez votre compte, nous vous accompagnons.",
+    "otherCta": "Ouvrir un compte"
+  },
+  "countriesFaq": {
+    "q": "Dans quels pays Rabotka Business est-il disponible ?",
+    "a": "Aujourd'hui : {list}. Les pièces demandées, les villes proposées et la diffusion de vos offres sont celles de votre pays ; les abonnements se règlent par mobile money, dans la monnaie de votre pays."
+  },
+  "countries": {
+    "kicker": "Où nous sommes",
+    "title": "Disponible dans {count} pays d'Afrique",
+    "text": "Chaque organisation recrute dans son pays : ses pièces, ses villes, et un abonnement réglé par mobile money dans sa monnaie.",
+    "elsewhere": "Ailleurs",
+    "regions": {
+      "central": "Afrique centrale",
+      "west": "Afrique de l'Ouest",
+      "east": "Afrique de l'Est et australe"
+    }
+  },
+  "faq": {
+    "kicker": "Questions fréquentes",
+    "title": "Tout savoir avant de commencer",
+    "other": "Une autre question ?",
+    "contact": "Nous contacter"
+  },
+  "demoBlock": {
+    "kicker": "Démarrer",
+    "title": "Voyez Rabotka sur vos propres recrutements",
+    "text": "Un membre de notre équipe vous montre comment publier, trier et recruter avec Rabotka Business, sur les postes que vous avez à pourvoir.",
+    "promises": [
+      "30 minutes, en visio ou au téléphone",
+      "Sur vos vrais postes et vos vrais candidats",
+      "Une réponse sous 24 h ouvrées"
+    ]
+  },
+  "connections": {
+    "title": "Rabotka au centre de votre recrutement",
+    "text": "Vos candidats arrivent de LinkedIn, de Google, de WhatsApp ou de votre messagerie ; vos entretiens partent dans votre agenda, vos comptes rendus vers votre équipe. Tout se décide dans Rabotka.",
+    "calendar": "Votre agenda",
+    "video": "Visio",
+    "files": "PDF et Excel",
+    "team": "Votre équipe"
+  },
+  "demoForm": {
+    "lastNameRequired": "Indiquez votre nom.",
+    "firstNameRequired": "Indiquez votre prénom.",
+    "emailInvalid": "Cet e-mail ne semble pas valide.",
+    "phoneInvalid": "Ce numéro ne semble pas valide.",
+    "companyRequired": "Indiquez le nom de votre entreprise.",
+    "jobTitleRequired": "Indiquez votre fonction.",
+    "countryRequired": "Choisissez votre pays.",
+    "sizeRequired": "Choisissez la taille de votre entreprise.",
+    "messageTooLong": "Votre message est trop long (2 000 caractères au plus).",
+    "failed": "Votre demande n'a pas pu être envoyée. Réessayez dans un instant.",
+    "lastName": "Nom",
+    "lastNamePlaceholder": "Mabiala",
+    "firstName": "Prénom",
+    "firstNamePlaceholder": "Grâce",
+    "email": "E-mail professionnel",
+    "emailPlaceholder": "prenom.nom@entreprise.com",
+    "company": "Entreprise",
+    "companyPlaceholder": "Le nom de votre organisation",
+    "jobTitle": "Fonction",
+    "jobTitlePlaceholder": "Responsable RH, gérant…",
+    "country": "Pays",
+    "countryPlaceholder": "Choisissez votre pays",
+    "phone": "Téléphone",
+    "phonePlaceholder": "Votre numéro, sans indicatif",
+    "size": "Taille de l'entreprise",
+    "employees": "salariés",
+    "interests": "Ce qui vous intéresse",
+    "message": "Message",
+    "messagePlaceholder": "Les postes à pourvoir, le nombre de recrutements par an, vos outils actuels…",
+    "sending": "Envoi",
+    "submit": "Demander ma démo",
+    "privacy": "Vos informations servent uniquement à vous recontacter au sujet de Rabotka Business. Voir notre <link>politique de confidentialité</link>.",
+    "sentTitle": "Merci {firstName}, votre demande est envoyée",
+    "sentText": "Un membre de notre équipe vous recontacte sous 24 h ouvrées pour convenir d'un créneau. Une confirmation vient de partir à <strong>{email}</strong>.",
+    "discover": "Découvrir les fonctionnalités en attendant",
+    "interestOptions": {
+      "analyse-cv": "Analyse de CV",
+      "offres-candidatures": "Offres et suivi des candidatures",
+      "entretiens": "Entretiens",
+      "missions": "Missions et contrats",
+      "trouver-des-profils": "Recherche de profils",
+      "equipe": "Recrutement en équipe"
+    }
+  }
+}

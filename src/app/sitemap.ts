@@ -1,19 +1,34 @@
 import type { MetadataRoute } from "next";
 
-import { FEATURES } from "#/features/landing/content";
-import { GUIDES } from "#/features/landing/site-content";
+import { FEATURE_SLUGS } from "#/features/landing/content";
+import { GUIDE_SLUGS } from "#/features/landing/site-content";
+import { OFFERED_LOCALES } from "#/i18n/config";
+import { localizedPath } from "#/i18n/routing";
 import { careersSitemapServer } from "#/lib/api/careers-server";
-import { MARKETING_PATHS } from "#/lib/seo/marketing";
+import { languageAlternates, MARKETING_PATHS } from "#/lib/seo/marketing";
 import { siteOrigin } from "#/lib/seo/site";
 
 /** The public site's pages and the careers pages; empty anywhere but production. */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { origin, indexed } = await siteOrigin();
   if (!indexed) return [];
+  // Each public page once per offered language, each listing the others (hreflang).
+  const absolute = (path: string) => `${origin}${path === "/" ? "" : path}`;
+  const page = (path: string, changeFrequency: "weekly" | "monthly") =>
+    OFFERED_LOCALES.map((locale) => {
+      const languages = languageAlternates(path);
+      return {
+        url: absolute(localizedPath(path, locale)),
+        changeFrequency,
+        ...(languages && {
+          alternates: { languages: Object.fromEntries(Object.entries(languages).map(([l, p]) => [l, absolute(p)])) },
+        }),
+      };
+    });
   const site: MetadataRoute.Sitemap = [
-    ...MARKETING_PATHS.map((p) => ({ url: `${origin}${p === "/" ? "" : p}`, changeFrequency: "weekly" as const })),
-    ...FEATURES.map((f) => ({ url: `${origin}${f.href}`, changeFrequency: "monthly" as const })),
-    ...GUIDES.map((g) => ({ url: `${origin}/ressources/${g.slug}`, changeFrequency: "monthly" as const })),
+    ...MARKETING_PATHS.flatMap((p) => page(p, "weekly")),
+    ...FEATURE_SLUGS.flatMap((slug) => page(`/fonctionnalites/${slug}`, "monthly")),
+    ...GUIDE_SLUGS.flatMap((slug) => page(`/ressources/${slug}`, "monthly")),
   ];
   const map = await careersSitemapServer();
   if (!map) return site;

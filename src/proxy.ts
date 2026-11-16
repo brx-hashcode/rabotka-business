@@ -4,7 +4,9 @@ import { ACCESS_COOKIE, REFRESH_COOKIE } from "#/lib/auth/cookies";
 import { safeRedirectPath } from "#/lib/safe-redirect";
 import { appConfig } from "#/config";
 import { DEFAULT_LOCALE, isOffered, LOCALE_COOKIE, LOCALE_HEADER, LOCALE_PARAM, type Locale } from "#/i18n/config";
-import { localizedPath, preferredLocale, stripLocalePrefix } from "#/i18n/routing";
+import { isMarketingPath, isPublicSitePath, localizedPath, preferredLocale, stripLocalePrefix } from "#/i18n/routing";
+
+export { isMarketingPath };
 
 const HOME = appConfig.homePath;
 
@@ -42,18 +44,6 @@ function isCandidatePath(pathname: string): boolean {
     pathname === "/carrieres" ||
     pathname.startsWith("/carrieres/")
   );
-}
-
-/** The landing and the marketing pages: one URL per language. */
-export function isPublicSitePath(pathname: string): boolean {
-  return pathname === "/" || isMarketingPath(pathname);
-}
-
-/** The public site beyond the landing: features, resources, about, contact, demo. */
-const MARKETING_PREFIXES = ["/fonctionnalites", "/ressources", "/a-propos", "/contact", "/demo"];
-
-export function isMarketingPath(pathname: string): boolean {
-  return MARKETING_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
 function forwardApi(request: NextRequest, locale: Locale, path = request.nextUrl.pathname) {

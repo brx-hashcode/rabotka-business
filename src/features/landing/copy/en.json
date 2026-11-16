@@ -1,0 +1,504 @@
+{
+  "features": {
+    "cv": {
+      "label": "CV analysis",
+      "description": "CVs read, scored and ranked for each role.",
+      "title": "Dozens of CVs, ranked in minutes",
+      "text": "Drop the CVs you received for a role, or pick them straight from your Gmail inbox. Rabotka reads each one, even scanned or photographed, and scores it against the role.",
+      "points": [
+        "A score out of 100, strengths and points to watch",
+        "The career path reviewed: years relevant to the role, full-time or part-time",
+        "Ask questions about a CV, compare up to 5 candidates",
+        "The ranking exported as a PDF, to share with your team"
+      ]
+    },
+    "offer": {
+      "label": "Job posts written for you",
+      "description": "A few words are enough: the full job post is ready.",
+      "title": "A clear job post in a few words",
+      "text": "Describe what you need as you would to a colleague: Rabotka writes the title and description, and suggests the trade. You review, adjust and publish.",
+      "points": [
+        "A clear title and description, ready to publish",
+        "Criteria that rule out candidates for reasons unrelated to the role are removed",
+        "Targeted by city and trade, all the way to candidates' WhatsApp"
+      ]
+    },
+    "linkedin": {
+      "label": "Posting on LinkedIn",
+      "description": "Your jobs on your LinkedIn, no copy-paste.",
+      "title": "Your jobs on LinkedIn, in one click",
+      "text": "Connect your LinkedIn account once: each job is posted as a card, with your text and your image. It leads to your careers page, where candidates apply.",
+      "points": [
+        "The post's text ready, to review and adjust before publishing",
+        "The job's image, generated for you, or your own",
+        "Each recruiter on the team posts on their own profile",
+        "Applications coming from LinkedIn flagged as such"
+      ]
+    },
+    "applicants": {
+      "label": "Applicant tracking",
+      "description": "The best-matched candidates at the top of the list.",
+      "title": "The best candidates at the top of the list",
+      "text": "Each application gets a score: trade, experience, location and reliability. You see first who fits, and why.",
+      "points": [
+        "“Why this score?” broken down criterion by criterion",
+        "Hire a candidate in one click",
+        "Reply to the others with a ready-made message, one by one or all at once"
+      ]
+    },
+    "interviews": {
+      "label": "Interviews",
+      "description": "Video calls in Rabotka, notes and the interview report.",
+      "title": "Interviews run and followed up in one place",
+      "text": "Offer one or more time slots: the candidate picks from the email they receive. On the day, the video call opens in Rabotka with your notes beside it, and the report is ready to share.",
+      "points": [
+        "Video calls in Rabotka: the candidate joins with a link, no account needed",
+        "Invite a colleague or a manager into the call",
+        "The interview transcribed automatically, the report written by AI",
+        "Your interviews in Google Calendar, Outlook or Apple Calendar, kept up to date on their own"
+      ]
+    },
+    "tracking": {
+      "label": "Missions and follow-up",
+      "description": "Contracts, missions and hiring report.",
+      "title": "From contract to review, everything stays in one place",
+      "text": "The contract is generated as soon as a candidate is hired, and opens in your space. Your missions, applications and hires are followed on a single dashboard.",
+      "points": [
+        "Contract you can view and print from your space",
+        "Dashboard over 7, 30 or 90 days",
+        "Hiring report as a PDF, ready for your management"
+      ]
+    },
+    "profiles": {
+      "label": "Profiles and agents",
+      "description": "Search verified profiles, and field agents.",
+      "title": "Go and find the profiles, online and in the field",
+      "text": "Search verified profiles by trade, skill or city, keep the most interesting ones and get their contact details. Our field agents also reach candidates who aren't on any platform.",
+      "points": [
+        "Profiles' identity verified",
+        "“My profiles” to keep promising candidates",
+        "The final decision is always yours"
+      ]
+    },
+    "team": {
+      "label": "Hiring as a team",
+      "description": "Recruiters, reviewers, shared opinions and notes.",
+      "title": "Decide together, without losing track",
+      "text": "Invite your colleagues into the space: each one sees the candidates for their jobs, gives an opinion and leaves notes. Decisions are made on facts, not on scattered emails.",
+      "points": [
+        "Clear roles: Administrator, Recruiter, Reviewer",
+        "Everyone's opinion on a candidate: Yes, Maybe, No",
+        "Notes the candidate never sees, and each application's history",
+        "Team Activity, to know who did what"
+      ]
+    }
+  },
+  "featureGroups": [
+    { "step": "Attract", "text": "Jobs seen everywhere" },
+    { "step": "Source and sort", "text": "The right profiles on top" },
+    { "step": "Evaluate", "text": "Every candidate followed" },
+    { "step": "Decide and follow up", "text": "As a team, up to the contract" }
+  ],
+  "resourceLinks": [
+    { "label": "Recruiter guides", "description": "Practical methods to hire better, faster." },
+    { "label": "Frequently asked questions", "description": "Countries, CVs, data, account: the essentials." },
+    { "label": "Security and privacy", "description": "What is read, kept and deleted." }
+  ],
+  "companyLinks": [{ "label": "About" }, { "label": "Contact" }, { "label": "Request a demo" }],
+  "trust": [
+    {
+      "title": "Verified organisation",
+      "text": "Your account is activated once your official documents are checked: a sign of trust for candidates."
+    },
+    {
+      "title": "Read-only mailbox",
+      "text": "Rabotka only reads the attachments you choose and never sends anything from your mailbox."
+    },
+    {
+      "title": "CVs deleted on schedule",
+      "text": "The files and contact details of analysed CVs are deleted at the end of the set period; only the scores remain."
+    },
+    {
+      "title": "Confidential documents",
+      "text": "Your documents and the CVs are kept in private storage, seen only by authorised people."
+    }
+  ],
+  "audiences": [
+    {
+      "title": "Companies and SMEs",
+      "text": "Retail, industry, services, construction: from short-term help to permanent hires.",
+      "roles": ["Sales rep", "Accountant", "Site manager", "Warehouse worker"]
+    },
+    {
+      "title": "Education and training",
+      "text": "Private schools, universities, vocational training centres: teaching staff, supervisors and administrative staff.",
+      "roles": ["Teacher", "Trainer", "Supervisor", "Secretary"]
+    },
+    {
+      "title": "NGOs and international organisations",
+      "text": "Project managers, field officers, consultants: local hires for your programmes.",
+      "roles": ["Project manager", "Field officer", "Consultant"]
+    },
+    {
+      "title": "Public sector",
+      "text": "Ministries, local authorities, public institutions: qualified profiles and a traceable process.",
+      "roles": ["Administrative officer", "Legal officer", "Engineer"]
+    },
+    {
+      "title": "Health",
+      "text": "Clinics, medical practices, pharmacies, laboratories: care, technical and front-desk staff.",
+      "roles": ["Nurse", "Pharmacist", "Lab technician"]
+    }
+  ],
+  "faqShown": [0, 1, 3, 2, -1],
+  "faq": [
+    {
+      "q": "What is Rabotka Business?",
+      "a": "Rabotka's hiring space for organisations: companies, NGOs, schools, health facilities, public bodies. You publish your jobs, receive and sort applications, run your interviews and decide as a team, all in one place. Your jobs reach Rabotka's candidates in your country, and your careers page receives applications from everywhere else."
+    },
+    {
+      "q": "What can I do with Rabotka Business?",
+      "a": "Write and publish a job in minutes, receive applications and follow them step by step, have CVs read and ranked for a role, get the contact details of the candidates you're interested in, offer video or in-person interviews with a report to share, and work together with your recruiters and reviewers. The details depend on your plan."
+    },
+    {
+      "q": "Can I import CVs from Gmail?",
+      "a": "Yes. Connect your Gmail inbox once, read-only: you see recent emails that contain a CV, tick the ones to analyse, and only those attachments are read. No email is kept or sent, and you can disconnect Gmail at any time. You can also upload PDFs, Word files or photos of CVs from your device."
+    },
+    {
+      "q": "Can I post my jobs on LinkedIn?",
+      "a": "Yes. Connect your LinkedIn account once from a job: it is posted on your profile as a card, with ready-made text you review and the image of your choice. The card opens your careers page, where candidates apply; their applications are flagged as coming from LinkedIn. Each recruiter on the team posts on their own profile."
+    },
+    {
+      "q": "How does CV analysis work?",
+      "a": "You choose the role — one of your jobs or a role described for the occasion — then the CVs. Rabotka reads each CV, compares it with the role and gives it a score out of 100, with its strengths, points to watch and a reading of the career path. The ranking is ready in minutes; a notification lets you know."
+    },
+    {
+      "q": "Which CVs can I send?",
+      "a": "PDFs, Word files (.docx) and photos or scans (JPG, PNG, WEBP), uploaded from your device or picked straight from your Gmail inbox. A file that can't be read, or that isn't a CV, isn't counted."
+    },
+    {
+      "q": "What does Rabotka do in my mailbox?",
+      "a": "Nothing more than what you ask. The connection is read-only: you see recent emails that contain a CV, tick the ones to analyse, and only those attachments are read. No email is kept or sent, and you can disconnect your mailbox at any time."
+    },
+    {
+      "q": "How long are CVs kept?",
+      "a": "The files and contact details of analysed CVs are deleted automatically at the end of the period shown when you run the analysis. The scores and the ranking remain available."
+    },
+    {
+      "q": "How does a video interview work?",
+      "a": "When you offer the interview, create a video link: the call takes place in Rabotka, with nothing to install. The candidate joins from their invitation, on a computer or a phone, without an account. You can invite a colleague or a manager: they get their own link by email and join under their name. You can also paste a Meet or Zoom link if you prefer."
+    },
+    {
+      "q": "What is the interview report?",
+      "a": "During or after the interview, take your notes: type or dictate them. In a Rabotka video call, the interview is transcribed automatically, sentence by sentence, and everyone can see that it is. From your notes and the transcript, Rabotka writes a report: summary, strengths, points to watch, practical details and next steps. You review it, edit it, email it to your team or save it as a PDF. Neither the sound nor the picture of the call is recorded."
+    },
+    {
+      "q": "Do interviews show up in my calendar?",
+      "a": "Yes. Add your interview calendar link once to Google Calendar, Outlook or Apple Calendar: each interview shows up there and updates on its own, whether it is confirmed, moved or cancelled."
+    },
+    {
+      "q": "Which organisations can open a business account?",
+      "a": "Companies of any size, start-ups, cooperatives and economic interest groups, schools and training centres, NGOs, associations and foundations, health facilities, public administrations, public institutions and international organisations."
+    },
+    {
+      "q": "Which supporting documents are required?",
+      "a": "They depend on your country and status: trade register entry (such as the RCCM) and tax number for a company, registration receipt and articles for an association or NGO, operating licence or accreditation for a school or health facility, founding act for a public body. The form tells you exactly which documents are expected."
+    },
+    {
+      "q": "How do I sign in to the business space?",
+      "a": "With the account's email address: a one-time code is sent each time you sign in. No password to manage."
+    }
+  ],
+  "pipeline": [
+    { "title": "Distribution", "text": "Rabotka, careers page, Google, LinkedIn" },
+    { "title": "Applications", "text": "All received in one place" },
+    { "title": "Sorting and ranking", "text": "Every CV read, scored and explained" },
+    { "title": "Interviews", "text": "Choice of slots, video call and report" },
+    { "title": "Decision", "text": "The team's opinions, candidate hired" },
+    { "title": "Contract and mission", "text": "Contract generated, mission followed" }
+  ],
+  "atsPillars": [
+    {
+      "title": "Sorting done for you",
+      "text": "Each application is read and scored against the role, even a scanned or photographed CV. You know why a candidate is on top, criterion by criterion."
+    },
+    {
+      "title": "A pipeline you can read",
+      "text": "From application received to candidate hired, each one has its status and history. Nothing gets lost between two emails."
+    },
+    {
+      "title": "Hiring together",
+      "text": "Recruiters and reviewers give their opinion and leave notes. Team Activity keeps track of every decision."
+    },
+    {
+      "title": "Built for Africa",
+      "text": "Your country's official documents, mobile money payment in your currency, candidates reached on WhatsApp, and field agents."
+    }
+  ],
+  "featurePages": {
+    "cv": {
+      "metaTitle": "CV analysis",
+      "metaDescription": "Upload your CVs or pick them in Gmail: Rabotka reads them, scores them out of 100 against the role and ranks them in minutes.",
+      "heading": "CV analysis that really reads every candidate",
+      "intro": "Dozens of CVs for one role? Rabotka reads them for you, even scanned or photographed, and gives you an explained ranking. You spend your time on the right candidates, not on the pile.",
+      "benefits": [
+        {
+          "title": "All your CVs, wherever they come from",
+          "text": "PDF, Word, photos and scans, uploaded from your device or picked straight from your Gmail inbox, read-only."
+        },
+        {
+          "title": "A score you can understand",
+          "text": "A score out of 100, strengths, points to watch and the career path reviewed: years relevant to the role, full-time or part-time."
+        },
+        {
+          "title": "A conversation with the CV",
+          "text": "Ask questions about a candidate, or compare up to 5 CVs side by side to decide between the last few."
+        },
+        {
+          "title": "A ranking to share",
+          "text": "Export the ranking and your questions as a PDF for your management or the hiring manager."
+        }
+      ]
+    },
+    "offer": {
+      "metaTitle": "Writing and distributing job posts",
+      "metaDescription": "Describe what you need in a few words: Rabotka writes the job post and publishes it on your careers page, on Google, on LinkedIn and to Rabotka candidates.",
+      "heading": "A clear job post in a few words, seen everywhere",
+      "intro": "Describe the role as you would to a colleague. Rabotka writes the title and description, suggests the trade, and puts the job online where the candidates are.",
+      "benefits": [
+        {
+          "title": "Written for you",
+          "text": "A title and description ready to publish, without the criteria that rule out candidates for reasons unrelated to the role. You review and adjust."
+        },
+        {
+          "title": "Screening questions",
+          "text": "Add your questions to the job, including knock-out questions: the answers arrive with each application."
+        },
+        {
+          "title": "Multi-channel posting",
+          "text": "Rabotka candidates targeted by city and trade, a careers page visible on Google, LinkedIn posting, WhatsApp and Facebook sharing, a poster with a QR code."
+        },
+        {
+          "title": "Candidates kept informed",
+          "text": "If the pay, date or place changes, candidates already engaged are told. An expired job can be republished in one click."
+        }
+      ]
+    },
+    "linkedin": {
+      "metaTitle": "Posting on LinkedIn",
+      "metaDescription": "Connect LinkedIn once: each job is posted with ready-made text and its image, and leads to your careers page.",
+      "heading": "Your jobs on LinkedIn, no copy-paste",
+      "intro": "Your professional network is a talent pool: each job is posted as a card, with your text and your image, and the applications it brings are flagged as such.",
+      "benefits": [
+        { "title": "Ready-made text", "text": "The post is written for you, to review and adjust before publishing." },
+        { "title": "A polished image", "text": "The job's image is generated for you, or you choose your own." },
+        { "title": "Each recruiter, their profile", "text": "Each recruiter on the team posts on their own LinkedIn profile." },
+        { "title": "Source tracked", "text": "Applications that come from LinkedIn are flagged in your inbox." }
+      ]
+    },
+    "applicants": {
+      "metaTitle": "Applicant tracking (ATS)",
+      "metaDescription": "A complete ATS: all your applications in one place, ranked by fit, with status, history, bulk replies and exports.",
+      "heading": "Applicant tracking, like a real ATS",
+      "intro": "Rabotka candidates, careers page, LinkedIn: every application lands in one inbox, ranked by fit with the role. Each candidate moves from step to step, with their history.",
+      "benefits": [
+        {
+          "title": "One inbox",
+          "text": "Applications from all your sources in one place, with where they came from: Rabotka, careers page, LinkedIn, QR code."
+        },
+        {
+          "title": "The best on top",
+          "text": "Each application gets a score: trade, experience, location and reliability. “Why this score?” details each criterion."
+        },
+        {
+          "title": "Hire, decline, reply",
+          "text": "Hire a candidate in one click. Reply to the others with a ready-made message, one by one or all at once."
+        },
+        {
+          "title": "Exports and reports",
+          "text": "A job's candidate list in Excel, and the hiring report as a PDF for your management."
+        }
+      ]
+    },
+    "interviews": {
+      "metaTitle": "Video interviews, notes and reports",
+      "metaDescription": "Offer several time slots, run the interview by video in Rabotka, dictate your notes and share a report written from them.",
+      "heading": "Interviews run and followed up in one place",
+      "intro": "Offer your time slots; the candidate picks from the email they receive. On the day, the video call opens in Rabotka with your notes beside it, and the report is shared with the team in one click.",
+      "benefits": [
+        { "title": "A choice of time slots", "text": "Offer up to three times: the candidate picks the one that suits them, or asks for another, with no account or password." },
+        { "title": "Video calls in Rabotka", "text": "Nothing to install: the candidate joins the call with their link, on a computer or a phone. Meet or Zoom are still possible." },
+        { "title": "A colleague in the call", "text": "Invite a manager or an expert: they get their own link by email and join under their name, with no account." },
+        { "title": "The interview transcribed", "text": "The video call is transcribed automatically: each sentence becomes text during the interview. Your notes, typed or dictated, stay beside it." },
+        { "title": "The report ready", "text": "Written by AI from your notes and the transcript: summary, strengths, points to watch, next steps. You review it, send it to the team or save it as a PDF." },
+        { "title": "Your calendar in sync", "text": "Google Calendar, Outlook or Apple Calendar: each interview shows up there and stays up to date, with a reminder the day before for you and the candidate." }
+      ],
+      "steps": [
+        {
+          "kicker": "During the interview",
+          "title": "Video calls in Rabotka",
+          "text": "On the day, the call opens in your space, with nothing to install. The candidate joins with the link in their invitation, on a computer or a phone, without an account.",
+          "points": [
+            "A colleague or a manager invited, under their name",
+            "A waiting page for the candidate, with the opening time",
+            "“End the interview” closes the call for everyone"
+          ],
+          "alt": "A laptop open on a group video call, a mug beside it."
+        },
+        {
+          "kicker": "At the same time",
+          "title": "Everyone's voice turned into text",
+          "text": "The video call transcribes the interview automatically, sentence by sentence, with nothing to switch on. Your notes, typed or dictated, stay beside the call.",
+          "points": [
+            "Both voices together, in the order they spoke",
+            "An important sentence added to your notes in one click",
+            "Neither sound nor picture is recorded"
+          ],
+          "alt": "A man in a video interview with a recruiter who appears on his computer screen."
+        },
+        {
+          "kicker": "After the interview",
+          "title": "The report, ready to share",
+          "text": "Rabotka writes the report from the transcript and your notes while you move on to something else: a notification tells you when it is ready. You review it, edit it, send it to the team or save it as a PDF.",
+          "points": [
+            "Summary, strengths, points to watch and next steps",
+            "The interview's actual times, not just the planned ones",
+            "Written by AI: review it before sending"
+          ],
+          "alt": "A team around a table, laptops open, discussing an interview."
+        }
+      ]
+    },
+    "tracking": {
+      "metaTitle": "Missions, contracts and dashboard",
+      "metaDescription": "A contract generated as soon as a candidate is hired, missions followed, a hiring dashboard and reports in PDF and Excel.",
+      "heading": "From contract to review, everything stays in one place",
+      "intro": "Hiring doesn't stop at “yes”. The contract is ready as soon as a candidate is hired, the mission is followed to the end, and your hiring figures are always up to date.",
+      "benefits": [
+        { "title": "The contract generated", "text": "Viewable and printable from your space as soon as a candidate is hired." },
+        { "title": "Missions followed", "text": "Who is arriving, who is on the job, who has finished; and your review of each completed mission." },
+        { "title": "A dashboard", "text": "Applications, interviews, timings and positions filled over 7, 30 or 90 days, compared with the previous period." },
+        { "title": "HR exports", "text": "The hiring report as a PDF, your data in Excel, and the staff register." }
+      ]
+    },
+    "profiles": {
+      "metaTitle": "Profile search",
+      "metaDescription": "Search verified profiles by trade, skill or city, keep the most interesting ones and get their contact details.",
+      "heading": "Don't wait for candidates: go and find them",
+      "intro": "Search Rabotka's verified profiles by trade, skill or city. Keep the most promising in “My profiles” and invite them to apply for your jobs.",
+      "benefits": [
+        { "title": "Verified profiles", "text": "Profiles' identity is verified before they are suggested to you." },
+        { "title": "My profiles", "text": "Keep promising candidates with your notes and keywords, and find the ones you've already hired." },
+        { "title": "Invited to your jobs", "text": "Offer a live job to a saved profile: they are invited to apply." },
+        { "title": "Agents in the field", "text": "Our agents also reach candidates who aren't on any platform." }
+      ]
+    },
+    "team": {
+      "metaTitle": "Hiring as a team",
+      "metaDescription": "Invite recruiters and reviewers: Yes, Maybe, No opinions, shared notes, history and Team Activity.",
+      "heading": "Hire together, decide together",
+      "intro": "A hire is rarely decided alone. Invite your colleagues: each has a role, gives an opinion and leaves notes, and Activity keeps track of everything.",
+      "benefits": [
+        { "title": "Clear roles", "text": "The Administrator manages the account, Recruiters run the jobs, Reviewers give their opinion." },
+        { "title": "Everyone's opinion", "text": "Yes, Maybe or No on each candidate: the decision reads at a glance." },
+        { "title": "Private notes", "text": "What the team writes about a candidate is never seen by them." },
+        { "title": "Activity and history", "text": "Who did what, and when: for the team as for each application." }
+      ]
+    }
+  },
+  "guides": {
+    "rediger-une-offre-qui-attire": {
+      "title": "Writing a job post that attracts the right candidates",
+      "description": "Title, duties, conditions: what makes a qualified candidate apply, and what drives them away.",
+      "sections": [
+        {
+          "heading": "A title candidates search for",
+          "paragraphs": [
+            "Candidates type a trade, not the role's internal name. “Cashier” finds more people than “Checkout host level 2”. Keep the title short and precise, with the trade first."
+          ]
+        },
+        {
+          "heading": "Duties before profile",
+          "paragraphs": [
+            "Start by describing what the person will do day to day, in a few concrete lines. The profile you're looking for comes next: the skills that are really needed, not a wish list."
+          ],
+          "list": [
+            "Three to five main duties, with action verbs",
+            "Essential skills, separate from the “nice to have”",
+            "Location, hours and contract type right at the start"
+          ]
+        },
+        {
+          "heading": "Drop what wrongly rules people out",
+          "paragraphs": [
+            "Age, sex or family situation have no place in a job post, and keep competent candidates away. Rabotka removes these criteria when it writes the job post for you."
+          ]
+        },
+        {
+          "heading": "One question to save time",
+          "paragraphs": [
+            "A well-chosen screening question (“Do you have a truck licence?”) sorts better than a long text. Make it a knock-out question only if the answer is truly blocking."
+          ]
+        }
+      ]
+    },
+    "trier-des-dizaines-de-cv": {
+      "title": "Sorting dozens of CVs without spending the day on it",
+      "description": "A three-step method to go from a pile of CVs to a shortlist, with CV analysis.",
+      "sections": [
+        {
+          "heading": "1. Describe the role before reading",
+          "paragraphs": [
+            "Before opening a single CV, write down what really matters: relevant experience, essential skills, the city. This is the text CV analysis compares with each candidate."
+          ]
+        },
+        {
+          "heading": "2. Let Rabotka do the first read",
+          "paragraphs": [
+            "Drop all the CVs at once, or pick them from your Gmail inbox. Each one is read, scored out of 100 and comes with its strengths and points to watch."
+          ],
+          "list": [
+            "Start with the highest scores, but read the “why”",
+            "Look at the points to watch: missing information isn't a flaw",
+            "Keep a second list for unusual profiles"
+          ]
+        },
+        {
+          "heading": "3. Decide between the last few",
+          "paragraphs": [
+            "Compare up to 5 CVs side by side and ask your questions: “Which one has already managed a team?”. Export the ranking as a PDF to share it with the hiring manager."
+          ]
+        }
+      ]
+    },
+    "organiser-ses-entretiens": {
+      "title": "Scheduling interviews without endless back-and-forth",
+      "description": "Offer your slots, run the video call, share the report: an interview that really serves the decision.",
+      "sections": [
+        {
+          "heading": "Offer, don't negotiate",
+          "paragraphs": [
+            "Offer a precise time, or up to three to choose from, with the format (on site, phone or video) and the place. The candidate picks, confirms or asks for another time from their email: no back-and-forth. For a video interview, create the link in Rabotka: the call happens there, with nothing to install."
+          ]
+        },
+        {
+          "heading": "The same questions for everyone",
+          "paragraphs": [
+            "To compare candidates, ask them the same main questions, tied to the role's duties. Write down the answers during the interview or right after, while they're fresh: typed or dictated, beside the video call."
+          ],
+          "list": [
+            "A question about a situation they've already faced",
+            "A question about a difficulty of the role",
+            "Time for the candidate's questions"
+          ]
+        },
+        {
+          "heading": "Decide together",
+          "paragraphs": [
+            "Invite the hiring manager into the call: they join with their own link, without an account. After the interview, Rabotka writes the report from your notes; review it and send it to the team. Each member gives their opinion (Yes, Maybe, No): the decision is made on shared facts, and the hired candidate gets their contract right away."
+          ]
+        }
+      ]
+    }
+  }
+}

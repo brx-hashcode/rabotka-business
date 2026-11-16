@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import {
   IconArrowRight,
   IconArrowsSort,
@@ -9,9 +9,10 @@ import {
   IconVideo,
 } from "@tabler/icons-react";
 
+import { LocalLink as Link } from "#/components/local-link";
 import { FEATURES_HREF } from "../content";
 import { PipelineMockup } from "../mockups/ats-mockups";
-import { ATS_PILLARS, PIPELINE } from "../site-content";
+import { atsPillars, pipeline } from "../site-content";
 import { SectionHeading } from "./section-heading";
 import { IconTile } from "./icon-tile";
 import { ConnectionsSection } from "./connections-section";
@@ -24,6 +25,7 @@ const STEP_ICONS = [IconSpeakerphone, IconInbox, IconArrowsSort, IconVideo, Icon
  * them, across on a wide screen, down the side on a phone.
  */
 export function PipelineSteps() {
+  const PIPELINE = pipeline(useLocale());
   return (
     <div className="rounded-[2rem] bg-page p-6 sm:p-8">
       <ol className="relative grid gap-7 xl:grid-cols-6 xl:gap-4">
@@ -54,6 +56,7 @@ export function PipelineSteps() {
 
 /** What makes it an ATS, not a job board: six pillars. */
 export function AtsPillars() {
+  const ATS_PILLARS = atsPillars(useLocale());
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       {ATS_PILLARS.map(({ title, text, icon }) => (
@@ -72,22 +75,23 @@ export function AtsPillars() {
  * a hire, and the pillars. `more` links to the features overview.
  */
 export function AtsSection({ more = true }: Readonly<{ more?: boolean }>) {
+  const t = useTranslations("site.ats");
   return (
     <section id="ats" className="bg-card py-20 md:py-28">
       <div className="mx-auto w-full max-w-7xl space-y-14 px-4 sm:px-6">
         <div className="grid items-center gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:gap-16">
           <div className="space-y-6">
             <SectionHeading
-              kicker="ATS nouvelle génération"
-              title="Tout le recrutement dans un seul pipeline"
-              text="Rabotka Business n'est pas un simple site d'annonces : c'est un logiciel de recrutement complet. Chaque candidat avance de la diffusion de l'offre jusqu'au contrat, et rien ne se perd en chemin."
+              kicker={t("kicker")}
+              title={t("title")}
+              text={t("text")}
             />
             {more && (
               <Link
                 href={FEATURES_HREF}
                 className="group inline-flex items-center gap-1.5 font-medium underline-offset-4 hover:underline"
               >
-                Voir toutes les fonctionnalités
+                {t("allFeatures")}
                 <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
             )}

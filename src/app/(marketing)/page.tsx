@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { PartnersStrip } from "#/features/careers/components/board/partners-strip";
 import { AtsSection } from "#/features/landing/components/ats-section";
@@ -13,11 +14,11 @@ import { careersPartnersServer } from "#/lib/api/careers-server";
 import { jsonLd, marketingMetadata, organizationLd } from "#/lib/seo/marketing";
 import { siteOrigin } from "#/lib/seo/site";
 
-export function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("site.pages.home");
   return marketingMetadata({
-    title: "Rabotka Business - l'ATS nouvelle génération pour recruter en Afrique",
-    description:
-      "Logiciel de recrutement complet : offres rédigées et diffusées partout, CV lus et classés pour chaque poste, pipeline suivi en équipe, entretiens en visio et comptes rendus partagés.",
+    title: t("metaTitle"),
+    description: t("metaDescription"),
     path: "/",
     keywords: ["ATS Afrique", "logiciel RH", "gestion des candidatures", "Google for Jobs", "LinkedIn", "compte rendu d'entretien"],
   });
@@ -29,14 +30,15 @@ export function generateMetadata(): Promise<Metadata> {
  * The detail lives on the other pages, never repeated here.
  */
 export default async function LandingPage() {
-  const [countries, { origin }, partners] = await Promise.all([
+  const [countries, { origin }, partners, t] = await Promise.all([
     businessCountriesServer(),
     siteOrigin(),
     careersPartnersServer(),
+    getTranslations("site.pages.seo"),
   ]);
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(organizationLd(origin)) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(organizationLd(origin, t("orgDescription"))) }} />
       <LandingHero countries={countries} />
       <PartnersStrip partners={partners} className="py-14" />
       <AtsSection />

@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { IconArrowRight, IconCheck } from "@tabler/icons-react";
+import { useLocale, useTranslations } from "next-intl";
 
+import { LocalLink as Link } from "#/components/local-link";
 import { cn } from "#/lib/utils";
 import { FeatureMockup } from "../mockups/mockups";
-import { STAGES } from "./feature-stages";
+import { stages } from "./feature-stages";
 import { IconTile } from "./icon-tile";
 
 /**
@@ -14,13 +15,15 @@ import { IconTile } from "./icon-tile";
  * the right with its screen. One tool at a time, nothing scrolls twice.
  */
 export function FeatureTabs() {
+  const t = useTranslations("site.tabs");
+  const STAGES = stages(useLocale());
   const all = STAGES.flatMap((s) => s.features);
   const [activeId, setActiveId] = useState(all[0].id);
   const active = all.find((f) => f.id === activeId) ?? all[0];
 
   return (
     <div className="grid gap-6 lg:grid-cols-[18rem_1fr] lg:gap-8">
-      <div role="tablist" aria-label="Fonctionnalités" aria-orientation="vertical" className="space-y-5">
+      <div role="tablist" aria-label={t("label")} aria-orientation="vertical" className="space-y-5">
         {STAGES.map((stage) => (
           <div key={stage.step} className="space-y-1">
             <p className="flex items-center gap-2 px-3 pb-1">
@@ -84,7 +87,7 @@ export function FeatureTabs() {
             href={active.href}
             className="group inline-flex items-center gap-1.5 font-medium underline-offset-4 hover:underline"
           >
-            Voir {active.label} en détail
+            {t("seeDetail", { label: active.label })}
             <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>

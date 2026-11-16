@@ -1,9 +1,10 @@
 "use client";
 
 import { useId, useState } from "react";
-import Link from "next/link";
 import { IconArrowRight, IconPlus } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
+import { LocalLink as Link } from "#/components/local-link";
 import { cn } from "#/lib/utils";
 
 const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
@@ -15,14 +16,15 @@ const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
  */
 export function FaqAccordion({ items }: Readonly<{ items: { q: string; a: string }[] }>) {
   const [open, setOpen] = useState<number | null>(0);
+  const t = useTranslations("site.faq");
   const id = useId();
 
   return (
     <section id="faq" className="py-20 md:py-28">
       <div className="mx-auto w-full max-w-3xl space-y-10 px-4 sm:px-6">
         <div className="space-y-3 text-center">
-          <p className="font-medium text-sm text-whatsapp-dark">Questions fréquentes</p>
-          <h2 className="font-semibold text-3xl tracking-tight sm:text-4xl">Tout savoir avant de commencer</h2>
+          <p className="font-medium text-sm text-whatsapp-dark">{t("kicker")}</p>
+          <h2 className="font-semibold text-3xl tracking-tight sm:text-4xl">{t("title")}</h2>
         </div>
         <div className="space-y-2">
           {items.map((item, i) => {
@@ -80,9 +82,9 @@ export function FaqAccordion({ items }: Readonly<{ items: { q: string; a: string
           })}
         </div>
         <p className="text-center text-muted-foreground text-sm">
-          Une autre question ?{" "}
+          {t("other")}{" "}
           <Link href="/contact" className="inline-flex items-center gap-1 font-medium text-foreground hover:underline">
-            Nous contacter
+            {t("contact")}
             <IconArrowRight className="size-4" />
           </Link>
         </p>
