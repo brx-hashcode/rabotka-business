@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -32,7 +33,9 @@ import { Checkbox } from "#/components/ui/checkbox";
 import { Bone, ClaimDetailSkeleton } from "#/components/page-skeletons";
 import { PreviewSheet, previewKindOf } from "#/components/preview-sheet";
 import { cvFileUrl, cvScreeningsKey, deleteCvScreening, getCvScreening } from "#/lib/api/cv-screening-controller";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import type { Translator } from "#/i18n/translator";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import type { CvResume, CvScreening, Interview } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { CRITERIA, Career, CriterionBar, Points, ScoreRing, VerdictChip, band, duration } from "./cv-bits";
@@ -48,7 +51,8 @@ import { pollEvery } from "#/features/layout/socket-status";
 /** CVs compared at once (the backend's limit too). */
 export const MAX_COMPARED = 5;
 
-const date = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+const date = (iso: string, locale: Locale) =>
+  new Date(iso).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long", year: "numeric" });
 
 /**
  * One analysis: its CVs best first, filling in live while they are read
@@ -60,6 +64,9 @@ const WAITING_SHOWN = 6;
 
 export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
   const router = useRouter();
+  const t = useTranslations("cv.result");
+  const tLabels = useTranslations("labels");
+  const friendlyError = useFriendlyError();
   const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: [...cvScreeningsKey, id],
@@ -81,16 +88,16 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
     mutationFn: () => deleteCvScreening(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: cvScreeningsKey });
-      toast.success("Analyse supprimée, avec ses fichiers.");
+      toast.success(t("deleted"));
       router.push("/espace/analyse-cv");
     },
-    onError: (err) => toast.error(friendlyError(err, "L'analyse n'a pas pu être supprimée.")),
+    onError: (err) => toast.error(friendlyError(err, t("deleteFailed"))),
   });
 
   if (query.isLoading) return <ClaimDetailSkeleton />;
   const s = query.data;
   if (!s) {
-    return <p className="pt-6 text-muted-foreground">{friendlyError(query.error, "Cette analyse est introuvable.")}</p>;
+    return <p className="pt-6 text-muted-foreground">{friendlyError(query.error, t("notFound"))}</p>;
   }
 
   const scored = s.resumes.filter((r) => r.status === "SCORED");
@@ -100,7 +107,7 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
 
   return (
     <div className="w-full space-y-6 pt-2">
-      <BackLink href="/espace/analyse-cv" label="Analyse de CV" current={s.jobTitle} />
+      <BackLink href="/espace/analyse-cv" label={t("back")} current={s.jobTitle} />
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="min-w-0 break-words font-semibold text-3xl tracking-tight">{s.jobTitle}</h1>
@@ -108,12 +115,12 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
           {selected.length > 0 && (
             <div className="flex items-center gap-1 rounded-full bg-card p-1 pl-4">
               <span className="text-muted-foreground text-sm tabular-nums">
-                {selected.length} sélectionné{selected.length > 1 ? "s" : ""}
+                {t("selected", { count: selected.length })}
               </span>
               <button
                 type="button"
                 onClick={() => setSelected([])}
-                aria-label="Effacer la sélection"
+                aria-label={t("clear")}
                 className="flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-page hover:text-foreground"
               >
                 <IconX className="size-4" />
@@ -122,26 +129,26 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
                 type="button"
                 onClick={() => setCompareOpen(true)}
                 disabled={selected.length < 2}
-                title={selected.length < 2 ? "Choisissez au moins 2 CV" : undefined}
+                title={selected.length < 2 ? t("pickTwo") : undefined}
                 className="inline-flex h-9 items-center rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm hover:bg-brand-lime/80 disabled:opacity-40"
               >
-                Comparer{selected.length > 1 ? ` (${selected.length})` : ""}
+                {t("compare", { count: selected.length > 1 ? String(selected.length) : "none" })}
               </button>
             </div>
           )}
           <button
             type="button"
-            onClick={() => exportCsv(s)}
+            onClick={() => exportCsv(s, t, (k) => tLabels(`criterion.${k}`), (score) => tLabels(`verdict.${band(score).level}`))}
             disabled={scored.length === 0}
             className="inline-flex h-11 items-center gap-2 rounded-full bg-card px-4 font-medium text-sm hover:bg-card/70 disabled:opacity-40"
           >
             <IconDownload className="size-4" />
-            Exporter
+            {t("export")}
           </button>
           <button
             type="button"
             onClick={() => setConfirm(true)}
-            aria-label="Supprimer l'analyse"
+            aria-label={t("delete")}
             className="inline-flex size-11 items-center justify-center rounded-full bg-card text-muted-foreground hover:bg-card/70 hover:text-destructive"
           >
             <IconTrash className="size-4" />
@@ -155,7 +162,7 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
 
           {s.purged && (
             <p className="rounded-2xl bg-card px-4 py-3 text-muted-foreground text-sm">
-              Les fichiers et les coordonnées ont été supprimés à la fin de leur durée de conservation ; les notes restent.
+              {t("purged")}
             </p>
           )}
 
@@ -195,8 +202,8 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
           {unread.length > 0 && (
             <section className="space-y-3 rounded-3xl bg-card p-6">
               <div className="space-y-1">
-                <h2 className="font-semibold">Non lus</h2>
-                <p className="text-muted-foreground text-sm">Ces fichiers ne sont pas décomptés de vos CV inclus.</p>
+                <h2 className="font-semibold">{t("unread")}</h2>
+                <p className="text-muted-foreground text-sm">{t("unreadText")}</p>
               </div>
               <ul className="space-y-2">
                 {unread.map((r) => (
@@ -231,7 +238,7 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
         src={preview?.hasFile ? cvFileUrl(s.id, preview.id) : undefined}
         kind={previewKindOf(preview?.mimeType) ?? "pdf"}
         fileName={preview?.fileName}
-        unavailable="Ce CV a été supprimé à la fin de sa durée de conservation."
+        unavailable={t("cvGone")}
       />
 
       <ActionDialog
@@ -239,9 +246,9 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
         onOpenChange={setConfirm}
         icon={<IconTrash className="size-5" />}
         tone="warning"
-        title="Supprimer cette analyse ?"
-        description="Le classement et les CV envoyés sont supprimés. Les CV déjà lus restent décomptés."
-        confirmLabel="Supprimer"
+        title={t("deleteTitle")}
+        description={t("deleteText")}
+        confirmLabel={t("deleteConfirm")}
         onConfirm={() => remove.mutate()}
         pending={remove.isPending}
       />
@@ -254,25 +261,26 @@ const READING_AT_ONCE = 3;
 /** Seconds one CV usually takes, for a rough « time left ». */
 const SECONDS_PER_CV = 15;
 
-function timeLeft(remaining: number): string {
-  if (remaining <= READING_AT_ONCE) return "Quelques secondes encore";
+function timeLeft(remaining: number, t: Translator<"cv.result">): string {
+  if (remaining <= READING_AT_ONCE) return t("fewSeconds");
   const secs = Math.ceil(remaining / READING_AT_ONCE) * SECONDS_PER_CV;
-  return secs < 60 ? `Environ ${secs} s restantes` : `Environ ${Math.ceil(secs / 60)} min restantes`;
+  return secs < 60 ? t("secondsLeft", { n: secs }) : t("minutesLeft", { n: Math.ceil(secs / 60) });
 }
 
 /** Where the analysis is: received, being read (n of m), ranked; and about how long is left. */
 function ProgressCard({ done, total }: Readonly<{ done: number; total: number }>) {
+  const t = useTranslations("cv.result");
   const steps = [
-    { label: "CV reçus", state: "done" as const },
-    { label: `Lecture · ${done}/${total}`, state: "active" as const },
-    { label: "Classement", state: done === total ? ("active" as const) : ("todo" as const) },
+    { key: "received", label: t("received"), state: "done" as const },
+    { key: "reading", label: t("reading", { done, total }), state: "active" as const },
+    { key: "ranking", label: t("ranking"), state: done === total ? ("active" as const) : ("todo" as const) },
   ];
   return (
     <section className="space-y-5 rounded-3xl bg-card p-6" aria-live="polite">
       <div className="flex items-start gap-4">
         <div className="min-w-0 flex-1 space-y-0.5">
-          <p className="font-semibold text-lg">Analyse en cours</p>
-          <p className="text-muted-foreground text-sm">Rabotka lit chaque CV et le compare au poste.</p>
+          <p className="font-semibold text-lg">{t("running")}</p>
+          <p className="text-muted-foreground text-sm">{t("runningText")}</p>
         </div>
         <p className="shrink-0 font-semibold text-2xl tabular-nums">
           {done}
@@ -282,14 +290,14 @@ function ProgressCard({ done, total }: Readonly<{ done: number; total: number }>
 
       <ol className="grid grid-cols-3 gap-2">
         {steps.map((step) => (
-          <li key={step.label} className="space-y-2">
+          <li key={step.key} className="space-y-2">
             <div
               className={cn(
                 "h-1.5 rounded-full",
                 step.state === "done" ? "bg-whatsapp-dark" : step.state === "active" ? "bg-whatsapp-dark/40" : "bg-page",
               )}
             >
-              {step.state === "active" && step.label.startsWith("Lecture") && (
+              {step.state === "active" && step.key === "reading" && (
                 <div className="h-full rounded-full bg-whatsapp-dark transition-[width] duration-500" style={{ width: `${(done / total) * 100}%` }} />
               )}
             </div>
@@ -304,9 +312,9 @@ function ProgressCard({ done, total }: Readonly<{ done: number; total: number }>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-2xl bg-page px-4 py-3 text-sm">
         <span className="flex items-center gap-1.5 font-medium">
           <IconClock className="size-4" />
-          {timeLeft(total - done)}
+          {timeLeft(total - done, t)}
         </span>
-        <span className="text-muted-foreground">Vous pouvez quitter la page : une notification vous prévient à la fin.</span>
+        <span className="text-muted-foreground">{t("leave")}</span>
       </div>
     </section>
   );
@@ -314,13 +322,14 @@ function ProgressCard({ done, total }: Readonly<{ done: number; total: number }>
 
 const FILE_KIND = (mime: string) =>
   mime.startsWith("image/")
-    ? { icon: IconPhoto, label: "Photo", tile: "bg-chip-amber text-chip-amber-foreground" }
+    ? { icon: IconPhoto, label: "photo", tile: "bg-chip-amber text-chip-amber-foreground" }
     : mime.includes("wordprocessingml")
       ? { icon: IconFileTypeDocx, label: "Word", tile: "bg-chip-violet text-chip-violet-foreground" }
       : { icon: IconFileTypePdf, label: "PDF", tile: "bg-destructive/10 text-destructive" };
 
 /** A CV not read yet, in the shape its result will take, so the ranking fills in without jumping. */
 function WaitingCard({ r, reading }: Readonly<{ r: CvResume; reading: boolean }>) {
+  const t = useTranslations("cv.result");
   const kind = FILE_KIND(r.mimeType);
   return (
     <article className="rounded-3xl bg-card p-5 sm:p-6" aria-busy="true">
@@ -339,11 +348,11 @@ function WaitingCard({ r, reading }: Readonly<{ r: CvResume; reading: boolean }>
                 reading ? "bg-chip-green text-chip-green-foreground" : "bg-page text-muted-foreground",
               )}
             >
-              {reading ? "Lecture en cours" : "En attente"}
+              {reading ? t("readingNow") : t("waiting")}
             </span>
           </div>
           <p className="text-muted-foreground text-xs">
-            {kind.label} · {reading ? "le score et l'avis arrivent dans quelques secondes" : "sera lu juste après"}
+            {kind.label === "photo" ? t("photo") : kind.label} · {reading ? t("soon") : t("next")}
           </p>
         </div>
       </div>
@@ -363,31 +372,33 @@ function WaitingCard({ r, reading }: Readonly<{ r: CvResume; reading: boolean }>
 /** What the CVs were measured against, beside them: the analysis in figures, then the job itself. */
 function JobAside({ s, scored, unread }: Readonly<{ s: CvScreening; scored: number; unread: number }>) {
   const [open, setOpen] = useState(false);
+  const t = useTranslations("cv.result");
+  const locale = useLocale() as Locale;
   const long = s.jobText.length > 700;
   return (
     <aside className="space-y-6 lg:sticky lg:top-24">
       <section className="space-y-4 rounded-3xl bg-card p-6">
-        <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">L&apos;analyse</p>
+        <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("analysis")}</p>
         <dl className="grid grid-cols-3 gap-2 text-center">
           <Figure label="CV" value={s.total} />
-          <Figure label={scored > 1 ? "Classés" : "Classé"} value={scored} />
-          <Figure label={unread > 1 ? "Non lus" : "Non lu"} value={unread} />
+          <Figure label={t("ranked", { count: scored })} value={scored} />
+          <Figure label={t("unreadCount", { count: unread })} value={unread} />
         </dl>
         <dl className="space-y-3 text-sm">
-          <Meta icon={IconCalendarEvent} label="Créée le" value={date(s.createdAt)} />
-          {s.bestScore !== null && <Meta icon={IconTrophy} label="Meilleur score" value={`${s.bestScore}/100`} />}
+          <Meta icon={IconCalendarEvent} label={t("created")} value={date(s.createdAt, locale)} />
+          {s.bestScore !== null && <Meta icon={IconTrophy} label={t("best")} value={`${s.bestScore}/100`} />}
           <Meta
             icon={IconShieldLock}
-            label="Fichiers et coordonnées"
-            value={s.purged ? "Supprimés" : `Conservés jusqu'au ${date(s.expiresAt)}`}
+            label={t("files")}
+            value={s.purged ? t("removed") : t("keptUntil", { date: date(s.expiresAt, locale) })}
           />
           {s.offerId && (
             <Meta
               icon={IconBriefcase}
-              label="Offre"
+              label={t("offer")}
               value={
                 <Link href={`/espace/offres/${s.offerId}`} className="underline-offset-2 hover:underline">
-                  Voir l&apos;offre
+                  {t("seeOffer")}
                 </Link>
               }
             />
@@ -396,7 +407,7 @@ function JobAside({ s, scored, unread }: Readonly<{ s: CvScreening; scored: numb
       </section>
 
       <section className="space-y-3 rounded-3xl bg-card p-6">
-        <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Le poste</p>
+        <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("role")}</p>
         <h2 className="break-words font-semibold text-lg leading-snug">{s.jobTitle}</h2>
         <div className="relative">
           <p className={cn("whitespace-pre-line text-muted-foreground text-sm leading-relaxed", long && !open && "max-h-80 overflow-hidden")}>
@@ -411,7 +422,7 @@ function JobAside({ s, scored, unread }: Readonly<{ s: CvScreening; scored: numb
             aria-expanded={open}
             className="inline-flex items-center gap-1 font-medium text-sm hover:underline"
           >
-            {open ? "Réduire" : "Voir tout"}
+            {open ? t("less") : t("all")}
             <IconChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
           </button>
         )}
@@ -469,12 +480,16 @@ function ResumeCard({
   const c = r.candidate;
   const name = c?.name ?? r.fileName;
   const score = r.score ?? 0;
+  const t = useTranslations("cv.result");
+  const tc = useTranslations("cv");
+  const tLabels = useTranslations("labels");
   const facts = [
     c?.currentTitle,
     typeof c?.experienceMonths === "number"
-      ? `${duration(c.experienceMonths)} d'expérience${typeof c.relevantMonths === "number" ? `, dont ${duration(c.relevantMonths)} en lien avec le poste` : ""}`
+      ? t("experience", { duration: duration(c.experienceMonths, tc) }) +
+        (typeof c.relevantMonths === "number" ? t("relevantPart", { duration: duration(c.relevantMonths, tc) }) : "")
       : c?.yearsExperience !== null && c?.yearsExperience !== undefined
-        ? `${c.yearsExperience} an${c.yearsExperience > 1 ? "s" : ""} d'expérience`
+        ? t("years", { n: c.yearsExperience })
         : null,
   ].filter(Boolean);
 
@@ -486,8 +501,8 @@ function ResumeCard({
             checked={selected}
             disabled={!selected && !canSelect}
             onCheckedChange={onToggle}
-            aria-label={`Comparer ${name}`}
-            title={!selected && !canSelect ? `${MAX_COMPARED} CV au plus` : undefined}
+            aria-label={t("compareOne", { name })}
+            title={!selected && !canSelect ? t("atMost", { max: MAX_COMPARED }) : undefined}
             className="size-5 rounded-md"
           />
           <span className="font-semibold text-muted-foreground text-xs tabular-nums">{r.rank}</span>
@@ -536,11 +551,11 @@ function ResumeCard({
 
       {open && (
         <div className="mt-5 grid gap-5 md:grid-cols-2 2xl:grid-cols-[1fr_1fr_15rem]">
-          <Points title="Points forts" items={r.strengths} tone="good" />
-          <Points title="Points d'attention" items={r.gaps} tone="gap" />
+          <Points title={t("strengths")} items={r.strengths} tone="good" />
+          <Points title={t("gaps")} items={r.gaps} tone="gap" />
           <div className="space-y-2.5 rounded-2xl bg-page p-4 md:col-span-2 2xl:col-span-1">
             {CRITERIA.filter((k) => typeof r.criteria?.[k.key] === "number").map((k) => (
-              <CriterionBar key={k.key} label={k.label} value={r.criteria?.[k.key] ?? 0} />
+              <CriterionBar key={k.key} label={tLabels(`criterion.${k.key}`)} value={r.criteria?.[k.key] ?? 0} />
             ))}
           </div>
           {!!c?.experiences?.length && (
@@ -555,7 +570,7 @@ function ResumeCard({
         <div className="mt-5 flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-page px-4 py-3">
           <InterviewLine interview={interview} />
           <Link href="/espace/entretiens" className="font-medium text-sm underline-offset-2 hover:underline">
-            Voir mes entretiens
+            {t("interviews")}
           </Link>
         </div>
       )}
@@ -568,7 +583,7 @@ function ResumeCard({
             className="inline-flex h-10 items-center gap-1.5 rounded-full bg-ink px-4 font-medium text-sm text-white hover:bg-ink/90"
           >
             <IconCalendarPlus className="size-4" />
-            Planifier un entretien
+            {t("schedule")}
           </button>
         )}
         <button
@@ -577,7 +592,7 @@ function ResumeCard({
           aria-expanded={open}
           className="inline-flex h-10 items-center gap-1.5 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70"
         >
-          {open ? "Moins de détails" : "Détails"}
+          {open ? t("lessDetails") : t("details")}
           <IconChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
         </button>
         {r.hasFile &&
@@ -588,7 +603,7 @@ function ResumeCard({
               className="inline-flex h-10 items-center gap-1.5 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70"
             >
               <IconDownload className="size-4" />
-              Télécharger le CV
+              {t("download")}
             </a>
           ) : (
             <button
@@ -597,7 +612,7 @@ function ResumeCard({
               className="inline-flex h-10 items-center gap-1.5 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70"
             >
               <IconEye className="size-4" />
-              Voir le CV
+              {t("view")}
             </button>
           ))}
         {c?.phone && (
@@ -619,16 +634,25 @@ function ResumeCard({
 
 
 /** The ranking as a spreadsheet: one line per CV read, best first. */
-function exportCsv(s: CvScreening) {
+function exportCsv(
+  s: CvScreening,
+  t: Translator<"cv.result">,
+  criterion: (key: (typeof CRITERIA)[number]["key"]) => string,
+  verdict: (score: number) => string,
+) {
   const cell = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-  const header = ["Rang", "Nom", "Score", "Appréciation", ...CRITERIA.map((k) => k.label), "Poste actuel", "Ville", "Expérience (ans)", "Téléphone", "E-mail", "Résumé", "Fichier"];
+  const header = [
+    ...(t.raw("csv.header") as string[]),
+    ...CRITERIA.map((k) => criterion(k.key)),
+    ...(t.raw("csv.tail") as string[]),
+  ];
   const rows = s.resumes
     .filter((r) => r.status === "SCORED")
     .map((r) => [
       r.rank,
       r.candidate?.name,
       r.score,
-      band(r.score ?? 0).label,
+      verdict(r.score ?? 0),
       ...CRITERIA.map((k) => r.criteria?.[k.key] ?? ""),
       r.candidate?.currentTitle,
       r.candidate?.city,
@@ -643,7 +667,7 @@ function exportCsv(s: CvScreening) {
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
   const a = document.createElement("a");
   a.href = url;
-  a.download = `analyse-cv-${s.jobTitle.toLowerCase().replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "")}.csv`;
+  a.download = t("csv.file", { slug: s.jobTitle.toLowerCase().replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") });
   a.click();
   URL.revokeObjectURL(url);
 }

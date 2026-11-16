@@ -2,32 +2,31 @@
 
 import Link from "next/link";
 import { IconLock } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import type { Translator } from "#/i18n/translator";
 import type { CvCriterion, CvExperience } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { PACKS_HREF } from "#/features/subscription/packs";
 
-export const CRITERIA: { key: CvCriterion; label: string }[] = [
-  { key: "skills", label: "Compétences" },
-  { key: "experience", label: "Expérience" },
-  { key: "training", label: "Formation" },
-  { key: "location", label: "Lieu" },
-  { key: "languages", label: "Langues" },
+/** The analysis's criteria, in order; their names are labels.criterion.* . */
+export const CRITERIA: { key: CvCriterion }[] = [
+  { key: "skills" },
+  { key: "experience" },
+  { key: "training" },
+  { key: "location" },
+  { key: "languages" },
 ];
 
-type Band = { level: "high" | "good" | "partial" | "low"; label: string; chip: string; ring: string };
+type Band = { level: "high" | "good" | "partial" | "low"; chip: string; ring: string };
 
-/**
- * How well a score fits the job, in words: the number alone says little.
- * `level` is the key of labels.verdict; `label` its French, for screens not
- * translated yet.
- */
+/** How well a score fits the job, in words (labels.verdict.<level>): the number alone says little. */
 export function band(score: number): Band {
-  if (score >= 80) return { level: "high", label: "Très adapté", chip: "bg-chip-green text-chip-green-foreground", ring: "text-whatsapp-dark" };
-  if (score >= 60) return { level: "good", label: "Adapté", chip: "bg-brand-lime text-[#0f2414]", ring: "text-whatsapp-dark" };
-  if (score >= 40) return { level: "partial", label: "Partiel", chip: "bg-chip-amber text-chip-amber-foreground", ring: "text-chip-amber-foreground" };
-  return { level: "low", label: "Peu adapté", chip: "bg-foreground/[0.07] text-muted-foreground", ring: "text-muted-foreground" };
+  if (score >= 80) return { level: "high", chip: "bg-chip-green text-chip-green-foreground", ring: "text-whatsapp-dark" };
+  if (score >= 60) return { level: "good", chip: "bg-brand-lime text-[#0f2414]", ring: "text-whatsapp-dark" };
+  if (score >= 40) return { level: "partial", chip: "bg-chip-amber text-chip-amber-foreground", ring: "text-chip-amber-foreground" };
+  return { level: "low", chip: "bg-foreground/[0.07] text-muted-foreground", ring: "text-muted-foreground" };
 }
 
 export function VerdictChip({ score }: Readonly<{ score: number }>) {
@@ -38,6 +37,7 @@ export function VerdictChip({ score }: Readonly<{ score: number }>) {
 
 /** The score out of 100 as a ring, the number in the middle. */
 export function ScoreRing({ score, size = 56 }: Readonly<{ score: number; size?: number }>) {
+  const t = useTranslations("cv");
   // A small ring (a board's card, a mock-up) keeps its number legible inside.
   const small = size < 34;
   const stroke = small ? 2 : 5;
@@ -60,7 +60,7 @@ export function ScoreRing({ score, size = 56 }: Readonly<{ score: number; size?:
           className={band(score).ring}
         />
       </svg>
-      <span className={cn("absolute font-semibold tabular-nums", small ? "text-[7.5px]" : "text-sm")} aria-label={`${score} sur 100`}>
+      <span className={cn("absolute font-semibold tabular-nums", small ? "text-[7.5px]" : "text-sm")} aria-label={t("outOf100", { score })}>
         {score}
       </span>
     </span>
@@ -83,17 +83,18 @@ export function CriterionBar({ label, value }: Readonly<{ label: string; value: 
 }
 
 export function CvLocked({ trial = false, packOnSale = false }: Readonly<{ trial?: boolean; packOnSale?: boolean }>) {
+  const t = useTranslations("cv");
   return (
     <section className="flex flex-col items-center gap-3 rounded-3xl bg-card px-6 py-12 text-center">
       <span className="flex size-12 items-center justify-center rounded-2xl bg-page">
         <IconLock className="size-6 text-muted-foreground" />
       </span>
       <p className="font-medium">
-        {trial ? "L'analyse de CV arrive avec une formule payante" : "L'analyse de CV n'est pas incluse dans votre formule"}
+        {trial ? t("lockedTrial") : t("locked")}
       </p>
       <p className="max-w-md text-muted-foreground text-sm">
-        {trial && "Elle n'est pas comprise dans l'essai gratuit. "}
-        Envoyez les CV reçus pour un poste : Rabotka les lit, même scannés ou pris en photo, et les classe du plus adapté au moins adapté.
+        {trial && t("notInTrial")}
+        {t("lockedText")}
       </p>
       <CvWayOut packOnSale={packOnSale && !trial} />
     </section>
@@ -102,17 +103,16 @@ export function CvLocked({ trial = false, packOnSale = false }: Readonly<{ trial
 
 /** All the « CV inclus » of the period used: until when, and the way to more. */
 export function CvUsedUp({ until, packOnSale = false }: Readonly<{ until: string | null; packOnSale?: boolean }>) {
-  const day = until ? new Date(until).toLocaleDateString("fr-FR", { day: "numeric", month: "long" }) : null;
+  const t = useTranslations("cv");
+  const locale = useLocale() as Locale;
+  const day = until ? new Date(until).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long" }) : "none";
   return (
     <section className="flex flex-col items-center gap-3 rounded-3xl bg-card px-6 py-12 text-center">
       <span className="flex size-12 items-center justify-center rounded-2xl bg-page">
         <IconLock className="size-6 text-muted-foreground" />
       </span>
-      <p className="font-medium">Plus de CV inclus{day ? ` jusqu'au ${day}` : ""}</p>
-      <p className="max-w-md text-muted-foreground text-sm">
-        Vous avez analysé tous les CV de votre formule pour cette période{day ? " : le compteur repart à zéro ensuite" : ""}. Pour en
-        analyser davantage dès maintenant, {packOnSale ? "ajoutez un pack de CV ou changez de formule" : "changez de formule"}.
-      </p>
+      <p className="font-medium">{t("usedUp", { date: day })}</p>
+      <p className="max-w-md text-muted-foreground text-sm">{t("usedUpText", { date: day, pack: packOnSale ? "yes" : "no" })}</p>
       <CvWayOut packOnSale={packOnSale} />
     </section>
   );
@@ -120,11 +120,12 @@ export function CvUsedUp({ until, packOnSale = false }: Readonly<{ until: string
 
 /** « Voir les formules », and the pack of CVs when one is on sale. */
 function CvWayOut({ packOnSale }: Readonly<{ packOnSale: boolean }>) {
+  const t = useTranslations("cv");
   return (
     <div className="mt-1 flex flex-wrap justify-center gap-2">
       {packOnSale && (
         <Link href={PACKS_HREF} className="inline-flex h-11 items-center rounded-full bg-ink px-5 font-medium text-sm text-white hover:bg-ink/90">
-          Acheter un pack de CV
+          {t("buyPack")}
         </Link>
       )}
       <Link
@@ -134,41 +135,38 @@ function CvWayOut({ packOnSale }: Readonly<{ packOnSale: boolean }>) {
           packOnSale ? "bg-page hover:bg-page/70" : "bg-ink text-white hover:bg-ink/90",
         )}
       >
-        Voir les formules
+        {t("seePlans")}
       </Link>
     </div>
   );
 }
 
-export const fileSize = (bytes: number) =>
-  bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} Ko` : `${(bytes / 1024 / 1024).toFixed(1).replace(".", ",")} Mo`;
+export type CvT = Translator<"cv">;
+
+export const fileSize = (bytes: number, t: CvT, locale: Locale) =>
+  bytes < 1024 * 1024
+    ? t("kb", { n: Math.max(1, Math.round(bytes / 1024)) })
+    : t("mb", { n: (bytes / 1024 / 1024).toLocaleString(INTL_LOCALE[locale], { minimumFractionDigits: 1, maximumFractionDigits: 1 }) });
 
 /** `3 ans et 4 mois`, `8 mois`. */
-export function duration(months: number): string {
+export function duration(months: number, t: CvT): string {
   const years = Math.floor(months / 12);
   const rest = months % 12;
-  const parts = [years ? `${years} an${years > 1 ? "s" : ""}` : "", rest ? `${rest} mois` : ""].filter(Boolean);
-  return parts.join(" et ") || "moins d'un mois";
+  if (years && rest) return t("and", { a: t("years", { n: years }), b: t("months", { n: rest }) });
+  if (years) return t("years", { n: years });
+  if (rest) return t("months", { n: rest });
+  return t("underMonth");
 }
 
-const TYPE_LABEL: Record<CvExperience["type"], string | null> = {
-  FULL_TIME: "Temps plein",
-  PART_TIME: "Temps partiel",
-  INTERNSHIP: "Stage",
-  FREELANCE: "Indépendant",
-  VOLUNTEER: "Bénévolat",
-  UNKNOWN: null,
+const RELEVANCE_DOT: Record<CvExperience["relevance"], string> = {
+  HIGH: "bg-whatsapp-dark",
+  PARTIAL: "bg-chip-amber-foreground",
+  NONE: "bg-muted-foreground/40",
 };
 
-const RELEVANCE: Record<CvExperience["relevance"], { label: string; dot: string }> = {
-  HIGH: { label: "En lien direct", dot: "bg-whatsapp-dark" },
-  PARTIAL: { label: "En lien partiel", dot: "bg-chip-amber-foreground" },
-  NONE: { label: "Sans lien", dot: "bg-muted-foreground/40" },
-};
-
-const month = (iso: string) => {
+const month = (iso: string, locale: Locale) => {
   const [y, m] = iso.split("-").map(Number);
-  return new Date(Date.UTC(y, (m || 1) - 1, 1)).toLocaleDateString("fr-FR", { month: "short", year: "numeric", timeZone: "UTC" });
+  return new Date(Date.UTC(y, (m || 1) - 1, 1)).toLocaleDateString(INTL_LOCALE[locale], { month: "short", year: "numeric", timeZone: "UTC" });
 };
 
 /**
@@ -180,43 +178,45 @@ export function Career({
   totalMonths,
   relevantMonths,
 }: Readonly<{ experiences: CvExperience[]; totalMonths: number | null; relevantMonths: number | null }>) {
+  const t = useTranslations("cv");
+  const locale = useLocale() as Locale;
   return (
     <section className="space-y-3 rounded-2xl bg-page p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="font-medium text-sm">Parcours</p>
+        <p className="font-medium text-sm">{t("career")}</p>
         {totalMonths !== null && relevantMonths !== null && (
           <p className="text-muted-foreground text-xs">
-            {duration(totalMonths)} au total · <span className="font-medium text-foreground">{duration(relevantMonths)} en lien avec le poste</span>
+            {t("total", { total: duration(totalMonths, t) })} ·{" "}
+            <span className="font-medium text-foreground">{t("relevant", { relevant: duration(relevantMonths, t) })}</span>
           </p>
         )}
       </div>
       <ol className="space-y-2">
         {experiences.map((e, i) => {
-          const rel = RELEVANCE[e.relevance];
-          const type = TYPE_LABEL[e.type];
+          const type = e.type === "UNKNOWN" ? null : t(`type.${e.type}`);
           return (
             <li key={`${e.title}-${i}`} className="flex gap-3 rounded-xl bg-card px-3.5 py-2.5">
-              <span aria-hidden className={cn("mt-1.5 size-2 shrink-0 rounded-full", rel.dot)} />
+              <span aria-hidden className={cn("mt-1.5 size-2 shrink-0 rounded-full", RELEVANCE_DOT[e.relevance])} />
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-sm">
                   {e.title}
                   {e.employer && <span className="font-normal text-muted-foreground"> · {e.employer}</span>}
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  {e.start ? `${month(e.start)} – ${e.current ? "aujourd'hui" : e.end ? month(e.end) : "?"}` : "Dates non précisées"}
-                  {e.months !== null && ` · ${duration(e.months)}`}
+                  {e.start ? `${month(e.start, locale)} – ${e.current ? t("now") : e.end ? month(e.end, locale) : "?"}` : t("noDates")}
+                  {e.months !== null && ` · ${duration(e.months, t)}`}
                 </p>
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1 text-xs">
                 {type && <span className="rounded-full bg-page px-2 py-0.5">{type}</span>}
-                <span className="text-muted-foreground">{rel.label}</span>
+                <span className="text-muted-foreground">{t(`relevance.${e.relevance}`)}</span>
               </div>
             </li>
           );
         })}
       </ol>
       <p className="text-muted-foreground text-xs">
-        Les emplois tenus en même temps ne comptent qu&apos;une fois ; un temps partiel ou un stage compte pour moitié.
+        {t("careerNote")}
       </p>
     </section>
   );
@@ -224,11 +224,12 @@ export function Career({
 
 /** Strong points or points to check, as a short list. */
 export function Points({ title, items, tone }: Readonly<{ title: string; items: string[]; tone: "good" | "gap" }>) {
+  const t = useTranslations("cv");
   return (
     <div className="space-y-2">
       <p className="font-medium text-sm">{title}</p>
       {items.length === 0 ? (
-        <p className="text-muted-foreground text-sm">Aucun.</p>
+        <p className="text-muted-foreground text-sm">{t("none")}</p>
       ) : (
         <ul className="space-y-1.5 text-sm">
           {items.map((item) => (
