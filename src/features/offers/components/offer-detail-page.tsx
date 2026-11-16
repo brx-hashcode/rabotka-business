@@ -101,6 +101,7 @@ import {
   type ApplicationStage,
 } from "../offer-labels";
 import { failedLabel } from "../offer-questions";
+import { OfferLanguageProvider } from "../offer-language";
 import { ApplicationActions, useApplicationChat } from "./application-actions";
 import { MoreActionsMenu, opinionLabel, type MoreAction } from "./more-actions-menu";
 import { useConfirmedShortlist } from "../use-shortlist";
@@ -226,6 +227,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const o = offer.data;
 
   return (
+    <OfferLanguageProvider offer={o}>
     <div className="w-full space-y-6 pt-2">
       <BackLink href="/espace/offres" label={t("back")} current={o?.title} />
 
@@ -425,6 +427,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
         )}
       </ActionDialog>
     </div>
+    </OfferLanguageProvider>
   );
 }
 

@@ -35,7 +35,7 @@
     "locked": "The AI-written report is included in higher plans. Your note stays with the interview.",
     "waiting": "Written automatically {when}. Add a note before then if you like.",
     "writeNow": "Write now",
-    "writing": "Writing. You'll be told by email as soon as it's ready: you can leave this page.",
+    "writing": "Writing. You'll be notified by email as soon as it's ready: you can leave this page.",
     "ready": "Your report is ready",
     "noteMissing": "Your note isn't in it yet: update it.",
     "emailed": "Also sent by email. Review it before sharing.",
@@ -140,7 +140,7 @@
       "VIDEO": "Video link"
     },
     "locationPlaceholder": {
-      "IN_PERSON": "E.g. 12 Peace Avenue, Nairobi",
+      "IN_PERSON": "E.g. 12 avenue de la Paix, Brazzaville",
       "PHONE": "Yours, if the candidate should call",
       "VIDEO": "https://meet.google.com/…"
     },
@@ -321,6 +321,7 @@
     "dialogTitle": "Report · {name}",
     "practicalLine": "{label}: {value}",
     "transcriptNote": "Transcribed automatically during the video call: it may contain errors.",
-    "turn": "{speaker}: {text}"
+    "turn": "{speaker}: {text}",
+    "candidateSlug": "candidate"
   }
 }

@@ -73,7 +73,7 @@
     "email": "Work email address",
     "emailPlaceholder": "firstname.lastname@organisation.com",
     "phone": "Phone",
-    "phonePlaceholder": "0712 345 678 (or with the country code, +254…)",
+    "phonePlaceholder": "06 123 45 67 (or with the country code, +237…)",
     "submit": "Get the code"
   },
   "verify": {
@@ -184,7 +184,7 @@
   "done": {
     "title": "Your business account is created",
     "signIn": "All that's left is to sign in: enter the code we just sent by email.",
-    "thanks": "Thank you! Our team is now reviewing your organisation's documents. You will be told by email as soon as your account is activated.",
+    "thanks": "Thank you! Our team is now reviewing your organisation's documents. You will be notified by email as soon as your account is activated.",
     "next": "Next steps",
     "checkTitle": "Your organisation is checked",
     "checkText": "Our team reviews your supporting documents.",

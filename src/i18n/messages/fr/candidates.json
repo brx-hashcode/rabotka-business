@@ -90,7 +90,8 @@
     "seeContract": "Voir le contrat",
     "contractTitle": "Contrat de {name}",
     "contractSubtitle": "Contrat de prestation de services",
-    "contractUnavailable": "Le contrat n'a pas pu être préparé. Réessayez dans un instant."
+    "contractUnavailable": "Le contrat n'a pas pu être préparé. Réessayez dans un instant.",
+    "contractFile": "contrat_{name}.pdf"
   },
   "search": {
     "title": "Trouver des profils",

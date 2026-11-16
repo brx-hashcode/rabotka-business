@@ -321,6 +321,7 @@
     "dialogTitle": "Compte rendu · {name}",
     "practicalLine": "{label} : {value}",
     "transcriptNote": "Transcrite automatiquement pendant la visio : elle peut contenir des erreurs.",
-    "turn": "{speaker} : {text}"
+    "turn": "{speaker} : {text}",
+    "candidateSlug": "candidat"
   }
 }

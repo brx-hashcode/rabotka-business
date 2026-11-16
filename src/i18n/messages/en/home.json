@@ -133,6 +133,7 @@
     "staffRegisterHint": "The people hired, in Excel",
     "acpe": "Jobs to declare (ACPE)",
     "acpeHint": "All your jobs, ready to declare",
-    "higherPlans": "Included in higher plans"
+    "higherPlans": "Included in higher plans",
+    "sheetFile": "recruitment-report.{ext}"
   }
 }

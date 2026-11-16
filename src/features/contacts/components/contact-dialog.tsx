@@ -89,7 +89,7 @@ export function ContactDialog({
         subtitle={t("contractSubtitle")}
         src={applicationContractUrl(applicationId)}
         kind="pdf"
-        fileName={`contrat_${name.replaceAll(/\s+/g, "_")}.pdf`}
+        fileName={t("contractFile", { name: name.replaceAll(/\s+/g, "_") })}
         unavailable={t("contractUnavailable")}
       />
     )}

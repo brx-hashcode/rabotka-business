@@ -5,11 +5,16 @@ import { useTranslations } from "next-intl";
 
 import { Textarea } from "#/components/ui/textarea";
 import { listMessageTemplates, messageTemplatesKey } from "#/lib/api/message-templates-controller";
+import { contentMessages } from "#/i18n/content";
 import { cn } from "#/lib/utils";
+import { useOfferLanguage } from "../offer-language";
 
-/** Ready words for a refusal while the team's own templates load (offers.refusal.templates; the server offers the same). */
+/**
+ * Ready words for a refusal (offers.refusal.templates), in the offer's
+ * language: the candidate reads them, so they follow the job, not the screen.
+ */
 export function useDefaultRefusals(): { label: string; text: string }[] {
-  return useTranslations("offers.refusal").raw("templates") as { label: string; text: string }[];
+  return contentMessages(useOfferLanguage()).offers.raw("refusal.templates") as { label: string; text: string }[];
 }
 
 /**
@@ -57,8 +62,11 @@ export function RefusalMessageField({ value, onChange }: Readonly<{ value: strin
 export function useRefusalTemplates(): { label: string; text: string }[] {
   const { data } = useQuery({ queryKey: messageTemplatesKey, queryFn: listMessageTemplates, staleTime: 60_000 });
   const defaults = useDefaultRefusals();
+  const language = useOfferLanguage();
   if (!data) return defaults;
   const own = data.templates.filter((t) => t.kind === "REFUSAL").map((t) => ({ label: t.title, text: t.body }));
   if (own.length > 0) return own;
+  // The server's ready-made ones are French: for an offer in another language, ours.
+  if (language !== "fr") return defaults;
   return data.suggested.filter((t) => t.kind === "REFUSAL").map((t) => ({ label: t.title, text: t.body }));
 }

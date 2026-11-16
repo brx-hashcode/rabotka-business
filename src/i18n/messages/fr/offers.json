@@ -613,5 +613,17 @@
     "publish": "Publier",
     "connectFailed": "La connexion à LinkedIn n'a pas pu commencer. Réessayez dans un instant.",
     "connectError": "La connexion à LinkedIn n'a pas abouti. Réessayez."
+  },
+  "linkedinPost": {
+    "remote": "Télétravail",
+    "missionOn": "Mission le {date}",
+    "applyUntil": "Candidatures jusqu'au {date}",
+    "hiring": "{company} recrute : {title}",
+    "weHire": "Nous recrutons : {title}",
+    "apply": "Postulez en ligne, sans créer de compte : {url}",
+    "tags": [
+      "recrutement",
+      "emploi"
+    ]
   }
 }

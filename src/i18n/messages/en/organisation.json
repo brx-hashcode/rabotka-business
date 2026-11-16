@@ -19,7 +19,7 @@
     "replaceTitle": "Some documents need replacing",
     "replaceText": "Send a new version of the refused documents so the verification can continue.",
     "pendingTitle": "Verification in progress",
-    "pendingText": "Our team is reviewing your documents. You will be told by email and in your workspace."
+    "pendingText": "Our team is reviewing your documents. You will be notified by email and in your workspace."
   },
   "owner": {
     "title": "Account holder",

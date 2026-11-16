@@ -576,6 +576,8 @@ export type InterviewReport = {
 /** An interview's video call, inside the app on our own Jitsi, or the public Jitsi room without its secret. */
 export type VisioJoin = {
   jobTitle: string;
+  /** The language the interview is held in, as the job tells; absent from an older server. */
+  language?: "fr" | "en";
   businessName: string;
   candidateName: string;
   startsAt: string;

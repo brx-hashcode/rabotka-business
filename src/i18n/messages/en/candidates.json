@@ -90,7 +90,8 @@
     "seeContract": "View the contract",
     "contractTitle": "{name}'s contract",
     "contractSubtitle": "Service agreement",
-    "contractUnavailable": "The contract couldn't be prepared. Try again in a moment."
+    "contractUnavailable": "The contract couldn't be prepared. Try again in a moment.",
+    "contractFile": "contract_{name}.pdf"
   },
   "search": {
     "title": "Find profiles",

@@ -133,6 +133,7 @@
     "staffRegisterHint": "Les personnes recrutées, en Excel",
     "acpe": "Offres à déclarer (ACPE)",
     "acpeHint": "Toutes vos offres, prêtes à déclarer",
-    "higherPlans": "Inclus dans les formules supérieures"
+    "higherPlans": "Inclus dans les formules supérieures",
+    "sheetFile": "rapport-recrutement.{ext}"
   }
 }

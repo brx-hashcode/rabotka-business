@@ -43,7 +43,7 @@ export function ReportExportMenu({ days, onOpenPdf }: Readonly<{ days: StatsPeri
   const hrExports = !!subscription?.entitlements.hrExports;
 
   async function download(ext: "xlsx" | "csv") {
-    await fetchFile(`${appConfig.apiUrl}/business/me/report.${ext}?days=${days}`, `rapport-recrutement.${ext}`);
+    await fetchFile(`${appConfig.apiUrl}/business/me/report.${ext}?days=${days}`, t("sheetFile", { ext }));
   }
 
   function hrExport(path: string, name: string) {

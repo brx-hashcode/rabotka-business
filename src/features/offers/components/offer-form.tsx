@@ -22,6 +22,7 @@ import { offerWriterOutOfReach, PACKS_HREF } from "#/features/subscription/packs
 import { usePackOnSale } from "#/features/subscription/use-packs";
 import { getJobCategories, type EmploymentType, type Offer, type OfferInput, type PaymentFlow } from "#/lib/api/offer-controller";
 import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import { contentLocale } from "#/i18n/content";
 import type { Translator } from "#/i18n/translator";
 import { cn } from "#/lib/utils";
 import { AVAILABLE_EMPLOYMENT_TYPES, EMPLOYMENT_TYPES, isDatedMission, PAYMENT_FLOWS } from "../offer-labels";
@@ -200,6 +201,9 @@ export function OfferForm({
   const remote = useWatch({ control: form.control, name: "isRemote" });
   const country = useWatch({ control: form.control, name: "countryCode" });
   const city = useWatch({ control: form.control, name: "city" });
+  // What the offer is written in: its ready-made questions follow it.
+  const title = useWatch({ control: form.control, name: "title" });
+  const description = useWatch({ control: form.control, name: "description" });
   const amount = useWatch({ control: form.control, name: "amount" });
   const { data: countries } = useCountries();
   const { data: cities } = useCities(country);
@@ -480,7 +484,7 @@ export function OfferForm({
               name="questions"
               render={({ field }) => (
                 <FormItem>
-                  <OfferQuestionsField value={field.value} onChange={field.onChange} />
+                  <OfferQuestionsField value={field.value} onChange={field.onChange} language={contentLocale([description, title], locale)} />
                   <FormMessage />
                 </FormItem>
               )}

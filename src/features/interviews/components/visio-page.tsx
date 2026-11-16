@@ -102,7 +102,8 @@ function Call({
   onGone: () => void;
   onApi?: (api: CallApi) => void;
 }>) {
-  // The call speaks the page's language (Jitsi's own buttons and its transcription).
+  // Jitsi's own buttons speak the page's language; the transcription is in the
+  // interview's (the job's), the same for the recruiter and the candidate.
   const locale = useLocale() as Locale;
   // Hidden by the page (« Terminer », a click outside Jitsi): gone at the latest after the grace.
   useEffect(() => {
@@ -144,6 +145,7 @@ function Call({
       lang={locale}
       configOverwrite={{
         subject: v.jobTitle,
+        transcription: { useAppLanguage: false, preferredLanguage: INTL_LOCALE[v.language ?? "fr"] },
         prejoinConfig: { enabled: true, hideExtraJoinButtons: ["no-audio", "by-phone"] },
         toolbarButtons: TOOLBAR,
         recordings: { showPrejoinWarning: false },

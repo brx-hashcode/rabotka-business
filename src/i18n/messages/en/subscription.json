@@ -50,7 +50,7 @@
     "drafts": "AI drafts",
     "recruiters": "Recruiters",
     "reviewers": "Reviewers",
-    "teamHint": "The members of your team, invited or active. Removing someone frees their place. <link>Manage the team</link>",
+    "teamHint": "The members of your team, invited or active. Removing someone frees their seat. <link>Manage the team</link>",
     "unlimited": "{used} · unlimited",
     "fromPacks": "+ {count} from your packs"
   },

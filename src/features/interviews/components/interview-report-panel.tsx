@@ -347,7 +347,7 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
           subtitle={`${candidateName} · ${jobTitle}`}
           src={`${appConfig.apiUrl}/business/me/interviews/${encodeURIComponent(interviewId)}/report.pdf?v=${encodeURIComponent(saved?.updatedAt ?? "")}`}
           kind="pdf"
-          fileName={tr("file", { name: slug(candidateName) })}
+          fileName={tr("file", { name: slug(candidateName) || tr("candidateSlug") })}
           unavailable={tr("docFailed")}
         />
       )}
@@ -805,7 +805,7 @@ function slug(name: string): string {
       .replace(/[\u0300-\u036f]/g, "")
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "") || "candidat"
+      .replace(/^-|-$/g, "")
   );
 }
 

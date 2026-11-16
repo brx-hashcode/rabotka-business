@@ -1,5 +1,7 @@
 "use client";
 
+import type { Locale } from "#/i18n/config";
+import { contentLocale, contentMessages } from "#/i18n/content";
 import { useTranslations } from "next-intl";
 import { useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import Link from "next/link";
@@ -271,6 +273,8 @@ function Editor({ business, slug }: Readonly<{ business: MyBusiness; slug: strin
 
           <BenefitsSection
             benefits={data.benefits}
+            // The public page is French until the business chooses its language: French unless it presents itself in another.
+            language={contentLocale([business.description])}
             pending={busy === "benefits"}
             onChange={(benefits) => savePage.mutate({ busy: "benefits", run: () => setCareersBenefits(benefits) })}
           />
@@ -593,12 +597,19 @@ function BenefitsSection({
   benefits,
   pending,
   onChange,
-}: Readonly<{ benefits: string[]; pending: boolean; onChange: (next: string[]) => void }>) {
+  language,
+}: Readonly<{
+  benefits: string[];
+  pending: boolean;
+  onChange: (next: string[]) => void;
+  /** The language the business presents itself in: the ideas are added to its public page. */
+  language: Locale;
+}>) {
   const t = useTranslations("careersEditor");
   const [text, setText] = useState("");
   const full = benefits.length >= MAX_BENEFITS;
   const has = (b: string) => benefits.some((x) => x.toLowerCase() === b.toLowerCase());
-  const ideas = (t.raw("benefits.ideas") as string[]).filter((b) => !has(b));
+  const ideas = (contentMessages(language).careersEditor.raw("benefits.ideas") as string[]).filter((b) => !has(b));
 
   const add = (value: string) => {
     const b = value.trim();

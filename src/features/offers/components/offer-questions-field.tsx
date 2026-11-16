@@ -14,6 +14,9 @@ import {
 
 import { useTranslations } from "next-intl";
 
+import type { Locale } from "#/i18n/config";
+import { contentMessages } from "#/i18n/content";
+
 import { Input } from "#/components/ui/input";
 import type { OfferQuestion, QuestionKind } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
@@ -168,11 +171,17 @@ function Threshold({ q, onChange }: Readonly<{ q: OfferQuestion; onChange: (q: O
 export function OfferQuestionsField({
   value,
   onChange,
-}: Readonly<{ value: OfferQuestion[]; onChange: (questions: OfferQuestion[]) => void }>) {
+  language,
+}: Readonly<{
+  value: OfferQuestion[];
+  onChange: (questions: OfferQuestion[]) => void;
+  /** The offer's language: candidates read the questions, so the ready ones follow it. */
+  language: Locale;
+}>) {
   const set = (i: number, q: OfferQuestion) => onChange(value.map((x, j) => (j === i ? q : x)));
   const t = useTranslations("offers.questionsField");
   const tq = useTranslations("offers.questions");
-  const unused = suggestions(tq.raw("suggestions") as { label: string; options: string[] }[]).filter(
+  const unused = suggestions(contentMessages(language).offers.raw("questions.suggestions") as { label: string; options: string[] }[]).filter(
     (s) => !value.some((q) => q.label.trim() === s.label),
   );
 
