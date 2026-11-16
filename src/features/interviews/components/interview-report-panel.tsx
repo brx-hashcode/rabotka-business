@@ -122,7 +122,8 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
   const transcript = useQuery({
     queryKey: interviewTranscriptKey(interviewId),
     queryFn: () => getInterviewTranscript(interviewId),
-    refetchInterval: (q) => (q.state.data?.transcribe ? 8000 : false),
+    // New sentences are pushed (interview:transcript); this only covers a lost socket.
+    refetchInterval: (q) => (q.state.data?.transcribe ? 15000 : false),
   });
   const lines = transcript.data?.lines ?? [];
   const spoken = lines.reduce((n, l) => n + l.text.length, 0);
@@ -180,8 +181,6 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
           {tab === "transcript" ? (
             <Conversation
               turns={turns}
-              live={live}
-              consent={transcript.data?.consent ?? null}
               onAdd={(t) => {
                 setDraft(joinText(notes, `${t.speaker} : ${t.text}`).slice(0, MAX_NOTES));
                 toast.success("Ajouté à vos notes.");
@@ -386,11 +385,6 @@ const SPEAKER_TONE: Record<Turn["role"], string> = {
   GUEST: "text-chip-violet-foreground",
 };
 
-const CONSENT_LINE: Record<string, string> = {
-  ACCEPTED: "Le candidat a accepté la transcription.",
-  DECLINED: "Le candidat a refusé : seule la voix de votre équipe est transcrite.",
-};
-
 function TabButton({ on, onClick, label, count }: Readonly<{ on: boolean; onClick: () => void; label: string; count?: number }>) {
   return (
     <button
@@ -411,10 +405,8 @@ function TabButton({ on, onClick, label, count }: Readonly<{ on: boolean; onClic
  */
 function Conversation({
   turns,
-  live,
-  consent,
   onAdd,
-}: Readonly<{ turns: Turn[]; live: boolean; consent: string | null; onAdd: (t: Turn) => void }>) {
+}: Readonly<{ turns: Turn[]; onAdd: (t: Turn) => void }>) {
   const box = useRef<HTMLOListElement>(null);
   const pinned = useRef(true);
   const count = turns.length;
@@ -462,8 +454,7 @@ function Conversation({
         ))}
       </ol>
       <p className="px-4 pb-3 text-muted-foreground text-xs">
-        Reconnue par le navigateur de chacun : elle peut contenir des erreurs.
-        {consent ? ` ${CONSENT_LINE[consent] ?? ""}` : live ? " Le candidat n'a pas encore répondu." : ""}
+        Transcrite automatiquement pendant la visio : elle peut contenir des erreurs.
       </p>
     </>
   );
@@ -692,7 +683,7 @@ function SendDialog({
   );
 }
 
-function joinText(before: string, added: string): string {
+export function joinText(before: string, added: string): string {
   const a = added.trim();
   if (!a) return before;
   if (!before.trim()) return a.charAt(0).toUpperCase() + a.slice(1);
@@ -711,7 +702,7 @@ const TICK = 50;
  * right to left, as tall as the microphone's level, fading out on the left.
  * Drawn on a canvas each frame, with no render per frame.
  */
-function LiveWaveform({ analyser }: Readonly<{ analyser: AnalyserNode | null }>) {
+export function LiveWaveform({ analyser }: Readonly<{ analyser: AnalyserNode | null }>) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const canvas = ref.current;
@@ -783,7 +774,7 @@ function LiveWaveform({ analyser }: Readonly<{ analyser: AnalyserNode | null }>)
 }
 
 /** How long the dictation has been running, as 0:42. */
-function Elapsed({ since }: Readonly<{ since: number }>) {
+export function Elapsed({ since }: Readonly<{ since: number }>) {
   const [now, setNow] = useState(since);
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 500);

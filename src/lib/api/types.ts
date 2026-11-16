@@ -557,13 +557,15 @@ export type InterviewReport = {
   writing?: boolean;
   /** Why the last writing failed, until the next one. */
   writingError?: string | null;
+  /** After the call: when it writes itself (« Rédiger maintenant » runs it now). */
+  scheduledFor?: string | null;
   generatedAt: string | null;
   sentAt: string | null;
   updatedAt: string | null;
 };
 
 /** What the candidate sees behind their private link. */
-/** An interview's video call, inside the app (8x8 JaaS), or the public Jitsi room without its keys. */
+/** An interview's video call, inside the app on our own Jitsi, or the public Jitsi room without its secret. */
 export type VisioJoin = {
   jobTitle: string;
   businessName: string;
@@ -578,7 +580,8 @@ export type VisioJoin = {
   interviewId?: string;
   businessLogoUrl?: string | null;
 } & (
-  | { provider: "jaas"; appId: string; roomName: string; jwt: string }
+  /** Our own Jitsi (visio.hashcode.digital; localhost:8000 in development). */
+  | { provider: "hosted"; domain: string; roomName: string; jwt: string }
   | { provider: "jitsi"; url: string }
   /** A guest's link before it opens (the day before): when, and no token yet. */
   | { provider: "waiting"; opensAt: string }

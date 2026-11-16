@@ -14,6 +14,12 @@ export function useDisplayCurrency(): {
   currency: DisplayCurrency;
   /** An XAF price, said in that currency. */
   price: (xaf: number) => string;
+  /**
+   * The currency is known: the organisation is loaded and, outside the CFA
+   * zone, its rate is in (or failed, FCFA then). Until then a price would
+   * show in FCFA and jump: draw a skeleton instead.
+   */
+  ready: boolean;
 } {
   const business = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
   const country = business.data?.countryCode ?? null;
@@ -24,5 +30,6 @@ export function useDisplayCurrency(): {
     staleTime: 30 * 60 * 1000,
   });
   const currency = rate.data ?? XAF;
-  return { currency, price: (xaf) => formatPrice(xaf, currency) };
+  const ready = !business.isPending && (!country || !rate.isPending);
+  return { currency, price: (xaf) => formatPrice(xaf, currency), ready };
 }
