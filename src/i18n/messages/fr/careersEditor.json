@@ -1,0 +1,85 @@
+{
+  "title": "Page carrières",
+  "subtitle": "La page publique de votre organisation : vos offres ouvertes, vos photos et ce que vous offrez.",
+  "seePage": "Voir la page",
+  "notBusiness": "Ce compte n'est pas un compte entreprise.",
+  "lockedTitle": "Votre page s'ouvre dès que votre organisation est vérifiée.",
+  "lockedText": "Vous pourrez alors y ajouter une photo de couverture, votre présentation, des photos et vos avantages, et partager son lien.",
+  "lockedLink": "Voir où en est la vérification",
+  "saveFailed": "Vos modifications n'ont pas pu être enregistrées.",
+  "updateFailed": "La page n'a pas pu être mise à jour.",
+  "loadFailed": "Votre page carrières n'a pas pu être chargée.",
+  "photoTooBig": "Cette photo dépasse 8 Mo.",
+  "steps": {
+    "logo": "Logo",
+    "cover": "Couverture",
+    "presentation": "Présentation",
+    "photos": "Photos",
+    "benefits": "Avantages"
+  },
+  "view": "Affichage",
+  "edit": "Modifier",
+  "preview": "Aperçu",
+  "previewHint": "Ce que voient les candidats.",
+  "cancel": "Annuler",
+  "save": "Enregistrer",
+  "add": "Ajouter",
+  "address": {
+    "title": "Adresse de la page",
+    "hint": "Partagez-la où sont vos candidats : WhatsApp, Facebook, affiche, site web.",
+    "copied": "Lien copié.",
+    "copyFailed": "Le lien n'a pas pu être copié.",
+    "copy": "Copier"
+  },
+  "distribute": {
+    "on": "Vos offres sont diffusées.",
+    "off": "Vos offres ne sont plus diffusées.",
+    "label": "Diffuser mes offres sur Google et les sites d'emploi",
+    "text": "Vos offres ouvertes apparaissent dans les recherches d'emploi. Les candidatures arrivent ici, comme les autres."
+  },
+  "progress": {
+    "completeTitle": "Votre page est complète",
+    "title": "Complétez votre page",
+    "completeText": "Les candidats voient qui vous êtes avant de postuler.",
+    "text": "Une page complète inspire confiance et attire plus de candidats."
+  },
+  "cover": {
+    "title": "Photo de couverture",
+    "hint": "En haut de la page, au format large : vos locaux, votre équipe, votre chantier.",
+    "change": "Changer",
+    "remove": "Retirer la photo de couverture",
+    "add": "Ajouter une photo de couverture",
+    "format": "Format large · JPG, PNG ou WEBP · 8 Mo au plus"
+  },
+  "presentation": {
+    "title": "Présentation",
+    "hint": "Activité, missions, valeurs : ce que les candidats doivent savoir de vous.",
+    "placeholder": "Ex. : Restaurant familial à Brazzaville depuis 2012, nous servons 300 couverts par jour…",
+    "saved": "Présentation enregistrée.",
+    "empty": "Votre présentation apparaîtra ici."
+  },
+  "photos": {
+    "title": "Photos",
+    "hint": "Le quotidien chez vous : l'équipe au travail, les lieux, un événement.",
+    "remove": "Retirer la photo {n}",
+    "removing": "Suppression…"
+  },
+  "benefits": {
+    "title": "Avantages",
+    "hint": "Ce que vous offrez en plus du salaire.",
+    "already": "Cet avantage est déjà sur votre page.",
+    "remove": "Retirer {name}",
+    "placeholder": "Un avantage, par exemple : prime de fin d'année",
+    "ideasTitle": "Idées",
+    "ideas": [
+      "Repas offert",
+      "Transport",
+      "Formation",
+      "Assurance santé",
+      "Primes",
+      "Horaires flexibles",
+      "Tenue fournie",
+      "Télétravail"
+    ]
+  }
+}

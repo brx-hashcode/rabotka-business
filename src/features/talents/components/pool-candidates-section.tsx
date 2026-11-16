@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import Link from "next/link";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -15,7 +16,8 @@ import { Textarea } from "#/components/ui/textarea";
 import { VerdictChip } from "#/features/cv-screening/components/cv-bits";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { INTL_LOCALE } from "#/i18n/config";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { listOffers, offersKey } from "#/lib/api/offer-controller";
 import {
   dropPoolCandidate,
@@ -28,25 +30,14 @@ import {
 } from "#/lib/api/talent-controller";
 import { cn, getInitials } from "#/lib/utils";
 
-const dayMonthYear = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-
-const COPY: Record<PoolKind, { empty: string; hint: string }> = {
-  external: {
-    empty: "Aucune candidature gardée pour l'instant.",
-    hint: "Les candidats de votre page carrières qui ont accepté d'être gardés pour d'autres postes, le temps de leur accord.",
-  },
-  cv: {
-    empty: "Aucun CV analysé n'est conservé en ce moment.",
-    hint: "Les CV de vos « Analyse de CV », tant que votre formule les conserve.",
-  },
-};
-
 /**
  * « Mes profils » beyond Rabotka: careers-page candidates kept with their
  * consent, and the CVs the business analysed. Searched by what their CV
  * says; kept with a note and tags; invited by e-mail to an open offer.
  */
 export function PoolCandidatesSection({ source }: Readonly<{ source: PoolKind }>) {
+  const t = useTranslations("talents.pool");
+  const friendlyError = useFriendlyError();
   const [q, setQ] = useState("");
   const [query, setQuery] = useState("");
   const [keptOnly, setKeptOnly] = useState(false);
@@ -60,7 +51,7 @@ export function PoolCandidatesSection({ source }: Readonly<{ source: PoolKind }>
 
   return (
     <section className="space-y-5 rounded-3xl bg-card p-6">
-      <p className="text-muted-foreground text-sm">{COPY[source].hint}</p>
+      <p className="text-muted-foreground text-sm">{t(`${source}.hint`)}</p>
       <form
         className="flex flex-wrap items-center gap-3"
         onSubmit={(e) => {
@@ -74,12 +65,12 @@ export function PoolCandidatesSection({ source }: Readonly<{ source: PoolKind }>
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onBlur={() => setQuery(q.trim())}
-            placeholder="Un métier, une compétence, une ville, un nom… dans le CV"
+            placeholder={t("placeholder")}
             className="h-11 rounded-full border-0 bg-page pl-10 shadow-none focus-visible:ring-2 focus-visible:ring-ink/10"
           />
         </div>
         <button type="submit" className="h-11 rounded-full bg-ink px-5 font-medium text-sm text-white hover:bg-ink/90">
-          Rechercher
+          {t("search")}
         </button>
         <button
           type="button"
@@ -90,7 +81,7 @@ export function PoolCandidatesSection({ source }: Readonly<{ source: PoolKind }>
             keptOnly ? "bg-selected text-selected-foreground" : "bg-page text-muted-foreground hover:text-foreground",
           )}
         >
-          Gardés seulement
+          {t("keptOnly")}
         </button>
       </form>
 
@@ -101,10 +92,10 @@ export function PoolCandidatesSection({ source }: Readonly<{ source: PoolKind }>
           ))}
         </div>
       ) : results.isError ? (
-        <p className="rounded-2xl bg-page p-4 text-muted-foreground text-sm">{friendlyError(results.error, "La recherche n'a pas abouti.")}</p>
+        <p className="rounded-2xl bg-page p-4 text-muted-foreground text-sm">{friendlyError(results.error, t("failed"))}</p>
       ) : items.length === 0 ? (
         <p className="rounded-2xl bg-page p-6 text-center text-muted-foreground text-sm">
-          {query ? `Aucun résultat pour « ${query} ».` : COPY[source].empty}
+          {query ? t("noResult", { query }) : t(`${source}.empty`)}
         </p>
       ) : (
         <>
@@ -121,7 +112,7 @@ export function PoolCandidatesSection({ source }: Readonly<{ source: PoolKind }>
                 onClick={() => void results.fetchNextPage()}
                 className="h-10 rounded-full bg-page px-5 font-medium text-sm hover:bg-page/70 disabled:opacity-50"
               >
-                Voir plus
+                {t("more")}
               </button>
             </div>
           )}
@@ -133,6 +124,10 @@ export function PoolCandidatesSection({ source }: Readonly<{ source: PoolKind }>
 
 function PoolCard({ candidate: c }: Readonly<{ candidate: PoolCandidate }>) {
   const queryClient = useQueryClient();
+  const t = useTranslations("talents.pool");
+  const locale = useLocale();
+  const friendlyError = useFriendlyError();
+  const dayMonthYear = (iso: string) => new Date(iso).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long", year: "numeric" });
   const hire = canHire(useMember().role);
   const [noting, setNoting] = useState(false);
   const [inviting, setInviting] = useState(false);
@@ -141,9 +136,9 @@ function PoolCard({ candidate: c }: Readonly<{ candidate: PoolCandidate }>) {
     mutationFn: () => (c.kept ? dropPoolCandidate(c.kind, c.id) : keepPoolCandidate(c.kind, c.id, { note: c.note, tags: c.tags })),
     onSuccess: () => {
       refresh();
-      toast.success(c.kept ? `${c.name} n'est plus gardé.` : `${c.name} est gardé dans Mes profils.`);
+      toast.success(c.kept ? t("dropped", { name: c.name }) : t("keptToast", { name: c.name }));
     },
-    onError: (err) => toast.error(friendlyError(err, "Le profil n'a pas pu être gardé.")),
+    onError: (err) => toast.error(friendlyError(err, t("keepFailed"))),
   });
 
   return (
@@ -164,8 +159,8 @@ function PoolCard({ candidate: c }: Readonly<{ candidate: PoolCandidate }>) {
             type="button"
             disabled={toggle.isPending}
             onClick={() => toggle.mutate()}
-            aria-label={c.kept ? `Ne plus garder ${c.name}` : `Garder ${c.name}`}
-            title={c.kept ? "Gardé : cliquer pour ne plus le garder" : "Garder dans Mes profils"}
+            aria-label={c.kept ? t("ariaDrop", { name: c.name }) : t("ariaKeep", { name: c.name })}
+            title={c.kept ? t("titleKept") : t("titleKeep")}
             className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card hover:bg-card/70 disabled:opacity-50"
           >
             {c.kept ? <IconBookmarkFilled className="size-4 text-whatsapp-dark" /> : <IconBookmark className="size-4" />}
@@ -176,15 +171,18 @@ function PoolCard({ candidate: c }: Readonly<{ candidate: PoolCandidate }>) {
       {c.summary && <p className="line-clamp-2 text-muted-foreground text-sm">{c.summary}</p>}
 
       <p className="text-muted-foreground text-xs">
-        {c.kind === "external" ? "A postulé pour " : "Analysé pour "}
-        {c.appliedFor.id ? (
-          <Link href={`/espace/offres/${c.appliedFor.id}`} className="font-medium text-foreground hover:underline">
-            {c.appliedFor.title}
-          </Link>
-        ) : (
-          <span className="font-medium text-foreground">{c.appliedFor.title}</span>
-        )}
-        {c.keptUntil && ` · ${c.kind === "external" ? "gardé" : "conservé"} jusqu'au ${dayMonthYear(c.keptUntil)}`}
+        {t.rich(`${c.kind}.origin`, {
+          title: c.appliedFor.title,
+          until: c.keptUntil ? dayMonthYear(c.keptUntil) : "none",
+          o: (chunks) =>
+            c.appliedFor.id ? (
+              <Link href={`/espace/offres/${c.appliedFor.id}`} className="font-medium text-foreground hover:underline">
+                {chunks}
+              </Link>
+            ) : (
+              <span className="font-medium text-foreground">{chunks}</span>
+            ),
+        })}
       </p>
 
       {(c.note || c.tags.length > 0) && (
@@ -192,9 +190,9 @@ function PoolCard({ candidate: c }: Readonly<{ candidate: PoolCandidate }>) {
           {c.note && <p className="whitespace-pre-line">{c.note}</p>}
           {c.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {c.tags.map((t) => (
-                <span key={t} className="rounded-full bg-page px-2 py-0.5 font-medium text-xs">
-                  {t}
+              {c.tags.map((x) => (
+                <span key={x} className="rounded-full bg-page px-2 py-0.5 font-medium text-xs">
+                  {x}
                 </span>
               ))}
             </div>
@@ -206,13 +204,13 @@ function PoolCard({ candidate: c }: Readonly<{ candidate: PoolCandidate }>) {
         {c.email && (
           <a href={`mailto:${c.email}`} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-card px-3 font-medium text-xs hover:bg-card/70">
             <IconMail className="size-3.5" />
-            E-mail
+            {t("email")}
           </a>
         )}
         {c.phone && (
           <a href={`tel:${c.phone.replace(/\s/g, "")}`} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-card px-3 font-medium text-xs hover:bg-card/70">
             <IconPhone className="size-3.5" />
-            Appeler
+            {t("call")}
           </a>
         )}
         {hire && (
@@ -223,7 +221,7 @@ function PoolCard({ candidate: c }: Readonly<{ candidate: PoolCandidate }>) {
               className="inline-flex h-9 items-center gap-1.5 rounded-full bg-card px-3 font-medium text-xs hover:bg-card/70"
             >
               <IconNote className="size-3.5" />
-              Note et mots-clés
+              {t("noteAndTags")}
             </button>
             {c.email && (
               <button
@@ -232,7 +230,7 @@ function PoolCard({ candidate: c }: Readonly<{ candidate: PoolCandidate }>) {
                 className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-full bg-ink px-3.5 font-medium text-white text-xs hover:bg-ink/90"
               >
                 <IconSend className="size-3.5" />
-                Inviter à postuler
+                {t("inviteApply")}
               </button>
             )}
           </>
@@ -246,29 +244,31 @@ function PoolCard({ candidate: c }: Readonly<{ candidate: PoolCandidate }>) {
 }
 
 function PoolNoteDialog({ candidate: c, onClose, onSaved }: Readonly<{ candidate: PoolCandidate; onClose: () => void; onSaved: () => void }>) {
+  const t = useTranslations("talents.pool");
+  const friendlyError = useFriendlyError();
   const [note, setNote] = useState(c.note ?? "");
   const [tags, setTags] = useState(c.tags.join(", "));
   const save = useMutation({
     mutationFn: () =>
       keepPoolCandidate(c.kind, c.id, {
         note: note.trim() || null,
-        tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
+        tags: tags.split(",").map((x) => x.trim()).filter(Boolean),
       }),
     onSuccess: () => {
       onSaved();
       onClose();
-      toast.success(`${c.name} est gardé, avec votre note.`);
+      toast.success(t("noteSaved", { name: c.name }));
     },
-    onError: (err) => toast.error(friendlyError(err, "La note n'a pas pu être enregistrée.")),
+    onError: (err) => toast.error(friendlyError(err, t("noteFailed"))),
   });
   return (
     <ActionDialog
       open
       onOpenChange={(o) => !o && onClose()}
       icon={<IconNote className="size-5" />}
-      title={`Note sur ${c.name}`}
-      description="Visible de votre équipe seulement. Enregistrer garde aussi le profil."
-      confirmLabel="Enregistrer"
+      title={t("noteTitle", { name: c.name })}
+      description={t("noteDescription")}
+      confirmLabel={t("save")}
       pending={save.isPending}
       onConfirm={() => save.mutate()}
     >
@@ -278,13 +278,13 @@ function PoolNoteDialog({ candidate: c, onClose, onSaved }: Readonly<{ candidate
           onChange={(e) => setNote(e.target.value)}
           maxLength={1000}
           rows={4}
-          placeholder="Ce que vous avez retenu de ce profil"
+          placeholder={t("notePlaceholder")}
           className="rounded-xl border-0 bg-page px-4 py-3 shadow-none"
         />
         <Input
           value={tags}
           onChange={(e) => setTags(e.target.value)}
-          placeholder="Mots-clés, séparés par des virgules"
+          placeholder={t("tagsPlaceholder")}
           className="h-11 rounded-xl border-0 bg-page px-4 shadow-none"
         />
       </div>
@@ -297,6 +297,8 @@ function PoolInviteDialog({
   open,
   onOpenChange,
 }: Readonly<{ candidate: PoolCandidate; open: boolean; onOpenChange: (o: boolean) => void }>) {
+  const t = useTranslations("talents.pool");
+  const friendlyError = useFriendlyError();
   const offers = useQuery({
     queryKey: [...offersKey, "list", "open"],
     queryFn: () => listOffers({ statuses: ["ACTIVE", "PARTIALLY_FILLED"] }),
@@ -308,9 +310,9 @@ function PoolInviteDialog({
     onSuccess: () => {
       onOpenChange(false);
       setOfferId("");
-      toast.success(`Invitation envoyée à ${c.name}.`);
+      toast.success(t("invited", { name: c.name }));
     },
-    onError: (err) => toast.error(friendlyError(err, "L'invitation n'a pas pu être envoyée.")),
+    onError: (err) => toast.error(friendlyError(err, t("inviteFailed"))),
   });
   const list = (offers.data?.items ?? []).filter((o) => o.id !== c.appliedFor.id);
   return (
@@ -318,9 +320,9 @@ function PoolInviteDialog({
       open={open}
       onOpenChange={onOpenChange}
       icon={<IconSend className="size-5" />}
-      title={`Inviter ${c.name} à postuler`}
-      description="Un e-mail avec le lien de l'offre sur votre page carrières : postuler prend quelques minutes."
-      confirmLabel="Envoyer l'invitation"
+      title={t("inviteTitle", { name: c.name })}
+      description={t("inviteDescription")}
+      confirmLabel={t("sendInvite")}
       confirmDisabled={!offerId}
       pending={invite.isPending}
       onConfirm={() => invite.mutate()}
@@ -329,15 +331,15 @@ function PoolInviteDialog({
         <Skeleton className="h-11 rounded-full" />
       ) : list.length === 0 ? (
         <p className="rounded-2xl bg-page p-4 text-muted-foreground text-sm">
-          Aucune autre offre en cours.{" "}
+          {t("noOtherOffer")}{" "}
           <Link href="/espace/offres/nouvelle" className="font-medium text-whatsapp-dark underline">
-            Publier une offre
+            {t("publish")}
           </Link>
         </p>
       ) : (
         <Select value={offerId} onValueChange={setOfferId}>
-          <SelectTrigger aria-label="Offre" className="h-11 w-full rounded-full border-0 bg-page px-4 font-medium shadow-none dark:bg-page">
-            <SelectValue placeholder="Choisir une offre en cours" />
+          <SelectTrigger aria-label={t("offerLabel")} className="h-11 w-full rounded-full border-0 bg-page px-4 font-medium shadow-none dark:bg-page">
+            <SelectValue placeholder={t("chooseOffer")} />
           </SelectTrigger>
           <SelectContent position="popper" sideOffset={8} className="z-[60] max-h-72 w-[var(--radix-select-trigger-width)]">
             {list.map((o) => (

@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -20,7 +21,8 @@ import { toast } from "sonner";
 import { Bone } from "#/components/page-skeletons";
 import { BackLink } from "#/components/back-link";
 import { getMyPacks, getMySubscription, myBusinessKey, myPacksKey, mySubscriptionKey } from "#/lib/api/business-controller";
-import { friendlyError } from "#/lib/api/friendly-error";
+import type { Translator } from "#/i18n/translator";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { getPaymentByToken, getPaymentGateways, initiatePayment } from "#/lib/api/payment-controller";
 import type { BusinessPlan, PaymentOperator } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
@@ -46,16 +48,17 @@ function readDescription(description: string | null | undefined) {
 }
 
 /** What a plan brings, said as on the Abonnement page. */
-function planLines(p: BusinessPlan): string[] {
+function planLines(p: BusinessPlan, t: Translator<"subscription">): string[] {
+  const cv = cvLine(p, t);
   return [
-    p.unlocksPerPeriod === null ? "Contacts illimités" : `${p.unlocksPerPeriod} contact${p.unlocksPerPeriod > 1 ? "s" : ""} inclus`,
-    offersPerPeriodLabel(p.activeOffersLimit),
-    ...(cvLine(p) ? [cvLine(p) as string] : []),
-    ...(p.includesPreselection ? ["Recherche de profils"] : []),
-    ...(p.priorityVisibility ? ["Offres affichées en premier"] : []),
-    ...(p.linkedinPosting ? ["Publication sur LinkedIn"] : []),
-    ...(p.videoInterviews ? ["Visio dans Rabotka"] : []),
-    ...(p.hrExports ? ["Exports RH"] : []),
+    p.unlocksPerPeriod === null ? t("lines.contactsUnlimited") : t("lines.contactsIncluded", { count: p.unlocksPerPeriod }),
+    offersPerPeriodLabel(p.activeOffersLimit, t),
+    ...(cv ? [cv] : []),
+    ...(p.includesPreselection ? [t("lines.search")] : []),
+    ...(p.priorityVisibility ? [t("lines.priority")] : []),
+    ...(p.linkedinPosting ? [t("lines.linkedin")] : []),
+    ...(p.videoInterviews ? [t("lines.visio")] : []),
+    ...(p.hrExports ? [t("lines.hrExports")] : []),
   ];
 }
 
@@ -68,6 +71,10 @@ function planLines(p: BusinessPlan): string[] {
  */
 export function PayPage({ token }: Readonly<{ token: string }>) {
   const queryClient = useQueryClient();
+  const t = useTranslations("subscription.pay");
+  const ts = useTranslations("subscription");
+  const locale = useLocale();
+  const friendlyError = useFriendlyError();
   const payment = useQuery({ queryKey: ["payment", token], queryFn: () => getPaymentByToken(token), retry: false });
   const gateways = useQuery({ queryKey: ["payment-gateways"], queryFn: getPaymentGateways, staleTime: 10 * 60 * 1000 });
   const subscription = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
@@ -112,7 +119,8 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
 
   const dial = selected?.dialCode ?? current?.dialCode ?? "242";
   // The network's own prefix (MTN 06, Airtel 05 in Congo).
-  const placeholder = phonePlaceholder(selected?.code, dial);
+  const example = phonePlaceholder(selected?.code, dial);
+  const placeholder = example ?? t("numberPlaceholder");
 
   function chooseCountry(next: string) {
     if (next === country) return;
@@ -127,9 +135,9 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
   // converted in its own currency elsewhere (dollars in the DRC).
   const charge = payment.data?.prices?.find((p) => p.currency === (selected?.currency ?? "XAF"));
   const amountLabel = charge
-    ? formatMoney(charge.amount, charge.currency)
+    ? formatMoney(charge.amount, charge.currency, locale)
     : amount !== null
-      ? formatMoney(amount, "XAF")
+      ? formatMoney(amount, "XAF", locale)
       : null;
   const what = readDescription(payment.data?.description);
   /** « 100 CV à analyser » when paying a pack, else null. */
@@ -141,15 +149,11 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
     // (+242 06 …), where elsewhere it is a trunk prefix to drop.
     const number = parsePhoneNumberFromString(digits, { defaultCallingCode: dial });
     if (!number?.isValid()) {
-      setError(
-        placeholder === "Numéro"
-          ? "Saisissez un numéro de téléphone valide."
-          : `Saisissez un numéro de téléphone valide, par exemple ${placeholder}.`,
-      );
+      setError(example ? t("invalidPhoneExample", { example }) : t("invalidPhone"));
       return;
     }
     if (gateway?.requiresOperator && !selected) {
-      setError("Choisissez votre opérateur.");
+      setError(t("chooseOperator"));
       return;
     }
     setError(null);
@@ -167,7 +171,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
       setSentAt(Date.now());
       setPhase("waiting");
     } catch (err) {
-      setError(friendlyError(err, "Le paiement n'a pas pu être lancé. Réessayez."));
+      setError(friendlyError(err, t("launchFailed")));
     } finally {
       setSending(false);
     }
@@ -221,11 +225,11 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
 
   return (
     <div className="w-full space-y-6 pt-2">
-      <BackLink href="/espace/abonnement" label="Abonnement" current={"Paiement"} />
+      <BackLink href="/espace/abonnement" label={ts("page.title")} current={t("title")} />
       <div className="space-y-1.5">
-        <h1 className="font-semibold text-3xl tracking-tight">Paiement</h1>
+        <h1 className="font-semibold text-3xl tracking-tight">{t("title")}</h1>
         <p className="text-muted-foreground">
-          Réglez votre {pack ? "pack" : "formule"} par mobile money : vous validez le paiement sur votre téléphone.
+          {t("intro", { kind: pack ? "pack" : "plan" })}
         </p>
       </div>
 
@@ -233,8 +237,8 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
         <section className="mx-auto max-w-xl rounded-3xl bg-card p-6 sm:p-8">
           <Result
             tone="muted"
-            title="Ce lien de paiement n'est plus valide"
-            text="Il a peut-être déjà été utilisé. Retrouvez votre formule sur la page Abonnement."
+            title={t("invalidTitle")}
+            text={t("invalidText")}
           />
         </section>
       ) : (
@@ -257,7 +261,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
                   <div className="space-y-3">
                     <label htmlFor="pay-country" className="flex items-center gap-2 font-medium text-sm">
                       <StepNumber n={1} />
-                      Pays du numéro
+                      {t("country")}
                     </label>
                     <CountryPicker
                       id="pay-country"
@@ -268,7 +272,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
                     />
                     {payerNotCovered && (
                       <p className="text-muted-foreground text-xs">
-                        Le mobile money de votre pays n&apos;est pas encore accepté : payez avec un numéro d&apos;un des pays de la liste.
+                        {t("notCovered")}
                       </p>
                     )}
                   </div>
@@ -278,9 +282,9 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
                   <fieldset className="space-y-3">
                     <legend className="mb-3 flex items-center gap-2 font-medium text-sm">
                       <StepNumber n={covered.length > 1 ? 2 : 1} />
-                      Votre opérateur
+                      {t("operator")}
                     </legend>
-                    <div role="radiogroup" aria-label="Opérateur" className="grid grid-cols-2 gap-3">
+                    <div role="radiogroup" aria-label={t("operatorLabel")} className="grid grid-cols-2 gap-3">
                       {operators.map((o) => {
                         const on = selected?.code === o.code;
                         return (
@@ -316,7 +320,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
                 <div className="space-y-3">
                   <label htmlFor="pay-phone" className="flex items-center gap-2 font-medium text-sm">
                     <StepNumber n={(covered.length > 1 ? 1 : 0) + (operators.length > 0 ? 1 : 0) + 1} />
-                    Numéro mobile money
+                    {t("phone")}
                   </label>
                   <div className="flex h-14 items-center rounded-2xl bg-page focus-within:ring-2 focus-within:ring-whatsapp-dark">
                     <span className="flex h-full items-center gap-2 pr-3 pl-4 font-semibold text-base">
@@ -334,7 +338,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
                       className="h-full flex-1 bg-transparent px-3 text-lg tracking-wide outline-none placeholder:text-muted-foreground/60"
                     />
                   </div>
-                  <p className="text-muted-foreground text-xs">Le téléphone qui recevra la demande de validation.</p>
+                  <p className="text-muted-foreground text-xs">{t("phoneHint")}</p>
                 </div>
 
                 {error && <p className="rounded-2xl bg-destructive/8 px-4 py-3 text-destructive text-sm">{error}</p>}
@@ -351,14 +355,14 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
                     ) : (
                       <>
                         <IconLock className="size-5" />
-                        Payer {amountLabel ?? ""}
+                        {t("pay", { amount: amountLabel ?? "" })}
                       </>
                     )}
                   </button>
                   {!gateways.isLoading && !gateways.data?.active ? (
-                    <p className="text-center text-muted-foreground text-sm">Le paiement est momentanément indisponible.</p>
+                    <p className="text-center text-muted-foreground text-sm">{t("unavailable")}</p>
                   ) : (
-                    <p className="text-center text-muted-foreground text-xs">Rien n&apos;est prélevé sans votre validation sur le téléphone.</p>
+                    <p className="text-center text-muted-foreground text-xs">{t("nothingCharged")}</p>
                   )}
                 </div>
               </div>
@@ -374,16 +378,14 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
             planName={what?.planName ?? null}
             startsAt={startsAt}
             failureText={failure}
-            back={pack ? { href: PACKS_HREF, label: "Retour aux packs" } : undefined}
+            back={pack ? { href: PACKS_HREF, label: t("backToPacks") } : undefined}
             approvedText={
-              pack ? `Votre pack est ajouté : ${pack}, valables 12 mois. La facture arrive par e-mail et dans Factures.` : undefined
+              pack ? t("packApproved", { pack }) : undefined
             }
             onClose={() => {
               if (phase === "waiting") {
                 toast(
-                  pack
-                    ? "Si vous validez la demande sur votre téléphone, votre pack sera ajouté quand même."
-                    : "Si vous validez la demande sur votre téléphone, votre formule s'activera quand même.",
+                  pack ? t("closedPack") : t("closedPlan"),
                 );
               }
               setPhase(null);
@@ -449,9 +451,11 @@ function Summary({
   /** « 100 CV à analyser » when paying a pack. */
   pack: string | null;
 }>) {
+  const t = useTranslations("subscription.pay");
+  const ts = useTranslations("subscription");
   return (
     <aside className="space-y-6 rounded-3xl bg-card p-6 lg:sticky lg:top-24">
-      <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Récapitulatif</p>
+      <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("summary")}</p>
       {loading ? (
         <div className="space-y-3">
           <Bone className="h-7 w-40" />
@@ -466,17 +470,17 @@ function Summary({
             </span>
             <div className="min-w-0">
               <p className="font-semibold text-lg">
-                {pack ? "Pack Rabotka Business" : planName ? `Formule ${planName}` : (description ?? "Abonnement")}
+                {pack ? t("packName") : planName ? t("planName", { plan: planName }) : (description ?? t("fallbackName"))}
               </p>
               {pack && <p className="text-muted-foreground text-sm">{pack}</p>}
-              {period && <p className="text-muted-foreground text-sm">Abonnement {period}, renouvelable</p>}
+              {period && <p className="text-muted-foreground text-sm">{t("billing", { period })}</p>}
             </div>
           </div>
           {(plan || pack) && (
             <ul className="space-y-2 rounded-2xl bg-page p-4 text-sm">
               {(pack
-                ? ["En plus de votre formule, sans en changer", "Utilisé une fois ceux de votre formule épuisés", "Valable 12 mois"]
-                : planLines(plan as BusinessPlan)
+                ? [t("packLine1"), t("packLine2"), t("packLine3")]
+                : planLines(plan as BusinessPlan, ts)
               ).map((line) => (
                 <li key={line} className="flex items-center gap-2">
                   <IconCheck className="size-4 shrink-0 text-whatsapp-dark" />
@@ -486,25 +490,25 @@ function Summary({
             </ul>
           )}
           <div className="flex items-baseline justify-between rounded-2xl bg-page p-4">
-            <span className="font-medium">Total à payer</span>
+            <span className="font-medium">{t("total")}</span>
             <span className="font-semibold text-2xl tracking-tight">{amount ?? "—"}</span>
           </div>
         </>
       )}
       <div className="space-y-3">
-        <p className="font-medium text-sm">Et ensuite</p>
+        <p className="font-medium text-sm">{t("next")}</p>
         <ul className="space-y-2.5 text-muted-foreground text-sm">
           <li className="flex gap-2.5">
             <IconDeviceMobile className="mt-0.5 size-4 shrink-0" />
-            Vous validez la demande sur votre téléphone.
+            {t("step1")}
           </li>
           <li className="flex gap-2.5">
             <IconCircleCheckFilled className="mt-0.5 size-4 shrink-0" />
-            {pack ? "Votre pack s'ajoute aussitôt." : "Votre formule s'active aussitôt."}
+            {pack ? t("stepPack") : t("stepPlan")}
           </li>
           <li className="flex gap-2.5">
             <IconFileInvoice className="mt-0.5 size-4 shrink-0" />
-            La facture arrive par e-mail et dans Factures.
+            {t("step3")}
           </li>
         </ul>
       </div>
@@ -518,6 +522,7 @@ function Result({
   text,
   retry,
 }: Readonly<{ tone: "good" | "bad" | "muted"; title: string; text: string; retry?: () => void }>) {
+  const t = useTranslations("subscription.pay");
   const Icon = tone === "good" ? IconCircleCheckFilled : IconAlertTriangle;
   return (
     <div className="space-y-5 py-6 text-center">
@@ -538,7 +543,7 @@ function Result({
       <div className="flex flex-wrap justify-center gap-2">
         {retry && (
           <button type="button" onClick={retry} className="inline-flex h-12 items-center rounded-full bg-ink px-6 font-medium text-white hover:bg-ink/90">
-            Réessayer
+            {t("retry")}
           </button>
         )}
         <Link
@@ -548,7 +553,7 @@ function Result({
             retry ? "bg-page hover:bg-page/70" : "bg-ink text-white hover:bg-ink/90",
           )}
         >
-          {tone === "good" ? "Aller au tableau de bord" : "Voir mon abonnement"}
+          {tone === "good" ? t("toDashboard") : t("toSubscription")}
         </Link>
       </div>
     </div>

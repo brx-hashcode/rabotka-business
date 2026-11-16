@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { debounce, parseAsString, useQueryStates } from "nuqs";
@@ -13,7 +14,9 @@ import { CandidateCard } from "#/features/candidates/components/candidate-card";
 import { useCities } from "#/hooks/use-geo";
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
 import { findCandidates, getSuggestedCandidates, type CandidateFilters } from "#/lib/api/candidate-controller";
-import { friendlyError, httpStatusOf } from "#/lib/api/friendly-error";
+import { INTL_LOCALE } from "#/i18n/config";
+import { httpStatusOf } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { getJobCategories } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
 
@@ -40,6 +43,9 @@ function useDebounced<T>(value: T, ms = 350): T {
  * so an offer can open it preset and a reload keeps it.
  */
 export function SearchPage() {
+  const t = useTranslations("candidates.search");
+  const locale = useLocale();
+  const friendlyError = useFriendlyError();
   const [{ q, categoryId, city, minReliability, minRating }, setFilters] = useQueryStates({
     q: parseAsString.withDefault("").withOptions({ limitUrlUpdates: debounce(300) }),
     categoryId: parseAsString.withDefault(ANY),
@@ -84,16 +90,16 @@ export function SearchPage() {
     <div className="w-full space-y-6 pt-2">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1.5">
-          <h1 className="font-semibold text-3xl tracking-tight">Trouver des profils</h1>
-          <p className="text-muted-foreground">Des profils vérifiés, par métier, ville et fiabilité : contactez-les directement.</p>
+          <h1 className="font-semibold text-3xl tracking-tight">{t("title")}</h1>
+          <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
         {e?.plan && (
           <p className="rounded-full bg-card px-4 py-2 font-medium text-sm">
-            Contacts inclus :{" "}
-            <span className="tabular-nums">
-              {e.unlocksUsed}
-              {e.unlocksQuota === null ? "" : ` sur ${e.unlocksQuota}`}
-            </span>
+            {t.rich(e.unlocksQuota === null ? "contactsUsed" : "contactsUsedOf", {
+              used: e.unlocksUsed,
+              quota: e.unlocksQuota ?? 0,
+              n: (chunks) => <span className="tabular-nums">{chunks}</span>,
+            })}
           </p>
         )}
       </div>
@@ -103,12 +109,12 @@ export function SearchPage() {
           <span className="flex size-12 items-center justify-center rounded-2xl bg-page">
             <IconLock className="size-6 text-muted-foreground" />
           </span>
-          <p className="font-medium">La recherche de profils n&apos;est pas incluse dans votre formule</p>
+          <p className="font-medium">{t("lockedTitle")}</p>
           <p className="max-w-md text-muted-foreground text-sm">
-            Passez à une formule qui l&apos;inclut pour chercher des profils et les contacter directement.
+            {t("lockedText")}
           </p>
           <Link href="/espace/abonnement" className="mt-1 inline-flex h-11 items-center rounded-full bg-ink px-5 font-medium text-sm text-white hover:bg-ink/90">
-            Voir les formules
+            {t("seePlans")}
           </Link>
         </section>
       ) : (
@@ -119,17 +125,17 @@ export function SearchPage() {
               <Input
                 value={q}
                 onChange={(ev) => void setFilters({ q: ev.target.value })}
-                placeholder="Métier, compétence, description… ex. « serveuse expérimentée »"
+                placeholder={t("placeholder")}
                 className="h-12 rounded-full border-0 bg-page pl-12 text-base shadow-none focus-visible:ring-2 focus-visible:ring-ink/10"
               />
             </div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr_auto]">
               <Select value={categoryId} onValueChange={set("categoryId")}>
-                <SelectTrigger aria-label="Métier" className={trigger}>
+                <SelectTrigger aria-label={t("trade")} className={trigger}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent position="popper" sideOffset={8} className="max-h-80">
-                  <SelectItem value={ANY}>Tous les métiers</SelectItem>
+                  <SelectItem value={ANY}>{t("allTrades")}</SelectItem>
                   {(categories.data ?? []).map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.name}
@@ -138,11 +144,11 @@ export function SearchPage() {
                 </SelectContent>
               </Select>
               <Select value={city} onValueChange={set("city")}>
-                <SelectTrigger aria-label="Ville" className={trigger}>
+                <SelectTrigger aria-label={t("city")} className={trigger}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent position="popper" sideOffset={8} className="max-h-80">
-                  <SelectItem value={ANY}>Toutes les villes</SelectItem>
+                  <SelectItem value={ANY}>{t("allCities")}</SelectItem>
                   {(cities.data ?? []).map((c) => (
                     <SelectItem key={c} value={c}>
                       {c}
@@ -151,24 +157,24 @@ export function SearchPage() {
                 </SelectContent>
               </Select>
               <Select value={minReliability} onValueChange={set("minReliability")}>
-                <SelectTrigger aria-label="Fiabilité" className={trigger}>
+                <SelectTrigger aria-label={t("reliability")} className={trigger}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent position="popper" sideOffset={8}>
-                  <SelectItem value={ANY}>Toute fiabilité</SelectItem>
-                  <SelectItem value="70">Fiabilité 70+</SelectItem>
-                  <SelectItem value="80">Fiabilité 80+</SelectItem>
-                  <SelectItem value="90">Fiabilité 90+</SelectItem>
+                  <SelectItem value={ANY}>{t("anyReliability")}</SelectItem>
+                  <SelectItem value="70">{t("reliabilityMin", { n: 70 })}</SelectItem>
+                  <SelectItem value="80">{t("reliabilityMin", { n: 80 })}</SelectItem>
+                  <SelectItem value="90">{t("reliabilityMin", { n: 90 })}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={minRating} onValueChange={set("minRating")}>
-                <SelectTrigger aria-label="Note" className={trigger}>
+                <SelectTrigger aria-label={t("rating")} className={trigger}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent position="popper" sideOffset={8}>
-                  <SelectItem value={ANY}>Toute note</SelectItem>
-                  <SelectItem value="4">4 ★ et plus</SelectItem>
-                  <SelectItem value="4.5">4,5 ★ et plus</SelectItem>
+                  <SelectItem value={ANY}>{t("anyRating")}</SelectItem>
+                  <SelectItem value="4">{t("ratingMin", { n: "4" })}</SelectItem>
+                  <SelectItem value="4.5">{t("ratingMin", { n: (4.5).toLocaleString(INTL_LOCALE[locale]) })}</SelectItem>
                 </SelectContent>
               </Select>
               <button
@@ -178,7 +184,7 @@ export function SearchPage() {
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-full px-4 font-medium text-muted-foreground text-sm hover:text-foreground disabled:opacity-40"
               >
                 <IconRefresh className="size-4" />
-                Réinitialiser
+                {t("reset")}
               </button>
             </div>
           </section>
@@ -186,8 +192,8 @@ export function SearchPage() {
           {!asking && (suggested.isLoading || (suggested.data?.length ?? 0) > 0) && (
             <section className="space-y-4 rounded-3xl bg-card p-5 sm:p-6">
               <div className="flex items-baseline gap-2">
-                <h2 className="font-semibold text-xl">Suggérés pour vous</h2>
-                <span className="text-muted-foreground text-sm">d&apos;après vos offres</span>
+                <h2 className="font-semibold text-xl">{t("suggested")}</h2>
+                <span className="text-muted-foreground text-sm">{t("fromOffers")}</span>
               </div>
               {suggested.isLoading ? (
                 <CardGridSkeleton kind="profile" count={3} />
@@ -204,22 +210,22 @@ export function SearchPage() {
           <section className="space-y-4 rounded-3xl bg-card p-5 sm:p-6">
             <div className="flex items-baseline justify-between gap-3">
               <h2 className="font-semibold text-xl">
-                {asking ? "Résultats" : "Tous les profils"}
+                {asking ? t("results") : t("all")}
               </h2>
               {results.data && (
                 <span className="text-muted-foreground text-sm tabular-nums">
-                  {total} profil{total > 1 ? "s" : ""}
+                  {t("count", { count: total })}
                 </span>
               )}
             </div>
             {results.isLoading ? (
               <CardGridSkeleton kind="profile" />
             ) : !results.data ? (
-              <p className="text-muted-foreground">{friendlyError(results.error, "La recherche est indisponible pour le moment.")}</p>
+              <p className="text-muted-foreground">{friendlyError(results.error, t("unavailable"))}</p>
             ) : items.length === 0 ? (
               <div className="flex flex-col items-center gap-2 rounded-2xl bg-page px-6 py-12 text-center">
-                <p className="font-medium">Aucun profil ne correspond</p>
-                <p className="max-w-sm text-muted-foreground text-sm">Élargissez la recherche : un autre métier, une autre ville, moins de critères.</p>
+                <p className="font-medium">{t("noMatch")}</p>
+                <p className="max-w-sm text-muted-foreground text-sm">{t("noMatchText")}</p>
               </div>
             ) : (
               <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -236,7 +242,7 @@ export function SearchPage() {
                   disabled={results.isFetchingNextPage}
                   className={cn("rounded-full bg-page px-5 py-2.5 font-medium text-sm hover:bg-page/70")}
                 >
-                  {results.isFetchingNextPage ? "Chargement…" : `Voir plus de profils (${total - items.length})`}
+                  {results.isFetchingNextPage ? t("loading") : t("more", { count: total - items.length })}
                 </button>
               </div>
             )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
@@ -8,9 +9,10 @@ import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
 import { buyPack } from "#/lib/api/business-controller";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import type { MySubscription, PackKind } from "#/lib/api/types";
-import { PACK_KINDS, PACK_TITLE, packUnits } from "../packs";
+import { PACK_KINDS, packUnits } from "../packs";
 import { usePacks } from "../use-packs";
 import { Bone } from "#/components/page-skeletons";
 import { useDisplayCurrency } from "#/features/money/use-display-currency";
@@ -24,7 +26,7 @@ const ICON: Record<PackKind, typeof IconFileSearch> = {
 
 const MAX_COUNT = 10;
 
-const date = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+const date = (iso: string, locale: Locale) => new Date(iso).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long", year: "numeric" });
 
 /**
  * The « Packs » tab: more CVs, offers, contacts or AI-written offers on top
@@ -33,6 +35,8 @@ const date = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "
  * only add to one), and only what is on sale.
  */
 export function PacksSection({ data }: Readonly<{ data: MySubscription }>) {
+  const t = useTranslations("subscription");
+  const locale = useLocale();
   const { data: packs } = usePacks();
   const onSale = PACK_KINDS.flatMap((kind) => packs?.onSale.find((p) => p.kind === kind) ?? []);
   const bought = packs?.credits ?? [];
@@ -50,7 +54,7 @@ export function PacksSection({ data }: Readonly<{ data: MySubscription }>) {
 
       {bought.length > 0 && (
         <div className="space-y-2 rounded-3xl bg-card p-6">
-          <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Vos packs</p>
+          <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("packs.yours")}</p>
           <ul className="divide-y divide-foreground/5">
             {bought.map((c) => {
               const Icon = ICON[c.kind];
@@ -60,9 +64,13 @@ export function PacksSection({ data }: Readonly<{ data: MySubscription }>) {
                     <Icon className="size-4" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block font-medium text-sm">{packUnits(c.kind, c.left)}</span>
+                    <span className="block font-medium text-sm">{packUnits(c.kind, c.left, t)}</span>
                     <span className="block text-muted-foreground text-xs">
-                      {c.left < c.quantity ? `Sur ${c.quantity} · ` : ""}jusqu&apos;au {date(c.expiresAt)}
+                      {t("packs.validity", {
+                        partial: c.left < c.quantity ? "yes" : "no",
+                        quantity: c.quantity,
+                        date: date(c.expiresAt, locale),
+                      })}
                     </span>
                   </span>
                 </li>
@@ -78,6 +86,8 @@ export function PacksSection({ data }: Readonly<{ data: MySubscription }>) {
 function PackCard({ kind, quantity, priceFcfa }: Readonly<{ kind: PackKind; quantity: number; priceFcfa: number }>) {
   // In the organisation's country's currency; the total converted as a
   // whole, as checkout charges it, not unit by unit.
+  const t = useTranslations("subscription");
+  const friendlyError = useFriendlyError();
   const { price, ready } = useDisplayCurrency();
   const router = useRouter();
   const [count, setCount] = useState(1);
@@ -85,7 +95,7 @@ function PackCard({ kind, quantity, priceFcfa }: Readonly<{ kind: PackKind; quan
   const buy = useMutation({
     mutationFn: () => buyPack(kind, count),
     onSuccess: ({ token }) => router.push(`/espace/payer/${token}`),
-    onError: (err) => toast.error(friendlyError(err, "Le paiement n'a pas pu être préparé. Réessayez.")),
+    onError: (err) => toast.error(friendlyError(err, t("page.payFailed"))),
   });
 
   return (
@@ -95,19 +105,19 @@ function PackCard({ kind, quantity, priceFcfa }: Readonly<{ kind: PackKind; quan
           <Icon className="size-5" />
         </span>
         <div className="space-y-0.5">
-          <h3 className="font-semibold text-lg">{PACK_TITLE[kind]}</h3>
-          <p className="text-muted-foreground text-sm">{packUnits(kind, quantity)}</p>
+          <h3 className="font-semibold text-lg">{t(`packs.title.${kind}`)}</h3>
+          <p className="text-muted-foreground text-sm">{packUnits(kind, quantity, t)}</p>
         </div>
       </div>
       <div className="flex items-end gap-1.5">
         {ready ? <span className="font-semibold text-2xl tracking-tight">{price(priceFcfa)}</span> : <Bone className="h-7 w-24" />}
-        <span className="mb-0.5 text-muted-foreground text-sm">/ pack</span>
+        <span className="mb-0.5 text-muted-foreground text-sm">{t("packs.perPack")}</span>
       </div>
       <div className="mt-auto space-y-3">
         <div className="flex items-center justify-between gap-3 rounded-2xl bg-page p-1.5">
           <button
             type="button"
-            aria-label="Un pack de moins"
+            aria-label={t("packs.less")}
             disabled={count <= 1 || buy.isPending}
             onClick={() => setCount((n) => Math.max(1, n - 1))}
             className="flex size-9 items-center justify-center rounded-xl bg-card hover:bg-card/70 disabled:opacity-40"
@@ -117,13 +127,13 @@ function PackCard({ kind, quantity, priceFcfa }: Readonly<{ kind: PackKind; quan
           {/* What the packs add up to, inside the stepper: always there, so the card keeps its height. */}
           <span className="flex min-w-0 flex-col items-center text-center tabular-nums leading-tight">
             <span className="text-sm">
-              <span className="font-semibold">{count}</span> pack{count > 1 ? "s" : ""}
+              {t.rich("packs.count", { count, b: (chunks) => <span className="font-semibold">{chunks}</span> })}
             </span>
-            <span className="truncate text-muted-foreground text-xs">{packUnits(kind, quantity * count)}</span>
+            <span className="truncate text-muted-foreground text-xs">{packUnits(kind, quantity * count, t)}</span>
           </span>
           <button
             type="button"
-            aria-label="Un pack de plus"
+            aria-label={t("packs.more")}
             disabled={count >= MAX_COUNT || buy.isPending}
             onClick={() => setCount((n) => Math.min(MAX_COUNT, n + 1))}
             className="flex size-9 items-center justify-center rounded-xl bg-card hover:bg-card/70 disabled:opacity-40"
@@ -137,7 +147,7 @@ function PackCard({ kind, quantity, priceFcfa }: Readonly<{ kind: PackKind; quan
           disabled={buy.isPending}
           className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-ink px-6 font-medium text-[15px] text-white transition-colors hover:bg-ink/90 disabled:opacity-60"
         >
-          {buy.isPending ? <Loader className="size-5 animate-spin text-white" /> : ready ? `Acheter · ${price(priceFcfa * count)}` : "Acheter"}
+          {buy.isPending ? <Loader className="size-5 animate-spin text-white" /> : ready ? t("packs.buyFor", { price: price(priceFcfa * count) }) : t("packs.buy")}
         </button>
       </div>
     </article>

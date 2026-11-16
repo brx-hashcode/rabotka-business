@@ -1,3 +1,5 @@
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+
 /**
  * Rabotka's prices are set in XAF. A business outside the CFA zone sees and
  * pays them in its own country's currency — the DRC in dollars — converted at
@@ -45,11 +47,12 @@ export function toLocalAmount(xaf: number, c: DisplayCurrency): number {
 }
 
 /** « 1 000 FCFA », « 1,70 $ », « 220 Ksh » — an amount already in `currency`. */
-export function formatMoney(amount: number, currency: string): string {
-  if (isCfa(currency)) return `${Math.round(amount).toLocaleString("fr-FR")} FCFA`;
+export function formatMoney(amount: number, currency: string, locale: Locale = "fr"): string {
+  const intl = INTL_LOCALE[locale];
+  if (isCfa(currency)) return `${Math.round(amount).toLocaleString(intl)} FCFA`;
   const whole = Number.isInteger(amount);
   try {
-    return new Intl.NumberFormat("fr-FR", {
+    return new Intl.NumberFormat(intl, {
       style: "currency",
       currency,
       currencyDisplay: "narrowSymbol",
@@ -58,11 +61,11 @@ export function formatMoney(amount: number, currency: string): string {
     }).format(amount);
   } catch {
     // A code Intl does not know: the figure and the code.
-    return `${amount.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} ${currency}`;
+    return `${amount.toLocaleString(intl, { maximumFractionDigits: 2 })} ${currency}`;
   }
 }
 
 /** An XAF price, said in `c`'s currency. */
-export function formatPrice(xaf: number, c: DisplayCurrency): string {
-  return formatMoney(toLocalAmount(xaf, c), c.currency);
+export function formatPrice(xaf: number, c: DisplayCurrency, locale: Locale = "fr"): string {
+  return formatMoney(toLocalAmount(xaf, c), c.currency, locale);
 }

@@ -10,6 +10,6 @@ describe("phonePlaceholder", () => {
 
   it("falls back on the country when the network has no known example", () => {
     expect(phonePlaceholder(null, "242")).toBe("06 123 45 67");
-    expect(phonePlaceholder("MTN_MOMO_CMR", "237")).toBe("Numéro");
+    expect(phonePlaceholder("MTN_MOMO_CMR", "237")).toBeNull();
   });
 });

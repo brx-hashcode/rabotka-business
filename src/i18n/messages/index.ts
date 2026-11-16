@@ -11,6 +11,16 @@ import enOffers from "./en/offers.json";
 import enApplications from "./en/applications.json";
 import enInterviews from "./en/interviews.json";
 import enCv from "./en/cv.json";
+import enTalents from "./en/talents.json";
+import enCandidates from "./en/candidates.json";
+import enTeam from "./en/team.json";
+import enOrganisation from "./en/organisation.json";
+import enSubscription from "./en/subscription.json";
+import enClaims from "./en/claims.json";
+import enCareersEditor from "./en/careersEditor.json";
+import enDiscussions from "./en/discussions.json";
+import enPages from "./en/pages.json";
+import enUi from "./en/ui.json";
 import enSite from "./en/site.json";
 import enSiteCopy from "./en/siteCopy.json";
 import frAuth from "./fr/auth.json";
@@ -24,6 +34,16 @@ import frOffers from "./fr/offers.json";
 import frApplications from "./fr/applications.json";
 import frInterviews from "./fr/interviews.json";
 import frCv from "./fr/cv.json";
+import frTalents from "./fr/talents.json";
+import frCandidates from "./fr/candidates.json";
+import frTeam from "./fr/team.json";
+import frOrganisation from "./fr/organisation.json";
+import frSubscription from "./fr/subscription.json";
+import frClaims from "./fr/claims.json";
+import frCareersEditor from "./fr/careersEditor.json";
+import frDiscussions from "./fr/discussions.json";
+import frPages from "./fr/pages.json";
+import frUi from "./fr/ui.json";
 import frSite from "./fr/site.json";
 import frSiteCopy from "./fr/siteCopy.json";
 
@@ -45,6 +65,16 @@ const fr = {
   applications: frApplications,
   interviews: frInterviews,
   cv: frCv,
+  talents: frTalents,
+  candidates: frCandidates,
+  team: frTeam,
+  organisation: frOrganisation,
+  subscription: frSubscription,
+  claims: frClaims,
+  careersEditor: frCareersEditor,
+  discussions: frDiscussions,
+  pages: frPages,
+  ui: frUi,
   site: frSite,
   siteCopy: frSiteCopy,
 };
@@ -65,6 +95,16 @@ export const MESSAGES: Record<Locale, Messages> = {
     applications: enApplications,
     interviews: enInterviews,
     cv: enCv,
+    talents: enTalents,
+    candidates: enCandidates,
+    team: enTeam,
+    organisation: enOrganisation,
+    subscription: enSubscription,
+    claims: enClaims,
+    careersEditor: enCareersEditor,
+    discussions: enDiscussions,
+    pages: enPages,
+    ui: enUi,
     site: enSite,
     siteCopy: enSiteCopy as typeof frSiteCopy,
   },

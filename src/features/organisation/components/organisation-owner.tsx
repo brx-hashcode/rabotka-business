@@ -1,8 +1,10 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { IconCalendar, IconMail, IconPhone, IconUser, type Icon as TablerIcon } from "@tabler/icons-react";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 
+import { INTL_LOCALE } from "#/i18n/config";
 import type { MyBusiness } from "#/lib/api/types";
 import { getInitials } from "#/lib/utils";
 
@@ -14,6 +16,8 @@ const readable = (n: string) => parsePhoneNumberFromString(n)?.formatInternation
  * through the team.
  */
 export function OrganisationOwner({ owner }: Readonly<{ owner: NonNullable<MyBusiness["owner"]> }>) {
+  const t = useTranslations("organisation.owner");
+  const locale = useLocale();
   const name = `${owner.firstName} ${owner.lastName}`.trim();
   return (
     <section className="space-y-4 rounded-3xl bg-card p-5 sm:p-6">
@@ -22,20 +26,20 @@ export function OrganisationOwner({ owner }: Readonly<{ owner: NonNullable<MyBus
           {getInitials(name) || <IconUser className="size-5" />}
         </span>
         <div className="min-w-0">
-          <p className="text-muted-foreground text-xs">Responsable du compte</p>
+          <p className="text-muted-foreground text-xs">{t("title")}</p>
           <h2 className="truncate font-semibold text-lg">{name}</h2>
         </div>
       </div>
       <dl className="space-y-2">
-        {owner.email && <Row icon={IconMail} label="E-mail de connexion" value={owner.email} />}
-        <Row icon={IconPhone} label="Téléphone" value={readable(owner.phone)} />
+        {owner.email && <Row icon={IconMail} label={t("email")} value={owner.email} />}
+        <Row icon={IconPhone} label={t("phone")} value={readable(owner.phone)} />
         {owner.directPhone && owner.directPhone !== owner.phone && (
-          <Row icon={IconPhone} label="Appel direct" value={readable(owner.directPhone)} />
+          <Row icon={IconPhone} label={t("directPhone")} value={readable(owner.directPhone)} />
         )}
         <Row
           icon={IconCalendar}
-          label="Compte créé le"
-          value={new Date(owner.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+          label={t("createdAt")}
+          value={new Date(owner.createdAt).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long", year: "numeric" })}
         />
       </dl>
     </section>

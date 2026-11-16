@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 
@@ -39,6 +40,7 @@ export function ActionDialog({
   /** A result to acknowledge, not a choice: a single full-width button. */
   hideCancel?: boolean;
 }>) {
+  const t = useTranslations("ui");
   return (
     <DialogPrimitive.Root
       open={open}
@@ -94,7 +96,7 @@ export function ActionDialog({
             {!hideCancel && (
               <DialogPrimitive.Close asChild disabled={pending}>
                 <Button size="lg" variant="secondary" className="rounded-full">
-                  Annuler
+                  {t("cancel")}
                 </Button>
               </DialogPrimitive.Close>
             )}

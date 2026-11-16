@@ -2,13 +2,6 @@ import { BusinessBaseController } from "./base-controller";
 
 export type MessageKind = "INVITATION" | "REFUSAL" | "INFORMATION" | "OTHER";
 
-export const MESSAGE_KIND_LABEL: Record<MessageKind, string> = {
-  INVITATION: "Invitation",
-  REFUSAL: "Refus",
-  INFORMATION: "Demande d'information",
-  OTHER: "Autre",
-};
-
 /** A template the business wrote. */
 export type MessageTemplate = {
   id: string;
@@ -57,11 +50,11 @@ export const deleteMessageTemplate = controller.remove.bind(controller);
 export const sendCandidatesMessage = controller.send.bind(controller);
 export const messageTemplatesKey = ["message-templates"] as const;
 
-/** The placeholders a template may use, as the editor offers them. */
+/** The placeholders a template may use, as the editor offers them (labels: messages `discussions.templates.placeholders`). */
 export const PLACEHOLDERS = [
-  { token: "{prenom}", label: "Prénom" },
-  { token: "{poste}", label: "Poste" },
-  { token: "{entreprise}", label: "Entreprise" },
+  { token: "{prenom}", key: "prenom" },
+  { token: "{poste}", key: "poste" },
+  { token: "{entreprise}", key: "entreprise" },
 ] as const;
 
 /** The same filling as the server's, for the preview. */

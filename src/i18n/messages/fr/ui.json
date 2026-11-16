@@ -1,0 +1,19 @@
+{
+  "cancel": "Annuler",
+  "breadcrumb": "Fil d'Ariane",
+  "loading": "Chargement",
+  "imageUnavailable": "Image indisponible",
+  "photo": "Photo",
+  "preview": {
+    "unavailable": "L'aperçu n'est plus disponible.",
+    "printFailed": "L'impression n'a pas pu s'ouvrir.",
+    "previous": "Précédente",
+    "next": "Suivante",
+    "zoomOut": "Réduire",
+    "zoomIn": "Agrandir",
+    "download": "Télécharger",
+    "print": "Imprimer",
+    "close": "Fermer",
+    "failed": "Le fichier n'a pas pu être affiché. Réessayez dans un instant."
+  }
+}

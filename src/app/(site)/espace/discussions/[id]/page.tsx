@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { DiscussionThread } from "#/features/discussions/components/discussion-thread";
 
-export const metadata: Metadata = { title: "Conversation" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("pages.titles");
+  return { title: t("conversation") };
+}
 
 export default async function Page({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
   const { id } = await params;

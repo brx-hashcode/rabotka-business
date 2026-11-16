@@ -1,10 +1,12 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { IconAlertTriangle, IconCircleCheckFilled, IconClockHour4, IconDeviceMobileMessage } from "@tabler/icons-react";
 
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
+import { INTL_LOCALE } from "#/i18n/config";
 import type { PaymentOperator } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 
@@ -29,7 +31,7 @@ export function PaymentDialog({
   planName,
   startsAt,
   approvedText,
-  back = { href: "/espace/abonnement", label: "Retour à l'abonnement" },
+  back,
   failureText,
   onClose,
   onResend,
@@ -53,7 +55,10 @@ export function PaymentDialog({
   onClose: () => void;
   onResend: () => void;
 }>) {
+  const t = useTranslations("subscription.dialog");
+  const locale = useLocale();
   const left = useCountdown(phase === "waiting" ? sentAt : null);
+  const backTo = back ?? { href: "/espace/abonnement", label: t("back") };
 
   return (
     <Dialog open={phase !== null} onOpenChange={(o) => !o && onClose()}>
@@ -68,9 +73,9 @@ export function PaymentDialog({
             <div className="space-y-5 px-6 pt-8 pb-6 text-center sm:px-8">
               <PhoneSignal />
               <div className="space-y-2">
-                <DialogTitle className="font-semibold text-2xl tracking-tight">Validez sur votre téléphone</DialogTitle>
+                <DialogTitle className="font-semibold text-2xl tracking-tight">{t("title")}</DialogTitle>
                 <DialogDescription className="text-muted-foreground text-sm">
-                  Une demande de paiement vient d&apos;arriver sur votre téléphone. Saisissez votre code secret mobile money pour la valider.
+                  {t("text")}
                 </DialogDescription>
               </div>
               <div className="flex items-center gap-3 rounded-2xl bg-page p-3 text-left">
@@ -85,7 +90,7 @@ export function PaymentDialog({
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium text-sm">{phone}</p>
-                  <p className="text-muted-foreground text-xs">{operator?.label ?? "Mobile money"}</p>
+                  <p className="text-muted-foreground text-xs">{operator?.label ?? t("mobileMoney")}</p>
                 </div>
                 <p className="font-semibold tabular-nums">{amount ?? ""}</p>
               </div>
@@ -93,29 +98,28 @@ export function PaymentDialog({
             <div className="space-y-3 bg-page/60 px-6 py-5 sm:px-8">
               <p className="flex items-center justify-center gap-1.5 text-muted-foreground text-sm">
                 <IconClockHour4 className="size-4" />
-                {left > 0 ? (
-                  <>
-                    Demande valable encore <span className="font-semibold text-foreground tabular-nums">{clock(left)}</span>
-                  </>
-                ) : (
-                  "Toujours rien ? La demande a peut-être expiré."
-                )}
+                {left > 0
+                  ? t.rich("validFor", {
+                      time: clock(left),
+                      b: (chunks) => <span className="font-semibold text-foreground tabular-nums">{chunks}</span>,
+                    })
+                  : t("maybeExpired")}
               </p>
               <p className="text-center text-muted-foreground text-xs">
-                Cette fenêtre se met à jour toute seule dès que l&apos;opérateur confirme.
+                {t("autoUpdate")}
               </p>
               <div className="flex gap-2 pt-1">
                 <button type="button" onClick={onClose} className="h-11 flex-1 rounded-full bg-card font-medium text-sm hover:bg-card/70">
-                  Fermer
+                  {t("close")}
                 </button>
                 <button
                   type="button"
                   onClick={onResend}
                   disabled={left > REQUEST_SECONDS - 30}
-                  title={left > REQUEST_SECONDS - 30 ? "Possible 30 secondes après l'envoi" : undefined}
+                  title={left > REQUEST_SECONDS - 30 ? t("resendHint") : undefined}
                   className="h-11 flex-1 rounded-full bg-ink font-medium text-sm text-white hover:bg-ink/90 disabled:opacity-40"
                 >
-                  Renvoyer la demande
+                  {t("resend")}
                 </button>
               </div>
             </div>
@@ -125,18 +129,24 @@ export function PaymentDialog({
         {phase === "approved" && (
           <Outcome
             tone="good"
-            title="Paiement confirmé"
-            text={approvedText ?? `${planName ? `Votre formule ${planName}` : "Votre formule"} ${
-              startsAt
-                ? `démarre le ${new Date(startsAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}, à la suite de la formule en cours`
-                : "est active dès maintenant"
-            }. La facture arrive par e-mail et dans Factures.`}
+            title={t("approvedTitle")}
+            text={
+              approvedText ??
+              t("approvedPlan", {
+                named: planName ? "yes" : "no",
+                plan: planName ?? "",
+                queued: startsAt ? "yes" : "no",
+                date: startsAt
+                  ? new Date(startsAt).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long", year: "numeric" })
+                  : "",
+              })
+            }
           >
             <Link href="/espace/factures" className="h-11 flex-1 rounded-full bg-page px-4 font-medium text-sm leading-[2.75rem] hover:bg-page/70">
-              Voir la facture
+              {t("seeInvoice")}
             </Link>
-            <Link href={back.href} className="h-11 flex-1 rounded-full bg-ink px-4 font-medium text-sm text-white leading-[2.75rem] hover:bg-ink/90">
-              {back.label}
+            <Link href={backTo.href} className="h-11 flex-1 rounded-full bg-ink px-4 font-medium text-sm text-white leading-[2.75rem] hover:bg-ink/90">
+              {backTo.label}
             </Link>
           </Outcome>
         )}
@@ -144,20 +154,20 @@ export function PaymentDialog({
         {(phase === "failed" || phase === "expired") && (
           <Outcome
             tone="bad"
-            title={phase === "expired" ? "La demande a expiré" : "Le paiement n'a pas abouti"}
+            title={phase === "expired" ? t("expiredTitle") : t("failedTitle")}
             text={
               phase === "expired"
-                ? "Elle n'a pas été validée à temps. Aucun montant n'a été prélevé."
+                ? t("expiredText")
                 : failureText
-                  ? `${failureText} Aucun montant n'a été prélevé.`
-                  : "Aucun montant n'a été prélevé. Les causes les plus fréquentes : solde insuffisant, code secret erroné, ou demande refusée sur le téléphone."
+                  ? t("failedWith", { reason: failureText })
+                  : t("failedText")
             }
           >
             <button type="button" onClick={onClose} className="h-11 flex-1 rounded-full bg-page font-medium text-sm hover:bg-page/70">
-              Changer de numéro
+              {t("changeNumber")}
             </button>
             <button type="button" onClick={onResend} className="h-11 flex-1 rounded-full bg-ink font-medium text-sm text-white hover:bg-ink/90">
-              Réessayer
+              {t("retry")}
             </button>
           </Outcome>
         )}

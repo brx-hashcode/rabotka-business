@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import Link from "next/link";
 import { BadgeCheck } from "lucide-react";
@@ -10,16 +11,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Skeleton } from "#/components/ui/skeleton";
 import { ProfileSkeleton } from "#/components/page-skeletons";
 import { getCandidate, getCandidatePortfolio } from "#/lib/api/candidate-controller";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { ImageGallerySheet } from "#/components/image-gallery-sheet";
 import { KeepButton } from "#/features/talents/components/keep-button";
 import { CandidateCvSection } from "./candidate-cv";
 import { MessageButton } from "./message-button";
 import { ReachButton } from "./reach-button";
 import { SafeImage } from "#/components/safe-image";
+import { INTL_LOCALE } from "#/i18n/config";
 import { getInitials } from "#/lib/utils";
-
-const date = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
 
 /**
  * A worker as an employer may see them, entirely in the space: who they are,
@@ -34,6 +34,10 @@ const date = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { month:
  */
 export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: string; asPage?: boolean }>) {
   const Title = asPage ? "h1" : "h2";
+  const t = useTranslations("candidates.profile");
+  const locale = useLocale();
+  const friendlyError = useFriendlyError();
+  const date = (iso: string) => new Date(iso).toLocaleDateString(INTL_LOCALE[locale], { month: "long", year: "numeric" });
   const { data: c, isLoading, error } = useQuery({
     queryKey: ["candidate", workerId],
     queryFn: () => getCandidate(workerId),
@@ -59,7 +63,7 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
     );
   }
   if (!c) {
-    const message = friendlyError(error, "Ce profil est indisponible.");
+    const message = friendlyError(error, t("unavailable"));
     if (asPage) return <p className="rounded-3xl bg-card p-6 text-muted-foreground">{message}</p>;
     return <p className="py-10 text-center text-muted-foreground">{message}</p>;
   }
@@ -76,7 +80,7 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
           <button
             type="button"
             onClick={() => setViewer({ images: [c.avatarUrl as string], index: 0, title: name })}
-            aria-label={`Voir la photo de ${name}`}
+            aria-label={t("photoOf", { name })}
             className="group relative shrink-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Avatar className="size-20 rounded-2xl">
@@ -104,7 +108,7 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
           {c.isVerified && (
             <span className="inline-flex items-center gap-1 font-medium text-whatsapp text-xs">
               <BadgeCheck className="size-3.5" />
-              Identité vérifiée
+              {t("verified")}
             </span>
           )}
           {c.categoryName && <p className="text-muted-foreground">{c.categoryName}</p>}
@@ -129,9 +133,9 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
   );
   const figures = (
     <>
-      <Figure label="Fiabilité" value={c.reliabilityScore === null ? "—" : `${c.reliabilityScore}/100`} />
+      <Figure label={t("reliability")} value={c.reliabilityScore === null ? "—" : `${c.reliabilityScore}/100`} />
       <Figure
-        label={`Note (${c.ratingCount})`}
+        label={t("rating", { count: c.ratingCount })}
         value={
           c.ratingAvg === null ? (
             "—"
@@ -143,12 +147,12 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
           )
         }
       />
-      <Figure label="Missions terminées" value={String(c.completedMissions)} />
+      <Figure label={t("completed")} value={String(c.completedMissions)} />
     </>
   );
   const trades = c.categoryNames.length > 0 && (
     <section className="space-y-2">
-      <h3 className="font-medium text-sm">Métiers</h3>
+      <h3 className="font-medium text-sm">{t("trades")}</h3>
       <div className="flex flex-wrap gap-2">
         {c.categoryNames.map((n) => (
           <span key={n} className="rounded-full bg-page px-3 py-1.5 text-sm">
@@ -160,14 +164,14 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
   );
   const presentation = c.description && (
     <section className="space-y-2">
-      <h3 className="font-medium text-sm">Présentation</h3>
+      <h3 className="font-medium text-sm">{t("presentation")}</h3>
       <p className="whitespace-pre-line text-muted-foreground leading-relaxed">{c.description}</p>
     </section>
   );
   const ownCv = <CandidateCvSection workerId={workerId} name={name} />;
   const realisations = (
     <section className="space-y-3">
-      <h3 className="font-medium text-sm">Réalisations{items.length > 0 ? ` (${items.length})` : ""}</h3>
+      <h3 className="font-medium text-sm">{t("realisations", { count: items.length > 0 ? String(items.length) : "none" })}</h3>
       {portfolio.isLoading && c.portfolioSlug ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {[0, 1, 2].map((i) => (
@@ -177,7 +181,7 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
       ) : items.length === 0 ? (
         <p className="flex items-center gap-2 rounded-2xl bg-page p-4 text-muted-foreground text-sm">
           <IconPhoto className="size-5" />
-          Aucune réalisation publiée pour le moment.
+          {t("noRealisation")}
         </p>
       ) : (
         <div className="space-y-4">
@@ -191,9 +195,9 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
                       <button
                         key={url}
                         type="button"
-                        onClick={() => setViewer({ images: urls, index, title: "Réalisation" })}
+                        onClick={() => setViewer({ images: urls, index, title: t("realisation") })}
                         className="group relative aspect-square overflow-hidden rounded-xl bg-card"
-                        aria-label="Agrandir l'image"
+                        aria-label={t("enlarge")}
                       >
                         <SafeImage
                           src={url}
@@ -225,8 +229,8 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
           <div className="flex min-w-0 items-center gap-3">
             <Link
               href="/espace/recherche"
-              aria-label="Retour à Trouver des profils"
-              title="Trouver des profils"
+              aria-label={t("back")}
+              title={t("find")}
               className="flex size-10 shrink-0 items-center justify-center rounded-full bg-card text-muted-foreground transition-colors hover:text-foreground"
             >
               <IconArrowLeft className="size-4.5" />
@@ -247,7 +251,7 @@ export function CandidateProfile({ workerId, asPage }: Readonly<{ workerId: stri
           </div>
           <aside className="space-y-6 rounded-3xl bg-card p-6 lg:sticky lg:top-24">
             <section className="space-y-3">
-              <h2 className="font-semibold text-lg">En bref</h2>
+              <h2 className="font-semibold text-lg">{t("brief")}</h2>
               <div className="grid grid-cols-3 gap-3 lg:grid-cols-1">{figures}</div>
             </section>
             {trades}

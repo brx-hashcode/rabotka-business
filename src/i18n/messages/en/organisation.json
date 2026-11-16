@@ -1,0 +1,80 @@
+{
+  "page": {
+    "saved": "Changes saved.",
+    "savedReview": "Changes saved. Our team will check them.",
+    "saveFailed": "Your changes could not be saved.",
+    "title": "Organisation",
+    "intro": "Your organisation's details and documents, and their verification.",
+    "notBusiness": "This account is not a business account.",
+    "details": "Details",
+    "locked": "Your organisation is verified: its identity, its official numbers and its documents can no longer be changed here. For a change, <link>send a request to the team</link>. The head office, the headcount and the description can still be edited.",
+    "save": "Save",
+    "nothing": "No changes to save."
+  },
+  "review": {
+    "refusedTitle": "Verification refused",
+    "refusedText": "{reason, select, none {} other {Reason: {reason}. }}Correct your details or replace the documents concerned: the verification will resume automatically.",
+    "docRefusedTitle": "A document was refused",
+    "docRefusedText": "Your organisation is verified. To replace this document, send a request to the Rabotka team from Help.",
+    "replaceTitle": "Some documents need replacing",
+    "replaceText": "Send a new version of the refused documents so the verification can continue.",
+    "pendingTitle": "Verification in progress",
+    "pendingText": "Our team is reviewing your documents. You will be told by email and in your space."
+  },
+  "owner": {
+    "title": "Account holder",
+    "email": "Sign-in email",
+    "phone": "Phone",
+    "directPhone": "Direct line",
+    "createdAt": "Account created on"
+  },
+  "logo": {
+    "badType": "Format not accepted: send a JPG, PNG or WEBP image.",
+    "tooBig": "Image too large: 5 MB maximum.",
+    "updated": "Logo updated.",
+    "failed": "The logo could not be sent. Try again.",
+    "change": "Change the logo",
+    "hint": "The logo candidates see on your jobs. JPG, PNG or WEBP, 5 MB maximum."
+  },
+  "documents": {
+    "status": {
+      "PENDING": "Pending",
+      "VERIFIED": "Accepted",
+      "REJECTED": "Refused"
+    },
+    "title": "Documents",
+    "lockedText": "The ones from your verification. To add one, send a request to the team. Your documents stay confidential.",
+    "toReplace": "{count, plural, one {# document} other {# documents}} to replace.",
+    "formats": "PDF, JPG, PNG or WEBP, 10 MB maximum. Your documents stay confidential.",
+    "file": "Document",
+    "resubmitted": "new version sent",
+    "reason": "Reason: {reason}",
+    "noReason": "not given",
+    "view": "View",
+    "replace": "Replace",
+    "recommended": "Recommended documents",
+    "recommendedHint": ": they speed up the verification",
+    "extra": "Additional documents",
+    "optional": "(optional)",
+    "addExtra": "Add an additional document",
+    "badType": "Format not accepted: send a PDF, JPG, PNG or WEBP.",
+    "tooBig": "File too large: 10 MB maximum.",
+    "replaced": "New version sent: it will be checked.",
+    "added": "Document added: it will be checked.",
+    "failed": "The document could not be sent. Try again.",
+    "sending": "Sending"
+  },
+  "mailboxes": {
+    "connected": "{provider} connected.",
+    "disconnectFailed": "The mailbox could not be disconnected.",
+    "title": "Connected mailboxes",
+    "text": "To pick CVs received by email in “CV analysis”. Rabotka only reads the attachments you choose.",
+    "expired": "Needs reconnecting",
+    "reconnect": "Reconnect",
+    "disconnect": "Disconnect",
+    "connectAccount": "Connect your account",
+    "confirmTitle": "Disconnect this mailbox?",
+    "confirmText": "You won't be able to pick CVs from it in “CV analysis” any more. Analyses already done are kept, and you can reconnect it at any time.",
+    "cancel": "Cancel"
+  }
+}

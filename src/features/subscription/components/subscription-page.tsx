@@ -1,6 +1,7 @@
 "use client";
 
 import { de } from "#/features/subscription/french";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
@@ -32,7 +33,9 @@ import {
   startPeriodNow,
   subscribeToPlan,
 } from "#/lib/api/business-controller";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import type { Translator } from "#/i18n/translator";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { getPaymentGateways } from "#/lib/api/payment-controller";
 import { featuredPlanId } from "../featured-plan";
 import { runningBillingPeriod } from "../running-period";
@@ -48,20 +51,19 @@ import { useDisplayCurrency } from "#/features/money/use-display-currency";
 
 type Period = "MONTHLY" | "ANNUAL";
 
-const STATUS: Record<SubscriptionStatus, { label: string; className: string }> = {
-  TRIAL: { label: "Essai gratuit", className: "bg-chip-violet text-chip-violet-foreground" },
-  ACTIVE: { label: "Actif", className: "bg-chip-green text-chip-green-foreground" },
-  EXPIRED: { label: "Terminé", className: "bg-page text-muted-foreground" },
-  CANCELLED: { label: "Annulé", className: "bg-page text-muted-foreground" },
+type SubT = Translator<"subscription">;
+
+const STATUS: Record<SubscriptionStatus, string> = {
+  TRIAL: "bg-chip-violet text-chip-violet-foreground",
+  ACTIVE: "bg-chip-green text-chip-green-foreground",
+  EXPIRED: "bg-page text-muted-foreground",
+  CANCELLED: "bg-page text-muted-foreground",
 };
 
-const date = (iso: string) =>
-  new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+const date = (iso: string, locale: Locale) =>
+  new Date(iso).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long", year: "numeric" });
 
-const TABS = [
-  { key: "formule", label: "Formule" },
-  { key: "packs", label: "Packs" },
-] as const;
+const TABS = ["formule", "packs"] as const;
 
 /**
  * « Abonnement »: the plan the organisation has now, what it used, and the
@@ -72,9 +74,11 @@ const TABS = [
  * with a plan running and packs on sale or bought.
  */
 export function SubscriptionPage() {
+  const t = useTranslations("subscription.page");
+  const friendlyError = useFriendlyError();
   const { data, isLoading, error } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   const packs = usePacks();
-  const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS.map((t) => t.key)).withDefault("formule"));
+  const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS).withDefault("formule"));
   const hasPacks =
     !!data?.entitlements.plan && ((packs.data?.onSale.length ?? 0) > 0 || (packs.data?.credits.length ?? 0) > 0);
   const onPacks = hasPacks && tab === "packs";
@@ -101,28 +105,28 @@ export function SubscriptionPage() {
     <div className="w-full space-y-8 pt-2">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1.5">
-          <h1 className="font-semibold text-3xl tracking-tight">Abonnement</h1>
+          <h1 className="font-semibold text-3xl tracking-tight">{t("title")}</h1>
           <p className="text-muted-foreground">
             {onPacks
-              ? "Ajoutez-en à votre formule sans en changer. Valables 12 mois, ils servent une fois ceux de votre formule utilisés."
-              : "Votre formule Rabotka Business, son utilisation et son renouvellement."}
+              ? t("introPacks")
+              : t("intro")}
           </p>
         </div>
         {hasPacks && (
-          <div role="tablist" aria-label="Abonnement" className="inline-flex rounded-full bg-card p-1">
-            {TABS.map((t) => (
+          <div role="tablist" aria-label={t("title")} className="inline-flex rounded-full bg-card p-1">
+            {TABS.map((key) => (
               <button
-                key={t.key}
+                key={key}
                 type="button"
                 role="tab"
-                aria-selected={(onPacks ? "packs" : "formule") === t.key}
-                onClick={() => void setTab(t.key === "formule" ? null : t.key)}
+                aria-selected={(onPacks ? "packs" : "formule") === key}
+                onClick={() => void setTab(key === "formule" ? null : key)}
                 className={cn(
                   "h-10 rounded-full px-5 font-medium text-sm transition-colors",
-                  (onPacks ? "packs" : "formule") === t.key ? "bg-ink text-white" : "text-muted-foreground hover:text-foreground",
+                  (onPacks ? "packs" : "formule") === key ? "bg-ink text-white" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {t.label}
+                {t(`tabs.${key}`)}
               </button>
             ))}
           </div>
@@ -152,7 +156,7 @@ export function SubscriptionPage() {
         </div>
       ) : !data ? (
         <p className="rounded-3xl bg-card p-6 text-muted-foreground">
-          {friendlyError(error, "Votre abonnement n'a pas pu être chargé.")}
+          {friendlyError(error, t("loadFailed"))}
         </p>
       ) : (
         <>
@@ -177,6 +181,7 @@ export function SubscriptionPage() {
  * from another country, or writes to support for another way.
  */
 function PayCountryNotice() {
+  const t = useTranslations("subscription.page");
   const business = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
   const gateways = useQuery({ queryKey: ["payment-gateways"], queryFn: getPaymentGateways, staleTime: 10 * 60 * 1000 });
   const gateway = gateways.data?.gateways?.find((g) => g.key === gateways.data?.active);
@@ -187,38 +192,41 @@ function PayCountryNotice() {
     <div className="flex items-start gap-3 rounded-3xl bg-card p-5 text-sm">
       <IconInfoCircle className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
       <p>
-        Le mobile money de votre pays n&apos;est pas encore accepté. Vous pouvez payer avec un numéro{" "}
-        {some.length > 0 && <>d&apos;un autre pays ({some.join(", ")}{local.elsewhere.length > some.length ? "…" : ""}) </>}
-        ou{" "}
-        <Link href="/espace/reclamations" className="font-medium underline underline-offset-2">
-          nous écrire
-        </Link>{" "}
-        pour un autre moyen de paiement.
+        {t.rich("notice", {
+          countries: some.length > 0 ? `${some.join(", ")}${local.elsewhere.length > some.length ? "…" : ""}` : "none",
+          link: (chunks) => (
+            <Link href="/espace/reclamations" className="font-medium underline underline-offset-2">
+              {chunks}
+            </Link>
+          ),
+        })}
       </p>
     </div>
   );
 }
 
 function CurrentPlan({ data, focused }: Readonly<{ data: MySubscription; focused: string | null }>) {
+  const t = useTranslations("subscription.current");
+  const ts = useTranslations("subscription");
+  const locale = useLocale();
   const e = data.entitlements;
   const ring = focused === "formule-actuelle" && "ring-2 ring-whatsapp-dark";
   if (!e.plan || !e.status) {
     return (
       <section id="formule-actuelle" className={cn("scroll-mt-24 space-y-2 rounded-3xl bg-card p-6", ring)}>
-        <h2 className="font-semibold text-lg">Aucune formule en cours</h2>
+        <h2 className="font-semibold text-lg">{t("noneTitle")}</h2>
         <p className="text-muted-foreground text-sm">
-          Choisissez une formule pour publier vos offres. Sans formule, chaque contact est payant.
+          {t("noneText")}
         </p>
       </section>
     );
   }
-  const status = STATUS[e.status];
   // Contacts, CVs and AI drafts count per period; online offers do not.
   // An annual plan's counters start again every month: the date they do, else the period's end.
   const renews = e.countersResetAt
-    ? `Pour ce mois, jusqu'au ${date(e.countersResetAt)} : le compteur repart à zéro ensuite.`
+    ? t("renewsMonth", { date: date(e.countersResetAt, locale) })
     : e.endsAt
-      ? `Pour la période, jusqu'au ${date(e.endsAt)}.`
+      ? t("renewsPeriod", { date: date(e.endsAt, locale) })
       : undefined;
   return (
     <section id="formule-actuelle" className={cn("scroll-mt-24 space-y-6 rounded-3xl bg-card p-6", ring)}>
@@ -226,12 +234,12 @@ function CurrentPlan({ data, focused }: Readonly<{ data: MySubscription; focused
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h2 className="font-semibold text-2xl tracking-tight">{e.plan.name}</h2>
-            <span className={cn("rounded-full px-2.5 py-1 font-medium text-xs", status.className)}>{status.label}</span>
+            <span className={cn("rounded-full px-2.5 py-1 font-medium text-xs", STATUS[e.status])}>{ts(`status.${e.status}`)}</span>
           </div>
           {e.endsAt && (
             <p className="flex items-center gap-1.5 text-muted-foreground text-sm">
               <IconClock className="size-4" />
-              {e.status === "TRIAL" ? "Essai jusqu'au" : "Jusqu'au"} {date(e.endsAt)}
+              {t(e.status === "TRIAL" ? "trialUntil" : "until", { date: date(e.endsAt, locale) })}
             </p>
           )}
         </div>
@@ -240,32 +248,32 @@ function CurrentPlan({ data, focused }: Readonly<{ data: MySubscription; focused
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Meter
           icon={IconLockOpen}
-          label="Contacts inclus"
+          label={t("contacts")}
           used={e.unlocksUsed}
           limit={e.unlocksQuota}
           packs={packCredits(e, "CONTACT")}
           hint={
             e.unlocksRemaining === 0
-              ? "Tous vos contacts inclus sont utilisés : les suivants sont payants."
+              ? t("contactsUsedUp")
               : renews
           }
         />
         <Meter
           icon={IconFileText}
-          label="Offres publiées"
+          label={t("offers")}
           used={offersUsed(e)}
           limit={e.activeOffersLimit}
           packs={packCredits(e, "OFFER")}
           hint={renews}
         />
         {e.cvQuota !== 0 && (
-          <Meter icon={IconFileSearch} label="CV inclus" used={e.cvUsed} limit={e.cvQuota} packs={packCredits(e, "CV")} hint={renews} />
+          <Meter icon={IconFileSearch} label={t("cv")} used={e.cvUsed} limit={e.cvQuota} packs={packCredits(e, "CV")} hint={renews} />
         )}
         {/* Absent from a backend older than AI writing. */}
         {e.offerDraftsQuota !== undefined && e.offerDraftsQuota !== 0 && (
           <Meter
             icon={IconWand}
-            label="Rédactions IA"
+            label={t("drafts")}
             used={
               e.offerDraftsQuota === null
                 ? 0
@@ -278,20 +286,20 @@ function CurrentPlan({ data, focused }: Readonly<{ data: MySubscription; focused
         )}
         {/* Added this period, like the offers: a new period frees them, the team stays. */}
         {e.recruitersLimit !== undefined && e.recruitersLimit !== 0 && (
-          <Meter icon={IconUserCheck} label="Recruteurs" used={e.recruiters ?? 0} limit={e.recruitersLimit} hint={<TeamHint />} />
+          <Meter icon={IconUserCheck} label={t("recruiters")} used={e.recruiters ?? 0} limit={e.recruitersLimit} hint={<TeamHint />} />
         )}
         {e.reviewersLimit !== undefined && e.reviewersLimit !== 0 && (
-          <Meter icon={IconUserSearch} label="Évaluateurs" used={e.reviewers ?? 0} limit={e.reviewersLimit} hint={<TeamHint />} />
+          <Meter icon={IconUserSearch} label={t("reviewers")} used={e.reviewers ?? 0} limit={e.reviewersLimit} hint={<TeamHint />} />
         )}
       </div>
 
       {(e.includesPreselection || e.priorityVisibility || e.linkedinPosting || e.hrExports || e.videoInterviews) && (
         <ul className="flex flex-wrap gap-2">
-          {e.includesPreselection && <Feature>Recherche de profils</Feature>}
-          {e.priorityVisibility && <Feature>Offres affichées en premier</Feature>}
-          {e.linkedinPosting && <Feature>Publication sur LinkedIn</Feature>}
-          {e.videoInterviews && <Feature>Visio dans Rabotka</Feature>}
-          {e.hrExports && <Feature>Exports RH</Feature>}
+          {e.includesPreselection && <Feature>{ts("lines.search")}</Feature>}
+          {e.priorityVisibility && <Feature>{ts("lines.priority")}</Feature>}
+          {e.linkedinPosting && <Feature>{ts("lines.linkedin")}</Feature>}
+          {e.videoInterviews && <Feature>{ts("lines.visio")}</Feature>}
+          {e.hrExports && <Feature>{ts("lines.hrExports")}</Feature>}
         </ul>
       )}
 
@@ -300,32 +308,28 @@ function CurrentPlan({ data, focused }: Readonly<{ data: MySubscription; focused
   );
 }
 
-const LENGTH: Record<string, string> = { MONTHLY: "1 mois", ANNUAL: "1 an" };
-
 /**
  * What the running period still has, in words, for the « start now » warning.
  * The packs are not lost: they go on with the next plan.
  */
 /** « 10 jours », « 1 jour »: what a paused period keeps. */
-function pausedDays(p: SubscriptionPeriod): string {
-  const days = Math.max(1, Math.ceil((Date.parse(p.endsAt) - Date.now()) / 86_400_000));
-  return days > 1 ? `${days} jours` : "1 jour";
+function pausedDays(p: SubscriptionPeriod): number {
+  return Math.max(1, Math.ceil((Date.parse(p.endsAt) - Date.now()) / 86_400_000));
 }
 
-function leftover(e: MySubscription["entitlements"]): string[] {
+function leftover(e: MySubscription["entitlements"], t: SubT): string[] {
   const out: string[] = [];
-  const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
   const unlocks = planShare(e.unlocksRemaining, packCredits(e, "CONTACT"));
   const cv = planShare(e.cvRemaining, packCredits(e, "CV"));
   const drafts = planShare(e.offerDraftsRemaining, packCredits(e, "OFFER_DRAFT"));
   const offers = planShare(e.offersRemaining, packCredits(e, "OFFER"));
-  if (unlocks) out.push(plural(unlocks, "contact inclus", "contacts inclus"));
-  if (cv) out.push(plural(cv, "CV inclus", "CV inclus"));
-  if (drafts) out.push(plural(drafts, "rédaction IA", "rédactions IA"));
-  if (offers) out.push(plural(offers, "offre à publier", "offres à publier"));
+  if (unlocks) out.push(t("upcoming.left.contacts", { count: unlocks }));
+  if (cv) out.push(t("upcoming.left.cv", { count: cv }));
+  if (drafts) out.push(t("upcoming.left.drafts", { count: drafts }));
+  if (offers) out.push(t("upcoming.left.offers", { count: offers }));
   if (e.endsAt) {
     const days = Math.ceil((new Date(e.endsAt).getTime() - Date.now()) / 86_400_000);
-    if (days > 0) out.push(plural(days, "jour", "jours"));
+    if (days > 0) out.push(t("upcoming.left.days", { count: days }));
   }
   return out;
 }
@@ -347,17 +351,21 @@ function UpcomingPeriods({
   focused: string | null;
 }>) {
   const queryClient = useQueryClient();
+  const t = useTranslations("subscription.upcoming");
+  const ts = useTranslations("subscription");
+  const locale = useLocale();
+  const friendlyError = useFriendlyError();
   const [confirm, setConfirm] = useState<SubscriptionPeriod | null>(null);
   const start = useMutation({
     mutationFn: (id: string) => startPeriodNow(id),
     onSuccess: (period) => {
       setConfirm(null);
       void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
-      toast.success(`${period.planName} a commencé : vos compteurs repartent à zéro jusqu'au ${date(period.endsAt)}.`);
+      toast.success(t("started", { plan: period.planName, date: date(period.endsAt, locale) }));
     },
-    onError: (err) => toast.error(friendlyError(err, "La formule n'a pas pu démarrer. Réessayez dans un instant.")),
+    onError: (err) => toast.error(friendlyError(err, t("startFailed"))),
   });
-  const lost = leftover(entitlements);
+  const lost = leftover(entitlements, ts);
   // The running period (it ends when the plan does), when Rabotka granted it:
   // paused by a start, not lost.
   const gifted =
@@ -368,7 +376,7 @@ function UpcomingPeriods({
 
   return (
     <div className="space-y-2">
-      <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">À suivre</p>
+      <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("heading")}</p>
       {queued.map((p, i) => (
         <div
           key={p.id}
@@ -386,13 +394,12 @@ function UpcomingPeriods({
               <p className="font-semibold">{p.planName}</p>
               {(p.paid || p.granted) && (
                 <span className="rounded-full bg-chip-green px-2.5 py-0.5 font-medium text-chip-green-foreground text-xs">
-                  {p.paid ? "Déjà payée" : "Offerte"}
+                  {p.paid ? t("paid") : t("granted")}
                 </span>
               )}
             </div>
             <p className="text-muted-foreground text-sm">
-              Du {date(p.startsAt)} au {date(p.endsAt)}
-              {i === 0 && " · commence automatiquement à la fin de votre formule"}
+              {t("range", { start: date(p.startsAt, locale), end: date(p.endsAt, locale), first: i === 0 ? "yes" : "no" })}
             </p>
           </div>
           {i === 0 && (
@@ -402,7 +409,7 @@ function UpcomingPeriods({
               className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-ink px-5 font-medium text-sm text-white hover:bg-ink/90"
             >
               <IconPlayerPlay className="size-4" />
-              Démarrer maintenant
+              {t("startNow")}
             </button>
           )}
         </div>
@@ -413,25 +420,24 @@ function UpcomingPeriods({
           {confirm && (
             <div className="space-y-5 p-6">
               <div className="space-y-1">
-                <DialogTitle className="font-semibold text-xl">Démarrer {confirm.planName} maintenant ?</DialogTitle>
+                <DialogTitle className="font-semibold text-xl">{t("confirmTitle", { plan: confirm.planName })}</DialogTitle>
                 <DialogDescription className="text-muted-foreground text-sm">
-                  {confirm.planName} commence aujourd&apos;hui pour {LENGTH[confirm.billingPeriod] ?? "toute sa durée"}, avec tous
-                  ses avantages à zéro.
+                  {t("confirmText", { plan: confirm.planName, length: confirm.billingPeriod })}
                 </DialogDescription>
               </div>
               {gifted ? (
                 // A plan Rabotka granted is paused, not lost: its days come back after.
                 <div className="space-y-2 rounded-2xl bg-chip-green/60 p-4 text-chip-green-foreground text-sm">
-                  <p className="font-medium">Votre formule {gifted.planName} offerte est mise en pause.</p>
-                  <p>Ses {pausedDays(gifted)} restants reprendront à la fin de {confirm.planName}.</p>
+                  <p className="font-medium">{t("pausedTitle", { plan: gifted.planName })}</p>
+                  <p>{t("pausedText", { days: pausedDays(gifted), plan: confirm.planName })}</p>
                 </div>
               ) : (
                 <div className="space-y-2 rounded-2xl bg-chip-amber/60 p-4 text-chip-amber-foreground text-sm">
-                  <p className="font-medium">Attention : votre formule actuelle s&apos;arrête aujourd&apos;hui.</p>
+                  <p className="font-medium">{t("stopsToday")}</p>
                   {lost.length > 0 ? (
-                    <p>Ce qu&apos;il lui reste est perdu : {lost.join(", ")}.</p>
+                    <p>{t("lost", { list: lost.join(", ") })}</p>
                   ) : (
-                    <p>Il ne lui reste plus rien à utiliser.</p>
+                    <p>{t("nothingLeft")}</p>
                   )}
                 </div>
               )}
@@ -442,7 +448,7 @@ function UpcomingPeriods({
                   onClick={() => setConfirm(null)}
                   className="h-12 flex-1 rounded-full bg-page font-medium hover:bg-page/70 disabled:opacity-50"
                 >
-                  Annuler
+                  {t("cancel")}
                 </button>
                 <button
                   type="button"
@@ -451,7 +457,7 @@ function UpcomingPeriods({
                   className="inline-flex h-12 flex-[1.4] items-center justify-center gap-2 rounded-full bg-ink font-medium text-white hover:bg-ink/90 disabled:opacity-60"
                 >
                   {start.isPending && <Loader className="size-4 animate-spin" />}
-                  Démarrer maintenant
+                  {t("startNow")}
                 </button>
               </div>
             </div>
@@ -463,21 +469,21 @@ function UpcomingPeriods({
 }
 
 /** « Analyse de CV » as a plan line; nothing when the plan leaves it out. */
-export function cvLine(plan: BusinessPlan): string | null {
+export function cvLine(plan: BusinessPlan, t: SubT): string | null {
   if (plan.cvScreeningsPerPeriod === 0) return null;
-  return plan.cvScreeningsPerPeriod === null ? "Analyse de CV illimitée" : `Analyse de CV : ${plan.cvScreeningsPerPeriod} CV inclus`;
+  return plan.cvScreeningsPerPeriod === null ? t("lines.cvUnlimited") : t("lines.cvIncluded", { count: plan.cvScreeningsPerPeriod });
 }
 
 /** Team places are a team size: the people in it now, invited or active. Leaving frees one. */
 function TeamHint() {
-  return (
-    <>
-      Les membres de votre équipe, invités ou actifs. Retirer quelqu&apos;un libère sa place.{" "}
+  const t = useTranslations("subscription.current");
+  return t.rich("teamHint", {
+    link: (chunks) => (
       <Link href="/espace/equipe" className="font-medium text-foreground underline underline-offset-2">
-        Gérer l&apos;équipe
+        {chunks}
       </Link>
-    </>
-  );
+    ),
+  });
 }
 
 function Meter({
@@ -496,6 +502,7 @@ function Meter({
   packs?: number;
   hint?: React.ReactNode;
 }>) {
+  const t = useTranslations("subscription.current");
   const pct = limit === null || limit === 0 ? 0 : Math.min(100, Math.round((used / limit) * 100));
   return (
     <div className="space-y-3 rounded-2xl bg-page p-4">
@@ -504,7 +511,7 @@ function Meter({
           <Icon className="size-4" />
           {label}
         </span>
-        <span className="shrink-0 whitespace-nowrap text-sm tabular-nums">{limit === null ? `${used} · illimité` : `${used} / ${limit}`}</span>
+        <span className="shrink-0 whitespace-nowrap text-sm tabular-nums">{limit === null ? t("unlimited", { used }) : `${used} / ${limit}`}</span>
       </div>
       {limit !== null && (
         <div className="h-2 overflow-hidden rounded-full bg-card">
@@ -513,7 +520,7 @@ function Meter({
       )}
       {packs > 0 && limit !== null && (
         <p className="inline-flex rounded-full bg-brand-lime/50 px-2.5 py-0.5 font-medium text-[#0f2414] text-xs">
-          + {packs} de vos packs
+          {t("fromPacks", { count: packs })}
         </p>
       )}
       {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
@@ -532,6 +539,10 @@ function Feature({ children }: Readonly<{ children: React.ReactNode }>) {
 
 function PlanChooser({ data, focused = false }: Readonly<{ data: MySubscription; focused?: boolean }>) {
   const router = useRouter();
+  const t = useTranslations("subscription.chooser");
+  const ts = useTranslations("subscription");
+  const locale = useLocale();
+  const friendlyError = useFriendlyError();
   // In the organisation's country's currency (dollars in the DRC).
   const { price: priceLabel, ready: priceReady } = useDisplayCurrency();
   const current = data.entitlements.status === "ACTIVE" ? data.entitlements.plan?.id : null;
@@ -551,7 +562,7 @@ function PlanChooser({ data, focused = false }: Readonly<{ data: MySubscription;
   const buy = useMutation({
     mutationFn: (plan: BusinessPlan) => subscribeToPlan(plan.id, period),
     onSuccess: ({ token }) => router.push(`/espace/payer/${token}`),
-    onError: (err) => toast.error(friendlyError(err, "Le paiement n'a pas pu être préparé. Réessayez.")),
+    onError: (err) => toast.error(friendlyError(err, ts("page.payFailed"))),
   });
 
   if (data.plans.length === 0) return null;
@@ -559,18 +570,18 @@ function PlanChooser({ data, focused = false }: Readonly<{ data: MySubscription;
     <section id="formules" className={cn("scroll-mt-24 space-y-5 rounded-3xl", focused && "ring-2 ring-whatsapp-dark ring-offset-8 ring-offset-page")}>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1">
-          <h2 className="font-semibold text-xl">{current ? "Renouveler ou changer de formule" : "Choisir une formule"}</h2>
+          <h2 className="font-semibold text-xl">{current ? t("titleRenew") : t("titleChoose")}</h2>
           <p className="text-muted-foreground text-sm">
             {current
-              ? "Payée par mobile money. Une formule supérieure démarre tout de suite ; un renouvellement ou une formule inférieure prend la suite de la formule en cours."
-              : "Payée par mobile money, active dès le paiement."}
+              ? t("textRenew")
+              : t("textChoose")}
           </p>
         </div>
-        <div role="radiogroup" aria-label="Période" className="inline-flex rounded-full bg-card p-1">
+        <div role="radiogroup" aria-label={t("period")} className="inline-flex rounded-full bg-card p-1">
           {(
             [
-              ["MONTHLY", "Mensuel"],
-              ["ANNUAL", "Annuel"],
+              ["MONTHLY", t("monthly")],
+              ["ANNUAL", t("annual")],
             ] as const
           ).map(([value, label]) => (
             <button
@@ -598,17 +609,19 @@ function PlanChooser({ data, focused = false }: Readonly<{ data: MySubscription;
           const switching = plan.id === current && !isCurrent;
           const change = !currentPlan || plan.id === current ? null : plan.monthlyPriceFcfa > currentPlan.monthlyPriceFcfa ? "up" : "down";
           // When a queued period starts: after the running one, or after those already paid.
-          const after = data.upcoming.length > 0 ? "après les périodes déjà payées" : "à la fin de la période en cours";
+          const after = data.upcoming.length > 0 ? "paid" : "running";
+          // French elides « de » before a vowel (« d'Essentiel »); English names the plan as is.
+          const named = (name: string) => (locale === "fr" ? de(name) : name);
           const when = data.entitlements.status === "TRIAL"
-            ? "Démarre dès le paiement : votre essai gratuit s'arrête alors."
+            ? t("whenTrial")
             : isCurrent
-            ? lastEnd && `La nouvelle période commence le ${date(lastEnd)}, ${after}.`
+            ? lastEnd && t("whenRenew", { date: date(lastEnd, locale), after })
             : switching
-            ? lastEnd && `${period === "ANNUAL" ? "L'abonnement annuel" : "L'abonnement mensuel"} commence le ${date(lastEnd)}, ${after}.`
+            ? lastEnd && t("whenSwitch", { period, date: date(lastEnd, locale), after })
             : change === "up"
-              ? `Démarre aujourd'hui : les jours restants ${de(currentPlan?.name ?? "")} sont convertis en jours ${de(plan.name)}.`
+              ? t("whenUp", { from: named(currentPlan?.name ?? ""), to: named(plan.name) })
               : change === "down"
-                ? lastEnd && `Démarre le ${date(lastEnd)}, ${after}.`
+                ? lastEnd && t("whenDown", { date: date(lastEnd, locale), after })
                 : null;
           const pending = buy.isPending && buy.variables?.id === plan.id;
           const isFeatured = plan.id === featured;
@@ -624,23 +637,23 @@ function PlanChooser({ data, focused = false }: Readonly<{ data: MySubscription;
                     {plan.name}
                     {plan.custom && (
                       <span className="rounded-full bg-chip-violet px-2.5 py-1 font-medium text-chip-violet-foreground text-xs">
-                        Sur mesure
+                        {t("custom")}
                       </span>
                     )}
                   </h3>
                   {isCurrent ? (
                     <span className="rounded-full bg-chip-green px-2.5 py-1 font-medium text-chip-green-foreground text-xs">
-                      Votre formule
+                      {t("yours")}
                     </span>
                   ) : switching ? (
                     <span className="rounded-full bg-chip-green px-2.5 py-1 font-medium text-chip-green-foreground text-xs">
-                      Votre formule, en {runningPeriod === "ANNUAL" ? "annuel" : "mensuel"}
+                      {t("yoursIn", { period: runningPeriod ?? "MONTHLY" })}
                     </span>
                   ) : scheduled.has(plan.name) ? (
-                    <span className="rounded-full bg-page px-2.5 py-1 font-medium text-muted-foreground text-xs">Programmée</span>
+                    <span className="rounded-full bg-page px-2.5 py-1 font-medium text-muted-foreground text-xs">{t("scheduled")}</span>
                   ) : (
                     isFeatured && (
-                      <span className="rounded-full bg-brand-lime px-2.5 py-1 font-medium text-[#0f2414] text-xs">Le plus choisi</span>
+                      <span className="rounded-full bg-brand-lime px-2.5 py-1 font-medium text-[#0f2414] text-xs">{t("featured")}</span>
                     )
                   )}
                 </div>
@@ -653,24 +666,24 @@ function PlanChooser({ data, focused = false }: Readonly<{ data: MySubscription;
                 ) : (
                   <Bone className="mb-0.5 h-8 w-28" />
                 )}
-                <span className="mb-1 text-muted-foreground text-sm">/ {period === "ANNUAL" ? "an" : "mois"}</span>
+                <span className="mb-1 text-muted-foreground text-sm">{t("per", { period })}</span>
               </div>
               <ul className="flex-1 space-y-2.5 text-sm">
                 <PlanLine>
                   {plan.unlocksPerPeriod === null
-                    ? "Contacts illimités"
-                    : `${plan.unlocksPerPeriod} contact${plan.unlocksPerPeriod > 1 ? "s" : ""} inclus`}
+                    ? ts("lines.contactsUnlimited")
+                    : ts("lines.contactsIncluded", { count: plan.unlocksPerPeriod })}
                 </PlanLine>
                 <PlanLine>
-                  {offersPerPeriodLabel(plan.activeOffersLimit)}
+                  {offersPerPeriodLabel(plan.activeOffersLimit, ts)}
                 </PlanLine>
-                {cvLine(plan) && <PlanLine>{cvLine(plan)}</PlanLine>}
-                {teamLine(plan) && <PlanLine>{teamLine(plan)}</PlanLine>}
-                {plan.includesPreselection && <PlanLine>Recherche de profils</PlanLine>}
-                {plan.priorityVisibility && <PlanLine>Offres affichées en premier</PlanLine>}
-                {plan.linkedinPosting && <PlanLine>Publication sur LinkedIn</PlanLine>}
-                {plan.videoInterviews && <PlanLine>Visio dans Rabotka</PlanLine>}
-                {plan.hrExports && <PlanLine>Exports RH</PlanLine>}
+                {cvLine(plan, ts) && <PlanLine>{cvLine(plan, ts)}</PlanLine>}
+                {teamLine(plan, ts) && <PlanLine>{teamLine(plan, ts)}</PlanLine>}
+                {plan.includesPreselection && <PlanLine>{ts("lines.search")}</PlanLine>}
+                {plan.priorityVisibility && <PlanLine>{ts("lines.priority")}</PlanLine>}
+                {plan.linkedinPosting && <PlanLine>{ts("lines.linkedin")}</PlanLine>}
+                {plan.videoInterviews && <PlanLine>{ts("lines.visio")}</PlanLine>}
+                {plan.hrExports && <PlanLine>{ts("lines.hrExports")}</PlanLine>}
               </ul>
               {when && <p className="text-muted-foreground text-xs">{when}</p>}
               <button
@@ -679,7 +692,7 @@ function PlanChooser({ data, focused = false }: Readonly<{ data: MySubscription;
                 disabled={buy.isPending || price <= 0}
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-ink px-6 font-medium text-[15px] text-white transition-colors hover:bg-ink/90 disabled:opacity-60"
               >
-                {pending ? <Loader className="size-5 animate-spin text-white" /> : isCurrent ? "Renouveler" : switching ? (period === "ANNUAL" ? "Passer à l'annuel" : "Passer au mensuel") : change === "up" ? `Passer à ${plan.name}` : change === "down" ? "Programmer" : "Choisir"}
+                {pending ? <Loader className="size-5 animate-spin text-white" /> : isCurrent ? t("renew") : switching ? (period === "ANNUAL" ? t("toAnnual") : t("toMonthly")) : change === "up" ? t("upgrade", { plan: plan.name }) : change === "down" ? t("schedule") : t("choose")}
               </button>
             </article>
           );

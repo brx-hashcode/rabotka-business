@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { IconPhoto } from "@tabler/icons-react";
 
@@ -15,12 +16,13 @@ export function SafeImage({
   fallbackClassName,
   eager,
 }: Readonly<{ src: string; className?: string; fallbackClassName?: string; eager?: boolean }>) {
+  const t = useTranslations("ui");
   const [failed, setFailed] = useState(false);
   if (failed) {
     return (
       <span className={cn("flex flex-col items-center justify-center gap-1 text-muted-foreground text-xs", fallbackClassName ?? "size-full")}>
         <IconPhoto className="size-6" />
-        Image indisponible
+        {t("imageUnavailable")}
       </span>
     );
   }

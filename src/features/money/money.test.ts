@@ -25,4 +25,9 @@ describe("local prices", () => {
     expect(formatMoney(1.7, "USD")).toBe("1,70 $");
     expect(formatMoney(43, "USD")).toBe("43 $");
   });
+
+  it("groups and marks decimals as the reader's language does", () => {
+    expect(formatMoney(1250, "XAF", "en")).toBe("1,250 FCFA");
+    expect(formatMoney(1.7, "USD", "en")).toBe("$1.70");
+  });
 });
