@@ -163,7 +163,8 @@ export function InterviewsCalendar() {
         <DialogContent className="w-[calc(100vw-2rem)] max-w-md gap-0 rounded-3xl border-0 bg-card p-0 shadow-soft">
           <DialogTitle className="sr-only">{shown ? t("withName", { name: shown.candidateName }) : t("interview")}</DialogTitle>
           {shown && (
-            <ul className="max-h-[85svh] overflow-y-auto">
+            // The card's first row ends on its status: kept clear of the dialog's close button, which sits in that corner.
+            <ul className="max-h-[85svh] overflow-y-auto [&>li>div:first-child]:pr-8">
               <InterviewCard interview={shown} past={isPast(shown)} />
             </ul>
           )}
