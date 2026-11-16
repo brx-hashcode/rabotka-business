@@ -63,5 +63,18 @@
     "today": "Today",
     "past": "Past"
   },
-  "fcfa": "{amount} FCFA"
+  "fcfa": "{amount} FCFA",
+  "verdict": {
+    "high": "Strong fit",
+    "good": "Good fit",
+    "partial": "Partial fit",
+    "low": "Weak fit"
+  },
+  "criterion": {
+    "skills": "Skills",
+    "experience": "Experience",
+    "training": "Education",
+    "location": "Location",
+    "languages": "Languages"
+  }
 }

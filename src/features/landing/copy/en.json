@@ -94,17 +94,48 @@
     }
   },
   "featureGroups": [
-    { "step": "Attract", "text": "Jobs seen everywhere" },
-    { "step": "Source and sort", "text": "The right profiles on top" },
-    { "step": "Evaluate", "text": "Every candidate followed" },
-    { "step": "Decide and follow up", "text": "As a team, up to the contract" }
+    {
+      "step": "Attract",
+      "text": "Jobs seen everywhere"
+    },
+    {
+      "step": "Source and sort",
+      "text": "The right profiles on top"
+    },
+    {
+      "step": "Evaluate",
+      "text": "Every candidate followed"
+    },
+    {
+      "step": "Decide and follow up",
+      "text": "As a team, up to the contract"
+    }
   ],
   "resourceLinks": [
-    { "label": "Recruiter guides", "description": "Practical methods to hire better, faster." },
-    { "label": "Frequently asked questions", "description": "Countries, CVs, data, account: the essentials." },
-    { "label": "Security and privacy", "description": "What is read, kept and deleted." }
+    {
+      "label": "Recruiter guides",
+      "description": "Practical methods to hire better, faster."
+    },
+    {
+      "label": "Frequently asked questions",
+      "description": "Countries, CVs, data, account: the essentials."
+    },
+    {
+      "label": "Security and privacy",
+      "description": "What is read, kept and deleted."
+    }
   ],
-  "companyLinks": [{ "label": "About" }, { "label": "Contact" }, { "label": "Request a demo" }],
+  "companyLinks": [
+    {
+      "label": "About"
+    },
+    {
+      "label": "Contact"
+    },
+    {
+      "label": "Request a demo"
+    }
+  ],
   "trust": [
     {
       "title": "Verified organisation",
@@ -127,30 +158,58 @@
     {
       "title": "Companies and SMEs",
       "text": "Retail, industry, services, construction: from short-term help to permanent hires.",
-      "roles": ["Sales rep", "Accountant", "Site manager", "Warehouse worker"]
+      "roles": [
+        "Sales rep",
+        "Accountant",
+        "Site manager",
+        "Warehouse worker"
+      ]
     },
     {
       "title": "Education and training",
       "text": "Private schools, universities, vocational training centres: teaching staff, supervisors and administrative staff.",
-      "roles": ["Teacher", "Trainer", "Supervisor", "Secretary"]
+      "roles": [
+        "Teacher",
+        "Trainer",
+        "Supervisor",
+        "Secretary"
+      ]
     },
     {
       "title": "NGOs and international organisations",
       "text": "Project managers, field officers, consultants: local hires for your programmes.",
-      "roles": ["Project manager", "Field officer", "Consultant"]
+      "roles": [
+        "Project manager",
+        "Field officer",
+        "Consultant"
+      ]
     },
     {
       "title": "Public sector",
       "text": "Ministries, local authorities, public institutions: qualified profiles and a traceable process.",
-      "roles": ["Administrative officer", "Legal officer", "Engineer"]
+      "roles": [
+        "Administrative officer",
+        "Legal officer",
+        "Engineer"
+      ]
     },
     {
       "title": "Health",
       "text": "Clinics, medical practices, pharmacies, laboratories: care, technical and front-desk staff.",
-      "roles": ["Nurse", "Pharmacist", "Lab technician"]
+      "roles": [
+        "Nurse",
+        "Pharmacist",
+        "Lab technician"
+      ]
     }
   ],
-  "faqShown": [0, 1, 3, 2, -1],
+  "faqShown": [
+    0,
+    1,
+    3,
+    2,
+    -1
+  ],
   "faq": [
     {
       "q": "What is Rabotka Business?",
@@ -210,12 +269,30 @@
     }
   ],
   "pipeline": [
-    { "title": "Distribution", "text": "Rabotka, careers page, Google, LinkedIn" },
-    { "title": "Applications", "text": "All received in one place" },
-    { "title": "Sorting and ranking", "text": "Every CV read, scored and explained" },
-    { "title": "Interviews", "text": "Choice of slots, video call and report" },
-    { "title": "Decision", "text": "The team's opinions, candidate hired" },
-    { "title": "Contract and mission", "text": "Contract generated, mission followed" }
+    {
+      "title": "Distribution",
+      "text": "Rabotka, careers page, Google, LinkedIn"
+    },
+    {
+      "title": "Applications",
+      "text": "All received in one place"
+    },
+    {
+      "title": "Sorting and ranking",
+      "text": "Every CV read, scored and explained"
+    },
+    {
+      "title": "Interviews",
+      "text": "Choice of slots, video call and report"
+    },
+    {
+      "title": "Decision",
+      "text": "The team's opinions, candidate hired"
+    },
+    {
+      "title": "Contract and mission",
+      "text": "Contract generated, mission followed"
+    }
   ],
   "atsPillars": [
     {
@@ -290,10 +367,22 @@
       "heading": "Your jobs on LinkedIn, no copy-paste",
       "intro": "Your professional network is a talent pool: each job is posted as a card, with your text and your image, and the applications it brings are flagged as such.",
       "benefits": [
-        { "title": "Ready-made text", "text": "The post is written for you, to review and adjust before publishing." },
-        { "title": "A polished image", "text": "The job's image is generated for you, or you choose your own." },
-        { "title": "Each recruiter, their profile", "text": "Each recruiter on the team posts on their own LinkedIn profile." },
-        { "title": "Source tracked", "text": "Applications that come from LinkedIn are flagged in your inbox." }
+        {
+          "title": "Ready-made text",
+          "text": "The post is written for you, to review and adjust before publishing."
+        },
+        {
+          "title": "A polished image",
+          "text": "The job's image is generated for you, or you choose your own."
+        },
+        {
+          "title": "Each recruiter, their profile",
+          "text": "Each recruiter on the team posts on their own LinkedIn profile."
+        },
+        {
+          "title": "Source tracked",
+          "text": "Applications that come from LinkedIn are flagged in your inbox."
+        }
       ]
     },
     "applicants": {
@@ -326,12 +415,30 @@
       "heading": "Interviews run and followed up in one place",
       "intro": "Offer your time slots; the candidate picks from the email they receive. On the day, the video call opens in Rabotka with your notes beside it, and the report is shared with the team in one click.",
       "benefits": [
-        { "title": "A choice of time slots", "text": "Offer up to three times: the candidate picks the one that suits them, or asks for another, with no account or password." },
-        { "title": "Video calls in Rabotka", "text": "Nothing to install: the candidate joins the call with their link, on a computer or a phone. Meet or Zoom are still possible." },
-        { "title": "A colleague in the call", "text": "Invite a manager or an expert: they get their own link by email and join under their name, with no account." },
-        { "title": "The interview transcribed", "text": "The video call is transcribed automatically: each sentence becomes text during the interview. Your notes, typed or dictated, stay beside it." },
-        { "title": "The report ready", "text": "Written by AI from your notes and the transcript: summary, strengths, points to watch, next steps. You review it, send it to the team or save it as a PDF." },
-        { "title": "Your calendar in sync", "text": "Google Calendar, Outlook or Apple Calendar: each interview shows up there and stays up to date, with a reminder the day before for you and the candidate." }
+        {
+          "title": "A choice of time slots",
+          "text": "Offer up to three times: the candidate picks the one that suits them, or asks for another, with no account or password."
+        },
+        {
+          "title": "Video calls in Rabotka",
+          "text": "Nothing to install: the candidate joins the call with their link, on a computer or a phone. Meet or Zoom are still possible."
+        },
+        {
+          "title": "A colleague in the call",
+          "text": "Invite a manager or an expert: they get their own link by email and join under their name, with no account."
+        },
+        {
+          "title": "The interview transcribed",
+          "text": "The video call is transcribed automatically: each sentence becomes text during the interview. Your notes, typed or dictated, stay beside it."
+        },
+        {
+          "title": "The report ready",
+          "text": "Written by AI from your notes and the transcript: summary, strengths, points to watch, next steps. You review it, send it to the team or save it as a PDF."
+        },
+        {
+          "title": "Your calendar in sync",
+          "text": "Google Calendar, Outlook or Apple Calendar: each interview shows up there and stays up to date, with a reminder the day before for you and the candidate."
+        }
       ],
       "steps": [
         {
@@ -375,10 +482,22 @@
       "heading": "From contract to review, everything stays in one place",
       "intro": "Hiring doesn't stop at “yes”. The contract is ready as soon as a candidate is hired, the mission is followed to the end, and your hiring figures are always up to date.",
       "benefits": [
-        { "title": "The contract generated", "text": "Viewable and printable from your space as soon as a candidate is hired." },
-        { "title": "Missions followed", "text": "Who is arriving, who is on the job, who has finished; and your review of each completed mission." },
-        { "title": "A dashboard", "text": "Applications, interviews, timings and positions filled over 7, 30 or 90 days, compared with the previous period." },
-        { "title": "HR exports", "text": "The hiring report as a PDF, your data in Excel, and the staff register." }
+        {
+          "title": "The contract generated",
+          "text": "Viewable and printable from your space as soon as a candidate is hired."
+        },
+        {
+          "title": "Missions followed",
+          "text": "Who is arriving, who is on the job, who has finished; and your review of each completed mission."
+        },
+        {
+          "title": "A dashboard",
+          "text": "Applications, interviews, timings and positions filled over 7, 30 or 90 days, compared with the previous period."
+        },
+        {
+          "title": "HR exports",
+          "text": "The hiring report as a PDF, your data in Excel, and the staff register."
+        }
       ]
     },
     "profiles": {
@@ -387,10 +506,22 @@
       "heading": "Don't wait for candidates: go and find them",
       "intro": "Search Rabotka's verified profiles by trade, skill or city. Keep the most promising in “My profiles” and invite them to apply for your jobs.",
       "benefits": [
-        { "title": "Verified profiles", "text": "Profiles' identity is verified before they are suggested to you." },
-        { "title": "My profiles", "text": "Keep promising candidates with your notes and keywords, and find the ones you've already hired." },
-        { "title": "Invited to your jobs", "text": "Offer a live job to a saved profile: they are invited to apply." },
-        { "title": "Agents in the field", "text": "Our agents also reach candidates who aren't on any platform." }
+        {
+          "title": "Verified profiles",
+          "text": "Profiles' identity is verified before they are suggested to you."
+        },
+        {
+          "title": "My profiles",
+          "text": "Keep promising candidates with your notes and keywords, and find the ones you've already hired."
+        },
+        {
+          "title": "Invited to your jobs",
+          "text": "Offer a live job to a saved profile: they are invited to apply."
+        },
+        {
+          "title": "Agents in the field",
+          "text": "Our agents also reach candidates who aren't on any platform."
+        }
       ]
     },
     "team": {
@@ -399,10 +530,22 @@
       "heading": "Hire together, decide together",
       "intro": "A hire is rarely decided alone. Invite your colleagues: each has a role, gives an opinion and leaves notes, and Activity keeps track of everything.",
       "benefits": [
-        { "title": "Clear roles", "text": "The Administrator manages the account, Recruiters run the jobs, Reviewers give their opinion." },
-        { "title": "Everyone's opinion", "text": "Yes, Maybe or No on each candidate: the decision reads at a glance." },
-        { "title": "Private notes", "text": "What the team writes about a candidate is never seen by them." },
-        { "title": "Activity and history", "text": "Who did what, and when: for the team as for each application." }
+        {
+          "title": "Clear roles",
+          "text": "The Administrator manages the account, Recruiters run the jobs, Reviewers give their opinion."
+        },
+        {
+          "title": "Everyone's opinion",
+          "text": "Yes, Maybe or No on each candidate: the decision reads at a glance."
+        },
+        {
+          "title": "Private notes",
+          "text": "What the team writes about a candidate is never seen by them."
+        },
+        {
+          "title": "Activity and history",
+          "text": "Who did what, and when: for the team as for each application."
+        }
       ]
     }
   },
@@ -499,6 +642,216 @@
           ]
         }
       ]
+    }
+  },
+  "mockups": {
+    "ranked": [
+      {
+        "name": "Grâce Loubaki",
+        "job": "Cashier · 4 yrs"
+      },
+      {
+        "name": "Jean-Baptiste Kiminou",
+        "job": "Sales assistant · 3 yrs"
+      },
+      {
+        "name": "Awa Mbemba",
+        "job": "Receptionist · 2 yrs"
+      },
+      {
+        "name": "Prince Nganga",
+        "job": "Warehouse worker · 1 yr"
+      }
+    ],
+    "criteria": {
+      "skills": "Skills",
+      "experience": "Experience",
+      "location": "Location",
+      "trade": "Trade",
+      "reliability": "Reliability"
+    },
+    "hero": {
+      "label": "Preview: a CV analysis ranks four candidates for a cashier role, from best to weakest fit.",
+      "title": "CV analysis · Supermarket cashier",
+      "heading": "Supermarket cashier",
+      "ranked": "4 CVs ranked",
+      "gmail": "2 CVs imported from Gmail",
+      "gmailAddress": "hiring@mycompany.com",
+      "confirmed": "Interview confirmed",
+      "confirmedWhen": "Grâce · Thursday 10 am"
+    },
+    "cv": {
+      "label": "Preview: an analysed CV's card, with its score, criteria, strengths and career path.",
+      "title": "CV analysis",
+      "summary": "Head cashier · 4 years 2 months relevant to the role",
+      "strengthsTitle": "Strengths",
+      "strengths": [
+        "Cash handling and stock counts",
+        "Managed a team of 3",
+        "Available immediately"
+      ],
+      "pathTitle": "Career path",
+      "path": [
+        {
+          "role": "Head cashier · Mayaka Supermarket",
+          "tag": "Full-time"
+        },
+        {
+          "role": "Sales assistant · Les Palmiers shop",
+          "tag": "Part-time"
+        }
+      ],
+      "fromMailbox": "From your mailbox"
+    },
+    "offer": {
+      "label": "Preview: a few words describing a need become a written job post, with its title, description and trade.",
+      "title": "Write with AI",
+      "prompt": "2 waiters for a wedding on Saturday evening in Pointe-Noire",
+      "badge": "Job post written",
+      "heading": "Waiters for a wedding reception",
+      "p1": "We are looking for two waiters to serve at a wedding reception on Saturday evening in Pointe-Noire: welcoming guests, table and buffet service, clearing.",
+      "p2": "Restaurant experience is a plus; a neat appearance and a sense of service are expected.",
+      "use": "Use this job post",
+      "tradeLabel": "Suggested trade:",
+      "trade": "Waiter"
+    },
+    "linkedin": {
+      "label": "Preview: a job posted on LinkedIn by a recruiter, as a card leading to the careers page, and the applications it brings.",
+      "title": "LinkedIn · your feed",
+      "author": "Sandrine Massamba",
+      "role": "HR manager · Hôtel Les Cocotiers · 2 min",
+      "post": "We're hiring 2 waiters for a wedding reception on Saturday evening in Pointe-Noire. Restaurant experience is a plus. Apply online 👇",
+      "company": "Hôtel Les Cocotiers",
+      "hiring": "Hiring",
+      "offerTitle": "Waiters for a wedding reception",
+      "type": "Mission",
+      "apply": "Apply",
+      "applyAt": "Apply at Hôtel Les Cocotiers",
+      "like": "Like",
+      "comment": "Comment",
+      "repost": "Repost",
+      "applications": "6 applications via LinkedIn",
+      "applicationsWhen": "Waiters · this week"
+    },
+    "applicants": {
+      "label": "Preview: a job's applications ranked by score, with one score broken down and bulk replies.",
+      "title": "Job · Shop sales assistant",
+      "selected": "2 selected",
+      "decline": "Decline with a message"
+    },
+    "interviews": {
+      "label": "Preview: confirmed interviews, one by video in Rabotka, and the report written from the notes.",
+      "title": "Interviews",
+      "rows": [
+        {
+          "day": "Thu",
+          "who": "Grâce Loubaki · Cashier",
+          "when": "10:00 · On site",
+          "status": "Confirmed"
+        },
+        {
+          "day": "Fri",
+          "who": "Jean-Baptiste Kiminou · Sales assistant",
+          "when": "15:30 · Video in Rabotka",
+          "status": "Join"
+        },
+        {
+          "day": "Mon",
+          "who": "Awa Mbemba · Receptionist",
+          "when": "9:00 · By phone",
+          "status": "Sent"
+        }
+      ],
+      "reportTitle": "Report · Grâce Loubaki",
+      "reportText": "Warm welcome, comfortable at the till. Available from Monday.",
+      "reportPoints": [
+        "Supermarket experience",
+        "Quick at giving change"
+      ],
+      "calendars": "Also in Google Calendar, Outlook, Apple Calendar"
+    },
+    "tracking": {
+      "label": "Preview: a 30-day hiring dashboard and its PDF report. Example figures.",
+      "title": "Dashboard · example",
+      "heading": "Your hiring",
+      "ranges": [
+        "7 d",
+        "30 d",
+        "90 d"
+      ],
+      "tiles": [
+        "Applications",
+        "Interviews",
+        "Hired"
+      ],
+      "funnel": [
+        "Received",
+        "Reviewed",
+        "Interviews",
+        "Hired"
+      ],
+      "pdf": "PDF report",
+      "contract": "Mission contract"
+    },
+    "profiles": {
+      "label": "Preview: a search of verified profiles by trade and city.",
+      "title": "Find profiles",
+      "search": "electrician, care assistant, driver…",
+      "people": [
+        {
+          "job": "Building electrician",
+          "tags": [
+            "B1 certified",
+            "6 years"
+          ]
+        },
+        {
+          "job": "Care assistant",
+          "tags": [
+            "Qualified",
+            "Nights"
+          ]
+        },
+        {
+          "job": "Delivery driver",
+          "tags": [
+            "Truck licence",
+            "Available"
+          ]
+        }
+      ]
+    },
+    "pipeline": {
+      "label": "Preview: a job's board, candidates by stage, with their score, source, video call and report.",
+      "title": "Cashier — Plateau Supermarket",
+      "columns": [
+        "To review",
+        "Shortlisted",
+        "Interview",
+        "Hired"
+      ],
+      "careersPage": "Careers page",
+      "visio": "Video · Thu",
+      "report": "Report",
+      "reportReady": "Report ready · Jean-Baptiste",
+      "hired": "Awa Mbemba hired · contract ready"
+    },
+    "team": {
+      "label": "Preview: the team's opinions and a note on a candidate.",
+      "title": "Team opinions",
+      "candidate": "Cashier · 4 yrs · Brazzaville",
+      "opinions": [
+        "Fabrice · Recruiter",
+        "Nadège · Reviewer",
+        "Steve · Reviewer"
+      ],
+      "verdict": {
+        "yes": "Yes",
+        "maybe": "Maybe",
+        "no": "No"
+      },
+      "note": "Very comfortable with the till and with customers. To check: availability on Sundays.",
+      "gaveOpinion": "Nadège gave her opinion"
     }
   }
 }

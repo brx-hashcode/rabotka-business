@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { IconLock } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import type { CvCriterion, CvExperience } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
@@ -15,19 +16,24 @@ export const CRITERIA: { key: CvCriterion; label: string }[] = [
   { key: "languages", label: "Langues" },
 ];
 
-type Band = { label: string; chip: string; ring: string };
+type Band = { level: "high" | "good" | "partial" | "low"; label: string; chip: string; ring: string };
 
-/** How well a score fits the job, in words: the number alone says little. */
+/**
+ * How well a score fits the job, in words: the number alone says little.
+ * `level` is the key of labels.verdict; `label` its French, for screens not
+ * translated yet.
+ */
 export function band(score: number): Band {
-  if (score >= 80) return { label: "Très adapté", chip: "bg-chip-green text-chip-green-foreground", ring: "text-whatsapp-dark" };
-  if (score >= 60) return { label: "Adapté", chip: "bg-brand-lime text-[#0f2414]", ring: "text-whatsapp-dark" };
-  if (score >= 40) return { label: "Partiel", chip: "bg-chip-amber text-chip-amber-foreground", ring: "text-chip-amber-foreground" };
-  return { label: "Peu adapté", chip: "bg-foreground/[0.07] text-muted-foreground", ring: "text-muted-foreground" };
+  if (score >= 80) return { level: "high", label: "Très adapté", chip: "bg-chip-green text-chip-green-foreground", ring: "text-whatsapp-dark" };
+  if (score >= 60) return { level: "good", label: "Adapté", chip: "bg-brand-lime text-[#0f2414]", ring: "text-whatsapp-dark" };
+  if (score >= 40) return { level: "partial", label: "Partiel", chip: "bg-chip-amber text-chip-amber-foreground", ring: "text-chip-amber-foreground" };
+  return { level: "low", label: "Peu adapté", chip: "bg-foreground/[0.07] text-muted-foreground", ring: "text-muted-foreground" };
 }
 
 export function VerdictChip({ score }: Readonly<{ score: number }>) {
+  const t = useTranslations("labels.verdict");
   const b = band(score);
-  return <span className={cn("rounded-full px-2.5 py-1 font-medium text-xs", b.chip)}>{b.label}</span>;
+  return <span className={cn("rounded-full px-2.5 py-1 font-medium text-xs", b.chip)}>{t(b.level)}</span>;
 }
 
 /** The score out of 100 as a ring, the number in the middle. */

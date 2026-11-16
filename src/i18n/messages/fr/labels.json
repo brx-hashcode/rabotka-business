@@ -63,5 +63,18 @@
     "today": "Aujourd'hui",
     "past": "Passée"
   },
-  "fcfa": "{amount} FCFA"
+  "fcfa": "{amount} FCFA",
+  "verdict": {
+    "high": "Très adapté",
+    "good": "Adapté",
+    "partial": "Partiel",
+    "low": "Peu adapté"
+  },
+  "criterion": {
+    "skills": "Compétences",
+    "experience": "Expérience",
+    "training": "Formation",
+    "location": "Lieu",
+    "languages": "Langues"
+  }
 }

@@ -643,5 +643,215 @@
         }
       ]
     }
+  },
+  "mockups": {
+    "ranked": [
+      {
+        "name": "Grâce Loubaki",
+        "job": "Caissière · 4 ans"
+      },
+      {
+        "name": "Jean-Baptiste Kiminou",
+        "job": "Vendeur · 3 ans"
+      },
+      {
+        "name": "Awa Mbemba",
+        "job": "Hôtesse d'accueil · 2 ans"
+      },
+      {
+        "name": "Prince Nganga",
+        "job": "Magasinier · 1 an"
+      }
+    ],
+    "criteria": {
+      "skills": "Compétences",
+      "experience": "Expérience",
+      "location": "Lieu",
+      "trade": "Métier",
+      "reliability": "Fiabilité"
+    },
+    "hero": {
+      "label": "Aperçu : une analyse de CV classe quatre candidats pour un poste de caissier, du plus adapté au moins adapté.",
+      "title": "Analyse de CV · Caissier en supermarché",
+      "heading": "Caissier en supermarché",
+      "ranked": "4 CV classés",
+      "gmail": "2 CV importés de Gmail",
+      "gmailAddress": "recrutement@monentreprise.cg",
+      "confirmed": "Entretien confirmé",
+      "confirmedWhen": "Grâce · jeudi 10 h"
+    },
+    "cv": {
+      "label": "Aperçu : la fiche d'un CV analysé, avec sa note, ses critères, ses points forts et son parcours.",
+      "title": "Analyse de CV",
+      "summary": "Caissière principale · 4 ans et 2 mois en lien avec le poste",
+      "strengthsTitle": "Points forts",
+      "strengths": [
+        "Tenue de caisse et inventaires",
+        "Encadrement d'une équipe de 3",
+        "Disponible immédiatement"
+      ],
+      "pathTitle": "Parcours",
+      "path": [
+        {
+          "role": "Caissière principale · Supermarché Mayaka",
+          "tag": "Temps plein"
+        },
+        {
+          "role": "Vendeuse · Boutique Les Palmiers",
+          "tag": "Temps partiel"
+        }
+      ],
+      "fromMailbox": "Depuis votre messagerie"
+    },
+    "offer": {
+      "label": "Aperçu : quelques mots décrivant un besoin deviennent une offre rédigée, avec son intitulé, sa description et son métier.",
+      "title": "Rédiger avec l'IA",
+      "prompt": "2 serveurs pour un mariage samedi soir à Pointe-Noire",
+      "badge": "Offre rédigée",
+      "heading": "Serveurs pour une réception de mariage",
+      "p1": "Nous recherchons deux serveurs pour assurer le service d'une réception de mariage, samedi soir à Pointe-Noire : accueil des invités, service à table et au buffet, débarrassage.",
+      "p2": "Expérience en restauration appréciée ; présentation soignée et sens du service attendus.",
+      "use": "Utiliser cette offre",
+      "tradeLabel": "Métier proposé :",
+      "trade": "Serveur"
+    },
+    "linkedin": {
+      "label": "Aperçu : une offre publiée sur LinkedIn par un recruteur, en carte qui mène à la page carrières, et les candidatures qui en viennent.",
+      "title": "LinkedIn · votre fil",
+      "author": "Sandrine Massamba",
+      "role": "Responsable RH · Hôtel Les Cocotiers · 2 min",
+      "post": "Nous recrutons 2 serveurs pour une réception de mariage samedi soir à Pointe-Noire. Expérience en restauration appréciée. Postulez en ligne 👇",
+      "company": "Hôtel Les Cocotiers",
+      "hiring": "Recrute",
+      "offerTitle": "Serveurs pour une réception de mariage",
+      "type": "Mission",
+      "apply": "Postuler",
+      "applyAt": "Postuler chez Hôtel Les Cocotiers",
+      "like": "J'aime",
+      "comment": "Commenter",
+      "repost": "Republier",
+      "applications": "6 candidatures via LinkedIn",
+      "applicationsWhen": "Serveurs · cette semaine"
+    },
+    "applicants": {
+      "label": "Aperçu : les candidatures d'une offre classées par note, avec le détail d'une note et des réponses groupées.",
+      "title": "Offre · Vendeur en boutique",
+      "selected": "2 sélectionnés",
+      "decline": "Refuser avec un message"
+    },
+    "interviews": {
+      "label": "Aperçu : des entretiens confirmés, dont un en visio dans Rabotka, et le compte rendu rédigé à partir des notes.",
+      "title": "Entretiens",
+      "rows": [
+        {
+          "day": "jeu.",
+          "who": "Grâce Loubaki · Caissière",
+          "when": "10 h 00 · Sur place",
+          "status": "Confirmé"
+        },
+        {
+          "day": "ven.",
+          "who": "Jean-Baptiste Kiminou · Vendeur",
+          "when": "15 h 30 · Visio dans Rabotka",
+          "status": "Rejoindre"
+        },
+        {
+          "day": "lun.",
+          "who": "Awa Mbemba · Hôtesse d'accueil",
+          "when": "9 h 00 · Par téléphone",
+          "status": "Envoyée"
+        }
+      ],
+      "reportTitle": "Compte rendu · Grâce Loubaki",
+      "reportText": "Accueil soigné, à l'aise avec la caisse. Disponible dès lundi.",
+      "reportPoints": [
+        "Expérience en grande surface",
+        "Rendu de monnaie rapide"
+      ],
+      "calendars": "Aussi dans Google Agenda, Outlook, Apple Calendrier"
+    },
+    "tracking": {
+      "label": "Aperçu : un tableau de bord de recrutement sur 30 jours et son rapport en PDF. Chiffres d'exemple.",
+      "title": "Tableau de bord · exemple",
+      "heading": "Vos recrutements",
+      "ranges": [
+        "7 j",
+        "30 j",
+        "90 j"
+      ],
+      "tiles": [
+        "Candidatures",
+        "Entretiens",
+        "Retenus"
+      ],
+      "funnel": [
+        "Reçues",
+        "Examinées",
+        "Entretiens",
+        "Retenues"
+      ],
+      "pdf": "Rapport PDF",
+      "contract": "Contrat de mission"
+    },
+    "profiles": {
+      "label": "Aperçu : une recherche de profils vérifiés par métier et par ville.",
+      "title": "Trouver des profils",
+      "search": "électricien, aide-soignante, chauffeur…",
+      "people": [
+        {
+          "job": "Électricien bâtiment",
+          "tags": [
+            "Habilitation B1",
+            "6 ans"
+          ]
+        },
+        {
+          "job": "Aide-soignante",
+          "tags": [
+            "Diplômée",
+            "Nuits"
+          ]
+        },
+        {
+          "job": "Chauffeur-livreur",
+          "tags": [
+            "Permis C",
+            "Disponible"
+          ]
+        }
+      ]
+    },
+    "pipeline": {
+      "label": "Aperçu : le tableau d'une offre, candidats rangés par étape, avec leur note, leur provenance, la visio et le compte rendu.",
+      "title": "Caissier — Supermarché du Plateau",
+      "columns": [
+        "À examiner",
+        "Présélectionnées",
+        "Entretien",
+        "Retenues"
+      ],
+      "careersPage": "Page carrières",
+      "visio": "Visio · jeu.",
+      "report": "Compte rendu",
+      "reportReady": "Compte rendu prêt · Jean-Baptiste",
+      "hired": "Awa Mbemba retenue · contrat prêt"
+    },
+    "team": {
+      "label": "Aperçu : les avis de l'équipe et une note sur un candidat.",
+      "title": "Avis de l'équipe",
+      "candidate": "Caissière · 4 ans · Brazzaville",
+      "opinions": [
+        "Fabrice · Recruteur",
+        "Nadège · Évaluatrice",
+        "Steve · Évaluateur"
+      ],
+      "verdict": {
+        "yes": "Oui",
+        "maybe": "Peut-être",
+        "no": "Non"
+      },
+      "note": "Très à l'aise avec la caisse et les clients. À revoir : disponibilité le dimanche.",
+      "gaveOpinion": "Nadège a donné son avis"
+    }
   }
 }
