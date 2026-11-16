@@ -31,7 +31,7 @@ import { isAdmin } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
 import { useSessionUser } from "#/hooks/use-session-user";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
-import { meKey, ROLE_LABEL, updateMe } from "#/lib/api/team-controller";
+import { meKey, updateMe } from "#/lib/api/team-controller";
 import { getMyBusiness, getMySubscription, myBusinessKey, mySubscriptionKey } from "#/lib/api/business-controller";
 import type { SubscriptionStatus } from "#/lib/api/types";
 import { cn, getInitials } from "#/lib/utils";
@@ -57,6 +57,7 @@ export function AccountMenu() {
   const tLanguage = useTranslations("common.language");
   const t = useTranslations("layout.account");
   const tNav = useTranslations("layout.nav");
+  const tLabels = useTranslations("labels");
   const locale = useLocale();
   const friendlyError = useFriendlyError();
   const emails = useMutation({
@@ -102,7 +103,7 @@ export function AccountMenu() {
           <span className="hidden min-w-0 flex-col text-left leading-tight md:flex">
             <span className="max-w-44 truncate font-medium text-sm">{name || business?.name || t("myAccount")}</span>
             <span className="max-w-44 truncate text-muted-foreground text-xs">
-              {asMember ? `${ROLE_LABEL[member.role]} · ${business?.name ?? ""}` : (personEmail ?? t("businessAccount"))}
+              {asMember ? `${tLabels(`role.${member.role}`)} · ${business?.name ?? ""}` : (personEmail ?? t("businessAccount"))}
             </span>
           </span>
           <IconChevronDown className="hidden size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180 sm:block" />
@@ -145,7 +146,7 @@ export function AccountMenu() {
                   {personEmail && <p className="truncate text-muted-foreground text-xs">{personEmail}</p>}
                 </div>
                 {role && (
-                  <span className="shrink-0 rounded-full bg-page px-2.5 py-0.5 font-medium text-xs">{ROLE_LABEL[role]}</span>
+                  <span className="shrink-0 rounded-full bg-page px-2.5 py-0.5 font-medium text-xs">{tLabels(`role.${role}`)}</span>
                 )}
               </div>
             )}
@@ -156,7 +157,7 @@ export function AccountMenu() {
                 className="flex items-center justify-between gap-2 rounded-xl bg-card px-3 py-2 text-sm hover:bg-card/70"
               >
                 <span className="min-w-0">
-                  <span className="block truncate font-medium">{plan.plan ? t("plan", { name: plan.plan.name }) : t("noPlan")}</span>
+                  <span className="block truncate font-medium">{plan.plan ? plan.plan.name : t("noPlan")}</span>
                   <span className="block truncate text-muted-foreground text-xs">
                     {plan.plan && plan.endsAt
                       ? t(plan.status === "TRIAL" ? "trialUntil" : "until", { date: shortDate(plan.endsAt, locale) })

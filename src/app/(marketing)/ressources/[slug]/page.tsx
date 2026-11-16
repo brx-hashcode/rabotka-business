@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
+import { getSiteCopy } from "#/features/landing/copy";
 import { notFound } from "next/navigation";
 import { IconArrowLeft, IconCheck, IconClock } from "@tabler/icons-react";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 
 import { Illustration } from "#/components/illustration";
 import { LocalLink as Link } from "#/components/local-link";
-import type { Locale } from "#/i18n/config";
 import { DemoBlock } from "#/features/landing/components/demo-block";
 import { PageHero } from "#/features/landing/components/page-hero";
 import { GUIDE_SLUGS, guides } from "#/features/landing/site-content";
@@ -19,14 +19,14 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps<"/ressources/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const guide = guides((await getLocale()) as Locale).find((g) => g.slug === slug);
+  const guide = guides(await getSiteCopy()).find((g) => g.slug === slug);
   if (!guide) return {};
   return marketingMetadata({ title: guide.title, description: guide.description, path: `/ressources/${guide.slug}` });
 }
 
 export default async function GuidePage({ params }: PageProps<"/ressources/[slug]">) {
   const { slug } = await params;
-  const GUIDES = guides((await getLocale()) as Locale);
+  const GUIDES = guides(await getSiteCopy());
   const t = await getTranslations("site.pages.guide");
   const guide = GUIDES.find((g) => g.slug === slug);
   if (!guide) notFound();

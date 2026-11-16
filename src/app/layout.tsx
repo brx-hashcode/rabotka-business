@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { cookies, headers } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale } from "next-intl/server";
+import { getLocale, getMessages } from "next-intl/server";
 
 import { Providers } from "#/app/providers";
 import { OG_LOCALE } from "#/i18n/config";
@@ -74,6 +74,8 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children, modal }: LayoutProps<"/">) {
   const isAuthenticated = (await cookies()).has(REFRESH_COOKIE);
   const locale = await getLocale();
+  // Everything but the public site's long copy, which its own layout adds.
+  const messages = Object.fromEntries(Object.entries(await getMessages()).filter(([namespace]) => namespace !== "siteCopy"));
 
   return (
     // The document background is the browser chrome's colour: Safari (iOS 26+)
@@ -92,7 +94,7 @@ export default async function RootLayout({ children, modal }: LayoutProps<"/">) 
         />
         <div className="min-h-svh bg-page pt-[env(safe-area-inset-top)]">
           {/* The request's language and messages, for client components. */}
-          <NextIntlClientProvider>
+          <NextIntlClientProvider messages={messages}>
             <Providers isAuthenticated={isAuthenticated}>
               {children}
               {modal}

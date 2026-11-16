@@ -1,16 +1,16 @@
 import { IconArrowRight } from "@tabler/icons-react";
-import { useLocale, useTranslations } from "next-intl";
+import { type SiteCopy, useSiteCopy } from "../copy";
+import { useTranslations } from "next-intl";
 
 import { LocalLink as Link } from "#/components/local-link";
-import type { Locale } from "#/i18n/config";
 import { featureGroups, features, FEATURES_HREF } from "../content";
 import { SectionHeading } from "./section-heading";
 import { IconTile } from "./icon-tile";
 
 /** The groups with their features, numbered: the hire's four stages. */
-export function stages(locale: Locale) {
-  const all = features(locale);
-  return featureGroups(locale).map((group, i) => ({
+export function stages(copy: SiteCopy) {
+  const all = features(copy);
+  return featureGroups(copy).map((group, i) => ({
     ...group,
     number: String(i + 1).padStart(2, "0"),
     features: group.ids.map((id) => all.find((f) => f.id === id)).filter((f) => f !== undefined),
@@ -20,7 +20,7 @@ export function stages(locale: Locale) {
 /** The home page's product overview: four stages, two tools each, each a link to its page. */
 export function FeatureStages() {
   const t = useTranslations("site.stages");
-  const STAGES = stages(useLocale());
+  const STAGES = stages(useSiteCopy());
   return (
     <section id="fonctionnalites" className="py-20 md:py-28">
       <div className="mx-auto w-full max-w-7xl space-y-12 px-4 sm:px-6">
@@ -72,7 +72,7 @@ export function FeatureStages() {
 
 /** Where a feature sits in the hire: the four stages, its own lit, the other tools one click away. */
 export function PipelinePosition({ featureId }: Readonly<{ featureId: string }>) {
-  const STAGES = stages(useLocale());
+  const STAGES = stages(useSiteCopy());
   return (
     <ol className="grid grid-cols-2 gap-2 md:grid-cols-4">
       {STAGES.map((stage) => {

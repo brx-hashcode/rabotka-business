@@ -24,6 +24,7 @@ import { PreviewSheet } from "#/components/preview-sheet";
 import { appConfig } from "#/config";
 import { offerChip } from "#/features/offers/offer-labels";
 import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import { formatPercent } from "#/i18n/format";
 import { SubscriptionBanner } from "#/features/subscription/components/subscription-banner";
 import { useSessionUser } from "#/hooks/use-session-user";
 import {
@@ -48,7 +49,7 @@ const PERIODS: StatsPeriod[] = [7, 30, 90];
 const date = (iso: string, locale: Locale) =>
   new Date(iso).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long", year: "numeric" });
 const nf = (n: number, locale: Locale) => n.toLocaleString(INTL_LOCALE[locale], { maximumFractionDigits: 1 });
-const percent = (n: number | null, locale: Locale) => (n === null ? "—" : locale === "fr" ? `${n} %` : `${n}%`);
+const percent = (n: number | null, locale: Locale) => (n === null ? "—" : formatPercent(n, locale));
 
 /**
  * The business space's home: how recruitment is going over a chosen period —
@@ -741,8 +742,10 @@ function NextSteps({ business, subscription }: Readonly<{ business: MyBusiness; 
  */
 function greeting(firstName: string | undefined, businessName: string | undefined, days: number) {
   return {
-    firstName: firstName?.trim() || "none",
-    business: businessName || "none",
+    named: firstName?.trim() ? "yes" : "no",
+    firstName: firstName?.trim() ?? "",
+    hasBusiness: businessName ? "yes" : "no",
+    business: businessName ?? "",
     elision: businessName && startsWithVowel(businessName) ? "vowel" : "other",
     days,
   };

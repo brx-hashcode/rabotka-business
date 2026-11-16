@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: t("metaTitle"),
     description: t("metaDescription"),
     path: "/",
-    keywords: ["ATS Afrique", "logiciel RH", "gestion des candidatures", "Google for Jobs", "LinkedIn", "compte rendu d'entretien"],
+    keywords: t.raw("keywords") as string[],
   });
 }
 

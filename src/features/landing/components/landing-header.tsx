@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useSiteCopy } from "../copy";
 import Image from "next/image";
 import { IconArrowRight, IconChevronDown, IconClock, IconLayoutKanban, IconMenu2 } from "@tabler/icons-react";
 
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 
 import { BusinessLockup } from "#/components/business-lockup";
 import { LocalLink as Link } from "#/components/local-link";
@@ -35,10 +36,10 @@ type Menu = { label: string; links: NavLink[]; wide?: boolean };
 /** The two menus, then the pages reached in one click after them. */
 function useNav() {
   const t = useTranslations("site.header");
-  const locale = useLocale();
+  const copy = useSiteCopy();
   const menus: Menu[] = [
-    { label: t("features"), links: solutionLinks(locale), wide: true },
-    { label: t("resources"), links: resourceLinks(locale) },
+    { label: t("features"), links: solutionLinks(copy), wide: true },
+    { label: t("resources"), links: resourceLinks(copy) },
   ];
   const pages: NavLink[] = [
     { href: "/a-propos", label: t("about") },
@@ -125,7 +126,7 @@ function DesktopMenu({ label, links, wide }: Readonly<{ label: string; links: Na
  */
 function SolutionsPanel() {
   const t = useTranslations("site.header");
-  const GROUPS = stages(useLocale());
+  const GROUPS = stages(useSiteCopy());
   return (
     <DropdownMenuContent
       align="start"
@@ -224,7 +225,7 @@ function SolutionsPanel() {
  */
 function ResourcesPanel({ links }: Readonly<{ links: NavLink[] }>) {
   const t = useTranslations("site.header");
-  const guide = guides(useLocale())[0];
+  const guide = guides(useSiteCopy())[0];
   return (
     <DropdownMenuContent
       align="start"
@@ -281,7 +282,7 @@ function ResourcesPanel({ links }: Readonly<{ links: NavLink[] }>) {
 function MobileMenu() {
   const [open, setOpen] = useState(false);
   const t = useTranslations("site.header");
-  const GROUPS = stages(useLocale());
+  const GROUPS = stages(useSiteCopy());
   const { menus: MENUS, pages: PAGES } = useNav();
 
   return (

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useSiteCopy } from "../copy";
 import { IconArrowRight, IconCheck } from "@tabler/icons-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 
 import { LocalLink as Link } from "#/components/local-link";
 import { cn } from "#/lib/utils";
@@ -16,7 +17,7 @@ import { IconTile } from "./icon-tile";
  */
 export function FeatureTabs() {
   const t = useTranslations("site.tabs");
-  const STAGES = stages(useLocale());
+  const STAGES = stages(useSiteCopy());
   const all = STAGES.flatMap((s) => s.features);
   const [activeId, setActiveId] = useState(all[0].id);
   const active = all.find((f) => f.id === activeId) ?? all[0];

@@ -22,8 +22,8 @@ import {
 } from "@tabler/icons-react";
 
 /**
- * The landing's structure in one place; its words are in copy/<locale>.json
- * (French first, English key for key), joined here by `features(locale)`… What Rabotka does today, nothing it does not:
+ * The landing's structure in one place; its words are the siteCopy messages
+ * (French first, English key for key), joined here by `features(copy)`… What Rabotka does today, nothing it does not:
  * no prices (they are the admin's to set), no statistics (they would need a
  * source), no testimonials until a real customer gives one. The numbers in
  * the product mock-ups are examples, and read as such.
@@ -39,8 +39,7 @@ import {
  * « Entretiens » shows the three interview-* photos, step by step.
  */
 
-import type { Locale } from "#/i18n/config";
-import { siteCopy } from "./copy";
+import type { SiteCopy } from "./copy";
 
 export const SIGN_UP_HREF = "/auth/sign-up";
 export const DEMO_HREF = "/demo";
@@ -92,14 +91,14 @@ const FEATURE_META: { id: Exclude<MockupKey, "pipeline">; slug: string; icon: Ic
 /** Every feature's slug (the sitemap's, the same in each language). */
 export const FEATURE_SLUGS = FEATURE_META.map((f) => f.slug);
 
-export function features(locale: Locale): Feature[] {
-  const copy = siteCopy(locale).features;
+export function features(copy: SiteCopy): Feature[] {
+  const text = copy.features;
   return FEATURE_META.map(({ id, slug, icon }) => ({
     id,
     slug,
     href: `/fonctionnalites/${slug}`,
     icon,
-    ...copy[id],
+    ...text[id],
   }));
 }
 
@@ -114,12 +113,12 @@ const FEATURE_GROUP_IDS: MockupKey[][] = [
   ["team", "tracking"],
 ];
 
-export function featureGroups(locale: Locale): { step: string; text: string; ids: MockupKey[] }[] {
-  return siteCopy(locale).featureGroups.map((g, i) => ({ ...g, ids: FEATURE_GROUP_IDS[i] }));
+export function featureGroups(copy: SiteCopy): { step: string; text: string; ids: MockupKey[] }[] {
+  return copy.featureGroups.map((g, i) => ({ ...g, ids: FEATURE_GROUP_IDS[i] }));
 }
 
-export function solutionLinks(locale: Locale): NavLink[] {
-  return features(locale).map(({ href, label, description, icon }) => ({ href, label, description, icon }));
+export function solutionLinks(copy: SiteCopy): NavLink[] {
+  return features(copy).map(({ href, label, description, icon }) => ({ href, label, description, icon }));
 }
 
 const RESOURCE_META = [
@@ -128,22 +127,22 @@ const RESOURCE_META = [
   { href: "/a-propos#confiance", icon: IconShieldCheck },
 ];
 
-export function resourceLinks(locale: Locale): NavLink[] {
-  return siteCopy(locale).resourceLinks.map((l, i) => ({ ...RESOURCE_META[i], ...l }));
+export function resourceLinks(copy: SiteCopy): NavLink[] {
+  return copy.resourceLinks.map((l, i) => ({ ...RESOURCE_META[i], ...l }));
 }
 
 const COMPANY_HREFS = ["/a-propos", "/contact", DEMO_HREF];
 
-export function companyLinks(locale: Locale): NavLink[] {
-  return siteCopy(locale).companyLinks.map((l, i) => ({ href: COMPANY_HREFS[i], ...l }));
+export function companyLinks(copy: SiteCopy): NavLink[] {
+  return copy.companyLinks.map((l, i) => ({ href: COMPANY_HREFS[i], ...l }));
 }
 
 export type Trust = { title: string; text: string; icon: Icon };
 
 const TRUST_ICONS = [IconShieldCheck, IconMailShare, IconTrash, IconLock];
 
-export function trust(locale: Locale): Trust[] {
-  return siteCopy(locale).trust.map((t, i) => ({ ...t, icon: TRUST_ICONS[i] }));
+export function trust(copy: SiteCopy): Trust[] {
+  return copy.trust.map((t, i) => ({ ...t, icon: TRUST_ICONS[i] }));
 }
 
 /** A sector Rabotka serves: what it recruits, and a few posts it often fills. */
@@ -151,8 +150,8 @@ export type Audience = { title: string; text: string; icon: Icon; roles: string[
 
 const AUDIENCE_ICONS = [IconBuildingSkyscraper, IconSchool, IconHeartHandshake, IconBuildingBank, IconStethoscope];
 
-export function audiences(locale: Locale): Audience[] {
-  return siteCopy(locale).audiences.map((a, i) => ({ ...a, icon: AUDIENCE_ICONS[i] }));
+export function audiences(copy: SiteCopy): Audience[] {
+  return copy.audiences.map((a, i) => ({ ...a, icon: AUDIENCE_ICONS[i] }));
 }
 
 /** Behind « Votre secteur n'apparaît pas ? »: an office, not the product. */
@@ -160,8 +159,8 @@ export const AUDIENCE_PHOTO = "/media/meeting-table.jpg";
 
 export type FaqItem = { q: string; a: string };
 
-export function faq(locale: Locale): FaqItem[] {
-  return siteCopy(locale).faq;
+export function faq(copy: SiteCopy): FaqItem[] {
+  return copy.faq;
 }
 
 /**
@@ -169,7 +168,6 @@ export function faq(locale: Locale): FaqItem[] {
  * what it does, then the tools a business already uses, then where. -1: a
  * question the page writes itself (the countries, from the catalog).
  */
-export function faqShown(locale: Locale): (FaqItem | null)[] {
-  const copy = siteCopy(locale);
+export function faqShown(copy: SiteCopy): (FaqItem | null)[] {
   return copy.faqShown.map((i) => copy.faq[i] ?? null);
 }

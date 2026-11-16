@@ -1,9 +1,7 @@
 import { IconCheck, IconFileText, IconMessageCircle, IconNote, IconQuestionMark, IconVideo, IconX } from "@tabler/icons-react";
 
-import { useLocale } from "next-intl";
-
 import { ScoreRing } from "#/features/cv-screening/components/cv-bits";
-import { siteCopy } from "../copy";
+import { useSiteCopy } from "../copy";
 import { cn } from "#/lib/utils";
 import { FloatCard, MockupFrame } from "./frame";
 
@@ -40,7 +38,7 @@ const COLUMNS: Person[][] = [
 ];
 
 function useCopy() {
-  return siteCopy(useLocale() as "fr" | "en").mockups;
+  return useSiteCopy().mockups;
 }
 
 /** « Grâce L. »: a board's card is narrow. */

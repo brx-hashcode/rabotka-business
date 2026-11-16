@@ -1,6 +1,6 @@
 {
   "title": "Tableau de bord",
-  "greeting": "{firstName, select, none {Voici} other {Bonjour {firstName}, voici}} {business, select, none {votre recrutement} other {le recrutement {elision, select, vowel {d'{business}} other {de {business}}}}} sur les {days} derniers jours.",
+  "greeting": "{named, select, yes {Bonjour {firstName}, voici} other {Voici}} {hasBusiness, select, yes {le recrutement {elision, select, vowel {d''{business}} other {de {business}}}} other {votre recrutement}} sur les {days} derniers jours.",
   "period": "Période",
   "days": "{days} jours",
   "report": {

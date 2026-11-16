@@ -22,7 +22,8 @@
     "soonTitle": "Bientôt disponible",
     "homeLabel": "{name} — tableau de bord",
     "menu": "Menu",
-    "openMenu": "Ouvrir le menu"
+    "openMenu": "Ouvrir le menu",
+    "builtAt": "Compilée le {date} UTC"
   },
   "theme": {
     "label": "Thème",
@@ -42,7 +43,6 @@
     "verifying": "Vérification en cours",
     "trial": "Essai gratuit",
     "active": "Actif",
-    "plan": "Plan {name}",
     "noPlan": "Aucun abonnement",
     "trialUntil": "Essai jusqu'au {date}",
     "until": "Jusqu'au {date}",

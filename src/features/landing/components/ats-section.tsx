@@ -1,4 +1,5 @@
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
+import { useSiteCopy } from "../copy";
 import {
   IconArrowRight,
   IconArrowsSort,
@@ -25,7 +26,7 @@ const STEP_ICONS = [IconSpeakerphone, IconInbox, IconArrowsSort, IconVideo, Icon
  * them, across on a wide screen, down the side on a phone.
  */
 export function PipelineSteps() {
-  const PIPELINE = pipeline(useLocale());
+  const PIPELINE = pipeline(useSiteCopy());
   return (
     <div className="rounded-[2rem] bg-page p-6 sm:p-8">
       <ol className="relative grid gap-7 xl:grid-cols-6 xl:gap-4">
@@ -56,7 +57,7 @@ export function PipelineSteps() {
 
 /** What makes it an ATS, not a job board: six pillars. */
 export function AtsPillars() {
-  const ATS_PILLARS = atsPillars(useLocale());
+  const ATS_PILLARS = atsPillars(useSiteCopy());
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       {ATS_PILLARS.map(({ title, text, icon }) => (

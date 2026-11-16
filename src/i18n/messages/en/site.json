@@ -54,7 +54,15 @@
   "pages": {
     "home": {
       "metaTitle": "Rabotka Business - the next-generation ATS for hiring in Africa",
-      "metaDescription": "Complete recruitment software: job posts written and published everywhere, CVs read and ranked for each role, a pipeline followed as a team, video interviews and shared reports."
+      "metaDescription": "Complete recruitment software: job posts written and published everywhere, CVs read and ranked for each role, a pipeline followed as a team, video interviews and shared reports.",
+      "keywords": [
+        "ATS Africa",
+        "HR software",
+        "applicant management",
+        "Google for Jobs",
+        "LinkedIn",
+        "interview report"
+      ]
     },
     "features": {
       "metaTitle": "Features",

@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
+import { getSiteCopy, type SiteCopy } from "#/features/landing/copy";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { IconCheck } from "@tabler/icons-react";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 
 import { DemoBlock } from "#/features/landing/components/demo-block";
 import { PipelinePosition } from "#/features/landing/components/feature-stages";
 import { PageHero } from "#/features/landing/components/page-hero";
 import { SectionHeading } from "#/features/landing/components/section-heading";
 import { features, FEATURE_SLUGS } from "#/features/landing/content";
-import type { Locale } from "#/i18n/config";
 import { FeatureMockup } from "#/features/landing/mockups/mockups";
 import { featurePage } from "#/features/landing/site-content";
 import { marketingMetadata } from "#/lib/seo/marketing";
@@ -20,14 +20,14 @@ export function generateStaticParams() {
   return FEATURE_SLUGS.map((slug) => ({ slug }));
 }
 
-function find(slug: string, locale: Locale) {
-  const feature = features(locale).find((f) => f.slug === slug);
+function find(slug: string, copy: SiteCopy) {
+  const feature = features(copy).find((f) => f.slug === slug);
   if (!feature || feature.id === "pipeline") return null;
-  return { feature, page: featurePage(locale, feature.id) };
+  return { feature, page: featurePage(copy, feature.id) };
 }
 
 export async function generateMetadata({ params }: PageProps<"/fonctionnalites/[slug]">): Promise<Metadata> {
-  const found = find((await params).slug, (await getLocale()) as Locale);
+  const found = find((await params).slug, await getSiteCopy());
   if (!found) return {};
   return marketingMetadata({
     title: found.page.metaTitle,
@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: PageProps<"/fonctionnalites/[
 
 /** One tool: what it does, where it sits in the hire (a link to the others), the demo. */
 export default async function FeaturePage({ params }: PageProps<"/fonctionnalites/[slug]">) {
-  const found = find((await params).slug, (await getLocale()) as Locale);
+  const found = find((await params).slug, await getSiteCopy());
   const t = await getTranslations("site.pages.feature");
   if (!found) notFound();
   const { feature, page } = found;

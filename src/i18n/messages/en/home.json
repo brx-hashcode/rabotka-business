@@ -1,6 +1,6 @@
 {
   "title": "Dashboard",
-  "greeting": "{firstName, select, none {Here is} other {Hello {firstName}, here is}} {business, select, none {your hiring} other {{business}'s hiring}} over the last {days} days.",
+  "greeting": "{named, select, yes {Hello {firstName}, here is} other {Here is}} {hasBusiness, select, yes {the hiring at {business}} other {your hiring}} over the last {days} days.",
   "period": "Period",
   "days": "{days} days",
   "report": {

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
+import { getSiteCopy } from "#/features/landing/copy";
 import { IconArrowRight, IconClock } from "@tabler/icons-react";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 
 import { Illustration } from "#/components/illustration";
 import { LocalLink as Link } from "#/components/local-link";
-import type { Locale } from "#/i18n/config";
 import { DemoBlock } from "#/features/landing/components/demo-block";
 import { PageHero } from "#/features/landing/components/page-hero";
 import { SectionHeading } from "#/features/landing/components/section-heading";
@@ -22,7 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ResourcesPage() {
   const t = await getTranslations("site.pages.resources");
-  const GUIDES = guides((await getLocale()) as Locale);
+  const GUIDES = guides(await getSiteCopy());
   return (
     <>
       <PageHero

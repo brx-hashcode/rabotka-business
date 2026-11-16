@@ -22,7 +22,8 @@
     "soonTitle": "Coming soon",
     "homeLabel": "{name} — dashboard",
     "menu": "Menu",
-    "openMenu": "Open the menu"
+    "openMenu": "Open the menu",
+    "builtAt": "Built on {date} UTC"
   },
   "theme": {
     "label": "Theme",
@@ -42,7 +43,6 @@
     "verifying": "Verification in progress",
     "trial": "Free trial",
     "active": "Active",
-    "plan": "{name} plan",
     "noPlan": "No subscription",
     "trialUntil": "Trial until {date}",
     "until": "Until {date}",

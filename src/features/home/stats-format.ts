@@ -1,5 +1,6 @@
 /** Formatting of the dashboard's figures; pure, so it is tested on its own. */
 import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import { formatPercent } from "#/i18n/format";
 import type { Translator } from "#/i18n/translator";
 
 const nf = (n: number, locale: Locale, digits = 1) =>
@@ -14,6 +15,7 @@ export function formatDelay(hours: number | null, t: Translator<"home.delays">, 
   return t("days", { n: Math.round((hours / 24) * 10) / 10 });
 }
 
+/** `label`: the change in figures (« +50 % »), empty when flat — the caller words that. */
 export type Trend = { label: string; direction: "up" | "down" | "flat"; good: boolean | null };
 
 /**
@@ -27,13 +29,12 @@ export function trend(
   locale: Locale = "fr",
 ): Trend | null {
   if (current === null || previous === null) return null;
-  if (current === previous) return { label: "stable", direction: "flat", good: null };
+  if (current === previous) return { label: "", direction: "flat", good: null };
   const direction = current > previous ? "up" : "down";
   const good = (direction === "up") !== lowerIsBetter;
   if (previous === 0) return { label: `+${nf(current, locale, 0)}`, direction, good };
   const pct = Math.round(((current - previous) / previous) * 100);
-  // « +50 % » in French, « +50% » in English.
-  return { label: `${pct > 0 ? "+" : ""}${pct}${locale === "fr" ? " %" : "%"}`, direction, good };
+  return { label: formatPercent(pct, locale, { signed: true }), direction, good };
 }
 
 /** `yyyy-mm-dd` → « 12 oct. » / « 12 Oct ». */

@@ -16,13 +16,11 @@ import {
   IconWriting,
 } from "@tabler/icons-react";
 
-import { useLocale } from "next-intl";
-
 import { ProviderTile } from "#/components/mail-provider-logos";
 import { CriterionBar, ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
 import { cn } from "#/lib/utils";
 import type { MockupKey } from "../content";
-import { siteCopy } from "../copy";
+import { useSiteCopy } from "../copy";
 import { PipelineMockup, TeamMockup } from "./ats-mockups";
 import { FloatCard, MockupFrame } from "./frame";
 
@@ -33,7 +31,7 @@ import { FloatCard, MockupFrame } from "./frame";
 
 /** The mock-ups' words in the reader's language (copy/<locale>.json → mockups). */
 function useMockupCopy() {
-  return siteCopy(useLocale() as "fr" | "en").mockups;
+  return useSiteCopy().mockups;
 }
 
 const SCORES = [88, 74, 61, 38];

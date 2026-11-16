@@ -1,6 +1,7 @@
 import Image from "next/image";
+import { useSiteCopy } from "../copy";
 import { IconArrowRight } from "@tabler/icons-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 
 import { LocalLink as Link } from "#/components/local-link";
 import { featurePage } from "../site-content";
@@ -13,7 +14,7 @@ import { SectionHeading } from "./section-heading";
  */
 export function InterviewsSpotlight() {
   const t = useTranslations("site.spotlight");
-  const steps = featurePage(useLocale(), "interviews").steps ?? [];
+  const steps = featurePage(useSiteCopy(), "interviews").steps ?? [];
   const href = "/fonctionnalites/entretiens";
   if (steps.length === 0) return null;
   return (

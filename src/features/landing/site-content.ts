@@ -8,20 +8,19 @@ import {
 
 import type { IllustrationName } from "#/components/illustration";
 
-import type { Locale } from "#/i18n/config";
 import type { MockupKey } from "./content";
-import { siteCopy } from "./copy";
+import type { SiteCopy } from "./copy";
 
 /*
  * The public site's pages beyond the landing: the ATS story, each feature's
  * page, the guides and « À propos ». Same rule as content.ts: what Rabotka
  * does today, no prices, no statistics, no invented customers. The words are
- * in copy/<locale>.json; here, what is not words (icons, photos, order).
+ * in the siteCopy messages; here, what is not words (icons, photos, order).
  */
 
 /** The pipeline every candidate goes through, as the ATS board shows it. */
-export function pipeline(locale: Locale): { title: string; text: string }[] {
-  return siteCopy(locale).pipeline;
+export function pipeline(copy: SiteCopy): { title: string; text: string }[] {
+  return copy.pipeline;
 }
 
 export type Pillar = { title: string; text: string; icon: Icon };
@@ -29,8 +28,8 @@ export type Pillar = { title: string; text: string; icon: Icon };
 const PILLAR_ICONS = [IconSortDescending, IconLayoutKanban, IconUsers, IconMapPin];
 
 /** What makes Rabotka Business an ATS of its generation, not a job board. */
-export function atsPillars(locale: Locale): Pillar[] {
-  return siteCopy(locale).atsPillars.map((p, i) => ({ ...p, icon: PILLAR_ICONS[i] }));
+export function atsPillars(copy: SiteCopy): Pillar[] {
+  return copy.atsPillars.map((p, i) => ({ ...p, icon: PILLAR_ICONS[i] }));
 }
 
 export type FeaturePage = {
@@ -52,8 +51,8 @@ const STEP_PHOTOS: Partial<Record<FeaturePageKey, string[]>> = {
 };
 
 /** One page per feature, keyed like features(). */
-export function featurePage(locale: Locale, key: FeaturePageKey): FeaturePage {
-  const page = siteCopy(locale).featurePages[key] as Omit<FeaturePage, "steps"> & {
+export function featurePage(copy: SiteCopy, key: FeaturePageKey): FeaturePage {
+  const page = copy.featurePages[key] as Omit<FeaturePage, "steps"> & {
     steps?: Omit<NonNullable<FeaturePage["steps"]>[number], "photo">[];
   };
   const photos = STEP_PHOTOS[key] ?? [];
@@ -71,7 +70,7 @@ export type Guide = {
 };
 
 /** Practical how-tos about recruiting with Rabotka: method, no figures. */
-const GUIDE_META: { slug: keyof ReturnType<typeof siteCopy>["guides"]; illustration: IllustrationName; minutes: number }[] = [
+const GUIDE_META: { slug: keyof SiteCopy["guides"]; illustration: IllustrationName; minutes: number }[] = [
   { slug: "rediger-une-offre-qui-attire", illustration: "job-offers", minutes: 5 },
   { slug: "trier-des-dizaines-de-cv", illustration: "online-cv", minutes: 4 },
   { slug: "organiser-ses-entretiens", illustration: "interview", minutes: 4 },
@@ -80,7 +79,7 @@ const GUIDE_META: { slug: keyof ReturnType<typeof siteCopy>["guides"]; illustrat
 /** Every guide's slug (the sitemap's, the same in each language). */
 export const GUIDE_SLUGS: string[] = GUIDE_META.map((g) => g.slug);
 
-export function guides(locale: Locale): Guide[] {
-  const copy = siteCopy(locale).guides;
-  return GUIDE_META.map((g) => ({ ...g, ...copy[g.slug] }));
+export function guides(copy: SiteCopy): Guide[] {
+  const text = copy.guides;
+  return GUIDE_META.map((g) => ({ ...g, ...text[g.slug] }));
 }

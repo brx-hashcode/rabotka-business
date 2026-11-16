@@ -17,7 +17,7 @@ import {
   type Icon,
 } from "@tabler/icons-react";
 
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 
 import { BrandLogo } from "#/components/brand-logo";
 import { LocalLink as Link } from "#/components/local-link";
@@ -35,6 +35,7 @@ import {
   solutionLinks,
   type NavLink,
 } from "../content";
+import { useSiteCopy } from "../copy";
 import { FlickeringGrid } from "./flickering-grid";
 import { SmartLink } from "./smart-link";
 
@@ -111,11 +112,11 @@ const SOCIALS: Record<SocialNetwork, { label: string; icon: Icon }> = {
 /** Every link once; the demo block above every page asks for the demo. */
 function useFooterColumns(): { title: string; links: NavLink[] }[] {
   const t = useTranslations("site.footer");
-  const locale = useLocale();
+  const copy = useSiteCopy();
   return [
-    { title: t("features"), links: solutionLinks(locale) },
-    { title: t("resources"), links: resourceLinks(locale) },
-    { title: t("company"), links: companyLinks(locale) },
+    { title: t("features"), links: solutionLinks(copy) },
+    { title: t("resources"), links: resourceLinks(copy) },
+    { title: t("company"), links: companyLinks(copy) },
     {
       title: t("account"),
       links: [

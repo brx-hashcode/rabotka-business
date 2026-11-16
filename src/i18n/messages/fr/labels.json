@@ -76,5 +76,10 @@
     "training": "Formation",
     "location": "Lieu",
     "languages": "Langues"
+  },
+  "role": {
+    "ADMIN": "Administrateur",
+    "RECRUITER": "Recruteur",
+    "REVIEWER": "Évaluateur"
   }
 }

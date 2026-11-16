@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { useSiteCopy } from "../copy";
 import { IconArrowRight } from "@tabler/icons-react";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -15,7 +16,7 @@ import { IconTile } from "./icon-tile";
 /** What happens to the business's papers, the CVs and its mailbox. */
 export function TrustSection() {
   const t = useTranslations("site.trust");
-  const TRUST = trust(useLocale());
+  const TRUST = trust(useSiteCopy());
   return (
     <section id="confiance" className="py-20 md:py-28">
       <div className="mx-auto w-full max-w-7xl space-y-12 px-4 sm:px-6">
@@ -44,7 +45,7 @@ export function TrustSection() {
  */
 export function AudiencesSection() {
   const t = useTranslations("site.audiences");
-  const AUDIENCES = audiences(useLocale());
+  const AUDIENCES = audiences(useSiteCopy());
   return (
     <section id="secteurs" className="py-20 md:py-28">
       <div className="mx-auto w-full max-w-7xl space-y-12 px-4 sm:px-6">
@@ -114,6 +115,6 @@ function useCountriesAnswer(countries: BusinessCountryName[]) {
 /** The FAQ: the few questions a business asks before it starts; the countries one where faqShown puts it (null). */
 export function FaqSection({ countries }: Readonly<{ countries: BusinessCountryName[] }>) {
   const countriesItem = useCountriesAnswer(countries);
-  const items = faqShown(useLocale()).map((item) => item ?? countriesItem);
+  const items = faqShown(useSiteCopy()).map((item) => item ?? countriesItem);
   return <FaqAccordion items={items} />;
 }
