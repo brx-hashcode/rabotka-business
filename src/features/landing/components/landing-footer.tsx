@@ -19,6 +19,7 @@ import {
 } from "@tabler/icons-react";
 
 import { BrandLogo } from "#/components/brand-logo";
+import { LanguageSwitch } from "#/components/language-switch";
 import { useSupportContact } from "#/hooks/use-support-contact";
 import type { BusinessCountryName } from "#/lib/api/catalog-server";
 import type { SocialNetwork, SupportContact } from "#/lib/api/public-controller";
@@ -263,6 +264,7 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
               <a href={`${PUBLIC_SITE}/privacy`} className="transition-colors hover:text-white">
                 Politique de confidentialité
               </a>
+              <LanguageSwitch tone="inverse" />
               <button
                 type="button"
                 onClick={() => window.scrollTo({ top: 0 })}
