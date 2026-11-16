@@ -1,25 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslations } from "next-intl";
 
 import { Form } from "#/components/ui/form";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { FormError, StepActions, StepHeading, TextField } from "./form-bits";
 
-const schema = z.object({
-  firstName: z.string().trim().min(1, "Indiquez votre prénom").max(100),
-  lastName: z.string().trim().min(1, "Indiquez votre nom").max(100),
-  email: z.email("Saisissez une adresse e-mail valide").trim().toLowerCase(),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^\+?[\d\s.-]{8,20}$/, "Saisissez un numéro de téléphone valide"),
-});
+/** The account holder's fields, with the reader's sentences (signUp.account.*). */
+const accountSchema = (t: (key: "firstNameRequired" | "lastNameRequired" | "emailInvalid" | "phoneInvalid") => string) =>
+  z.object({
+    firstName: z.string().trim().min(1, t("firstNameRequired")).max(100),
+    lastName: z.string().trim().min(1, t("lastNameRequired")).max(100),
+    email: z.email(t("emailInvalid")).trim().toLowerCase(),
+    phone: z
+      .string()
+      .trim()
+      .regex(/^\+?[\d\s.-]{8,20}$/, t("phoneInvalid")),
+  });
 
-export type AccountValues = z.infer<typeof schema>;
+export type AccountValues = z.infer<ReturnType<typeof accountSchema>>;
 
 /**
  * Who holds the account, and the professional email it signs in with. The
@@ -33,6 +36,9 @@ export function AccountStep({
   defaultValues?: AccountValues;
   onDone: (values: AccountValues) => Promise<void>;
 }>) {
+  const t = useTranslations("signUp.account");
+  const friendlyError = useFriendlyError();
+  const schema = useMemo(() => accountSchema(t), [t]);
   const form = useForm<AccountValues>({
     resolver: zodResolver(schema),
     defaultValues: defaultValues ?? { firstName: "", lastName: "", email: "", phone: "" },
@@ -44,7 +50,7 @@ export function AccountStep({
     try {
       await onDone(values);
     } catch (err) {
-      setError(friendlyError(err, "Impossible d'envoyer le code. Réessayez."));
+      setError(friendlyError(err, t("sendFailed")));
     }
   }
 
@@ -52,34 +58,34 @@ export function AccountStep({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(submit)} noValidate className="space-y-8">
         <StepHeading
-          title="Créez votre compte entreprise"
-          text="Commencez par le responsable du compte. Un code de vérification sera envoyé à son adresse professionnelle."
+          title={t("title")}
+          text={t("text")}
         />
         <div className="grid gap-5 sm:grid-cols-2">
-          <TextField control={form.control} name="firstName" label="Prénom" autoComplete="given-name" autoFocus />
-          <TextField control={form.control} name="lastName" label="Nom" autoComplete="family-name" />
+          <TextField control={form.control} name="firstName" label={t("firstName")} autoComplete="given-name" autoFocus />
+          <TextField control={form.control} name="lastName" label={t("lastName")} autoComplete="family-name" />
           <TextField
             control={form.control}
             name="email"
-            label="Adresse e-mail professionnelle"
+            label={t("email")}
             type="email"
             autoComplete="email"
-            placeholder="prenom.nom@organisation.cg"
+            placeholder={t("emailPlaceholder")}
             className="sm:col-span-2"
           />
           <TextField
             control={form.control}
             name="phone"
-            label="Téléphone"
+            label={t("phone")}
             type="tel"
             autoComplete="tel"
             // The organisation's country, chosen next, gives the prefix.
-            placeholder="06 123 45 67 (ou avec l'indicatif, +237…)"
+            placeholder={t("phonePlaceholder")}
             className="sm:col-span-2"
           />
         </div>
         <FormError message={error} />
-        <StepActions continueLabel="Recevoir le code" pending={form.formState.isSubmitting} />
+        <StepActions continueLabel={t("submit")} pending={form.formState.isSubmitting} />
       </form>
     </Form>
   );

@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { IconArrowRight, IconCircleCheckFilled, IconPencil } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
@@ -39,6 +40,7 @@ export function ReviewStep({
   onBack: () => void;
   onSubmit: () => void;
 }>) {
+  const t = useTranslations("signUp.review");
   const [accepted, setAccepted] = useState(false);
   const [viewing, setViewing] = useState<string | null>(null);
   const viewed = viewing ? documents[viewing] : undefined;
@@ -58,37 +60,37 @@ export function ReviewStep({
       }}
     >
       <StepHeading
-        title="Vérifiez vos informations"
-        text="Relisez avant l'envoi : nos équipes vérifieront votre organisation sur la base de ces éléments."
+        title={t("title")}
+        text={t("text")}
       />
 
-      <Summary title="Responsable du compte" onEdit={() => onEdit(0)}>
-        <Row label="Nom">{`${account.firstName} ${account.lastName}`}</Row>
-        <Row label="E-mail">{account.email}</Row>
-        <Row label="Téléphone">{account.phone}</Row>
+      <Summary title={t("holder")} onEdit={() => onEdit(0)}>
+        <Row label={t("name")}>{`${account.firstName} ${account.lastName}`}</Row>
+        <Row label={t("email")}>{account.email}</Row>
+        <Row label={t("phone")}>{account.phone}</Row>
       </Summary>
 
-      <Summary title="Organisation" onEdit={() => onEdit(2)}>
-        <Row label="Raison sociale">{organisation.name}</Row>
-        <Row label="Type">{categoryLabel}</Row>
-        {legalFormLabel && <Row label="Forme juridique">{legalFormLabel}</Row>}
-        {organisation.size && <Row label="Effectif">{`${organisation.size} salariés`}</Row>}
+      <Summary title={t("organisation")} onEdit={() => onEdit(2)}>
+        <Row label={t("companyName")}>{organisation.name}</Row>
+        <Row label={t("type")}>{categoryLabel}</Row>
+        {legalFormLabel && <Row label={t("legalForm")}>{legalFormLabel}</Row>}
+        {organisation.size && <Row label={t("size")}>{t("employees", { size: organisation.size })}</Row>}
         {organisation.registrationNumber && (
-          <Row label={ids.registrationNumber?.label ?? "N° RCCM"}>{organisation.registrationNumber}</Row>
+          <Row label={ids.registrationNumber?.label ?? t("registrationNumber")}>{organisation.registrationNumber}</Row>
         )}
-        {organisation.taxId && <Row label={ids.taxId?.label ?? "NIF"}>{organisation.taxId}</Row>}
+        {organisation.taxId && <Row label={ids.taxId?.label ?? t("taxId")}>{organisation.taxId}</Row>}
         {organisation.statisticalId && ids.statisticalId && (
           <Row label={ids.statisticalId.label}>{organisation.statisticalId}</Row>
         )}
-        <Row label={organisation.address ? "Adresse" : "Pays"}>
+        <Row label={organisation.address ? t("address") : t("country")}>
           {[organisation.address, organisation.city, countryName].filter(Boolean).join(", ")}
         </Row>
-        {organisation.website && <Row label="Site web">{organisation.website}</Row>}
+        {organisation.website && <Row label={t("website")}>{organisation.website}</Row>}
       </Summary>
 
-      <Summary title="Documents" onEdit={() => onEdit(3)}>
+      <Summary title={t("documents")} onEdit={() => onEdit(3)}>
         {Object.keys(documents).length === 0 && (
-          <p className="text-muted-foreground">Aucun pour l&apos;instant : vous pourrez les ajouter depuis votre espace.</p>
+          <p className="text-muted-foreground">{t("noDocuments")}</p>
         )}
         {Object.entries(documents).map(([type, doc]) => (
           <Row key={type} label={docLabel.get(type) ?? type}>
@@ -107,15 +109,18 @@ export function ReviewStep({
       <label className="flex cursor-pointer items-start gap-3 rounded-2xl bg-page p-4 text-sm">
         <Checkbox checked={accepted} onCheckedChange={(v) => setAccepted(v === true)} className="mt-0.5" />
         <span>
-          J&apos;accepte les{" "}
-          <a href={`${PUBLIC_SITE}/terms`} target="_blank" rel="noreferrer" className="font-medium underline underline-offset-4">
-            conditions d&apos;utilisation
-          </a>{" "}
-          et la{" "}
-          <a href={`${PUBLIC_SITE}/privacy`} target="_blank" rel="noreferrer" className="font-medium underline underline-offset-4">
-            politique de confidentialité
-          </a>{" "}
-          de Rabotka, et certifie être habilité(e) à représenter cette organisation.
+          {t.rich("terms", {
+            terms: (chunks) => (
+              <a href={`${PUBLIC_SITE}/terms`} target="_blank" rel="noreferrer" className="font-medium underline underline-offset-4">
+                {chunks}
+              </a>
+            ),
+            privacy: (chunks) => (
+              <a href={`${PUBLIC_SITE}/privacy`} target="_blank" rel="noreferrer" className="font-medium underline underline-offset-4">
+                {chunks}
+              </a>
+            ),
+          })}
         </span>
       </label>
 
@@ -129,19 +134,20 @@ export function ReviewStep({
       />
 
       <FormError message={error} />
-      <StepActions onBack={onBack} continueLabel="Envoyer ma demande" pending={pending} disabled={!accepted} />
+      <StepActions onBack={onBack} continueLabel={t("submit")} pending={pending} disabled={!accepted} />
     </form>
   );
 }
 
 function Summary({ title, onEdit, children }: Readonly<{ title: string; onEdit: () => void; children: ReactNode }>) {
+  const t = useTranslations("signUp.review");
   return (
     <section className="rounded-2xl bg-page p-5">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-semibold">{title}</h2>
         <button type="button" onClick={onEdit} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-medium text-sm hover:bg-black/5">
           <IconPencil className="size-4" />
-          Modifier
+          {t("edit")}
         </button>
       </div>
       <dl className="space-y-2 text-sm">{children}</dl>
@@ -169,6 +175,7 @@ function Row({ label, children }: Readonly<{ label: string; children: ReactNode 
  */
 export function SignUpDone({ email, signInRequired }: Readonly<{ email: string; signInRequired: boolean }>) {
   const leaving = useLeaving();
+  const t = useTranslations("signUp.done");
 
   // A full page load, not a client-side navigation: the request then carries
   // the session cookies just set, and if there were none the gate's redirect
@@ -182,29 +189,16 @@ export function SignUpDone({ email, signInRequired }: Readonly<{ email: string; 
   return (
     <div className="space-y-8">
       <StepHeading
-        title="Votre compte entreprise est créé"
-        text={
-          signInRequired
-            ? "Il ne reste qu'à vous connecter : saisissez le code que nous venons d'envoyer par e-mail."
-            : "Merci ! Nos équipes examinent maintenant les pièces de votre organisation. Vous serez informé par e-mail dès que votre compte sera activé."
-        }
+        title={t("title")}
+        text={signInRequired ? t("signIn") : t("thanks")}
       />
       <div className="space-y-3">
-        <p className="font-semibold text-sm">Les prochaines étapes</p>
+        <p className="font-semibold text-sm">{t("next")}</p>
         <ol className="space-y-3 text-sm">
           {[
-            {
-              title: "Vérification de votre organisation",
-              text: "Nos équipes examinent vos pièces justificatives.",
-            },
-            {
-              title: "Activation de votre compte",
-              text: "Vous êtes prévenu par e-mail et dans votre espace.",
-            },
-            {
-              title: "Vos premiers recrutements",
-              text: "Publiez vos offres et recevez des profils présélectionnés.",
-            },
+            { title: t("checkTitle"), text: t("checkText") },
+            { title: t("activationTitle"), text: t("activationText") },
+            { title: t("hireTitle"), text: t("hireText") },
           ].map((item, i) => (
             <li key={item.title} className="flex items-start gap-3 rounded-2xl bg-page p-4">
               <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-card font-semibold text-xs">
@@ -228,7 +222,7 @@ export function SignUpDone({ email, signInRequired }: Readonly<{ email: string; 
           aria-busy={leaving.active || undefined}
           className="h-12 rounded-full border-0 bg-ink px-6 text-[15px] text-white hover:bg-ink/90 disabled:opacity-100 sm:h-12 sm:text-[15px]"
         >
-          Découvrir mon espace entreprise
+          {t("enter")}
           {/* Not Button's `loading`: its spinner is invisible on ink. */}
           {leaving.active ? <Loader aria-hidden className="size-4 animate-spin" /> : <IconArrowRight />}
         </Button>

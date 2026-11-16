@@ -19,5 +19,7 @@
     "older": "Older"
   },
   "loading": "Loading…",
-  "seeMore": "See more"
+  "seeMore": "See more",
+  "search": "Search…",
+  "noResult": "No results."
 }

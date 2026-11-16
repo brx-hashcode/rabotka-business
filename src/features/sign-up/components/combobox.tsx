@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { IconCheck, IconSelector } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import {
   Command,
@@ -42,8 +43,8 @@ export function Combobox({
   onChange,
   options,
   placeholder,
-  searchPlaceholder = "Rechercher…",
-  emptyText = "Aucun résultat.",
+  searchPlaceholder,
+  emptyText,
   disabled,
   invalid,
   clearable,
@@ -62,6 +63,7 @@ export function Combobox({
   id?: string;
 }>) {
   const [open, setOpen] = useState(false);
+  const t = useTranslations("common");
   const selected = options.find((o) => o.value === value);
 
   const groups = new Map<string, ComboboxOption[]>();
@@ -94,9 +96,9 @@ export function Combobox({
         className="w-(--anchor-width) min-w-72 rounded-2xl border-0 bg-card shadow-soft before:hidden"
       >
         <Command className={COMMAND_STYLE} filter={filter}>
-          <CommandInput placeholder={searchPlaceholder} />
+          <CommandInput placeholder={searchPlaceholder ?? t("search")} />
           <CommandList className="max-h-72 overscroll-contain pr-1">
-            <CommandEmpty>{emptyText}</CommandEmpty>
+            <CommandEmpty>{emptyText ?? t("noResult")}</CommandEmpty>
             {[...groups.entries()].map(([group, items]) => (
               <CommandGroup key={group || "_"} heading={group || undefined}>
                 {items.map((option) => (

@@ -1,0 +1,203 @@
+{
+  "steps": {
+    "account": {
+      "label": "Compte",
+      "kicker": "Responsable du compte",
+      "title": "La personne qui pilotera vos recrutements",
+      "text": "Le compte entreprise est rattaché à une personne : c'est elle qui se connecte, publie les offres et échange avec les candidats."
+    },
+    "verify": {
+      "label": "Vérification",
+      "kicker": "Sécurité",
+      "title": "Votre adresse professionnelle, confirmée",
+      "text": "Un code à usage unique garantit que l'adresse e-mail vous appartient. C'est aussi ainsi que vous vous connecterez : sans mot de passe."
+    },
+    "organisation": {
+      "label": "Organisation",
+      "kicker": "Votre organisation",
+      "title": "Présentez votre structure aux candidats",
+      "text": "Raison sociale, statut juridique, identifiants officiels : ces informations figurent sur votre profil et servent à la vérification."
+    },
+    "documents": {
+      "label": "Documents",
+      "kicker": "Conformité",
+      "title": "Les pièces qui authentifient votre organisation",
+      "text": "Les documents demandés dépendent de votre statut. Ils sont conservés de manière confidentielle et examinés par nos équipes uniquement."
+    },
+    "review": {
+      "label": "Validation",
+      "kicker": "Dernière étape",
+      "title": "Vérifiez, validez, commencez à recruter",
+      "text": "Relisez vos informations avant l'envoi. Votre compte est activé dès que nos équipes ont validé votre organisation."
+    },
+    "done": {
+      "kicker": "Demande envoyée",
+      "title": "Bienvenue sur Rabotka Business",
+      "text": "Nos équipes examinent votre organisation. Vous pouvez déjà découvrir votre espace."
+    }
+  },
+  "progress": {
+    "previous": "Étape précédente",
+    "finished": "Inscription terminée",
+    "stepOf": "Étape {n} sur {total}",
+    "welcome": "Bienvenue",
+    "haveAccount": "Déjà un compte ? ",
+    "signIn": "Se connecter",
+    "steps": "Étapes de l'inscription"
+  },
+  "form": {
+    "optional": "facultatif",
+    "back": "Retour",
+    "continue": "Continuer",
+    "loading": "Chargement"
+  },
+  "code": {
+    "digit": "Chiffre {n}",
+    "incomplete": "Saisissez les 6 chiffres du code.",
+    "failed": "Ce code n'a pas fonctionné. Réessayez.",
+    "resent": "Nouveau code envoyé",
+    "resendFailed": "Impossible de renvoyer le code.",
+    "resendIn": "Renvoyer dans {seconds} s",
+    "resend": "Renvoyer le code"
+  },
+  "account": {
+    "firstNameRequired": "Indiquez votre prénom",
+    "lastNameRequired": "Indiquez votre nom",
+    "emailInvalid": "Saisissez une adresse e-mail valide",
+    "phoneInvalid": "Saisissez un numéro de téléphone valide",
+    "sendFailed": "Impossible d'envoyer le code. Réessayez.",
+    "title": "Créez votre compte entreprise",
+    "text": "Commencez par le responsable du compte. Un code de vérification sera envoyé à son adresse professionnelle.",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "email": "Adresse e-mail professionnelle",
+    "emailPlaceholder": "prenom.nom@organisation.cg",
+    "phone": "Téléphone",
+    "phonePlaceholder": "06 123 45 67 (ou avec l'indicatif, +237…)",
+    "submit": "Recevoir le code"
+  },
+  "verify": {
+    "title": "Vérifiez votre adresse e-mail",
+    "text": "Nous avons envoyé un code à 6 chiffres à {email}. Il est valable quelques minutes.",
+    "nothing": "Vous n'avez rien reçu ?",
+    "changeEmail": "Modifier l'adresse",
+    "submit": "Vérifier"
+  },
+  "organisation": {
+    "nameRequired": "Indiquez la raison sociale",
+    "categoryRequired": "Choisissez le type d'organisation",
+    "countryRequired": "Choisissez le pays",
+    "websiteInvalid": "Adresse web complète, avec https://",
+    "identifierRequired": "Indiquez le {label}",
+    "title": "Votre organisation",
+    "text": "Ces informations apparaissent sur votre profil entreprise et servent à sa vérification.",
+    "identity": "Identité",
+    "verified": "vérifiée",
+    "verifiedPlural": "vérifiés",
+    "name": "Raison sociale",
+    "category": "Type d'organisation",
+    "categoryPlaceholder": "Choisir le type d'organisation",
+    "categorySearch": "Rechercher : PME, école, ONG…",
+    "legalForm": "Forme juridique",
+    "legalFormPlaceholder": "Choisir la forme juridique",
+    "legalFormFirst": "Choisissez d'abord le type",
+    "identifiers": "Identifiants officiels",
+    "identifiersRequired": "Les numéros de vos documents obligatoires, tels qu'ils y figurent.",
+    "identifiersOptional": "Ils facilitent la vérification de votre organisation.",
+    "statisticalId": "Identifiant statistique",
+    "notProvided": "Non renseigné",
+    "headOffice": "Siège",
+    "headOfficeText": "Seul le pays est demandé : une organisation qui exerce en ligne laisse l'adresse vide.",
+    "address": "Adresse",
+    "addressPlaceholder": "Rue, quartier, arrondissement",
+    "country": "Pays",
+    "countryPlaceholder": "Choisir le pays",
+    "countrySearch": "Rechercher un pays",
+    "city": "Ville",
+    "cityPlaceholder": "Choisir la ville",
+    "cityFirst": "Choisissez d'abord le pays",
+    "citySearch": "Rechercher une ville",
+    "presentation": "Présentation",
+    "website": "Site web",
+    "description": "Présentation de l'organisation",
+    "descriptionPlaceholder": "Activité, missions, valeurs : ce que les candidats doivent savoir de vous.",
+    "size": "Effectif",
+    "employees": "salariés",
+    "groups": {
+      "companies": "Entreprises",
+      "associations": "Associations et ONG",
+      "education": "Enseignement et formation",
+      "health": "Santé",
+      "public": "Secteur public et international",
+      "other": "Autres"
+    }
+  },
+  "documents": {
+    "title": "Pièces justificatives",
+    "text": "Ils prouvent que votre organisation existe : nous les vérifions avant que vous puissiez recruter. PDF, JPG, PNG ou WEBP, 10 Mo maximum par fichier ; vos documents restent confidentiels.",
+    "required": "Documents obligatoires",
+    "eitherOne": "L’un ou l’autre suffit",
+    "recommended": "Documents recommandés",
+    "yours": "Vos documents",
+    "complementary": "Documents complémentaires",
+    "atLeastOne": "au moins un",
+    "addComplementary": "Ajouter des documents complémentaires",
+    "missing": "Il manque encore {list}.",
+    "anyDocument": "au moins un document",
+    "quoted": "« {name} »",
+    "tooBig": "« {name} » dépasse 10 Mo.",
+    "uploadFailed": "« {name} » n'a pas pu être envoyé. Réessayez.",
+    "previewOf": "Aperçu : {title}",
+    "preview": "{fileName} · Aperçu",
+    "noFile": "Aucun fichier",
+    "replace": "Remplacer",
+    "remove": "Retirer",
+    "upload": "Téléverser",
+    "previewGone": "L'aperçu n'est plus disponible. Le document est bien enregistré."
+  },
+  "review": {
+    "title": "Vérifiez vos informations",
+    "text": "Relisez avant l'envoi : nos équipes vérifieront votre organisation sur la base de ces éléments.",
+    "holder": "Responsable du compte",
+    "name": "Nom",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "organisation": "Organisation",
+    "companyName": "Raison sociale",
+    "type": "Type",
+    "legalForm": "Forme juridique",
+    "size": "Effectif",
+    "employees": "{size} salariés",
+    "registrationNumber": "N° RCCM",
+    "taxId": "NIF",
+    "address": "Adresse",
+    "country": "Pays",
+    "website": "Site web",
+    "documents": "Documents",
+    "noDocuments": "Aucun pour l'instant : vous pourrez les ajouter depuis votre espace.",
+    "terms": "J'accepte les <terms>conditions d'utilisation</terms> et la <privacy>politique de confidentialité</privacy> de Rabotka, et certifie être habilité(e) à représenter cette organisation.",
+    "submit": "Envoyer ma demande",
+    "edit": "Modifier",
+    "failed": "La création du compte a échoué. Réessayez.",
+    "verifyAgain": "Pour finaliser, confirmez à nouveau votre adresse : un nouveau code vous a été envoyé."
+  },
+  "done": {
+    "title": "Votre compte entreprise est créé",
+    "signIn": "Il ne reste qu'à vous connecter : saisissez le code que nous venons d'envoyer par e-mail.",
+    "thanks": "Merci ! Nos équipes examinent maintenant les pièces de votre organisation. Vous serez informé par e-mail dès que votre compte sera activé.",
+    "next": "Les prochaines étapes",
+    "checkTitle": "Vérification de votre organisation",
+    "checkText": "Nos équipes examinent vos pièces justificatives.",
+    "activationTitle": "Activation de votre compte",
+    "activationText": "Vous êtes prévenu par e-mail et dans votre espace.",
+    "hireTitle": "Vos premiers recrutements",
+    "hireText": "Publiez vos offres et recevez des profils présélectionnés.",
+    "enter": "Découvrir mon espace entreprise"
+  },
+  "inlineSignIn": {
+    "sendFailed": "Impossible d'envoyer le code de connexion.",
+    "title": "Accédez à votre espace",
+    "text": "Nous venons d'envoyer un code de connexion à <strong>{email}</strong>.",
+    "submit": "Se connecter"
+  }
+}
