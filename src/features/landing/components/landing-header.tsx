@@ -48,11 +48,7 @@ function useNav() {
   return { menus, pages };
 }
 
-/**
- * The public site's header: brand, the Fonctionnalités and Ressources menus,
- * two pages, then the ways in, « Demander une démo » first. Sticky on the
- * lime band; on phones the menus fold into a sheet.
- */
+
 export function LandingHeader() {
   const t = useTranslations("site.header");
   const { menus: MENUS, pages: PAGES } = useNav();
