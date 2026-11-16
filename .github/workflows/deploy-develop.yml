@@ -79,8 +79,11 @@ jobs:
           target: production
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          # English is offered on develop, to be tried before production
+          # (deploy-production.yml does not pass it: French only there).
           build-args: |
             APP_VERSION=${{ github.sha }}
+            NEXT_PUBLIC_OFFER_ENGLISH=1
           labels: ${{ steps.meta.outputs.labels }}
           # Registry-backed layer cache stored in GHCR (a :buildcache tag), not
           # GitHub's Actions Cache — which returned 400 outages and gave 0% hit,

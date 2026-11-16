@@ -14,6 +14,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # The commit, shown in the sidebar (next.config.ts): the build has no .git.
 ARG APP_VERSION
 ENV APP_VERSION=$APP_VERSION
+# "1" offers English beside French (src/i18n/config.ts). Read when the app is
+# built, so it is a build argument: empty unless the workflow passes it.
+ARG NEXT_PUBLIC_OFFER_ENGLISH
+ENV NEXT_PUBLIC_OFFER_ENGLISH=$NEXT_PUBLIC_OFFER_ENGLISH
 RUN pnpm run build
 
 # `output: "standalone"` (next.config.ts) emits a self-contained server.js with
