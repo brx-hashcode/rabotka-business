@@ -22,7 +22,7 @@ function formatOf(e: CalendarEntry, t: InterviewsT): string {
 
 function statusOf(e: CalendarEntry, t: InterviewsT): string {
   if (e.offered) return t("offered");
-  if (e.interview.endedAt && e.interview.status !== "CANCELLED") return t("ended");
+  if (e.interview.endedAt && e.interview.status !== "CANCELLED") return t("endedLabel");
   return t(`status.${e.interview.status}`);
 }
 

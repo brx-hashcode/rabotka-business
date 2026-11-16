@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -20,7 +21,9 @@ import { Button } from "#/components/ui/button";
 import { Textarea } from "#/components/ui/textarea";
 import { useDictation } from "#/features/interviews/use-dictation";
 import { useVideoPlan } from "#/features/interviews/use-video-plan";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import type { Translator } from "#/i18n/translator";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import {
   getInterviewReport,
   interviewReportKey,
@@ -47,12 +50,12 @@ export function reportStage(r: InterviewReport | undefined, planAllowed: boolean
 }
 
 /** « dans 1 min 30 »: what is left before the report writes itself. */
-export function untilText(at: string, now: number): string {
+export function untilText(at: string, now: number, t: Translator<"interviews.ended">): string {
   const s = Math.max(0, Math.round((new Date(at).getTime() - now) / 1000));
-  if (s < 60) return `dans ${s} s`;
+  if (s < 60) return t("inSeconds", { s });
   const m = Math.floor(s / 60);
   const rest = s % 60;
-  return rest ? `dans ${m} min ${String(rest).padStart(2, "0")}` : `dans ${m} min`;
+  return rest ? t("inMinutesSeconds", { m, s: String(rest).padStart(2, "0") }) : t("inMinutes", { m });
 }
 
 /** The server's wait after the call, for the bar (AFTER_CALL_DELAY_MS there). */
@@ -78,6 +81,9 @@ export function CallEnded({
   onOpenReport,
 }: Readonly<{ interviewId: string; candidateName: string; jobTitle: string; endedAt?: string | null; onOpenReport: () => void }>) {
   const queryClient = useQueryClient();
+  const tr = useTranslations("interviews.ended");
+  const locale = useLocale() as Locale;
+  const friendlyError = useFriendlyError();
   const key = interviewReportKey(interviewId);
   const videoPlan = useVideoPlan();
   const query = useQuery({
@@ -120,7 +126,7 @@ export function CallEnded({
       setAddedSinceReport(false);
       void queryClient.invalidateQueries({ queryKey: interviewsKey });
     },
-    onError: (err) => toast.error(friendlyError(err, "Le compte rendu n'a pas pu être lancé.")),
+    onError: (err) => toast.error(friendlyError(err, tr("startFailed"))),
   });
 
   // The countdown, while it waits.
@@ -131,11 +137,11 @@ export function CallEnded({
     return () => clearInterval(t);
   }, [stage]);
 
-  let noteStatus = "Facultatif · enregistrée automatiquement";
-  if (save.isPending) noteStatus = "Enregistrement…";
-  else if (draft !== null && draft !== saved?.notes) noteStatus = "Modifiée";
-  else if (notes) noteStatus = "Enregistrée";
-  const endedTime = endedAt ? new Date(endedAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : null;
+  let noteState: "noteOptional" | "saving" | "changed" | "saved" = "noteOptional";
+  if (save.isPending) noteState = "saving";
+  else if (draft !== null && draft !== saved?.notes) noteState = "changed";
+  else if (notes) noteState = "saved";
+  const endedTime = endedAt ? new Date(endedAt).toLocaleTimeString(INTL_LOCALE[locale], { hour: "2-digit", minute: "2-digit" }) : null;
 
   return (
     <div className="flex size-full justify-center overflow-y-auto px-4 py-8 sm:items-center sm:py-10">
@@ -145,7 +151,7 @@ export function CallEnded({
             <IconCheck className="size-6" stroke={2.5} />
           </span>
           <div className="space-y-1">
-            <h2 className="font-semibold text-xl tracking-tight">Entretien terminé</h2>
+            <h2 className="font-semibold text-xl tracking-tight">{tr("title")}</h2>
             <p className="text-muted-foreground text-sm">
               {candidateName} · {jobTitle}
               {endedTime && ` · ${endedTime}`}
@@ -168,18 +174,18 @@ export function CallEnded({
         <section className="overflow-hidden rounded-2xl bg-page">
           <div className="flex items-center gap-2 px-4 pt-3.5">
             <IconNotes className="size-4 text-muted-foreground" />
-            <h3 className="font-medium text-sm">Une note pour le compte rendu</h3>
+            <h3 className="font-medium text-sm">{tr("note")}</h3>
           </div>
           <Textarea
             value={notes}
             onChange={(e) => setDraft(e.target.value.slice(0, MAX_NOTES))}
-            placeholder="Votre impression, ses disponibilités, la suite à donner…"
+            placeholder={tr("notePlaceholder")}
             className="min-h-24 resize-none rounded-none border-0 bg-transparent px-4 pt-2 shadow-none focus-visible:ring-0 dark:bg-transparent"
           />
           {dictation.listening ? (
             <div className="space-y-2 px-3 pb-3" role="status" aria-live="polite">
               <p className={cn("line-clamp-2 min-h-5 px-1 text-sm", dictation.interim ? "text-foreground/70" : "text-muted-foreground italic")}>
-                {dictation.interim || "Je vous écoute… vos phrases s'ajoutent à la note."}
+                {dictation.interim || tr("listening")}
               </p>
               <div className="flex items-center gap-3 rounded-full bg-card py-1 pr-1 pl-3">
                 <span className="relative flex size-2.5 shrink-0">
@@ -190,8 +196,8 @@ export function CallEnded({
                 <LiveWaveform analyser={dictation.analyser} />
                 <button
                   type="button"
-                  aria-label="Arrêter la dictée"
-                  title="Arrêter la dictée"
+                  aria-label={tr("stopDictation")}
+                  title={tr("stopDictation")}
                   onClick={dictation.stop}
                   className="flex size-9 shrink-0 items-center justify-center rounded-full bg-destructive text-white transition-transform hover:scale-105"
                 >
@@ -202,8 +208,8 @@ export function CallEnded({
           ) : (
             <div className="flex items-center justify-between gap-3 py-2.5 pr-2.5 pl-4">
               <span className="flex items-center gap-1 text-muted-foreground text-xs" aria-live="polite">
-                {noteStatus === "Enregistrée" && <IconCheck className="size-3.5" />}
-                {noteStatus}
+                {noteState === "saved" && <IconCheck className="size-3.5" />}
+                {tr(noteState)}
               </span>
               {dictation.supported && (
                 <button
@@ -212,7 +218,7 @@ export function CallEnded({
                   className="flex h-10 shrink-0 items-center gap-2 rounded-full bg-card px-4 text-sm transition-colors hover:bg-card/70"
                 >
                   <IconMicrophone className="size-4" />
-                  Dicter
+                  {tr("dictate")}
                 </button>
               )}
             </div>
@@ -231,7 +237,7 @@ export function CallEnded({
             }}
           >
             <IconCalendarMonth className="size-4" />
-            Fermer et revenir aux entretiens
+            {tr("back")}
           </Button>
         </div>
       </div>
@@ -259,57 +265,58 @@ function ReportCard({
   onWrite: () => void;
   onOpen: () => void;
 }>) {
-  let title = "Compte rendu";
+  const tr = useTranslations("interviews.ended");
+  let title = tr("report");
   let line: string;
   let action: React.ReactNode = null;
   const ghost = "h-9 shrink-0 rounded-full bg-card px-4 text-sm sm:h-9";
   const primary = "h-9 shrink-0 rounded-full px-4 text-sm sm:h-9";
   switch (stage) {
     case "locked":
-      line = "Le compte rendu rédigé par IA est inclus dans les formules supérieures. Votre note reste avec l'entretien.";
+      line = tr("locked");
       break;
     case "waiting":
-      line = `Rédigé automatiquement ${scheduledFor ? untilText(scheduledFor, now) : "dans un instant"}. Ajoutez une note d'ici là si vous le souhaitez.`;
+      line = tr("waiting", { when: scheduledFor ? untilText(scheduledFor, now, tr) : tr("shortly") });
       action = (
         <Button type="button" variant="ghost" className={ghost} loading={pending} onClick={onWrite}>
-          Rédiger maintenant
+          {tr("writeNow")}
         </Button>
       );
       break;
     case "writing":
-      line = "Rédaction en cours. Vous serez prévenu par e-mail dès qu'il est prêt : vous pouvez quitter cette page.";
+      line = tr("writing");
       break;
     case "ready":
-      title = "Votre compte rendu est prêt";
-      line = addedSinceReport ? "Votre note n'y figure pas encore : mettez-le à jour." : "Envoyé aussi par e-mail. Relisez-le avant de le partager.";
+      title = tr("ready");
+      line = addedSinceReport ? tr("noteMissing") : tr("emailed");
       action = (
         <div className="flex shrink-0 gap-2">
           {addedSinceReport && (
             <Button type="button" variant="ghost" className={ghost} loading={pending} onClick={onWrite}>
               <IconRefresh className="size-4" />
-              Mettre à jour
+              {tr("update")}
             </Button>
           )}
           <Button type="button" className={primary} onClick={onOpen}>
-            Lire
+            {tr("read")}
           </Button>
         </div>
       );
       break;
     case "failed":
-      title = "Compte rendu non rédigé";
-      line = report?.writingError ?? "Il n'a pas pu être rédigé.";
+      title = tr("failed");
+      line = report?.writingError ?? tr("failedLine");
       action = (
         <Button type="button" variant="ghost" className={ghost} loading={pending} onClick={onWrite}>
-          Réessayer
+          {tr("retry")}
         </Button>
       );
       break;
     default:
-      line = "Pas assez d'éléments pour le rédiger : ajoutez une note ci-dessous.";
+      line = tr("notEnough");
       action = (
         <Button type="button" variant="ghost" className={ghost} loading={pending} onClick={onWrite}>
-          Rédiger
+          {tr("write")}
         </Button>
       );
   }
@@ -325,7 +332,7 @@ function ReportCard({
           <p className="font-medium text-sm">{title}</p>
           <p className="text-muted-foreground text-xs leading-relaxed">{line}</p>
           {(stage === "waiting" || stage === "writing") && (
-            <div className="mt-2 h-1 overflow-hidden rounded-full bg-card" role="progressbar" aria-label="Rédaction du compte rendu">
+            <div className="mt-2 h-1 overflow-hidden rounded-full bg-card" role="progressbar" aria-label={tr("progress")}>
               <div
                 className={cn("h-full rounded-full bg-whatsapp transition-[width] duration-1000 ease-linear", stage === "writing" && "w-full animate-pulse")}
                 style={stage === "waiting" && scheduledFor ? { width: `${Math.round(waitProgress(scheduledFor, now) * 100)}%` } : undefined}

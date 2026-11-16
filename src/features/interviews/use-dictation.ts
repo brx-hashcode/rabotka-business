@@ -2,9 +2,12 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
+import { useLocale, useTranslations } from "next-intl";
+
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
 
 /**
- * The browser's own speech recognition (Chrome, Edge, Safari), in French:
+ * The browser's own speech recognition (Chrome, Edge, Safari), in the page's language:
  * « Dicter » in the notes. (The visio itself is transcribed by our Jitsi.)
  * It hears only this device's microphone, never the other side of a call.
  * Absent on Firefox (`supported` false).
@@ -34,6 +37,9 @@ export function useDictation(
   /** The voice meter opens its own microphone stream: off beside a call, on phones that share one badly. */
   { meter = true }: { meter?: boolean } = {},
 ) {
+  const t = useTranslations("interviews");
+  // Heard in the page's language: an English recruiter dictates in English.
+  const locale = useLocale() as Locale;
   const supported = useSyncExternalStore(noSubscribe, () => recognitionClass() !== null, () => false);
   const [listening, setListening] = useState(false);
   /** The words heard so far, not yet final: shown in grey under the notes. */
@@ -69,7 +75,7 @@ export function useDictation(
 
   const listen = (Klass: new () => Recognition) => {
     const r = new Klass();
-    r.lang = "fr-FR";
+    r.lang = INTL_LOCALE[locale];
     r.continuous = true;
     r.interimResults = true;
     r.onresult = (e) => {
@@ -100,7 +106,7 @@ export function useDictation(
       if (e.error === "no-speech" || e.error === "aborted") return;
       wanted.current = false;
       setError(e.error);
-      if (e.error === "not-allowed") toast.error("Autorisez le micro dans votre navigateur pour dicter.");
+      if (e.error === "not-allowed") toast.error(t("micBlocked"));
     };
     ref.current = r;
     r.start();
