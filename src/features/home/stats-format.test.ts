@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { formatDelay, trend } from "./stats-format";
+import { createTranslator } from "next-intl";
+
+import { MESSAGES } from "#/i18n/messages";
+import { formatDelay as format, trend } from "./stats-format";
+
+const fr = createTranslator({ locale: "fr", messages: MESSAGES.fr, namespace: "home.delays" });
+const en = createTranslator({ locale: "en", messages: MESSAGES.en, namespace: "home.delays" });
+const formatDelay = (hours: number | null) => format(hours, fr, "fr");
 
 describe("formatDelay", () => {
   it("speaks in hours, then days", () => {
@@ -8,6 +15,11 @@ describe("formatDelay", () => {
     expect(formatDelay(0.4)).toBe("< 1 h");
     expect(formatDelay(5.4)).toBe("5 h");
     expect(formatDelay(60)).toBe("2,5 jours");
+  });
+
+  it("speaks English", () => {
+    expect(format(60, en, "en")).toBe("2.5 days");
+    expect(trend(30, 20, false, "en")?.label).toBe("+50%");
   });
 });
 

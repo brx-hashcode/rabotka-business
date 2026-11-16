@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { DescriptionText } from "#/features/careers/components/description-text";
 import { useEffect, useState } from "react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
@@ -84,17 +85,16 @@ import {
   type Offer,
   type OfferApplicant,
 } from "#/lib/api/offer-controller";
+import { INTL_LOCALE } from "#/i18n/config";
 import { cn, getInitials } from "#/lib/utils";
 import {
-  APPLICATION_STATUS,
+  applicationStatusLabel,
   applicationStage,
-  EMPLOYMENT_LABEL,
   fcfa,
   isDatedMission,
   offerChip,
   closingTile,
   offerDate,
-  PAYMENT_SUFFIX,
   pillStatus,
   statusClass,
   type ApplicationStage,
@@ -445,7 +445,9 @@ function OfferHeader({
   outsiders,
   actions,
 }: Readonly<{ offer: Offer; category?: string; applicants?: OfferApplicant[]; outsiders: ExternalApplication[]; actions: React.ReactNode }>) {
-  const status = offerChip(o);
+  const tLabels = useTranslations("labels");
+  const locale = useLocale();
+  const status = offerChip(o, tLabels);
   const list = applicants ?? [];
   const toReview = list.filter((a) => applicationStage(a.status) === "new").length + outsiders.filter((a) => externalStage(a) === "new").length;
   // `acceptedCount` counts ACCEPTED only; a hire that has started or ended still fills its seat.
@@ -454,7 +456,7 @@ function OfferHeader({
   const filled = Math.min(Math.max(o.acceptedCount, hired), o.quantity);
   const left = o.scheduledAt ? daysUntil(o.scheduledAt) : null;
   const open = o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED";
-  const closing = closingTile(o, left);
+  const closing = closingTile(o, left, tLabels, locale);
 
   return (
     <section className="space-y-8 rounded-3xl bg-card p-6 sm:p-8">
@@ -462,7 +464,7 @@ function OfferHeader({
         <div className="min-w-0 space-y-3">
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className={cn("rounded-full px-2.5 py-1 font-medium", status.className)}>{status.label}</span>
-            <span className="rounded-full bg-page px-2.5 py-1 font-medium">{EMPLOYMENT_LABEL[o.employmentType]}</span>
+            <span className="rounded-full bg-page px-2.5 py-1 font-medium">{tLabels(`employmentType.${o.employmentType}`)}</span>
             {category && <span className="rounded-full bg-page px-2.5 py-1 font-medium">{category}</span>}
           </div>
           <h1 className="break-words font-semibold text-3xl tracking-tight sm:text-4xl">{o.title}</h1>
@@ -491,7 +493,7 @@ function OfferHeader({
           icon={IconCalendarEvent}
           label={closing.label}
           value={closing.value}
-          hint={closing.hint ?? (o.scheduledAt ? (offerDate(o.scheduledAt, o.employmentType) ?? undefined) : undefined)}
+          hint={closing.hint ?? (o.scheduledAt ? (offerDate(o.scheduledAt, o.employmentType, tLabels, locale) ?? undefined) : undefined)}
           muted={!open}
         />
       </div>
@@ -989,6 +991,7 @@ function ApplicantRow({
   detailsOpen?: boolean;
 }>) {
   const [open, setOpen] = useState(detailsOpen);
+  const tLabels = useTranslations("labels");
   const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
   // What « ⋯ » opens: the CVs, the team's opinions; « Message » goes straight there.
   const [panel, setPanel] = useState<"own-cv" | "rabotka-cv" | "opinion" | "interview" | null>(null);
@@ -1121,7 +1124,7 @@ function ApplicantRow({
           </span>
         </Link>
         <span className={cn("shrink-0 rounded-full px-2.5 py-1 font-medium text-xs", statusClass(pillStatus(a.status, a.shortlistedAt)))}>
-          {APPLICATION_STATUS[pillStatus(a.status, a.shortlistedAt)] ?? a.status}
+          {applicationStatusLabel(pillStatus(a.status, a.shortlistedAt), tLabels)}
         </span>
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
@@ -1451,6 +1454,8 @@ function SuggestedCard({
 }
 
 function DetailsCard({ offer: o, category }: Readonly<{ offer: Offer; category?: string }>) {
+  const tLabels = useTranslations("labels");
+  const locale = useLocale();
   const place = o.isRemote ? "À distance" : [o.city, o.countryName].filter(Boolean).join(", ");
   const rows: { icon: TablerIcon; label: string; value: string; hint?: string }[] = [
     ...(isDatedMission(o.employmentType) || o.scheduledAt
@@ -1458,7 +1463,10 @@ function DetailsCard({ offer: o, category }: Readonly<{ offer: Offer; category?:
           {
             icon: IconCalendarEvent,
             label: isDatedMission(o.employmentType) ? "Candidatures jusqu'au" : "Clôture des candidatures",
-            value: offerDate(o.scheduledAt, o.employmentType)?.replace(/^Candidatures jusqu'au /, "") ?? "Non renseignée",
+            value: (isDatedMission(o.employmentType)
+              ? offerDate(o.scheduledAt, o.employmentType, tLabels, locale)
+              : o.scheduledAt &&
+                new Date(o.scheduledAt).toLocaleDateString(INTL_LOCALE[locale], { weekday: "short", day: "numeric", month: "long", year: "numeric" })) ?? "Non renseignée",
           },
         ]
       : []),
@@ -1467,9 +1475,9 @@ function DetailsCard({ offer: o, category }: Readonly<{ offer: Offer; category?:
     {
       icon: IconCash,
       label: "Rémunération",
-      value: o.amount === null ? "À discuter avec le candidat" : `${fcfa(o.amount)}${o.paymentFlow ? ` ${PAYMENT_SUFFIX[o.paymentFlow]}` : ""}`,
+      value: o.amount === null ? "À discuter avec le candidat" : `${fcfa(o.amount, locale)}${o.paymentFlow ? ` ${tLabels(`paymentSuffix.${o.paymentFlow}`)}` : ""}`,
     },
-    { icon: IconBriefcase, label: "Type et métier", value: [EMPLOYMENT_LABEL[o.employmentType], category].filter(Boolean).join(" · ") },
+    { icon: IconBriefcase, label: "Type et métier", value: [tLabels(`employmentType.${o.employmentType}`), category].filter(Boolean).join(" · ") },
   ];
   return (
     <section className="space-y-4 rounded-3xl bg-card p-6">

@@ -1,50 +1,48 @@
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import type { LabelsT } from "#/i18n/translator";
+import frLabels from "#/i18n/messages/fr/labels.json";
 import type { EmploymentType, OfferStatus, PaymentFlow } from "#/lib/api/offer-controller";
 
-export const EMPLOYMENT_TYPES: { value: EmploymentType; label: string; hint: string }[] = [
-  { value: "MISSION", label: "Mission", hint: "Un travail ponctuel, à une date donnée" },
-  { value: "CDD", label: "CDD", hint: "Contrat à durée déterminée" },
-  { value: "CDI", label: "CDI", hint: "Contrat à durée indéterminée" },
-  { value: "STAGE", label: "Stage", hint: "Stage ou alternance" },
-];
+/*
+ * Words are in the `labels` messages (src/i18n/messages/fr/labels.json):
+ * t(`employmentType.${type}`), t(`offerStatus.${status}`),
+ * t(`applicationStatus.${status}`), t(`paymentFlow.${flow}`)… Here: the order,
+ * the colours, and the helpers that put words together.
+ */
+
+export const EMPLOYMENT_TYPES: EmploymentType[] = ["MISSION", "CDD", "CDI", "STAGE"];
 
 /** What a business may publish: every type, the business closing a CDD, CDI or stage itself. */
 export const AVAILABLE_EMPLOYMENT_TYPES: EmploymentType[] = ["MISSION", "CDD", "CDI", "STAGE"];
 
-export const EMPLOYMENT_LABEL: Record<EmploymentType, string> = {
-  MISSION: "Mission",
-  CDD: "CDD",
-  CDI: "CDI",
-  STAGE: "Stage",
-};
+export const PAYMENT_FLOWS: PaymentFlow[] = ["TASK", "HOURLY", "DAILY", "MONTHLY"];
 
-export const PAYMENT_FLOWS: { value: PaymentFlow; label: string }[] = [
-  { value: "TASK", label: "Par tâche" },
-  { value: "HOURLY", label: "Par heure" },
-  { value: "DAILY", label: "Par jour" },
-  { value: "MONTHLY", label: "Par mois" },
-];
+/**
+ * Words candidates read — careers pages, LinkedIn posts — are in the
+ * business's language, not the reader's: French until a business can choose
+ * (then these take the business's messages).
+ */
+export const EMPLOYMENT_LABEL: Record<EmploymentType, string> = frLabels.employmentType;
+export const PAYMENT_SUFFIX: Record<PaymentFlow, string> = frLabels.paymentSuffix;
 
-export const PAYMENT_SUFFIX: Record<PaymentFlow, string> = {
-  TASK: "la tâche",
-  HOURLY: "/ heure",
-  DAILY: "/ jour",
-  MONTHLY: "/ mois",
-};
-
-export const STATUS: Record<OfferStatus, { label: string; className: string }> = {
-  DRAFT: { label: "Brouillon", className: "bg-page text-muted-foreground" },
-  ACTIVE: { label: "En ligne", className: "bg-chip-green text-chip-green-foreground" },
-  PARTIALLY_FILLED: { label: "En partie pourvue", className: "bg-chip-violet text-chip-violet-foreground" },
-  FILLED: { label: "Pourvue", className: "bg-chip-violet text-chip-violet-foreground" },
-  IN_PROGRESS: { label: "En cours", className: "bg-chip-amber text-chip-amber-foreground" },
-  COMPLETED: { label: "Terminée", className: "bg-page text-muted-foreground" },
-  EXPIRED: { label: "Expirée", className: "bg-page text-muted-foreground" },
-  CANCELLED: { label: "Annulée", className: "bg-page text-muted-foreground" },
+export const STATUS_CLASSNAME: Record<OfferStatus, string> = {
+  DRAFT: "bg-page text-muted-foreground",
+  ACTIVE: "bg-chip-green text-chip-green-foreground",
+  PARTIALLY_FILLED: "bg-chip-violet text-chip-violet-foreground",
+  FILLED: "bg-chip-violet text-chip-violet-foreground",
+  IN_PROGRESS: "bg-chip-amber text-chip-amber-foreground",
+  COMPLETED: "bg-page text-muted-foreground",
+  EXPIRED: "bg-page text-muted-foreground",
+  CANCELLED: "bg-page text-muted-foreground",
 };
 
 /** An offer's chip: the status, or « Fermée » when the employer ended it. */
-export function offerChip(o: { status: OfferStatus; closedAt?: string | null }) {
-  return o.status === "EXPIRED" && o.closedAt ? { ...STATUS.EXPIRED, label: "Fermée" } : STATUS[o.status];
+export function offerChip(o: { status: OfferStatus; closedAt?: string | null }, t: LabelsT) {
+  const closed = o.status === "EXPIRED" && !!o.closedAt;
+  return {
+    label: t(`offerStatus.${closed ? "CLOSED" : o.status}`),
+    className: STATUS_CLASSNAME[o.status],
+  };
 }
 
 /** Still taking decisions on candidates. */
@@ -52,18 +50,25 @@ export function isRecruiting(status: OfferStatus) {
   return status === "ACTIVE" || status === "PARTIALLY_FILLED";
 }
 
-export const APPLICATION_STATUS: Record<string, string> = {
-  PENDING: "Nouvelle",
-  VIEWED: "Vue",
+const APPLICATION_STATUSES = [
+  "PENDING",
+  "VIEWED",
   /** Not a status: the business's « Présélectionnée » step (`pillStatus`). */
-  SHORTLISTED: "Présélectionnée",
-  WAITING_PAYMENT: "En attente du candidat",
-  ACCEPTED: "Retenue",
-  STARTED: "En mission",
-  END: "Terminée",
-  REJECTED: "Refusée",
-  CANCELLED: "Annulée",
-};
+  "SHORTLISTED",
+  "WAITING_PAYMENT",
+  "ACCEPTED",
+  "STARTED",
+  "END",
+  "REJECTED",
+  "CANCELLED",
+] as const;
+
+/** An application's status in words; an unknown one as it comes. */
+export function applicationStatusLabel(status: string, t: LabelsT): string {
+  return (APPLICATION_STATUSES as readonly string[]).includes(status)
+    ? t(`applicationStatus.${status as (typeof APPLICATION_STATUSES)[number]}`)
+    : status;
+}
 
 /** Where an application stands, for the pipeline's tabs and its pill colour. */
 export type ApplicationStage = "new" | "viewed" | "shortlisted" | "hired" | "closed";
@@ -107,15 +112,16 @@ export const statusClass = (status: string) => STATUS_CLASS[status] ?? "bg-card 
 /** Whether the date is the day of the work (a mission) or a closing date. */
 export const isDatedMission = (t: EmploymentType) => t === "MISSION";
 
-export const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
+export const fcfa = (n: number, locale: Locale = "fr") => `${n.toLocaleString(INTL_LOCALE[locale])} FCFA`;
 
-export function offerDate(iso: string | null, type: EmploymentType): string | null {
+export function offerDate(iso: string | null, type: EmploymentType, t: LabelsT, locale: Locale): string | null {
   if (!iso) return null;
   const d = new Date(iso);
-  const day = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "long", year: "numeric" });
-  const time = d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-  const withTime = time === "23:59" ? day : `${day} à ${time}`;
-  return isDatedMission(type) ? withTime : `Candidatures jusqu'au ${day}`;
+  const tag = INTL_LOCALE[locale];
+  const day = d.toLocaleDateString(tag, { weekday: "short", day: "numeric", month: "long", year: "numeric" });
+  const time = d.toLocaleTimeString(tag, { hour: "2-digit", minute: "2-digit", hour12: false });
+  const withTime = time === "23:59" ? day : t("offer.dayAt", { day, time });
+  return isDatedMission(type) ? withTime : t("offer.applicationsUntil", { day });
 }
 
 /**
@@ -128,20 +134,25 @@ export function closingTile(
   o: { employmentType: EmploymentType; status: OfferStatus; closedAt?: string | null },
   /** Days to its date (mission day, or closing day); null when it has none. */
   left: number | null,
+  t: LabelsT,
+  locale: Locale,
 ): { label: string; value: string; hint?: string } {
   const mission = isDatedMission(o.employmentType);
-  const label = mission ? "Mission" : "Clôture";
+  const label = mission ? t("offer.mission") : t("offer.closing");
   if (!isRecruiting(o.status)) {
     // Ended: how, and when you closed it if you did.
     const closed = o.closedAt
-      ? `le ${new Date(o.closedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}`
+      ? t("offer.closedOn", {
+          date: new Date(o.closedAt).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long" }),
+        })
       : undefined;
-    return { label, value: o.closedAt ? "Fermée" : offerChip(o).label, hint: closed };
+    return { label, value: o.closedAt ? t("offerStatus.CLOSED") : offerChip(o, t).label, hint: closed };
   }
   if (left === null) {
-    return mission
-      ? { label, value: "—" }
-      : { label, value: "Sans date limite", hint: "jusqu'à ce que vous la fermiez" };
+    return mission ? { label, value: "—" } : { label, value: t("offer.noDeadline"), hint: t("offer.untilYouClose") };
   }
-  return { label, value: left > 0 ? `J-${left}` : left === 0 ? "Aujourd'hui" : "Passée" };
+  return {
+    label,
+    value: left > 0 ? t("offer.daysLeft", { n: left }) : left === 0 ? t("offer.today") : t("offer.past"),
+  };
 }

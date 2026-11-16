@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { debounce, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
@@ -12,7 +13,7 @@ import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-control
 import { friendlyError } from "#/lib/api/friendly-error";
 import { listOffers, offersKey, type OfferListItem, type OfferStatus } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
-import { EMPLOYMENT_LABEL, fcfa, offerChip, offerDate, PAYMENT_SUFFIX } from "../offer-labels";
+import { fcfa, offerChip, offerDate } from "../offer-labels";
 import { offersFull, offersUsed } from "#/features/subscription/offers-quota";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
@@ -168,13 +169,15 @@ export function OffersPage() {
 }
 
 function OfferCard({ offer: o }: Readonly<{ offer: OfferListItem }>) {
-  const status = offerChip(o);
-  const when = offerDate(o.scheduledAt, o.employmentType);
+  const tLabels = useTranslations("labels");
+  const locale = useLocale();
+  const status = offerChip(o, tLabels);
+  const when = offerDate(o.scheduledAt, o.employmentType, tLabels, locale);
   const place = o.isRemote ? "À distance" : [o.city, o.countryName].filter(Boolean).join(", ");
   return (
     <Link href={`/espace/offres/${o.id}`} className="flex flex-col gap-4 rounded-3xl bg-card p-6 transition-colors hover:bg-card/70">
       <div className="flex items-start justify-between gap-3">
-        <span className="rounded-full bg-page px-2.5 py-1 font-medium text-xs">{EMPLOYMENT_LABEL[o.employmentType]}</span>
+        <span className="rounded-full bg-page px-2.5 py-1 font-medium text-xs">{tLabels(`employmentType.${o.employmentType}`)}</span>
         <span className={cn("rounded-full px-2.5 py-1 font-medium text-xs", status.className)}>{status.label}</span>
       </div>
       <h2 className="line-clamp-2 font-semibold text-lg leading-snug">{o.title}</h2>
@@ -198,7 +201,7 @@ function OfferCard({ offer: o }: Readonly<{ offer: OfferListItem }>) {
       </ul>
       {o.amount !== null && (
         <p className="font-semibold">
-          {fcfa(o.amount)} {o.paymentFlow && <span className="font-normal text-muted-foreground text-sm">{PAYMENT_SUFFIX[o.paymentFlow]}</span>}
+          {fcfa(o.amount, locale)} {o.paymentFlow && <span className="font-normal text-muted-foreground text-sm">{tLabels(`paymentSuffix.${o.paymentFlow}`)}</span>}
         </p>
       )}
     </Link>

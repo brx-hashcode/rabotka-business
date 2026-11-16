@@ -3,17 +3,23 @@
 import { useMemo } from "react";
 import { ResponsiveTimeRange, type CalendarDatum, type CalendarTooltipProps, type ColorScale } from "@nivo/calendar";
 import { useTheme } from "next-themes";
+import { useLocale, useTranslations } from "next-intl";
 
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
 import type { BusinessStats } from "#/lib/api/types";
 import { shortDay } from "../stats-format";
 
-const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? "s" : ""}`;
-
 /**
  * Sunday first, nivo's own week: its Monday-first one miscounts the columns
- * of a period starting on a Sunday (one short, the cells overflow).
+ * of a period starting on a Sunday (one short, the cells overflow). The short
+ * names in the reader's language (« dim. », « Sun »).
  */
-const WEEKDAYS = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
+function weekdays(locale: Locale): string[] {
+  // 2023-01-01 was a Sunday.
+  return Array.from({ length: 7 }, (_, i) =>
+    new Date(Date.UTC(2023, 0, 1 + i, 12)).toLocaleDateString(INTL_LOCALE[locale], { weekday: "short", timeZone: "UTC" }),
+  );
+}
 
 /** Room on the left for the weekday names, and between the days: shared with the date row above. */
 const LEGEND = 40;
@@ -43,7 +49,7 @@ const localDay = (iso: string) => new Date(`${iso}T00:00:00`);
  * Sunday-first week): the period's first day, then each Sunday after it.
  * Past 8 columns every other one, so the dates never run into each other.
  */
-export function weekLabels(firstIso: string, days: number): (string | null)[] {
+export function weekLabels(firstIso: string, days: number, locale: Locale = "fr"): (string | null)[] {
   const first = localDay(firstIso);
   const lead = first.getDay();
   const columns = Math.ceil((lead + days) / 7);
@@ -51,7 +57,7 @@ export function weekLabels(firstIso: string, days: number): (string | null)[] {
     if (columns > 8 && c % 2 === 1) return null;
     const d = new Date(first);
     if (c > 0) d.setDate(d.getDate() + 7 * c - lead);
-    return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+    return d.toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "short" });
   });
 }
 
@@ -63,6 +69,8 @@ export function weekLabels(firstIso: string, days: number): (string | null)[] {
  */
 export function ApplicationsChart({ series }: Readonly<{ series: BusinessStats["series"] }>) {
   const { resolvedTheme } = useTheme();
+  const t = useTranslations("home.perDay");
+  const locale = useLocale();
   const palette = PALETTE[resolvedTheme === "dark" ? "dark" : "light"];
   const max = Math.max(1, ...series.map((d) => d.applications));
 
@@ -80,7 +88,7 @@ export function ApplicationsChart({ series }: Readonly<{ series: BusinessStats["
   // nivo leaves the last day out: up to the next midnight.
   const to = localDay(series[series.length - 1].date);
   to.setDate(to.getDate() + 1);
-  const labels = weekLabels(series[0].date, series.length);
+  const labels = weekLabels(series[0].date, series.length, locale);
 
   return (
     <div className="space-y-3">
@@ -106,7 +114,7 @@ export function ApplicationsChart({ series }: Readonly<{ series: BusinessStats["
           data={data}
           from={from}
           to={to}
-          weekdays={WEEKDAYS}
+          weekdays={weekdays(locale)}
           weekdayTicks={[1, 3, 5]}
           weekdayLegendOffset={LEGEND}
           // The dates above say when; nivo's month names would say it twice.
@@ -122,38 +130,38 @@ export function ApplicationsChart({ series }: Readonly<{ series: BusinessStats["
             text: { fill: palette.text, fontSize: 12, fontFamily: "inherit" },
             tooltip: { container: { background: "transparent", boxShadow: "none", padding: 0 } },
           }}
-          tooltip={DayTooltip}
+          tooltip={(props) => <DayTooltip {...props} locale={locale} />}
         />
       </div>
 
       <div className="flex items-center justify-between gap-3 text-muted-foreground text-xs">
         <span>
-          {shortDay(series[0].date)} – {shortDay(series[series.length - 1].date)}
+          {shortDay(series[0].date, locale)} – {shortDay(series[series.length - 1].date, locale)}
         </span>
         <span className="flex items-center gap-1.5" aria-hidden>
-          Moins
+          {t("less")}
           {[palette.empty, ...palette.steps].map((c) => (
             <span key={c} className="size-3 rounded-[3px]" style={{ background: c }} />
           ))}
-          Plus
+          {t("more")}
         </span>
       </div>
 
       {/* On the wrapper: a table ignores sr-only's 1px height and would stretch the page. */}
       <div className="sr-only">
         <table>
-          <caption>Candidatures et candidats retenus par jour</caption>
+          <caption>{t("caption")}</caption>
           <thead>
             <tr>
-              <th>Jour</th>
-              <th>Candidatures</th>
-              <th>Retenus</th>
+              <th>{t("day")}</th>
+              <th>{t("applications")}</th>
+              <th>{t("hires")}</th>
             </tr>
           </thead>
           <tbody>
             {series.map((d) => (
               <tr key={d.date}>
-                <td>{shortDay(d.date)}</td>
+                <td>{shortDay(d.date, locale)}</td>
                 <td>{d.applications}</td>
                 <td>{d.hires}</td>
               </tr>
@@ -166,15 +174,16 @@ export function ApplicationsChart({ series }: Readonly<{ series: BusinessStats["
 }
 
 /** A day's figures, in the dashboard's own popover. */
-function DayTooltip(props: CalendarTooltipProps) {
-  const { day, value } = props;
+function DayTooltip(props: CalendarTooltipProps & { locale: Locale }) {
+  const { day, value, locale } = props;
+  const t = useTranslations("home.perDay");
   const applications = Number(value) || 0;
   const hires = (props as unknown as { hires?: number }).hires ?? 0;
   return (
     <div className="w-max rounded-xl bg-popover px-3 py-2 text-popover-foreground text-sm shadow-soft">
-      <p className="font-medium">{shortDay(day)}</p>
-      <p className="text-muted-foreground">{plural(applications, "candidature")}</p>
-      <p className="text-muted-foreground">{plural(hires, "retenu")}</p>
+      <p className="font-medium">{shortDay(day, locale)}</p>
+      <p className="text-muted-foreground">{t("applicationsCount", { count: applications })}</p>
+      <p className="text-muted-foreground">{t("hiresCount", { count: hires })}</p>
     </div>
   );
 }

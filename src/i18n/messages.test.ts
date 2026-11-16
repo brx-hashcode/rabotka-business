@@ -31,9 +31,13 @@ describe("messages", () => {
       expect([...target.keys()].sort()).toEqual([...source.keys()].sort());
     });
 
-    it(`${locale} takes the same arguments as French`, () => {
+    // Fewer is fine — French grammar may need one English does not (an
+    // elision) — but never one the code does not pass.
+    it(`${locale} takes no argument French does not`, () => {
       for (const [key, message] of source) {
-        expect({ key, args: argumentsOf(target.get(key) ?? "") }).toEqual({ key, args: argumentsOf(message) });
+        const allowed = new Set(argumentsOf(message));
+        const extra = argumentsOf(target.get(key) ?? "").filter((a) => !allowed.has(a));
+        expect({ key, extra }).toEqual({ key, extra: [] });
       }
     });
 

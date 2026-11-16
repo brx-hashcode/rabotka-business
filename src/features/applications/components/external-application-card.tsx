@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -29,7 +30,7 @@ import { cvScreeningsKey, getCvScreening } from "#/lib/api/cv-screening-controll
 import { sourceLabel } from "#/features/careers/candidate-source";
 import { showExternalStatus } from "#/features/offers/application-cache";
 import { useConfirmedShortlist } from "#/features/offers/use-shortlist";
-import { APPLICATION_STATUS, statusClass, type ApplicationStage } from "#/features/offers/offer-labels";
+import { applicationStatusLabel, statusClass, type ApplicationStage } from "#/features/offers/offer-labels";
 import { DescriptionText } from "#/features/careers/components/description-text";
 import { canSchedule } from "#/features/applications/can-schedule";
 import { downloadFile } from "#/lib/api/download";
@@ -84,6 +85,7 @@ export function ExternalApplicationCard({
   /** The analysis and answers shown from the start (the board's window). */
   detailsOpen?: boolean;
 }>) {
+  const tLabels = useTranslations("labels");
   const queryClient = useQueryClient();
   const name = `${a.firstName} ${a.lastName}`;
   // Deciding is for those who hire; an Évaluateur reads and gives its opinion.
@@ -241,7 +243,7 @@ export function ExternalApplicationCard({
             {score !== null && <VerdictChip score={score} />}
             <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px]">Page carrières</span>
             {a.source && a.source !== "direct" && (
-              <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px] text-muted-foreground">via {sourceLabel(a.source)}</span>
+              <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px] text-muted-foreground">via {sourceLabel(a.source, tLabels)}</span>
             )}
           </p>
           {a.analysis?.status === "QUEUED" && <p className="mt-1 text-muted-foreground text-xs">Analyse du CV en cours…</p>}
@@ -251,7 +253,7 @@ export function ExternalApplicationCard({
         </div>
         {/* Where it stands, in the words and colours of a Rabotka applicant's card. */}
         <span className={cn("shrink-0 rounded-full px-2.5 py-1 font-medium text-xs", statusClass(STAGE_STATUS[externalStage(a)]))}>
-          {APPLICATION_STATUS[STAGE_STATUS[externalStage(a)]]}
+          {applicationStatusLabel(STAGE_STATUS[externalStage(a)], tLabels)}
         </span>
       </div>
 

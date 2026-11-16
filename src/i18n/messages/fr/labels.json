@@ -1,0 +1,67 @@
+{
+  "offerStatus": {
+    "DRAFT": "Brouillon",
+    "ACTIVE": "En ligne",
+    "PARTIALLY_FILLED": "En partie pourvue",
+    "FILLED": "Pourvue",
+    "IN_PROGRESS": "En cours",
+    "COMPLETED": "Terminée",
+    "EXPIRED": "Expirée",
+    "CANCELLED": "Annulée",
+    "CLOSED": "Fermée"
+  },
+  "applicationStatus": {
+    "PENDING": "Nouvelle",
+    "VIEWED": "Vue",
+    "SHORTLISTED": "Présélectionnée",
+    "WAITING_PAYMENT": "En attente du candidat",
+    "ACCEPTED": "Retenue",
+    "STARTED": "En mission",
+    "END": "Terminée",
+    "REJECTED": "Refusée",
+    "CANCELLED": "Annulée"
+  },
+  "employmentType": {
+    "MISSION": "Mission",
+    "CDD": "CDD",
+    "CDI": "CDI",
+    "STAGE": "Stage"
+  },
+  "employmentHint": {
+    "MISSION": "Un travail ponctuel, à une date donnée",
+    "CDD": "Contrat à durée déterminée",
+    "CDI": "Contrat à durée indéterminée",
+    "STAGE": "Stage ou alternance"
+  },
+  "paymentFlow": {
+    "TASK": "Par tâche",
+    "HOURLY": "Par heure",
+    "DAILY": "Par jour",
+    "MONTHLY": "Par mois"
+  },
+  "paymentSuffix": {
+    "TASK": "la tâche",
+    "HOURLY": "/ heure",
+    "DAILY": "/ jour",
+    "MONTHLY": "/ mois"
+  },
+  "source": {
+    "agent": "Agents Rabotka",
+    "carrieres": "Page carrières",
+    "direct": "Lien direct",
+    "qr": "Affiche (QR code)"
+  },
+  "offer": {
+    "dayAt": "{day} à {time}",
+    "applicationsUntil": "Candidatures jusqu'au {day}",
+    "mission": "Mission",
+    "closing": "Clôture",
+    "closedOn": "le {date}",
+    "noDeadline": "Sans date limite",
+    "untilYouClose": "jusqu'à ce que vous la fermiez",
+    "daysLeft": "J-{n}",
+    "today": "Aujourd'hui",
+    "past": "Passée"
+  },
+  "fcfa": "{amount} FCFA"
+}

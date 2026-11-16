@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useForm, useWatch, type Control, type FieldPath } from "react-hook-form";
@@ -178,6 +179,7 @@ export function OfferForm({
   onSubmit: (values: OfferFormValues, countryName: string | undefined) => void;
   onCancel?: () => void;
 }>) {
+  const tLabels = useTranslations("labels");
   const form = useForm<OfferFormValues>({
     resolver: zodResolver(schema),
     defaultValues,
@@ -331,12 +333,12 @@ export function OfferForm({
               control={form.control}
               name="employmentType"
               label="Type d'offre"
-              options={EMPLOYMENT_TYPES.map((t) => ({
-                value: t.value,
-                label: t.label,
-                hint: t.hint,
+              options={EMPLOYMENT_TYPES.map((value) => ({
+                value,
+                label: tLabels(`employmentType.${value}`),
+                hint: tLabels(`employmentHint.${value}`),
                 // An offer already of that type (made in the app) keeps it.
-                disabled: !AVAILABLE_EMPLOYMENT_TYPES.includes(t.value) && t.value !== defaultValues.employmentType,
+                disabled: !AVAILABLE_EMPLOYMENT_TYPES.includes(value) && value !== defaultValues.employmentType,
               }))}
             />
             {dated ? (
@@ -438,7 +440,7 @@ export function OfferForm({
                 control={form.control}
                 name="paymentFlow"
                 label="Rythme de paiement"
-                options={PAYMENT_FLOWS.map((f) => ({ value: f.value, label: f.label }))}
+                options={PAYMENT_FLOWS.map((value) => ({ value, label: tLabels(`paymentFlow.${value}`) }))}
               />
             )}
             <FormField

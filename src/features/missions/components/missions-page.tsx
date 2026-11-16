@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
@@ -10,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Bone, CardGridSkeleton, TilesSkeleton } from "#/components/page-skeletons";
 import { StatTile } from "#/features/home/components/stat-tile";
 import { ApplicationActions } from "#/features/offers/components/application-actions";
-import { APPLICATION_STATUS, fcfa, PAYMENT_SUFFIX, statusClass, STATUS } from "#/features/offers/offer-labels";
+import { applicationStatusLabel, fcfa, offerChip, statusClass } from "#/features/offers/offer-labels";
 import { allPages } from "#/lib/api/all-pages";
 import { friendlyError } from "#/lib/api/friendly-error";
 import {
@@ -148,6 +149,8 @@ export function MissionsPage() {
 
 function MissionCard({ offer: o }: Readonly<{ offer: OfferListItem }>) {
   // The offer page's own query: the same rows, with whether each was rated.
+  const tLabels = useTranslations("labels");
+  const locale = useLocale();
   const team = useQuery({ queryKey: [...offersKey, o.id, "applicants"], queryFn: () => getOfferApplicants(o.id) });
   const hired = (team.data ?? []).filter((a) => HIRED.has(a.status));
   const toRate = hired.filter((a) => a.status === "END" && !a.ratedByEmployer).length;
@@ -172,7 +175,7 @@ function MissionCard({ offer: o }: Readonly<{ offer: OfferListItem }>) {
             {place && ` · ${place}`}
           </p>
         </div>
-        <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 font-medium text-xs", STATUS[o.status].className)}>{STATUS[o.status].label}</span>
+        <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 font-medium text-xs", offerChip(o, tLabels).className)}>{offerChip(o, tLabels).label}</span>
       </div>
 
       {(o.description || o.amount !== null || o.address) && (
@@ -182,8 +185,8 @@ function MissionCard({ offer: o }: Readonly<{ offer: OfferListItem }>) {
             {o.amount !== null && (
               <span className="inline-flex items-center gap-1 font-semibold">
                 <IconCash className="size-3.5 text-muted-foreground" />
-                {fcfa(o.amount)}
-                {o.paymentFlow && <span className="font-normal text-muted-foreground">{PAYMENT_SUFFIX[o.paymentFlow]}</span>}
+                {fcfa(o.amount, locale)}
+                {o.paymentFlow && <span className="font-normal text-muted-foreground">{tLabels(`paymentSuffix.${o.paymentFlow}`)}</span>}
               </span>
             )}
             {!o.isRemote && o.address && (
@@ -241,7 +244,7 @@ function MissionCard({ offer: o }: Readonly<{ offer: OfferListItem }>) {
         <ul className="space-y-1.5">
           {hired.map((a) => {
             const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
-            const stage = a.status === "END" && a.ratedByEmployer ? "Terminée · notée" : (APPLICATION_STATUS[a.status] ?? a.status);
+            const stage = a.status === "END" && a.ratedByEmployer ? "Terminée · notée" : applicationStatusLabel(a.status, tLabels);
             return (
               <li key={a.applicationId} className="flex items-center gap-2.5 rounded-2xl bg-page p-2 pl-2.5">
                 <Link href={`/espace/candidats/${a.worker.id}`} className="group flex min-w-0 flex-1 items-center gap-2.5">

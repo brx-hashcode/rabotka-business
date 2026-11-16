@@ -1,0 +1,138 @@
+{
+  "title": "Tableau de bord",
+  "greeting": "{firstName, select, none {Voici} other {Bonjour {firstName}, voici}} {business, select, none {votre recrutement} other {le recrutement {elision, select, vowel {d'{business}} other {de {business}}}}} sur les {days} derniers jours.",
+  "period": "Période",
+  "days": "{days} jours",
+  "report": {
+    "title": "Rapport de recrutement",
+    "subtitle": "{name} · {days} derniers jours",
+    "yourOrganisation": "Votre organisation",
+    "fileName": "rapport-recrutement-{days}-jours.pdf",
+    "unavailable": "Le rapport n'a pas pu être créé. Réessayez dans un instant."
+  },
+  "tiles": {
+    "received": "Candidatures reçues",
+    "toReview": "À examiner",
+    "overdue": "dont {count} en attente depuis plus de 48 h",
+    "recent": "toutes reçues il y a moins de 48 h",
+    "noneWaiting": "aucune candidature en attente",
+    "hires": "Candidats retenus",
+    "openPositions": "Postes ouverts",
+    "onOffers": "sur {count, plural, one {# offre} other {# offres}} en ligne"
+  },
+  "trend": "vs les {days} jours précédents",
+  "trendStable": "stable",
+  "unavailable": "Ces informations sont indisponibles pour le moment. Réessayez dans un instant.",
+  "perDay": {
+    "title": "Candidatures par jour",
+    "perOffer": "{n} par offre en moyenne",
+    "less": "Moins",
+    "more": "Plus",
+    "caption": "Candidatures et candidats retenus par jour",
+    "day": "Jour",
+    "applications": "Candidatures",
+    "hires": "Retenus",
+    "applicationsCount": "{count, plural, one {# candidature} other {# candidatures}}",
+    "hiresCount": "{count, plural, one {# retenu} other {# retenus}}"
+  },
+  "funnel": {
+    "title": "Où en sont vos candidatures",
+    "received": "Reçues",
+    "viewed": "Consultées",
+    "hired": "Retenues",
+    "started": "Mission démarrée",
+    "completed": "Mission terminée",
+    "empty": "Aucune candidature reçue sur la période.",
+    "note": "Les candidatures reçues sur la période, et jusqu'où elles sont allées."
+  },
+  "delays": {
+    "title": "Délais",
+    "firstApplicant": "Premier candidat",
+    "firstApplicantHint": "après la publication d'une offre",
+    "response": "Délai de réponse",
+    "responseHint": "avant d'ouvrir ou de répondre",
+    "hire": "Délai de recrutement",
+    "hireHint": "de la publication à l'acceptation",
+    "note": "En moyenne sur la période, comparé à la période précédente.",
+    "underHour": "< 1 h",
+    "hours": "{n} h",
+    "days": "{n, plural, one {# jour} other {# jours}}"
+  },
+  "results": {
+    "title": "Résultats",
+    "filled": "Postes pourvus",
+    "filledHint": "{filled, plural, one {# poste pourvu} other {# postes pourvus}} sur {proposed}",
+    "noShows": "Absences",
+    "noShowsHint": "sur {count, plural, one {# mission terminée} other {# missions terminées}}",
+    "noMissionEnded": "aucune mission terminée",
+    "ratingGiven": "Note donnée",
+    "ratingGivenHint": "moyenne de vos {count} avis",
+    "ratingReceived": "Note reçue",
+    "ratingReceivedHint": "{count} avis de candidats"
+  },
+  "subscription": {
+    "title": "Abonnement",
+    "none": "Aucune formule en cours : vos contacts sont payés à l'unité et vous ne pouvez pas publier d'offres.",
+    "choose": "Choisir une formule",
+    "manage": "Gérer",
+    "trial": "Essai",
+    "active": "Active",
+    "trialUntil": "Essai jusqu'au <strong>{date}</strong>",
+    "until": "Jusqu'au <strong>{date}</strong>",
+    "contacts": "Contacts inclus",
+    "offers": "Offres publiées",
+    "cvs": "CV inclus",
+    "unlocked": "{count, plural, one {# contact obtenu} other {# contacts obtenus}} sur les {days} derniers jours.",
+    "daysLeftLabel": "{left, plural, one {# jour restant} other {# jours restants}} sur {total}",
+    "daysLeft": "{left, plural, one {jour<br></br>restant} other {jours<br></br>restants}}",
+    "unlimited": "illimité",
+    "overContacts": "{used} contacts pour {limit, plural, one {# inclus} other {# inclus}} : changez de formule pour aller au-delà.",
+    "overOffers": "{used} offres pour {limit, plural, one {# incluse} other {# incluses}} : changez de formule pour aller au-delà.",
+    "overCvs": "{used} CV pour {limit, plural, one {# inclus} other {# inclus}} : changez de formule pour aller au-delà."
+  },
+  "offers": {
+    "title": "Offres à suivre",
+    "all": "Toutes les offres",
+    "empty": "Vous n'avez encore publié aucune offre.",
+    "publish": "Publier une offre",
+    "applications": "{count, plural, one {# candidature} other {# candidatures}}",
+    "filled": "{filled}/{quantity, plural, one {# poste pourvu} other {# postes pourvus}}",
+    "toReview": "{count} à examiner",
+    "upToDate": "À jour"
+  },
+  "categories": {
+    "title": "Métiers les plus demandés",
+    "note": "Candidatures reçues sur la période, par métier de l'offre."
+  },
+  "sources": {
+    "title": "Provenance",
+    "hired": "{count, plural, one {# retenu} other {# retenus}}",
+    "note": "D'où viennent les candidatures de la période."
+  },
+  "nextSteps": {
+    "title": "Prochaines étapes",
+    "done": "{done}/{total} faites",
+    "logo": "Ajouter le logo de votre organisation",
+    "documents": "Faire accepter vos documents",
+    "verified": "Obtenir la vérification de l'organisation",
+    "plan": "Choisir une formule",
+    "firstOffer": "Publier votre première offre"
+  },
+  "export": {
+    "pending": "Export en cours…",
+    "button": "Exporter",
+    "failed": "L'export n'a pas pu être créé. Réessayez dans un instant.",
+    "pdf": "Rapport PDF",
+    "pdfHint": "À lire, imprimer ou envoyer",
+    "xlsx": "Excel (.xlsx)",
+    "xlsxHint": "Un onglet par section, toutes les offres",
+    "csv": "CSV",
+    "csvHint": "Les mêmes chiffres, pour tout autre outil",
+    "hr": "Exports RH",
+    "staffRegister": "Registre du personnel",
+    "staffRegisterHint": "Les personnes recrutées, en Excel",
+    "acpe": "Offres à déclarer (ACPE)",
+    "acpeHint": "Toutes vos offres, prêtes à déclarer",
+    "higherPlans": "Inclus dans les formules supérieures"
+  }
+}

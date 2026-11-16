@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -18,7 +19,7 @@ import { InterviewLine, latestInterview } from "#/features/interviews/components
 import { ScheduleInterviewDialog } from "#/features/interviews/components/schedule-interview-dialog";
 import { interviewsKey, listInterviews } from "#/lib/api/interview-controller";
 import type { Interview } from "#/lib/api/types";
-import { APPLICATION_STATUS, applicationStage, isRecruiting, statusClass, type ApplicationStage } from "#/features/offers/offer-labels";
+import { applicationStatusLabel, applicationStage, isRecruiting, statusClass, type ApplicationStage } from "#/features/offers/offer-labels";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { externalApplicationsKey, listExternalApplications } from "#/lib/api/careers-controller";
 import { listReceivedApplications, offersKey, type ReceivedApplication } from "#/lib/api/offer-controller";
@@ -247,6 +248,7 @@ function ApplicationCard({
   interview,
 }: Readonly<{ application: ReceivedApplication; focused?: boolean; interview?: Interview }>) {
   const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
+  const tLabels = useTranslations("labels");
   const [planning, setPlanning] = useState(false);
   const hire = canHire(useMember().role);
   const stage = applicationStage(a.status);
@@ -270,7 +272,7 @@ function ApplicationCard({
           </Link>
           <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className={cn("rounded-full px-2 py-0.5 font-medium text-[11px]", statusClass(a.status))}>
-              {APPLICATION_STATUS[a.status] ?? a.status}
+              {applicationStatusLabel(a.status, tLabels)}
             </span>
             <span className="text-muted-foreground text-xs">{ago(a.createdAt)}</span>
           </p>

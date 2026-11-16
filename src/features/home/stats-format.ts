@@ -1,14 +1,17 @@
 /** Formatting of the dashboard's figures; pure, so it is tested on its own. */
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import type { Translator } from "#/i18n/translator";
 
-const nf = (n: number, digits = 1) => n.toLocaleString("fr-FR", { maximumFractionDigits: digits });
+const nf = (n: number, locale: Locale, digits = 1) =>
+  n.toLocaleString(INTL_LOCALE[locale], { maximumFractionDigits: digits });
 
-/** A delay in hours, said the way people say it: « 5 h », « 2,5 jours ». */
-export function formatDelay(hours: number | null): string {
+/** A delay in hours, said the way people say it: « 5 h », « 2,5 jours » (home.delays.*). */
+export function formatDelay(hours: number | null, t: Translator<"home.delays">, locale: Locale): string {
   if (hours === null) return "—";
-  if (hours < 1) return "< 1 h";
-  if (hours < 48) return `${nf(Math.round(hours), 0)} h`;
-  const d = hours / 24;
-  return `${nf(d)} jour${d >= 2 ? "s" : ""}`;
+  if (hours < 1) return t("underHour");
+  if (hours < 48) return t("hours", { n: nf(Math.round(hours), locale, 0) });
+  // ICU's « # » writes the figure the language's way (« 2,5 »), one decimal at most.
+  return t("days", { n: Math.round((hours / 24) * 10) / 10 });
 }
 
 export type Trend = { label: string; direction: "up" | "down" | "flat"; good: boolean | null };
@@ -17,16 +20,22 @@ export type Trend = { label: string; direction: "up" | "down" | "flat"; good: bo
  * This period against the previous one. `lowerIsBetter` for delays: a drop is
  * the good news there. No previous value: nothing to compare, no trend.
  */
-export function trend(current: number | null, previous: number | null, lowerIsBetter = false): Trend | null {
+export function trend(
+  current: number | null,
+  previous: number | null,
+  lowerIsBetter = false,
+  locale: Locale = "fr",
+): Trend | null {
   if (current === null || previous === null) return null;
   if (current === previous) return { label: "stable", direction: "flat", good: null };
   const direction = current > previous ? "up" : "down";
   const good = (direction === "up") !== lowerIsBetter;
-  if (previous === 0) return { label: `+${nf(current, 0)}`, direction, good };
+  if (previous === 0) return { label: `+${nf(current, locale, 0)}`, direction, good };
   const pct = Math.round(((current - previous) / previous) * 100);
-  return { label: `${pct > 0 ? "+" : ""}${pct} %`, direction, good };
+  // « +50 % » in French, « +50% » in English.
+  return { label: `${pct > 0 ? "+" : ""}${pct}${locale === "fr" ? " %" : "%"}`, direction, good };
 }
 
-/** `yyyy-mm-dd` → « 12 oct. ». */
-export const shortDay = (day: string) =>
-  new Date(`${day}T12:00:00Z`).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+/** `yyyy-mm-dd` → « 12 oct. » / « 12 Oct ». */
+export const shortDay = (day: string, locale: Locale = "fr") =>
+  new Date(`${day}T12:00:00Z`).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "short" });

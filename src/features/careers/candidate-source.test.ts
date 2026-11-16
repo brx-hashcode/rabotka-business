@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { labelsIn } from "#/i18n/test-translators";
 import { candidateSource, sourceLabel } from "./candidate-source";
 
 describe("candidateSource", () => {
@@ -22,7 +23,8 @@ describe("candidateSource", () => {
 
 describe("sourceLabel", () => {
   it("says it in words, even for a site it does not know", () => {
-    expect(sourceLabel("qr")).toBe("Affiche (QR code)");
-    expect(sourceLabel("emploicg")).toBe("Emploicg");
+    expect(sourceLabel("qr", labelsIn("fr"))).toBe("Affiche (QR code)");
+    expect(sourceLabel("qr", labelsIn("en"))).toBe("Poster (QR code)");
+    expect(sourceLabel("emploicg", labelsIn("fr"))).toBe("Emploicg");
   });
 });
