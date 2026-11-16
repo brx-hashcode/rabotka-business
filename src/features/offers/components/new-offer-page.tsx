@@ -121,11 +121,14 @@ function PlanCard({ subscription }: Readonly<{ subscription: MySubscription }>) 
   const full = offersFull(e);
   const packOnSale = usePackOnSale("OFFER");
   const t = useTranslations("offers.new");
-  const link = (href: string) => (chunks: React.ReactNode) => (
-    <Link href={href} className="font-medium underline">
-      {chunks}
-    </Link>
-  );
+  const link = (href: string) =>
+    function LinkChunk(chunks: React.ReactNode) {
+      return (
+        <Link href={href} className="font-medium underline">
+          {chunks}
+        </Link>
+      );
+    };
   return (
     <section className="space-y-4 rounded-3xl bg-card p-6">
       <div className="flex items-baseline justify-between gap-3">
