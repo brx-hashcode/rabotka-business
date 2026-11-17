@@ -13,7 +13,7 @@ const PROMISE_ICONS = [IconClock, IconUserCheck, IconCalendarEvent];
  */
 export async function DemoBlock({ title, text }: Readonly<{ title?: string; text?: string }>) {
   const [countries, tr] = await Promise.all([businessCountriesServer(), getTranslations("site.demoBlock")]);
-  const PROMISES = (tr.raw("promises") as string[]).map((line, i) => ({ icon: PROMISE_ICONS[i], text: line }));
+  const PROMISES = (tr.raw("promises") as { title: string; text: string }[]).map((p, i) => ({ ...p, icon: PROMISE_ICONS[i] }));
   return (
     <section id="demarrer" aria-labelledby="demarrer-titre" className="px-4 py-20 sm:px-6 md:py-28">
       <div className="mx-auto grid w-full max-w-7xl gap-10 rounded-[2rem] bg-header p-6 text-header-foreground sm:p-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14 lg:p-14">
@@ -23,13 +23,17 @@ export async function DemoBlock({ title, text }: Readonly<{ title?: string; text
             {title ?? tr("title")}
           </h2>
           <p className="text-header-muted text-lg">{text ?? tr("text")}</p>
-          <ul className="space-y-3">
-            {PROMISES.map(({ icon: Icon, text: t }) => (
-              <li key={t} className="flex items-center gap-3">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card/70">
-                  <Icon className="size-4" />
+          {/* What the demo is, each promise said and then made concrete. */}
+          <ul className="space-y-3 pt-2">
+            {PROMISES.map(({ icon: Icon, title: heading, text: detail }) => (
+              <li key={heading} className="flex gap-4 rounded-2xl bg-card/55 p-4">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-card text-[#0f2414]">
+                  <Icon className="size-5" />
                 </span>
-                {t}
+                <span className="min-w-0 space-y-1">
+                  <span className="block font-semibold">{heading}</span>
+                  <span className="block text-header-muted text-sm leading-relaxed">{detail}</span>
+                </span>
               </li>
             ))}
           </ul>

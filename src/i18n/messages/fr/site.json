@@ -219,9 +219,18 @@
     "title": "Voyez Rabotka sur vos propres recrutements",
     "text": "Un membre de notre équipe vous montre comment publier, trier et recruter avec Rabotka Business, sur les postes que vous avez à pourvoir.",
     "promises": [
-      "30 minutes, en visio ou au téléphone",
-      "Sur vos vrais postes et vos vrais candidats",
-      "Une réponse sous 24 h ouvrées"
+      {
+        "title": "30 minutes, en visio ou au téléphone",
+        "text": "Le temps de voir ce qui compte pour vous : publier une offre, trier les candidatures, organiser les entretiens."
+      },
+      {
+        "title": "Sur vos vrais postes",
+        "text": "Venez avec un poste à pourvoir : nous partons de vos besoins et de vos candidats, pas d'un exemple tout fait."
+      },
+      {
+        "title": "Une réponse sous 24 h ouvrées",
+        "text": "Un membre de notre équipe vous recontacte pour fixer le moment qui vous convient."
+      }
     ]
   },
   "connections": {
