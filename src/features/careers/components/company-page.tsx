@@ -9,6 +9,7 @@ import { getCareersCompany, type CareersCompany, type CareersOfferSummary } from
 import { CareersShell, offerPlace } from "./careers-shell";
 import { CompanyHero, websiteHref } from "./company-hero";
 import { CompanyPageSkeleton } from "./company-page-skeleton";
+import { PhotoBento } from "./photo-bento";
 
 /** A business and its open offers, for someone who is not on Rabotka. */
 export function CompanyPage({
@@ -120,12 +121,7 @@ export function CompanyPage({
           {!!page.company.photos?.length && (
             <section className="space-y-3 rounded-3xl bg-card p-6 sm:p-8">
               <h2 className="font-semibold text-lg">La vie chez {page.company.name}</h2>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {page.company.photos.map((src) => (
-                  // eslint-disable-next-line @next/next/no-img-element -- the business's own upload, any host
-                  <img key={src} src={src} alt="" className="aspect-[4/3] w-full rounded-2xl object-cover" />
-                ))}
-              </div>
+              <PhotoBento photos={page.company.photos} title={`La vie chez ${page.company.name}`} />
             </section>
           )}
         </>
