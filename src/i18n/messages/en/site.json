@@ -219,9 +219,18 @@
     "title": "See Rabotka on your own hiring",
     "text": "A member of our team shows you how to publish, sort and hire with Rabotka Business, on the roles you need to fill.",
     "promises": [
-      "30 minutes, by video or phone",
-      "On your real roles and your real candidates",
-      "A reply within one business day"
+      {
+        "title": "30 minutes, by video or phone",
+        "text": "Enough to see what matters to you: publishing a job, sorting applications, organising interviews."
+      },
+      {
+        "title": "On your real roles",
+        "text": "Bring a role you need to fill: we start from your needs and your candidates, not a ready-made example."
+      },
+      {
+        "title": "A reply within one business day",
+        "text": "A member of our team gets back to you to set a time that suits you."
+      }
     ]
   },
   "connections": {
