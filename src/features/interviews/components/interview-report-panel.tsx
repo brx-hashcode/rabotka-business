@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -26,7 +27,8 @@ import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
 import { Textarea } from "#/components/ui/textarea";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import {
   editInterviewReport,
   getInterviewReport,
@@ -60,6 +62,9 @@ type Props = {
  */
 export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: Readonly<Props>) {
   const queryClient = useQueryClient();
+  const tr = useTranslations("interviews.report");
+  const locale = useLocale() as Locale;
+  const friendlyError = useFriendlyError();
   const key = interviewReportKey(interviewId);
   const query = useQuery({
     queryKey: key,
@@ -100,18 +105,18 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
     onSuccess: (data) => {
       store(data);
       setEditing(null);
-      toast.success("Rédaction lancée : vous pouvez fermer cette fenêtre, une notification vous préviendra.");
+      toast.success(tr("started"));
     },
-    onError: (err) => toast.error(friendlyError(err, "Le compte rendu n'a pas pu être rédigé.")),
+    onError: (err) => toast.error(friendlyError(err, tr("writeFailed"))),
   });
   const edit = useMutation({
     mutationFn: (r: InterviewReportBody) => editInterviewReport(interviewId, r),
     onSuccess: (data) => {
       store(data);
       setEditing(null);
-      toast.success("Compte rendu enregistré.");
+      toast.success(tr("saved"));
     },
-    onError: (err) => toast.error(friendlyError(err, "Les modifications n'ont pas pu être enregistrées.")),
+    onError: (err) => toast.error(friendlyError(err, tr("saveFailed"))),
   });
 
   const dictation = useDictation((text) => setDraft((d) => joinText(d ?? saved?.notes ?? "", text).slice(0, MAX_NOTES)));
@@ -144,7 +149,7 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
     );
   }
 
-  const status = save.isPending ? "Enregistrement…" : draft !== null && draft !== saved?.notes ? "Modifié" : saved?.updatedAt ? "Enregistré" : "";
+  const status = save.isPending ? "saving" : draft !== null && draft !== saved?.notes ? "changed" : saved?.updatedAt ? "stored" : null;
 
   return (
     <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
@@ -154,26 +159,26 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
           <div className="flex items-center gap-1 px-2 pt-2">
             {hasTranscript ? (
               <>
-                <TabButton on={tab === "transcript"} onClick={() => setTab("transcript")} label="Transcription" count={turns.length} />
-                <TabButton on={tab === "notes"} onClick={() => setTab("notes")} label="Vos notes" />
+                <TabButton on={tab === "transcript"} onClick={() => setTab("transcript")} label={tr("transcript")} count={turns.length} />
+                <TabButton on={tab === "notes"} onClick={() => setTab("notes")} label={tr("notes")} />
               </>
             ) : (
-              <h3 className="px-2 py-1.5 font-semibold text-sm">Vos notes</h3>
+              <h3 className="px-2 py-1.5 font-semibold text-sm">{tr("notes")}</h3>
             )}
             <span className="ml-auto flex items-center gap-1.5 px-2 text-muted-foreground text-xs" aria-live="polite">
               {tab === "transcript" ? (
                 live ? (
                   <>
                     <span className="size-2 rounded-full bg-destructive" />
-                    En cours
+                    {tr("live")}
                   </>
                 ) : (
-                  "Automatique"
+                  tr("automatic")
                 )
               ) : (
                 <>
-                  {status === "Enregistré" && <IconCheck className="size-3.5" />}
-                  {status}
+                  {status === "stored" && <IconCheck className="size-3.5" />}
+                  {status && tr(status)}
                 </>
               )}
             </span>
@@ -182,8 +187,8 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
             <Conversation
               turns={turns}
               onAdd={(t) => {
-                setDraft(joinText(notes, `${t.speaker} : ${t.text}`).slice(0, MAX_NOTES));
-                toast.success("Ajouté à vos notes.");
+                setDraft(joinText(notes, tr("turn", { speaker: t.speaker, text: t.text })).slice(0, MAX_NOTES));
+                toast.success(tr("added"));
               }}
             />
           ) : (
@@ -191,7 +196,7 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
           <Textarea
             value={notes}
             onChange={(e) => setDraft(e.target.value.slice(0, MAX_NOTES))}
-            placeholder="Ce qu'il a dit de son expérience, ses disponibilités, ses prétentions, votre impression…"
+            placeholder={tr("notesPlaceholder")}
             className="min-h-48 flex-1 resize-none rounded-none border-0 bg-transparent px-4 shadow-none focus-visible:ring-0 dark:bg-transparent"
           />
           {dictation.listening ? (
@@ -205,8 +210,8 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
                 <LiveWaveform analyser={dictation.analyser} />
                 <button
                   type="button"
-                  aria-label="Arrêter la dictée"
-                  title="Arrêter la dictée"
+                  aria-label={tr("stopDictation")}
+                  title={tr("stopDictation")}
                   onClick={dictation.stop}
                   className="flex size-9 shrink-0 items-center justify-center rounded-full bg-destructive text-white transition-transform hover:scale-105"
                 >
@@ -214,7 +219,7 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
                 </button>
               </div>
               <p className={cn("line-clamp-2 min-h-5 text-sm", dictation.interim ? "text-foreground/70" : "text-muted-foreground italic")}>
-                {dictation.interim || "Je vous écoute… vos phrases s'ajoutent aux notes."}
+                {dictation.interim || tr("listening")}
               </p>
             </div>
           ) : (
@@ -222,7 +227,7 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
               {dictation.supported ? (
                 <Button type="button" variant="ghost" className="h-9 rounded-full bg-card px-3.5 text-sm" onClick={() => void dictation.start()}>
                   <IconMicrophone className="size-4" />
-                  Dicter
+                  {tr("dictate")}
                 </Button>
               ) : (
                 <span />
@@ -237,33 +242,33 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
         </div>
         <div className="flex gap-2">
           {tab === "transcript" && turns.length > 0 && (
-            <Button type="button" variant="ghost" className="h-11 shrink-0 rounded-full bg-page px-4 text-sm sm:h-11" onClick={() => void copyTranscript(turns)}>
+            <Button type="button" variant="ghost" className="h-11 shrink-0 rounded-full bg-page px-4 text-sm sm:h-11" onClick={() => void copyTranscript(turns, locale, tr)}>
               <IconCopy className="size-4" />
-              Copier
+              {tr("copy")}
             </Button>
           )}
           {reportLocked ? (
             // Not clickable, the reason said in the button itself.
             <Button type="button" variant="ghost" className="h-11 flex-1 rounded-full bg-page text-sm sm:h-11" disabled>
               <IconLock className="size-4" />
-              Compte rendu par IA · formule supérieure
+              {tr("locked")}
             </Button>
           ) : (
             <Button type="button" className="h-11 flex-1 rounded-full text-sm sm:h-11" disabled={!enough || writing} loading={write.isPending} onClick={() => write.mutate()}>
               {report ? <IconRefresh className={cn("size-4", writing && "animate-spin")} /> : <IconFileText className="size-4" />}
-              {writing ? "Rédaction en cours…" : report ? "Réécrire le compte rendu" : "Rédiger le compte rendu"}
+              {writing ? tr("writing") : report ? tr("rewrite") : tr("write")}
             </Button>
           )}
         </div>
         <p className="text-center text-muted-foreground text-xs">
           {reportLocked
-            ? "Le compte rendu rédigé par IA est inclus dans les formules supérieures. Vos notes restent enregistrées."
+            ? tr("lockedText")
             : enough
             ? lines.length > 0
-              ? "Rédigé par IA à partir de la transcription et de vos notes : relisez-le avant de l'envoyer."
-              : "Rédigé par IA à partir de vos notes : relisez-le avant de l'envoyer."
-            : "Quelques lignes de notes, ou la transcription de l'entretien, suffisent pour rédiger le compte rendu."}
-          {tab === "notes" && dictation.supported && " La dictée passe par le service vocal de votre navigateur."}
+              ? tr("fromBoth")
+              : tr("fromNotes")
+            : tr("notEnough")}
+          {tab === "notes" && dictation.supported && tr("browserVoice")}
         </p>
       </section>
 
@@ -287,34 +292,32 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
               <IconFileText className="size-5 text-muted-foreground" />
             </span>
             <div className="max-w-xs space-y-1">
-              <p className="font-medium text-sm">Le compte rendu apparaîtra ici</p>
-              <p className="text-muted-foreground text-xs">
-                Prenez vos notes pendant ou après l&apos;entretien, puis « Rédiger le compte rendu » : résumé, points forts, points de vigilance et prochaines étapes.
-              </p>
+              <p className="font-medium text-sm">{tr("placeholderTitle")}</p>
+              <p className="text-muted-foreground text-xs">{tr("placeholderText")}</p>
             </div>
           </div>
         ) : (
           <>
             <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-4 pb-3">
               <div className="min-w-0">
-                <h3 className="font-semibold">Compte rendu</h3>
+                <h3 className="font-semibold">{tr("title")}</h3>
                 <p className="text-muted-foreground text-xs">
                   {saved?.sentAt
-                    ? `Envoyé à l'équipe le ${new Date(saved.sentAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}`
-                    : "Pas encore envoyé"}
+                    ? tr("sentOn", { date: new Date(saved.sentAt).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long" }) })
+                    : tr("notSent")}
                 </p>
               </div>
               {!editing && (
                 <div className="flex items-center gap-1.5">
-                  <IconAction label="Modifier" onClick={() => setEditing(report)}>
+                  <IconAction label={tr("edit")} onClick={() => setEditing(report)}>
                     <IconPencil className="size-4" />
                   </IconAction>
-                  <IconAction label="Aperçu PDF" onClick={() => setPreview(true)}>
+                  <IconAction label={tr("pdf")} onClick={() => setPreview(true)}>
                     <IconFileTypePdf className="size-4" />
                   </IconAction>
                   <Button type="button" className="h-9 rounded-full px-3.5 text-sm" onClick={() => setSending(true)}>
                     <IconMail className="size-4" />
-                    {saved?.sentAt ? "Renvoyer" : "Envoyer à l'équipe"}
+                    {saved?.sentAt ? tr("resend") : tr("send")}
                   </Button>
                 </div>
               )}
@@ -340,12 +343,12 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
         <PreviewSheet
           open={preview}
           onOpenChange={setPreview}
-          title="Compte rendu d'entretien"
+          title={tr("document")}
           subtitle={`${candidateName} · ${jobTitle}`}
           src={`${appConfig.apiUrl}/business/me/interviews/${encodeURIComponent(interviewId)}/report.pdf?v=${encodeURIComponent(saved?.updatedAt ?? "")}`}
           kind="pdf"
-          fileName={`compte-rendu-${slug(candidateName)}.pdf`}
-          unavailable="Le document n'a pas pu être créé. Réessayez dans un instant."
+          fileName={tr("file", { name: slug(candidateName) || tr("candidateSlug") })}
+          unavailable={tr("docFailed")}
         />
       )}
       {sending && <SendDialog interviewId={interviewId} onClose={() => setSending(false)} onSent={store} />}
@@ -367,14 +370,17 @@ function toTurns(lines: InterviewTranscript["lines"]): Turn[] {
   return turns;
 }
 
-const hhmm = (iso: string) => new Date(iso).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+const hhmm = (iso: string, locale: Locale = "fr") =>
+  new Date(iso).toLocaleTimeString(INTL_LOCALE[locale], { hour: "2-digit", minute: "2-digit" });
 
-async function copyTranscript(turns: Turn[]) {
+async function copyTranscript(turns: Turn[], locale: Locale, tr: (key: "copied" | "copyFailed") => string) {
+  // « Awa : … » in French, « Awa: … » in English.
+  const colon = locale === "fr" ? " : " : ": ";
   try {
-    await navigator.clipboard.writeText(turns.map((t) => `[${hhmm(t.at)}] ${t.speaker} : ${t.text}`).join("\n"));
-    toast.success("Transcription copiée.");
+    await navigator.clipboard.writeText(turns.map((t) => `[${hhmm(t.at, locale)}] ${t.speaker}${colon}${t.text}`).join("\n"));
+    toast.success(tr("copied"));
   } catch {
-    toast.error("La transcription n'a pas pu être copiée.");
+    toast.error(tr("copyFailed"));
   }
 }
 
@@ -407,6 +413,8 @@ function Conversation({
   turns,
   onAdd,
 }: Readonly<{ turns: Turn[]; onAdd: (t: Turn) => void }>) {
+  const tr = useTranslations("interviews.report");
+  const locale = useLocale() as Locale;
   const box = useRef<HTMLOListElement>(null);
   const pinned = useRef(true);
   const count = turns.length;
@@ -419,7 +427,7 @@ function Conversation({
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center">
         <IconMicrophone className="size-5 text-muted-foreground" />
-        <p className="max-w-xs text-muted-foreground text-sm">La transcription s&apos;affiche ici pendant l&apos;appel, phrase après phrase.</p>
+        <p className="max-w-xs text-muted-foreground text-sm">{tr("emptyTranscript")}</p>
       </div>
     );
   }
@@ -435,16 +443,16 @@ function Conversation({
       >
         {turns.map((t) => (
           <li key={t.key} className="group flex items-start gap-2 rounded-lg px-1 py-0.5 hover:bg-card/60">
-            <span className="w-11 shrink-0 pt-px font-mono text-muted-foreground text-xs tabular-nums">{hhmm(t.at)}</span>
+            <span className="w-11 shrink-0 pt-px font-mono text-muted-foreground text-xs tabular-nums">{hhmm(t.at, locale)}</span>
             <p className="min-w-0 flex-1 text-sm leading-relaxed">
               <span className={cn("font-medium", SPEAKER_TONE[t.role])}>{t.speaker}</span>
-              <span className="text-muted-foreground"> : </span>
+              <span className="text-muted-foreground">{locale === "fr" ? " : " : ": "}</span>
               {t.text}
             </p>
             <button
               type="button"
-              aria-label="Ajouter aux notes"
-              title="Ajouter aux notes"
+              aria-label={tr("addToNotes")}
+              title={tr("addToNotes")}
               onClick={() => onAdd(t)}
               className="flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-opacity hover:bg-card hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
             >
@@ -454,7 +462,7 @@ function Conversation({
         ))}
       </ol>
       <p className="px-4 pb-3 text-muted-foreground text-xs">
-        Transcrite automatiquement pendant la visio : elle peut contenir des erreurs.
+        {tr("transcriptNote")}
       </p>
     </>
   );
@@ -462,6 +470,7 @@ function Conversation({
 
 /** While the report is written off the page: nobody has to wait in front of it. */
 function WritingNotice({ again = false }: Readonly<{ again?: boolean }>) {
+  const tr = useTranslations("interviews.report");
   return (
     <div className="flex items-start gap-3 rounded-2xl bg-card px-4 py-3" role="status" aria-live="polite">
       <span className="relative mt-1 flex size-2.5 shrink-0">
@@ -469,10 +478,8 @@ function WritingNotice({ again = false }: Readonly<{ again?: boolean }>) {
         <span className="relative inline-flex size-2.5 rounded-full bg-whatsapp" />
       </span>
       <div className="text-sm">
-        <p className="font-medium">{again ? "Nouvelle rédaction en cours…" : "Rédaction en cours…"}</p>
-        <p className="text-muted-foreground text-xs">
-          Vous pouvez fermer cette fenêtre et continuer : une notification vous prévient dès que le compte rendu est prêt.
-        </p>
+        <p className="font-medium">{again ? tr("writingAgain") : tr("writing")}</p>
+        <p className="text-muted-foreground text-xs">{tr("closeAnytime")}</p>
       </div>
     </div>
   );
@@ -492,17 +499,20 @@ function IconAction({ label, onClick, children }: Readonly<{ label: string; onCl
   );
 }
 
-const SECTIONS: { key: "pointsForts" | "pointsDeVigilance" | "prochainesEtapes"; title: string }[] = [
-  { key: "pointsForts", title: "Points forts" },
-  { key: "pointsDeVigilance", title: "Points de vigilance" },
-  { key: "prochainesEtapes", title: "Prochaines étapes" },
+const SECTIONS: { key: "pointsForts" | "pointsDeVigilance" | "prochainesEtapes"; title: "strengths" | "watch" | "nextSteps" }[] = [
+  { key: "pointsForts", title: "strengths" },
+  { key: "pointsDeVigilance", title: "watch" },
+  { key: "prochainesEtapes", title: "nextSteps" },
 ];
 
-function practical(r: InterviewReportBody): string[] {
+type ReportT = ReturnType<typeof useTranslations<"interviews.report">>;
+
+function practical(r: InterviewReportBody, tr: ReportT): string[] {
+  const line = (label: string, value: string) => tr("practicalLine", { label, value });
   return [
-    r.infosPratiques.disponibilite && `Disponibilité : ${r.infosPratiques.disponibilite}`,
-    r.infosPratiques.pretentions && `Prétentions : ${r.infosPratiques.pretentions}`,
-    r.infosPratiques.mobilite && `Mobilité : ${r.infosPratiques.mobilite}`,
+    r.infosPratiques.disponibilite && line(tr("availability"), r.infosPratiques.disponibilite),
+    r.infosPratiques.pretentions && line(tr("expectations"), r.infosPratiques.pretentions),
+    r.infosPratiques.mobilite && line(tr("mobility"), r.infosPratiques.mobilite),
   ].filter((x): x is string => Boolean(x));
 }
 
@@ -524,18 +534,19 @@ function Block({ title, items, tone }: Readonly<{ title: string; items: string[]
 }
 
 export function ReportView({ report: r }: Readonly<{ report: InterviewReportBody }>) {
+  const tr = useTranslations("interviews.report");
   return (
     <div className="space-y-4">
       <p className="text-sm leading-relaxed">{r.resume}</p>
       {(r.pointsForts.length > 0 || r.pointsDeVigilance.length > 0) && (
         <div className={cn("grid gap-3", r.pointsForts.length > 0 && r.pointsDeVigilance.length > 0 && "sm:grid-cols-2")}>
-          <Block title="Points forts" items={r.pointsForts} tone="good" />
-          <Block title="Points de vigilance" items={r.pointsDeVigilance} tone="warn" />
+          <Block title={tr("strengths")} items={r.pointsForts} tone="good" />
+          <Block title={tr("watch")} items={r.pointsDeVigilance} tone="warn" />
         </div>
       )}
       {r.reponsesCles.length > 0 && (
         <div className="space-y-1.5">
-          <p className="font-medium text-sm">Réponses clés</p>
+          <p className="font-medium text-sm">{tr("keyAnswers")}</p>
           <dl className="space-y-2 text-sm">
             {r.reponsesCles.map((x) => (
               <div key={x.question} className="rounded-xl bg-card px-3 py-2">
@@ -546,14 +557,14 @@ export function ReportView({ report: r }: Readonly<{ report: InterviewReportBody
           </dl>
         </div>
       )}
-      <Block title="Infos pratiques" items={practical(r)} />
+      <Block title={tr("practical")} items={practical(r, tr)} />
       {r.avisRecruteur && (
         <div className="space-y-1.5">
-          <p className="font-medium text-sm">Avis du recruteur</p>
+          <p className="font-medium text-sm">{tr("opinion")}</p>
           <blockquote className="border-muted-foreground/30 border-l-2 pl-3 text-muted-foreground text-sm italic">{r.avisRecruteur}</blockquote>
         </div>
       )}
-      <Block title="Prochaines étapes" items={r.prochainesEtapes} />
+      <Block title={tr("nextSteps")} items={r.prochainesEtapes} />
     </div>
   );
 }
@@ -573,17 +584,18 @@ function ReportEditor({
   pending: boolean;
 }>) {
   const field = "rounded-xl border-0 bg-card text-sm";
+  const tr = useTranslations("interviews.report");
   const lines = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
   return (
     <div className="space-y-3">
       <label className="block space-y-1">
-        <span className="font-medium text-sm">Résumé</span>
+        <span className="font-medium text-sm">{tr("summary")}</span>
         <Textarea value={r.resume} onChange={(e) => onChange({ ...r, resume: e.target.value })} className={cn(field, "min-h-28")} />
       </label>
       {SECTIONS.map((s) => (
         <label key={s.key} className="block space-y-1">
           <span className="font-medium text-sm">
-            {s.title} <span className="font-normal text-muted-foreground">(un par ligne)</span>
+            {tr(s.title)} <span className="font-normal text-muted-foreground">{tr("onePerLine")}</span>
           </span>
           <Textarea
             defaultValue={r[s.key].join("\n")}
@@ -595,7 +607,7 @@ function ReportEditor({
       <div className="grid gap-3 sm:grid-cols-3">
         {(["disponibilite", "pretentions", "mobilite"] as const).map((k) => (
           <label key={k} className="block space-y-1">
-            <span className="font-medium text-sm">{{ disponibilite: "Disponibilité", pretentions: "Prétentions", mobilite: "Mobilité" }[k]}</span>
+            <span className="font-medium text-sm">{tr(({ disponibilite: "availability", pretentions: "expectations", mobilite: "mobility" } as const)[k])}</span>
             <Textarea
               value={r.infosPratiques[k]}
               onChange={(e) => onChange({ ...r, infosPratiques: { ...r.infosPratiques, [k]: e.target.value } })}
@@ -605,16 +617,16 @@ function ReportEditor({
         ))}
       </div>
       <label className="block space-y-1">
-        <span className="font-medium text-sm">Avis du recruteur</span>
+        <span className="font-medium text-sm">{tr("opinion")}</span>
         <Textarea value={r.avisRecruteur} onChange={(e) => onChange({ ...r, avisRecruteur: e.target.value })} className={cn(field, "min-h-16")} />
       </label>
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" className="h-9 rounded-full bg-card px-4 text-sm" onClick={onCancel}>
-          Annuler
+          {tr("cancel")}
         </Button>
         <Button type="button" className="h-9 rounded-full px-4 text-sm" loading={pending} onClick={onSave}>
           <IconCheck className="size-4" />
-          Enregistrer
+          {tr("save")}
         </Button>
       </div>
     </div>
@@ -628,6 +640,8 @@ function SendDialog({
   onSent,
 }: Readonly<{ interviewId: string; onClose: () => void; onSent: (r: InterviewReport) => void }>) {
   const team = useQuery({ queryKey: teamKey, queryFn: getTeam });
+  const tr = useTranslations("interviews.report");
+  const friendlyError = useFriendlyError();
   const members = (team.data?.members ?? []).filter((m) => m.status === "ACTIVE");
   const [picked, setPicked] = useState<Set<string> | null>(null);
   const chosen = picked ?? new Set(members.filter((m) => m.emailsOn).map((m) => m.id));
@@ -635,16 +649,16 @@ function SendDialog({
     mutationFn: () => sendInterviewReport(interviewId, [...chosen]),
     onSuccess: (data) => {
       onSent(data);
-      toast.success(data.sentTo > 1 ? `Compte rendu envoyé à ${data.sentTo} personnes.` : "Compte rendu envoyé.");
+      toast.success(tr("sentTo", { count: data.sentTo }));
       onClose();
     },
-    onError: (err) => toast.error(friendlyError(err, "Le compte rendu n'a pas pu être envoyé.")),
+    onError: (err) => toast.error(friendlyError(err, tr("sendFailed"))),
   });
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="rounded-3xl border-0 bg-card p-6 shadow-soft sm:max-w-md">
-        <DialogTitle>Envoyer le compte rendu</DialogTitle>
-        <DialogDescription>Par e-mail, aux membres de votre équipe que vous choisissez.</DialogDescription>
+        <DialogTitle>{tr("sendTitle")}</DialogTitle>
+        <DialogDescription>{tr("sendText")}</DialogDescription>
         {team.isLoading ? (
           <Bone className="h-24 w-full rounded-2xl" />
         ) : (
@@ -672,10 +686,10 @@ function SendDialog({
         )}
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="ghost" className="h-10 rounded-full bg-page px-4" onClick={onClose}>
-            Annuler
+            {tr("cancel")}
           </Button>
           <Button type="button" className="h-10 rounded-full px-4" disabled={chosen.size === 0} loading={send.isPending} onClick={() => send.mutate()}>
-            Envoyer
+            {tr("sendButton")}
           </Button>
         </div>
       </DialogContent>
@@ -791,12 +805,14 @@ function slug(name: string): string {
       .replace(/[\u0300-\u036f]/g, "")
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "") || "candidat"
+      .replace(/^-|-$/g, "")
   );
 }
 
 /** The panel in a large window, from an interview's card on « Entretiens ». */
 export function InterviewReportDialog({ open, onOpenChange, ...props }: Readonly<Props & { open: boolean; onOpenChange: (o: boolean) => void }>) {
+  const tr = useTranslations("interviews.report");
+  const locale = useLocale() as Locale;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -807,9 +823,9 @@ export function InterviewReportDialog({ open, onOpenChange, ...props }: Readonly
         className="flex max-h-[92svh] w-[calc(100vw-2rem)] flex-col gap-4 overflow-y-auto rounded-3xl border-0 bg-card p-5 shadow-soft sm:max-w-6xl sm:p-6 lg:h-[86svh] lg:overflow-hidden"
       >
         <div className="space-y-1 pr-8">
-          <DialogTitle className="text-lg">Compte rendu · {props.candidateName}</DialogTitle>
+          <DialogTitle className="text-lg">{tr("dialogTitle", { name: props.candidateName })}</DialogTitle>
           <DialogDescription>
-            {props.jobTitle} · {new Date(props.startsAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}
+            {props.jobTitle} · {new Date(props.startsAt).toLocaleString(INTL_LOCALE[locale], { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}
           </DialogDescription>
         </div>
         <InterviewReportPanel {...props} />

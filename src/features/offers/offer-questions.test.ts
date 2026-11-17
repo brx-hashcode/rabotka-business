@@ -20,9 +20,9 @@ describe("offer questions", () => {
   });
 
   it("says what blocks a question", () => {
-    expect(questionProblem({ ...blankQuestion("CHOICE"), label: "Langue", options: ["A", ""] })).toMatch(/deux réponses/);
-    expect(questionProblem({ ...blankQuestion("CHOICE"), label: "Langue", options: ["A", "B"], knockout: true, accepted: ["A", "B"] })).toMatch(/élimine personne/);
-    expect(questionProblem({ ...blankQuestion(), label: "Permis ?", knockout: true })).toMatch(/réponse attendue/);
+    expect(questionProblem({ ...blankQuestion("CHOICE"), label: "Langue", options: ["A", ""] })).toBe("twoAnswers");
+    expect(questionProblem({ ...blankQuestion("CHOICE"), label: "Langue", options: ["A", "B"], knockout: true, accepted: ["A", "B"] })).toBe("allAccepted");
+    expect(questionProblem({ ...blankQuestion(), label: "Permis ?", knockout: true })).toBe("expected");
     expect(questionProblem({ ...blankQuestion(), label: "Permis B ?", knockout: true, accepted: ["yes"] })).toBeNull();
   });
 
@@ -41,12 +41,12 @@ describe("numbers, dates and long answers", () => {
   const base = { label: "Années d'expérience", options: [], required: true, knockout: true, accepted: [] as string[] };
 
   it("asks for the minimum of an « éliminatoire » number", () => {
-    expect(questionProblem({ ...base, kind: "NUMBER" })).toBe("Indiquez le minimum accepté.");
+    expect(questionProblem({ ...base, kind: "NUMBER" })).toBe("minimum");
     expect(questionProblem({ ...base, kind: "NUMBER", accepted: ["2,5"] })).toBeNull();
   });
 
   it("asks for the latest date of an « éliminatoire » date", () => {
-    expect(questionProblem({ ...base, kind: "DATE" })).toBe("Indiquez la date limite acceptée.");
+    expect(questionProblem({ ...base, kind: "DATE" })).toBe("deadline");
     expect(questionProblem({ ...base, kind: "DATE", accepted: ["2026-12-01"] })).toBeNull();
   });
 

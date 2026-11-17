@@ -1,0 +1,128 @@
+{
+  "topics": {
+    "candidate": {
+      "label": "Candidate or mission",
+      "hint": "No-show, lateness, poor work…"
+    },
+    "payment": {
+      "label": "Payment or invoice",
+      "hint": "Amount, charge, invoice…"
+    },
+    "plan": {
+      "label": "Subscription",
+      "hint": "Plan, included contacts…"
+    },
+    "account": {
+      "label": "Account and documents",
+      "hint": "Verification, information…"
+    },
+    "bug": {
+      "label": "Technical problem",
+      "hint": "A page or an action that doesn't work"
+    },
+    "other": {
+      "label": "Other",
+      "hint": "A question, an idea…"
+    }
+  },
+  "status": {
+    "CREATED": "Sent",
+    "IN_PROGRESS": "In progress",
+    "COMPLETED": "Resolved",
+    "REJECTED": "Declined"
+  },
+  "photos": {
+    "wrongType": "{name}: only JPG, PNG or WEBP photos are accepted.",
+    "tooBig": "{name} is over 5 MB.",
+    "tooMany": "{max} photos at most.",
+    "remove": "Remove the photo",
+    "add": "Add photos"
+  },
+  "list": {
+    "title": "Help",
+    "intro": "A problem with a candidate, a payment, an invoice? The Rabotka team replies here.",
+    "new": "New request",
+    "open": "In progress",
+    "openHint": "open requests",
+    "waiting": "Waiting for the team",
+    "waitingHint": "not picked up yet",
+    "closed": "Closed",
+    "closedHint": "resolved or closed",
+    "loadFailed": "Your requests are unavailable right now.",
+    "emptyOpen": "No requests in progress",
+    "emptyClosed": "No closed requests",
+    "emptyText": "Describe your problem, attach photos if needed: the team replies here.",
+    "another": "Another problem?",
+    "anotherText": "Open a new request",
+    "request": "Request",
+    "sentOn": "Sent on {date}",
+    "updated": "Updated {ago}",
+    "ago": {
+      "justNow": "just now",
+      "minutes": "{n} min ago",
+      "hours": "{n} h ago",
+      "yesterday": "yesterday",
+      "days": "{n} days ago",
+      "on": "on {date}"
+    }
+  },
+  "form": {
+    "title": "New request",
+    "intro": "Tell us what's wrong: the Rabotka team replies in your workspace.",
+    "errors": {
+      "topic": "Choose a topic",
+      "titleRequired": "Subject required",
+      "titleTooLong": "Subject too long",
+      "descriptionMin": "At least 10 characters",
+      "descriptionMax": "1,800 characters at most"
+    },
+    "noOffer": "None in particular",
+    "noCandidate": "None in particular",
+    "sent": "Request sent. The Rabotka team will reply here.",
+    "sendFailed": "The request couldn't be sent.",
+    "topicSection": "The topic",
+    "topic": "Topic",
+    "concernsSection": "What the request is about",
+    "offer": "Job offer",
+    "offerPlaceholder": "Choose a job",
+    "offerSearch": "Search for a job…",
+    "candidate": "Candidate",
+    "candidatePlaceholder": "Choose a candidate",
+    "candidateSearch": "Search for a candidate…",
+    "candidateEmpty": "No candidate.",
+    "requestSection": "Your request",
+    "subject": "Subject",
+    "subjectPlaceholder": "E.g. candidate absent on the day of the mission",
+    "description": "Description",
+    "descriptionPlaceholder": "What happened, when, what you expect from us…",
+    "photos": "Photos",
+    "photosHint": "Up to 3 photos, JPG, PNG or WEBP, 5 MB each.",
+    "send": "Send",
+    "descriptionCheck": "Description (at least 10 characters)",
+    "preview": "Preview of the request",
+    "subjectEmpty": "Subject of the request",
+    "photoCount": "{count, plural, one {# photo} other {# photos}}",
+    "noPhoto": "None",
+    "ready": "Ready to send",
+    "toComplete": "To complete",
+    "next": "What happens next",
+    "next1": "The Rabotka team replies in the request, under Help.",
+    "next2": "A notification tells you about every answer.",
+    "notFilled": "Not provided"
+  },
+  "detail": {
+    "sendFailed": "The message couldn't be sent.",
+    "notFound": "This request can't be found.",
+    "thread": "Conversation with the Rabotka team",
+    "threadText": "Answers in your workspace, and a notification for every message.",
+    "empty": "No answer yet. Add a detail if needed: the team will see it.",
+    "closed": "This request is {status, select, COMPLETED {resolved} other {declined}}: you can no longer reply to it.",
+    "placeholder": "Write to the team…",
+    "message": "Your message",
+    "send": "Send",
+    "sentOn": "Sent on {date}",
+    "photos": "Photos",
+    "team": "Rabotka team",
+    "enlarge": "Enlarge the image"
+  }
+}

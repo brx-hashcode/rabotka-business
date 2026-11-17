@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { IconRefresh } from "@tabler/icons-react";
 
 import { Button } from "#/components/ui/button";
@@ -11,19 +12,19 @@ export default function ErrorPage({
   error,
   reset,
 }: Readonly<{ error: Error & { digest?: string }; reset: () => void }>) {
+  const t = useTranslations("pages.error");
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-4 p-6 text-center">
       <div className="space-y-1.5">
-        <h1 className="font-semibold text-lg">Une erreur est survenue</h1>
+        <h1 className="font-semibold text-lg">{t("title")}</h1>
         <p className="max-w-sm text-muted-foreground text-sm">
-          Cette page n&apos;a pas pu se charger. Réessayez — si le problème
-          persiste, vérifiez votre connexion internet.
+          {t("text")}
         </p>
       </div>
 
       <Button onClick={reset}>
         <IconRefresh />
-        Réessayer
+        {t("retry")}
       </Button>
 
       {process.env.NODE_ENV === "development" && (

@@ -134,7 +134,8 @@ export type OfferInput = {
   questions?: OfferQuestion[];
 };
 
-export type JobCategory = { id: string; name: string; slug: string };
+/** `nameEn`: the trade in English, when the admin gave one. */
+export type JobCategory = { id: string; name: string; slug: string; nameEn: string | null };
 
 type Raw = Record<string, unknown>;
 const str = (v: unknown) => (typeof v === "string" ? v : null);
@@ -284,8 +285,9 @@ class OfferController extends BusinessBaseController {
     return this.post(`/job-offers/${encodeURIComponent(id)}/republish`, { scheduledAt });
   }
 
-  categories(): Promise<JobCategory[]> {
-    return this.get("/job-categories");
+  async categories(): Promise<JobCategory[]> {
+    const rows = await this.get<Raw[]>("/job-categories");
+    return rows.map((c) => ({ id: String(c.id), name: String(c.name ?? ""), slug: String(c.slug ?? ""), nameEn: str(c.name_en) }));
   }
 }
 

@@ -1,0 +1,83 @@
+{
+  "nav": {
+    "recruitment": "Recruitment",
+    "profiles": "Profiles",
+    "account": "My account",
+    "dashboard": "Dashboard",
+    "messages": "Messages",
+    "offers": "Jobs",
+    "careersPage": "Careers page",
+    "applications": "Applications",
+    "interviews": "Interviews",
+    "missions": "Missions",
+    "search": "Find profiles",
+    "pool": "My profiles",
+    "cvAnalysis": "CV analysis",
+    "organisation": "Organisation",
+    "team": "Team",
+    "subscription": "Subscription",
+    "invoices": "Invoices",
+    "help": "Help",
+    "soon": "Soon",
+    "soonTitle": "Coming soon",
+    "homeLabel": "{name} — dashboard",
+    "menu": "Menu",
+    "openMenu": "Open the menu",
+    "builtAt": "Built on {date} UTC"
+  },
+  "theme": {
+    "label": "Theme",
+    "dark": "Dark",
+    "light": "Light"
+  },
+  "refused": {
+    "title": "This page is restricted",
+    "reviewer": "A reviewer reads applications and gives an opinion; this page is for those who hire.",
+    "admin": "Only your organisation's administrator can open it.",
+    "back": "Back to the dashboard"
+  },
+  "account": {
+    "myAccount": "My account",
+    "businessAccount": "Business account",
+    "verified": "Verified organisation",
+    "verifying": "Verification in progress",
+    "trial": "Free trial",
+    "active": "Active",
+    "trialUntil": "Trial until {date}",
+    "until": "Until {date}",
+    "choosePlan": "Choose a plan",
+    "emails": "Receive emails",
+    "emailsOn": "You will receive emails from your workspace.",
+    "emailsOff": "You will no longer receive emails from your workspace.",
+    "emailsFailed": "The setting could not be saved.",
+    "signOut": "Sign out"
+  },
+  "logout": {
+    "title": "Sign out?",
+    "description": "You will need to enter your email and a code again to come back.",
+    "confirm": "Sign out"
+  },
+  "search": {
+    "trigger": "Search for a profile: trade, skill…",
+    "title": "Search",
+    "description": "Search for a candidate or a page",
+    "placeholder": "Trade, skill, description…",
+    "candidates": "Candidates",
+    "searching": "Searching",
+    "planRequired": "Profile search is included in some plans: see “Subscription”.",
+    "seePlans": "See plans",
+    "unavailable": "Search is unavailable right now.",
+    "none": "No candidates for “{query}”.",
+    "reliability": "Reliability {score}",
+    "hint": "Describe the profile you need: a trade, a skill, a know-how (at least 2 letters).",
+    "pages": "Pages"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "unreadLabel": "Notifications, {count} unread",
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications",
+    "emptyHint": "Applications, CV analyses, interviews and subscription updates will show up here.",
+    "unread": "Unread"
+  }
+}

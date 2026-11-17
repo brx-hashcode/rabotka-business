@@ -1,11 +1,13 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { IconArrowRight } from "@tabler/icons-react";
 
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
+import { INTL_LOCALE } from "#/i18n/config";
 import { cn } from "#/lib/utils";
 
 const SOON_MS = 7 * 24 * 60 * 60 * 1000;
@@ -15,6 +17,8 @@ const SOON_MS = 7 * 24 * 60 * 60 * 1000;
  * no plan, a trial running, or a period ending within a week.
  */
 export function SubscriptionBanner({ className }: Readonly<{ className?: string }>) {
+  const t = useTranslations("subscription.banner");
+  const locale = useLocale();
   const { data } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   // Read once per mount: the banner need not tick.
   const [now] = useState(() => Date.now());
@@ -22,13 +26,13 @@ export function SubscriptionBanner({ className }: Readonly<{ className?: string 
   const e = data.entitlements;
   const ends = e.endsAt ? new Date(e.endsAt) : null;
   const queued = data.upcoming.length > 0;
-  const day = (d: Date) => d.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+  const day = (d: Date) => d.toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long" });
 
   let text: string | null = null;
-  if (!e.plan) text = "Choisissez une formule pour publier vos offres et obtenir vos contacts inclus.";
-  else if (e.status === "TRIAL" && ends) text = `Votre essai gratuit de la formule ${e.plan.name} se termine le ${day(ends)}.`;
+  if (!e.plan) text = t("noPlan");
+  else if (e.status === "TRIAL" && ends) text = t("trial", { plan: e.plan.name, date: day(ends) });
   else if (ends && !queued && ends.getTime() - now < SOON_MS)
-    text = `Votre abonnement ${e.plan.name} se termine le ${day(ends)}. Renouvelez-le pour garder vos avantages.`;
+    text = t("ending", { plan: e.plan.name, date: day(ends) });
   if (!text) return null;
 
   return (

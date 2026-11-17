@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { IconBuilding, IconCamera } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
@@ -7,7 +8,7 @@ import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { uploadMyBusinessLogo } from "#/lib/api/business-controller";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 
 const ACCEPT = "image/jpeg,image/png,image/webp";
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -21,25 +22,27 @@ export function OrganisationLogo({
   logoUrl,
   onUploaded,
 }: Readonly<{ name: string; logoUrl: string | null; onUploaded: (url: string) => void }>) {
+  const t = useTranslations("organisation.logo");
+  const friendlyError = useFriendlyError();
   const input = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState(false);
 
   async function send(file: File) {
     if (!ACCEPT.split(",").includes(file.type)) {
-      toast.error("Format non accepté : envoyez une image JPG, PNG ou WEBP.");
+      toast.error(t("badType"));
       return;
     }
     if (file.size > MAX_BYTES) {
-      toast.error("Image trop lourde : 5 Mo maximum.");
+      toast.error(t("tooBig"));
       return;
     }
     setPending(true);
     try {
       const { avatarUrl } = await uploadMyBusinessLogo(file);
       onUploaded(avatarUrl);
-      toast.success("Logo mis à jour.");
+      toast.success(t("updated"));
     } catch (err) {
-      toast.error(friendlyError(err, "Le logo n'a pas pu être envoyé. Réessayez."));
+      toast.error(friendlyError(err, t("failed")));
     } finally {
       setPending(false);
     }
@@ -58,7 +61,7 @@ export function OrganisationLogo({
           type="button"
           onClick={() => input.current?.click()}
           disabled={pending}
-          aria-label="Changer le logo"
+          aria-label={t("change")}
           className="absolute -right-1 -bottom-1 flex size-8 items-center justify-center rounded-full bg-ink text-white transition-colors hover:bg-ink/90 disabled:opacity-100"
         >
           {pending ? <Loader className="size-4 animate-spin" /> : <IconCamera className="size-4" />}
@@ -67,7 +70,7 @@ export function OrganisationLogo({
       <div className="min-w-0 space-y-1">
         <p className="truncate font-semibold text-xl tracking-tight">{name}</p>
         <p className="text-muted-foreground text-sm">
-          Logo visible par les candidats sur vos offres. JPG, PNG ou WEBP, 5 Mo maximum.
+          {t("hint")}
         </p>
       </div>
       <input

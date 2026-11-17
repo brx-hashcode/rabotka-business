@@ -1,0 +1,23 @@
+{
+  "title": "Missions",
+  "intro": "Vos recrutements sur le terrain : qui vient, qui est en mission, qui a terminé — et qui noter.",
+  "unavailable": "Vos missions sont indisponibles pour le moment.",
+  "current": "Missions en cours",
+  "coming": "Attendus",
+  "comingHint": "retenus, mission à venir",
+  "onIt": "En mission",
+  "finished": "Terminées",
+  "finishedHint": "personnes ayant fini leur mission",
+  "tabCurrent": "En cours et à venir",
+  "tabDone": "Terminées",
+  "noneCurrent": "Aucune mission en cours",
+  "noneDone": "Aucune mission terminée",
+  "noneCurrentHint": "Retenez un candidat sur l'une de vos offres : la mission apparaît ici.",
+  "noneDoneHint": "Vos missions terminées apparaîtront ici.",
+  "seeApplications": "Voir les candidatures",
+  "toRate": "{count} à noter",
+  "team": "Équipe",
+  "positions": "{filled}/{quantity, plural, one {# poste} other {# postes}}",
+  "doneRated": "Terminée · notée",
+  "see": "Voir la mission"
+}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { trialLocks } from "#/features/subscription/trial-lock";
 import { cvOutOfReach, packCredits, PACKS_HREF } from "#/features/subscription/packs";
 import { usePackOnSale } from "#/features/subscription/use-packs";
@@ -26,42 +27,42 @@ import { Bone, CardGridSkeleton } from "#/components/page-skeletons";
 import { Input } from "#/components/ui/input";
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
 import { cvScreeningsKey, listCvScreenings } from "#/lib/api/cv-screening-controller";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import type { Translator } from "#/i18n/translator";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import type { CvScreeningSummary, MySubscription } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { CvLocked, ScoreRing, VerdictChip, band } from "./cv-bits";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const fold = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
-const longDate = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+const longDate = (iso: string, locale: Locale) =>
+  new Date(iso).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long", year: "numeric" });
+
+type ListT = Translator<"cv.list">;
 
 /** « Aujourd'hui », « Hier », « Il y a 3 jours », then the date. A module helper: reading the clock is not render's business. */
-function when(iso: string): string {
+function when(iso: string, t: ListT, locale: Locale): string {
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / DAY_MS);
-  if (days <= 0) return `Aujourd'hui à ${new Date(iso).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`;
-  if (days === 1) return "Hier";
-  if (days < 7) return `Il y a ${days} jours`;
-  return `Le ${longDate(iso)}`;
+  if (days <= 0) return t("todayAt", { time: new Date(iso).toLocaleTimeString(INTL_LOCALE[locale], { hour: "2-digit", minute: "2-digit" }) });
+  if (days === 1) return t("yesterday");
+  if (days < 7) return t("daysAgo", { days });
+  return t("on", { date: longDate(iso, locale) });
 }
 
 function daysLeft(iso: string): number {
   return Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / DAY_MS));
 }
 
-const FILTERS = [
-  { key: "all", label: "Toutes" },
-  { key: "running", label: "En cours" },
-  { key: "done", label: "Terminées" },
-] as const;
+const FILTERS = [{ key: "all" }, { key: "running" }, { key: "done" }] as const;
 type Filter = (typeof FILTERS)[number]["key"];
 
-const SORTS = [
-  { key: "recent", label: "Plus récentes" },
-  { key: "best", label: "Meilleur score" },
-] as const;
+const SORTS = [{ key: "recent" }, { key: "best" }] as const;
 
 /** « Analyse de CV »: the figures first, then the analyses, findable and sortable. */
 export function CvScreeningsPage() {
+  const t = useTranslations("cv.list");
+  const friendlyError = useFriendlyError();
   const subscription = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   const screenings = useQuery({ queryKey: [...cvScreeningsKey, "list"], queryFn: () => listCvScreenings(0, 50) });
   const e = subscription.data?.entitlements;
@@ -92,10 +93,8 @@ export function CvScreeningsPage() {
     <div className="w-full space-y-6 pt-2">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1.5">
-          <h1 className="font-semibold text-3xl tracking-tight">Analyse de CV</h1>
-          <p className="text-muted-foreground">
-            Envoyez les CV reçus pour un poste : Rabotka les lit et les classe, du plus adapté au moins adapté.
-          </p>
+          <h1 className="font-semibold text-3xl tracking-tight">{t("title")}</h1>
+          <p className="text-muted-foreground">{t("intro")}</p>
         </div>
         {!locked && (
           <Link
@@ -104,7 +103,7 @@ export function CvScreeningsPage() {
             className="inline-flex h-12 items-center gap-2 rounded-full bg-ink px-5 font-medium text-white hover:bg-ink/90 aria-disabled:pointer-events-none aria-disabled:opacity-40"
           >
             <IconPlus className="size-4" />
-            Nouvelle analyse
+            {t("new")}
           </Link>
         )}
       </div>
@@ -124,21 +123,21 @@ export function CvScreeningsPage() {
       {(!locked || items.length > 0) && (
         <section className="space-y-5 rounded-3xl bg-card p-6">
           <div className="flex flex-wrap items-center gap-3">
-            <h2 className="mr-auto font-semibold">Vos analyses</h2>
+            <h2 className="mr-auto font-semibold">{t("yours")}</h2>
             <div className="relative w-full sm:w-72">
               <IconSearch className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={q}
                 onChange={(ev) => void setQ(ev.target.value)}
-                placeholder="Poste ou candidat…"
-                aria-label="Rechercher une analyse"
+                placeholder={t("search")}
+                aria-label={t("searchLabel")}
                 className="h-10 rounded-full border-0 bg-page pl-10 shadow-none focus-visible:ring-2 focus-visible:ring-ink/10"
               />
             </div>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div role="tablist" aria-label="État" className="flex gap-1 overflow-x-auto rounded-full bg-page p-1">
+            <div role="tablist" aria-label={t("state")} className="flex gap-1 overflow-x-auto rounded-full bg-page p-1">
               {FILTERS.map((f) => (
                 <button
                   key={f.key}
@@ -151,12 +150,12 @@ export function CvScreeningsPage() {
                     filter === f.key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  {f.label}
+                  {t(`filters.${f.key}`)}
                   <span className="tabular-nums opacity-70">{count(f.key)}</span>
                 </button>
               ))}
             </div>
-            <div className="flex gap-1 rounded-full bg-page p-1" role="radiogroup" aria-label="Trier">
+            <div className="flex gap-1 rounded-full bg-page p-1" role="radiogroup" aria-label={t("sort")}>
               {SORTS.map((s) => (
                 <button
                   key={s.key}
@@ -169,7 +168,7 @@ export function CvScreeningsPage() {
                     sort === s.key ? "bg-card text-foreground" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  {s.label}
+                  {t(`sorts.${s.key}`)}
                 </button>
               ))}
             </div>
@@ -178,17 +177,17 @@ export function CvScreeningsPage() {
           {screenings.isLoading ? (
             <CardGridSkeleton kind="application" count={3} />
           ) : !screenings.data ? (
-            <p className="text-muted-foreground">{friendlyError(screenings.error, "Vos analyses sont indisponibles pour le moment.")}</p>
+            <p className="text-muted-foreground">{friendlyError(screenings.error, t("unavailable"))}</p>
           ) : shown.length === 0 ? (
             <div className="flex flex-col items-center gap-3 rounded-2xl bg-page px-6 py-12 text-center">
               <span className="flex size-12 items-center justify-center rounded-2xl bg-card">
                 <IconFileSearch className="size-6 text-muted-foreground" />
               </span>
-              <p className="font-medium">{items.length === 0 ? "Aucune analyse pour le moment" : "Aucune analyse ici"}</p>
+              <p className="font-medium">{items.length === 0 ? t("noneYet") : t("noneHere")}</p>
               <p className="max-w-sm text-muted-foreground text-sm">
                 {items.length === 0
-                  ? "Choisissez une offre, ajoutez les CV (PDF, Word ou photo) : le classement arrive en quelques secondes par CV."
-                  : "Changez de filtre ou de recherche pour en voir d'autres."}
+                  ? t("noneYetHint")
+                  : t("changeFilter")}
               </p>
             </div>
           ) : (
@@ -211,6 +210,9 @@ function Overview({
   packOnSale,
 }: Readonly<{ e: MySubscription["entitlements"]; items: CvScreeningSummary[]; packOnSale: boolean }>) {
   const packs = packCredits(e, "CV");
+  const t = useTranslations("cv.list");
+  const tVerdict = useTranslations("labels.verdict");
+  const locale = useLocale() as Locale;
   const scored = items.reduce((n, s) => n + s.scored, 0);
   const weighted = items.reduce((n, s) => n + (s.averageScore ?? 0) * s.scored, 0);
   const average = scored ? Math.round(weighted / scored) : null;
@@ -219,22 +221,22 @@ function Overview({
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-      <Tile icon={IconListNumbers} label="Analyses" value={String(items.length)} hint={`${items.filter((s) => s.status === "PROCESSING").length} en cours`} />
-      <Tile icon={IconFileText} label="CV classés" value={String(scored)} hint={`dont ${strong} très adapté${strong > 1 ? "s" : ""}`} />
+      <Tile icon={IconListNumbers} label={t("analyses")} value={String(items.length)} hint={t("runningCount", { count: items.filter((s) => s.status === "PROCESSING").length })} />
+      <Tile icon={IconFileText} label={t("ranked")} value={String(scored)} hint={t("strong", { count: strong })} />
       <Tile
         icon={IconChartBar}
-        label="Score moyen"
+        label={t("average")}
         value={average === null ? "—" : `${average}/100`}
-        hint={average === null ? "Aucun CV classé" : band(average).label}
+        hint={average === null ? t("noneRanked") : tVerdict(band(average).level)}
       />
       <div className="space-y-3 rounded-3xl bg-card p-4 sm:p-5">
         <div className="flex items-center justify-between gap-2">
           <p className="flex items-center gap-2 text-muted-foreground text-sm">
             <IconFileSearch className="size-4" />
-            {e.cvQuota === 0 ? "CV de vos packs" : "CV inclus"}
+            {e.cvQuota === 0 ? t("fromPacks") : t("included")}
           </p>
           <p className="font-semibold tabular-nums">
-            {e.cvQuota === null ? "Illimité" : e.cvQuota === 0 ? `${packs} restants` : `${e.cvUsed} / ${e.cvQuota}`}
+            {e.cvQuota === null ? t("unlimited") : e.cvQuota === 0 ? t("packsLeft", { count: packs }) : `${e.cvUsed} / ${e.cvQuota}`}
           </p>
         </div>
         {e.cvQuota !== null && e.cvQuota > 0 && (
@@ -244,21 +246,20 @@ function Overview({
         )}
         <p className="text-muted-foreground text-xs">
           {e.cvRemaining === 0 ? (
-            <>
-              Tous utilisés : changez de formule
-              {packOnSale && (
-                <>
-                  {" ou "}
+            packOnSale ? (
+              t.rich("allUsedPack", {
+                pack: (chunks) => (
                   <Link href={PACKS_HREF} className="font-medium text-foreground underline underline-offset-2">
-                    ajoutez un pack
+                    {chunks}
                   </Link>
-                </>
-              )}{" "}
-              pour en analyser davantage.
-            </>
+                ),
+              })
+            ) : (
+              t("allUsed")
+            )
           ) : (
-            `${packs > 0 && e.cvQuota ? `+ ${packs} de vos packs · ` : ""}${e.cvBatchMax} CV par analyse · ${e.cvFileMaxMb} Mo chacun${
-              e.endsAt && e.cvQuota !== 0 ? ` · jusqu'au ${longDate(e.endsAt)}` : ""
+            `${packs > 0 && e.cvQuota ? t("plusPacks", { count: packs }) : ""}${t("limits", { batch: e.cvBatchMax, mb: e.cvFileMaxMb })}${
+              e.endsAt && e.cvQuota !== 0 ? t("until", { date: longDate(e.endsAt, locale) }) : ""
             }`
           )}
         </p>
@@ -281,10 +282,10 @@ function Tile({ icon: Icon, label, value, hint }: Readonly<{ icon: TablerIcon; l
 }
 
 const BANDS = [
-  { key: "very", label: "Très adaptés", bar: "bg-whatsapp-dark" },
-  { key: "good", label: "Adaptés", bar: "bg-brand-lime" },
-  { key: "partial", label: "Partiels", bar: "bg-chip-amber-foreground" },
-  { key: "low", label: "Peu adaptés", bar: "bg-foreground/20" },
+  { key: "very", bar: "bg-whatsapp-dark" },
+  { key: "good", bar: "bg-brand-lime" },
+  { key: "partial", bar: "bg-chip-amber-foreground" },
+  { key: "low", bar: "bg-foreground/20" },
 ] as const;
 
 /** One analysis: where the job came from, the best candidate, how the CVs spread, how long the files stay. */
@@ -292,15 +293,17 @@ function ScreeningCard({ s }: Readonly<{ s: CvScreeningSummary }>) {
   const running = s.status === "PROCESSING";
   const unread = running ? 0 : s.total - s.scored;
   const left = daysLeft(s.expiresAt);
+  const t = useTranslations("cv.list");
+  const locale = useLocale() as Locale;
   return (
     <li>
       <Link href={`/espace/analyse-cv/${s.id}`} className="group flex h-full flex-col gap-4 rounded-3xl bg-page p-5 transition-colors hover:bg-page/70">
         <div className="flex items-center justify-between gap-2 text-xs">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-2.5 py-1 font-medium text-muted-foreground">
             {s.offerId ? <IconBriefcase className="size-3.5" /> : <IconPencil className="size-3.5" />}
-            {s.offerId ? "Offre" : "Poste décrit"}
+            {s.offerId ? t("offer") : t("described")}
           </span>
-          <span className="text-muted-foreground">{when(s.createdAt)}</span>
+          <span className="text-muted-foreground">{when(s.createdAt, t, locale)}</span>
         </div>
 
         <div className="flex items-start gap-3.5">
@@ -315,7 +318,7 @@ function ScreeningCard({ s }: Readonly<{ s: CvScreeningSummary }>) {
             <p className="line-clamp-2 font-semibold leading-snug group-hover:underline">{s.jobTitle}</p>
             {running ? (
               <span className="inline-flex rounded-full bg-chip-amber px-2.5 py-1 font-medium text-chip-amber-foreground text-xs">
-                En cours · {s.done}/{s.total}
+                {t("running", { done: s.done, total: s.total })}
               </span>
             ) : (
               s.bestScore !== null && <VerdictChip score={s.bestScore} />
@@ -325,7 +328,7 @@ function ScreeningCard({ s }: Readonly<{ s: CvScreeningSummary }>) {
 
         {running ? (
           <div className="space-y-2 rounded-2xl bg-card p-3.5">
-            <p className="text-muted-foreground text-xs">Lecture des CV…</p>
+            <p className="text-muted-foreground text-xs">{t("readingCvs")}</p>
             <div className="h-2 overflow-hidden rounded-full bg-page">
               <div className="h-full rounded-full bg-whatsapp-dark transition-[width]" style={{ width: `${(s.done / s.total) * 100}%` }} />
             </div>
@@ -336,7 +339,7 @@ function ScreeningCard({ s }: Readonly<{ s: CvScreeningSummary }>) {
               <p className="flex items-center gap-2 text-sm">
                 <IconTrophy className="size-4 shrink-0 text-whatsapp-dark" />
                 <span className="min-w-0 truncate">
-                  <span className="text-muted-foreground">En tête : </span>
+                  <span className="text-muted-foreground">{t("top")}</span>
                   <span className="font-medium">{s.bestCandidate}</span>
                 </span>
               </p>
@@ -352,16 +355,16 @@ function ScreeningCard({ s }: Readonly<{ s: CvScreeningSummary }>) {
                   {BANDS.filter((b) => s.bands[b.key] > 0).map((b) => (
                     <span key={b.key} className="inline-flex items-center gap-1.5">
                       <span className={cn("size-2 rounded-full", b.bar)} />
-                      {s.bands[b.key]} {s.bands[b.key] > 1 ? b.label.toLowerCase() : b.label.toLowerCase().replace(/s$/, "")}
+                      {t(`bands.${b.key}`, { count: s.bands[b.key] })}
                     </span>
                   ))}
                 </p>
               </div>
             )}
             <dl className="grid grid-cols-3 gap-2 text-center">
-              <Stat label="CV" value={String(s.total)} />
-              <Stat label="Moyenne" value={s.averageScore === null ? "—" : String(s.averageScore)} />
-              <Stat label={unread > 1 ? "Non lus" : "Non lu"} value={String(unread)} />
+              <Stat label={t("cvs")} value={String(s.total)} />
+              <Stat label={t("mean")} value={s.averageScore === null ? "—" : String(s.averageScore)} />
+              <Stat label={t("unreadCount", { count: unread })} value={String(unread)} />
             </dl>
           </div>
         )}
@@ -369,7 +372,7 @@ function ScreeningCard({ s }: Readonly<{ s: CvScreeningSummary }>) {
         <div className="mt-auto flex items-center justify-between gap-3 text-muted-foreground text-xs">
           <span className="inline-flex items-center gap-1.5">
             <IconShieldLock className="size-3.5" />
-            {s.purged ? "Fichiers supprimés, notes conservées" : `Fichiers conservés ${left} jour${left > 1 ? "s" : ""}`}
+            {s.purged ? t("purged") : t("kept", { count: left })}
           </span>
           <IconChevronRight className="size-4 shrink-0" />
         </div>

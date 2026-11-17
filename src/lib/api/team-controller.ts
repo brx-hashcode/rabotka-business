@@ -86,15 +86,3 @@ export const resendInvite = controller.resend.bind(controller);
 export const setMemberRole = controller.setRole.bind(controller);
 export const removeMember = controller.remove.bind(controller);
 export const getActivity = controller.activity.bind(controller);
-
-export const ROLE_LABEL: Record<MemberRole, string> = {
-  ADMIN: "Administrateur",
-  RECRUITER: "Recruteur",
-  REVIEWER: "Évaluateur",
-};
-
-export const ROLE_HINT: Record<MemberRole, string> = {
-  ADMIN: "Tout, dont l'abonnement, l'organisation et l'équipe",
-  RECRUITER: "Offres, candidats, entretiens, messages et missions",
-  REVIEWER: "Consulte les candidats et donne son avis",
-};

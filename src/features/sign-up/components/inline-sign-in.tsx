@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { sessionUserKey } from "#/hooks/use-session-user";
 import { sendOtp } from "#/lib/api/auth-controller";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { verifySession } from "#/lib/auth/session-client";
 import { CodeInput, completeCode } from "./code-input";
 import { FormError, StepActions } from "./form-bits";
@@ -21,6 +22,8 @@ const RESEND_SECONDS = 60;
  */
 export function InlineSignIn({ email }: Readonly<{ email: string }>) {
   const queryClient = useQueryClient();
+  const t = useTranslations("signUp");
+  const friendlyError = useFriendlyError();
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -31,7 +34,9 @@ export function InlineSignIn({ email }: Readonly<{ email: string }>) {
   useEffect(() => {
     if (sent.current) return;
     sent.current = true;
-    sendOtp(email).catch((err) => setError(friendlyError(err, "Impossible d'envoyer le code de connexion.")));
+    sendOtp(email).catch((err) => setError(friendlyError(err, t("inlineSignIn.sendFailed"))));
+    // Once per mount: a language change reloads the page anyway.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email]);
 
   useEffect(() => {
@@ -43,7 +48,7 @@ export function InlineSignIn({ email }: Readonly<{ email: string }>) {
   async function signIn() {
     const otp = completeCode(value);
     if (!otp) {
-      setError("Saisissez les 6 chiffres du code.");
+      setError(t("code.incomplete"));
       return;
     }
     setError(null);
@@ -57,7 +62,7 @@ export function InlineSignIn({ email }: Readonly<{ email: string }>) {
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- deliberate full load, see above
       globalThis.location.assign("/espace");
     } catch (err) {
-      setError(friendlyError(err, "Ce code n'a pas fonctionné. Réessayez.", { keepUnauthorized: true }));
+      setError(friendlyError(err, t("code.failed"), { keepUnauthorized: true }));
       setPending(false);
     }
   }
@@ -68,9 +73,9 @@ export function InlineSignIn({ email }: Readonly<{ email: string }>) {
       await sendOtp(email);
       setValue("");
       setCooldown(RESEND_SECONDS);
-      toast.success("Nouveau code envoyé");
+      toast.success(t("code.resent"));
     } catch (err) {
-      toast.error(friendlyError(err, "Impossible de renvoyer le code."));
+      toast.error(friendlyError(err, t("code.resendFailed")));
     }
   }
 
@@ -84,9 +89,12 @@ export function InlineSignIn({ email }: Readonly<{ email: string }>) {
       }}
     >
       <div className="space-y-1">
-        <p className="font-semibold">Accédez à votre espace</p>
+        <p className="font-semibold">{t("inlineSignIn.title")}</p>
         <p className="text-muted-foreground text-sm">
-          Nous venons d&apos;envoyer un code de connexion à <span className="font-medium text-foreground">{email}</span>.
+          {t.rich("inlineSignIn.text", {
+            email,
+            strong: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
+          })}
         </p>
       </div>
       <CodeInput value={value} onChange={setValue} disabled={pending} boxClassName="bg-card" />
@@ -96,10 +104,10 @@ export function InlineSignIn({ email }: Readonly<{ email: string }>) {
         disabled={cooldown > 0}
         className="font-medium text-sm underline-offset-4 hover:underline disabled:text-muted-foreground disabled:no-underline"
       >
-        {cooldown > 0 ? `Renvoyer dans ${cooldown} s` : "Renvoyer le code"}
+        {cooldown > 0 ? t("code.resendIn", { seconds: cooldown }) : t("code.resend")}
       </button>
       <FormError message={error} />
-      <StepActions continueLabel="Se connecter" pending={pending} />
+      <StepActions continueLabel={t("inlineSignIn.submit")} pending={pending} />
     </form>
   );
 }

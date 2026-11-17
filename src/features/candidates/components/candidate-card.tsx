@@ -1,5 +1,10 @@
 "use client";
 
+import { useTradeName } from "#/lib/api/use-trade-name";
+import { useLocale, useTranslations } from "next-intl";
+
+import type { Locale } from "#/i18n/config";
+import { formatRating } from "#/i18n/format";
 import Link from "next/link";
 import { BadgeCheck } from "lucide-react";
 import { IconBriefcase, IconShieldCheck, IconStarFilled } from "@tabler/icons-react";
@@ -10,8 +15,6 @@ import type { Candidate } from "#/lib/api/candidate-controller";
 import { cn, getInitials } from "#/lib/utils";
 import { ReachButton } from "./reach-button";
 
-export const RELIABILITY_HINT = "Fiabilité : présence, ponctualité et missions menées à terme";
-
 const button = "inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 font-medium text-sm transition-colors";
 
 /**
@@ -20,6 +23,9 @@ const button = "inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-
  * the card itself.
  */
 export function CandidateCard({ candidate: c, compact }: Readonly<{ candidate: Candidate; compact?: boolean }>) {
+  const t = useTranslations("candidates.card");
+  const locale = useLocale() as Locale;
+  const trade = useTradeName();
   const name = `${c.firstName} ${c.lastName}`.trim();
   return (
     <li className={cn("flex flex-col gap-4 rounded-3xl bg-page p-5", compact && "gap-3 p-4")}>
@@ -33,26 +39,26 @@ export function CandidateCard({ candidate: c, compact }: Readonly<{ candidate: C
         <div className="min-w-0 flex-1">
           <Link href={`/espace/candidats/${c.id}`} className="flex items-center gap-1.5 hover:underline">
             <span className="truncate font-semibold">{name}</span>
-            {c.isVerified && <BadgeCheck aria-label="Identité vérifiée" className="size-4 shrink-0 text-whatsapp" />}
+            {c.isVerified && <BadgeCheck aria-label={t("verified")} className="size-4 shrink-0 text-whatsapp" />}
           </Link>
-          {c.categoryName && <p className="truncate text-muted-foreground text-sm">{c.categoryName}</p>}
+          {c.categoryName && <p className="truncate text-muted-foreground text-sm">{trade(c.categoryName)}</p>}
           <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs">
             {c.ratingAvg !== null && c.ratingCount > 0 && (
               <span className="inline-flex items-center gap-1 font-medium">
                 <IconStarFilled className="size-3.5 text-amber-400" />
-                {Number(c.ratingAvg).toFixed(1)}
+                {formatRating(c.ratingAvg, locale)}
                 <span className="font-normal text-muted-foreground">({c.ratingCount})</span>
               </span>
             )}
             {c.reliabilityScore !== null && (
-              <span className="inline-flex items-center gap-1 font-medium" title={RELIABILITY_HINT}>
+              <span className="inline-flex items-center gap-1 font-medium" title={t("reliabilityHint")}>
                 <IconShieldCheck className="size-3.5 text-whatsapp-dark" />
                 {c.reliabilityScore}/100
               </span>
             )}
             <span className="inline-flex items-center gap-1 text-muted-foreground">
               <IconBriefcase className="size-3.5" />
-              {c.completedMissions} mission{c.completedMissions > 1 ? "s" : ""}
+              {t("missions", { count: c.completedMissions })}
             </span>
           </p>
         </div>
@@ -61,7 +67,7 @@ export function CandidateCard({ candidate: c, compact }: Readonly<{ candidate: C
       {!compact && c.description && <p className="line-clamp-2 text-muted-foreground text-sm leading-relaxed">{c.description}</p>}
       <div className="mt-auto flex gap-2">
         <Link href={`/espace/candidats/${c.id}`} className={cn(button, "bg-card hover:bg-card/70")}>
-          Profil
+          {t("profile")}
         </Link>
         <ReachButton workerId={c.id} name={name} />
       </div>

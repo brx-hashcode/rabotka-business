@@ -5,7 +5,12 @@ import type { BusinessCatalog, UploadedFile } from "./types";
 type RawCatalog = Omit<BusinessCatalog, "country" | "countries" | "identifiers" | "categories"> &
   Partial<Pick<BusinessCatalog, "country" | "countries" | "identifiers">> & {
     categories: (Omit<BusinessCatalog["categories"][number], "documents"> & {
-      documents: { required?: string[][]; recommended?: string[]; optional: string[] };
+      documents: {
+        required?: string[][];
+        requiredByLegalForm?: Record<string, string[][]>;
+        recommended?: string[];
+        optional: string[];
+      };
     })[];
   };
 
@@ -29,6 +34,8 @@ function withCatalogDefaults(raw: RawCatalog): BusinessCatalog {
       documents: {
         recommended: c.documents.recommended ?? (c.documents.required ?? []).flat(),
         optional: c.documents.optional,
+        required: c.documents.required ?? [],
+        requiredByLegalForm: c.documents.requiredByLegalForm,
       },
     })),
   };

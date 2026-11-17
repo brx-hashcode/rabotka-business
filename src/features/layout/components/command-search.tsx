@@ -1,10 +1,15 @@
 "use client";
 
+import { useTradeName } from "#/lib/api/use-trade-name";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { IconCommand, IconSearch, IconStarFilled } from "@tabler/icons-react";
+import { useLocale, useTranslations } from "next-intl";
+
+import type { Locale } from "#/i18n/config";
+import { formatRating } from "#/i18n/format";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Bone } from "#/components/page-skeletons";
@@ -16,7 +21,8 @@ import {
   CommandList,
 } from "#/components/ui/command";
 import { searchCandidates } from "#/lib/api/candidate-controller";
-import { friendlyError, httpStatusOf } from "#/lib/api/friendly-error";
+import { httpStatusOf } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { getInitials } from "#/lib/utils";
 import { pageAllowed } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
@@ -34,6 +40,10 @@ const plain = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerC
  */
 export function CommandSearch() {
   const router = useRouter();
+  const t = useTranslations("layout");
+  const locale = useLocale() as Locale;
+  const trade = useTradeName();
+  const friendlyError = useFriendlyError();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
@@ -65,7 +75,7 @@ export function CommandSearch() {
   const forbidden = httpStatusOf(results.error) === 403;
   const { role } = useMember();
   const pages = NAV_ITEMS.filter(
-    (i) => !i.soon && pageAllowed(role, i.href) && (!query.trim() || plain(i.label).includes(plain(query.trim()))),
+    (i) => !i.soon && pageAllowed(role, i.href) && (!query.trim() || plain(t(`nav.${i.label}`)).includes(plain(query.trim()))),
   );
 
   function close() {
@@ -81,7 +91,7 @@ export function CommandSearch() {
         className="flex h-12 w-full max-w-md items-center gap-3 rounded-2xl bg-card pr-1.5 pl-4 text-left text-muted-foreground transition-colors hover:text-foreground"
       >
         <IconSearch className="size-5 shrink-0" />
-        <span className="flex-1 truncate text-[15px]">Rechercher un profil : métier, compétence…</span>
+        <span className="flex-1 truncate text-[15px]">{t("search.trigger")}</span>
         <span className="hidden items-center gap-1 rounded-xl bg-brand-lime px-3 py-1.5 font-medium text-[#0f2414] text-sm sm:flex">
           <IconCommand className="size-4" />K
         </span>
@@ -90,17 +100,17 @@ export function CommandSearch() {
       <CommandDialog
         open={open}
         onOpenChange={(o) => (o ? setOpen(true) : close())}
-        title="Rechercher"
-        description="Rechercher un candidat ou une page"
+        title={t("search.title")}
+        description={t("search.description")}
         shouldFilter={false}
         className="sm:max-w-2xl"
       >
-        <CommandInput value={query} onValueChange={setQuery} placeholder="Métier, compétence, description…" />
+        <CommandInput value={query} onValueChange={setQuery} placeholder={t("search.placeholder")} />
         <CommandList className="max-h-[60vh]">
           {searching && (
-            <CommandGroup heading="Candidats">
+            <CommandGroup heading={t("search.candidates")}>
               {results.isFetching && !results.data ? (
-                <div className="space-y-1 p-1" role="status" aria-label="Recherche">
+                <div className="space-y-1 p-1" role="status" aria-label={t("search.searching")}>
                   {[0, 1, 2].map((i) => (
                     <div key={i} className="flex items-center gap-3 p-2">
                       <Bone className="size-9 shrink-0 rounded-xl" />
@@ -113,17 +123,17 @@ export function CommandSearch() {
                 </div>
               ) : forbidden ? (
                 <div className="space-y-2 px-2 py-4 text-sm">
-                  <p className="text-muted-foreground">La recherche de profils est incluse dans certaines formules : voir « Abonnement ».</p>
+                  <p className="text-muted-foreground">{t("search.planRequired")}</p>
                   <Link href="/espace/abonnement" onClick={close} className="font-medium text-whatsapp-dark hover:underline">
-                    Voir les formules
+                    {t("search.seePlans")}
                   </Link>
                 </div>
               ) : results.isError ? (
                 <p className="px-2 py-4 text-muted-foreground text-sm">
-                  {friendlyError(results.error, "La recherche est indisponible pour le moment.")}
+                  {friendlyError(results.error, t("search.unavailable"))}
                 </p>
               ) : results.data?.items.length === 0 ? (
-                <p className="px-2 py-4 text-muted-foreground text-sm">Aucun candidat pour « {debounced} ».</p>
+                <p className="px-2 py-4 text-muted-foreground text-sm">{t("search.none", { query: debounced })}</p>
               ) : (
                 results.data?.items.map((c) => {
                   const name = `${c.firstName} ${c.lastName}`.trim();
@@ -144,17 +154,17 @@ export function CommandSearch() {
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-medium">{name}</span>
                         <span className="block truncate text-muted-foreground text-xs">
-                          {c.categoryNames.slice(0, 3).join(" · ") || "—"}
+                          {c.categoryNames.slice(0, 3).map(trade).join(" · ") || "—"}
                         </span>
                         {c.description && (
                           <span className="mt-0.5 line-clamp-1 text-muted-foreground text-xs">{c.description}</span>
                         )}
                       </span>
                       <span className="flex shrink-0 items-center gap-3 text-muted-foreground text-xs">
-                        {c.reliabilityScore !== null && <span>Fiabilité {c.reliabilityScore}</span>}
+                        {c.reliabilityScore !== null && <span>{t("search.reliability", { score: c.reliabilityScore })}</span>}
                         {c.ratingAvg !== null && (
                           <span className="inline-flex items-center gap-0.5">
-                            {c.ratingAvg.toFixed(1)}
+                            {formatRating(c.ratingAvg, locale)}
                             <IconStarFilled className="size-3 text-amber-400" />
                           </span>
                         )}
@@ -167,11 +177,11 @@ export function CommandSearch() {
           )}
           {!searching && (
             <p className="px-4 pt-4 pb-1 text-muted-foreground text-sm">
-              Décrivez le profil recherché : un métier, une compétence, un savoir-faire (au moins 2 lettres).
+              {t("search.hint")}
             </p>
           )}
           {pages.length > 0 && (
-            <CommandGroup heading="Pages">
+            <CommandGroup heading={t("search.pages")}>
               {pages.map(({ label, href, icon: Icon }) => (
                 <CommandItem
                   key={href}
@@ -182,7 +192,7 @@ export function CommandSearch() {
                   }}
                 >
                   <Icon />
-                  {label}
+                  {t(`nav.${label}`)}
                 </CommandItem>
               ))}
             </CommandGroup>

@@ -2,13 +2,15 @@
 
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 
 import { BusinessLockup } from "#/components/business-lockup";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { pageAllowed } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
-import { builtAtTitle, versionLabel } from "#/lib/app-version";
+import type { Locale } from "#/i18n/config";
+import { builtAt, versionLabel } from "#/lib/app-version";
 import { getMyBusiness, myBusinessKey } from "#/lib/api/business-controller";
 import { cn, getInitials } from "#/lib/utils";
 import { isActive, NAV_GROUPS } from "./nav-items";
@@ -20,6 +22,9 @@ import { isActive, NAV_GROUPS } from "./nav-items";
  */
 export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>) {
   const pathname = usePathname();
+  const t = useTranslations("layout.nav");
+  const locale = useLocale() as Locale;
+  const built = builtAt(locale);
   const { data: business } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
   // Each person sees the pages its role uses (the API refuses the rest anyway).
   const { role } = useMember();
@@ -33,7 +38,7 @@ export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>
         href="/espace"
         onClick={onNavigate}
         className="px-2 py-2"
-        aria-label={`${business?.logoUrl ? business.name : "Rabotka Business"} — tableau de bord`}
+        aria-label={t("homeLabel", { name: business?.logoUrl ? business.name : "Rabotka Business" })}
       >
         {business?.logoUrl ? (
           // The organisation's own brand, with the product still named under it.
@@ -66,7 +71,7 @@ export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>
         {groups.map((group, i) => (
           <div key={group.title ?? `group-${i}`} className="flex flex-col gap-0.5">
             {group.title && (
-              <p className="mb-1 px-3 font-medium text-[11px] text-muted-foreground uppercase tracking-wider">{group.title}</p>
+              <p className="mb-1 px-3 font-medium text-[11px] text-muted-foreground uppercase tracking-wider">{t(group.title)}</p>
             )}
             {group.items.map(({ label, href, icon: Icon, soon }) => {
               if (soon) {
@@ -74,12 +79,12 @@ export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>
                   <span
                     key={href}
                     aria-disabled
-                    title="Bientôt disponible"
+                    title={t("soonTitle")}
                     className="flex h-10 cursor-not-allowed items-center gap-3 rounded-xl px-3 text-muted-foreground/55 text-sm"
                   >
                     <Icon className="size-[18px] shrink-0" />
-                    <span className="flex-1 truncate">{label}</span>
-                    <span className="shrink-0 rounded-full bg-page px-1.5 py-px text-[10px] text-muted-foreground">Bientôt</span>
+                    <span className="flex-1 truncate">{t(label)}</span>
+                    <span className="shrink-0 rounded-full bg-page px-1.5 py-px text-[10px] text-muted-foreground">{t("soon")}</span>
                   </span>
                 );
               }
@@ -98,7 +103,7 @@ export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>
                   )}
                 >
                   <Icon className="size-[18px] shrink-0" />
-                  <span className="flex-1 truncate">{label}</span>
+                  <span className="flex-1 truncate">{t(label)}</span>
                   <PendingDot />
                 </Link>
               );
@@ -108,8 +113,8 @@ export function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>
       </nav>
 
       <div className="pt-4">
-        <p className="px-3 text-[11px] text-muted-foreground/70 tabular-nums" title={builtAtTitle()}>
-          {versionLabel()}
+        <p className="px-3 text-[11px] text-muted-foreground/70 tabular-nums" title={built && t("builtAt", { date: built })}>
+          {versionLabel(undefined, undefined, locale)}
         </p>
       </div>
     </div>

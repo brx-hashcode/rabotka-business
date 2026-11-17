@@ -1,0 +1,95 @@
+{
+  "offerStatus": {
+    "DRAFT": "Draft",
+    "ACTIVE": "Live",
+    "PARTIALLY_FILLED": "Partly filled",
+    "FILLED": "Filled",
+    "IN_PROGRESS": "In progress",
+    "COMPLETED": "Completed",
+    "EXPIRED": "Expired",
+    "CANCELLED": "Cancelled",
+    "CLOSED": "Closed"
+  },
+  "applicationStatus": {
+    "PENDING": "New",
+    "VIEWED": "Viewed",
+    "SHORTLISTED": "Shortlisted",
+    "WAITING_PAYMENT": "Waiting for the candidate",
+    "ACCEPTED": "Hired",
+    "STARTED": "On mission",
+    "END": "Completed",
+    "REJECTED": "Declined",
+    "CANCELLED": "Cancelled"
+  },
+  "employmentType": {
+    "MISSION": "Mission",
+    "CDD": "Fixed-term",
+    "CDI": "Permanent",
+    "STAGE": "Internship"
+  },
+  "employmentHint": {
+    "MISSION": "One-off work, on a given date",
+    "CDD": "Fixed-term contract",
+    "CDI": "Permanent contract",
+    "STAGE": "Internship or work-study"
+  },
+  "paymentFlow": {
+    "TASK": "Per task",
+    "HOURLY": "Per hour",
+    "DAILY": "Per day",
+    "MONTHLY": "Per month"
+  },
+  "paymentSuffix": {
+    "TASK": "for the task",
+    "HOURLY": "/ hour",
+    "DAILY": "/ day",
+    "MONTHLY": "/ month"
+  },
+  "source": {
+    "agent": "Rabotka agents",
+    "carrieres": "Careers page",
+    "direct": "Direct link",
+    "qr": "Poster (QR code)"
+  },
+  "offer": {
+    "dayAt": "{day} at {time}",
+    "applicationsUntil": "Applications until {day}",
+    "mission": "Mission",
+    "closing": "Closing",
+    "closedOn": "on {date}",
+    "noDeadline": "No deadline",
+    "untilYouClose": "until you close it",
+    "daysLeft": "{n, plural, one {# day left} other {# days left}}",
+    "today": "Today",
+    "past": "Past",
+    "remote": "Remote"
+  },
+  "verdict": {
+    "high": "Strong fit",
+    "good": "Good fit",
+    "partial": "Partial fit",
+    "low": "Weak fit"
+  },
+  "criterion": {
+    "skills": "Skills",
+    "experience": "Experience",
+    "training": "Education",
+    "location": "Location",
+    "languages": "Languages",
+    "trade": "Trade",
+    "reliability": "Reliability",
+    "proximity": "Proximity"
+  },
+  "role": {
+    "ADMIN": "Administrator",
+    "RECRUITER": "Recruiter",
+    "REVIEWER": "Reviewer"
+  },
+  "when": {
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "inDays": "In {days} days",
+    "yesterday": "Yesterday",
+    "daysAgo": "{days} days ago"
+  }
+}

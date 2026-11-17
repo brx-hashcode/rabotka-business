@@ -49,3 +49,12 @@ describe("friendlyError", () => {
     );
   });
 });
+
+describe("friendlyError in another language", () => {
+  const standard = { network: "net", server: "srv", session: "ses", permission: "perm", rateLimit: "rate" };
+  it("uses the standard sentences it is given", () => {
+    expect(friendlyError(new TypeError("Failed to fetch"), "f", { standard })).toBe("net");
+    expect(friendlyError({ statusCode: 503 }, "f", { standard })).toBe("srv");
+    expect(friendlyError({ statusCode: 401 }, "f", { standard })).toBe("ses");
+  });
+});

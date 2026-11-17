@@ -1,0 +1,857 @@
+{
+  "features": {
+    "cv": {
+      "label": "Analyse de CV",
+      "description": "Les CV lus, notés et classés pour chaque poste.",
+      "title": "Des dizaines de CV, classés en quelques minutes",
+      "text": "Déposez les CV reçus pour un poste, ou choisissez-les directement dans votre messagerie Gmail. Rabotka lit chacun, même scanné ou pris en photo, et le note par rapport au poste.",
+      "points": [
+        "Une note sur 100, les points forts et les points d'attention",
+        "Le parcours relu : années en lien avec le poste, temps plein ou partiel",
+        "Posez vos questions sur un CV, comparez jusqu'à 5 candidats",
+        "Le classement exporté en PDF, à partager avec votre équipe"
+      ]
+    },
+    "offer": {
+      "label": "Offres rédigées pour vous",
+      "description": "Quelques mots suffisent : l'offre complète est prête.",
+      "title": "Une offre claire en quelques mots",
+      "text": "Décrivez votre besoin comme vous le diriez à un collègue : Rabotka rédige l'intitulé et la description, et propose le métier. Vous relisez, ajustez et publiez.",
+      "points": [
+        "Un intitulé et une description clairs, prêts à publier",
+        "Les critères qui écartent des candidats sans rapport avec le poste sont retirés",
+        "Diffusion ciblée par ville et par métier, jusque sur WhatsApp côté candidats"
+      ]
+    },
+    "linkedin": {
+      "label": "Publication sur LinkedIn",
+      "description": "Vos offres sur votre LinkedIn, sans copier-coller.",
+      "title": "Vos offres sur LinkedIn, en un clic",
+      "text": "Connectez votre compte LinkedIn une fois : chaque offre s'y publie en carte, avec votre texte et votre image. Elle mène à votre page carrières, où les candidats postulent.",
+      "points": [
+        "Le texte du post prêt, à relire et ajuster avant de publier",
+        "L'image de l'offre, générée pour vous, ou la vôtre",
+        "Chaque recruteur de l'équipe publie sur son propre profil",
+        "Les candidatures venues de LinkedIn repérées comme telles"
+      ]
+    },
+    "applicants": {
+      "label": "Suivi des candidatures",
+      "description": "Les candidats les plus adaptés en tête de liste.",
+      "title": "Les meilleurs candidats en tête de liste",
+      "text": "Chaque candidature reçoit une note : métier, expérience, lieu et fiabilité. Vous voyez d'abord qui correspond, et pourquoi.",
+      "points": [
+        "« Pourquoi ce score ? » détaillé critère par critère",
+        "Retenir un candidat en un clic",
+        "Répondre aux autres avec un message prêt à l'emploi, un par un ou tous à la fois"
+      ]
+    },
+    "interviews": {
+      "label": "Entretiens",
+      "description": "La visio dans Rabotka, les notes et le compte rendu.",
+      "title": "Des entretiens menés et suivis au même endroit",
+      "text": "Proposez un ou plusieurs créneaux : le candidat choisit depuis l'e-mail qu'il reçoit. Le jour venu, la visio s'ouvre dans Rabotka, vos notes à côté, et le compte rendu est prêt à partager.",
+      "points": [
+        "La visio dans Rabotka : le candidat la rejoint par un lien, sans compte",
+        "Invitez un collègue ou un responsable dans l'appel",
+        "L'entretien transcrit automatiquement, le compte rendu rédigé par IA",
+        "Vos entretiens dans Google Agenda, Outlook ou Apple Calendrier, mis à jour seuls"
+      ]
+    },
+    "tracking": {
+      "label": "Missions et suivi",
+      "description": "Contrats, missions et rapport de recrutement.",
+      "title": "Du contrat au bilan, tout reste au même endroit",
+      "text": "Le contrat est généré dès qu'un candidat est retenu, et s'ouvre dans votre espace. Vos missions, vos candidatures et vos recrutements se suivent sur un seul tableau de bord.",
+      "points": [
+        "Contrat consultable et imprimable depuis l'espace",
+        "Tableau de bord sur 7, 30 ou 90 jours",
+        "Rapport de recrutement en PDF, prêt pour votre direction"
+      ]
+    },
+    "profiles": {
+      "label": "Profils et agents",
+      "description": "Recherche de profils vérifiés et agents de terrain.",
+      "title": "Allez chercher les profils, en ligne et sur le terrain",
+      "text": "Recherchez parmi les profils vérifiés par métier, compétence ou ville, gardez les plus intéressants et obtenez leur contact. Nos agents de terrain mobilisent aussi les candidats absents des plateformes.",
+      "points": [
+        "Identité des profils vérifiée",
+        "« Mes profils » pour garder les candidats prometteurs",
+        "La décision finale vous appartient toujours"
+      ]
+    },
+    "team": {
+      "label": "Recrutement en équipe",
+      "description": "Recruteurs, évaluateurs, avis et notes partagés.",
+      "title": "Décidez à plusieurs, sans perdre le fil",
+      "text": "Invitez vos collègues dans l'espace : chacun voit les candidats de ses offres, donne son avis et laisse ses notes. La décision se prend sur des faits, pas sur des e-mails éparpillés.",
+      "points": [
+        "Des rôles clairs : Administrateur, Recruteur, Évaluateur",
+        "L'avis de chacun sur un candidat : Oui, Peut-être, Non",
+        "Des notes jamais vues du candidat, et l'historique de chaque candidature",
+        "L'Activité de l'équipe, pour savoir qui a fait quoi"
+      ]
+    }
+  },
+  "featureGroups": [
+    {
+      "step": "Attirer",
+      "text": "Des offres vues partout"
+    },
+    {
+      "step": "Sourcer et trier",
+      "text": "Les bons profils en tête"
+    },
+    {
+      "step": "Évaluer",
+      "text": "Chaque candidat suivi"
+    },
+    {
+      "step": "Décider et suivre",
+      "text": "En équipe, jusqu'au contrat"
+    }
+  ],
+  "resourceLinks": [
+    {
+      "label": "Guides du recruteur",
+      "description": "Des méthodes concrètes pour recruter mieux, plus vite."
+    },
+    {
+      "label": "Questions fréquentes",
+      "description": "Pays, CV, données, compte : l'essentiel."
+    },
+    {
+      "label": "Sécurité et confidentialité",
+      "description": "Ce qui est lu, gardé et supprimé."
+    }
+  ],
+  "companyLinks": [
+    {
+      "label": "À propos"
+    },
+    {
+      "label": "Contact"
+    },
+    {
+      "label": "Demander une démo"
+    }
+  ],
+  "trust": [
+    {
+      "title": "Organisation vérifiée",
+      "text": "Votre compte est activé après vérification de vos pièces officielles : un gage de sérieux pour les candidats."
+    },
+    {
+      "title": "Messagerie en lecture seule",
+      "text": "Rabotka ne lit que les pièces jointes que vous choisissez et n'envoie jamais rien depuis votre messagerie."
+    },
+    {
+      "title": "CV supprimés à échéance",
+      "text": "Les fichiers et les coordonnées des CV analysés sont supprimés au bout de la durée prévue ; seules les notes restent."
+    },
+    {
+      "title": "Documents confidentiels",
+      "text": "Vos pièces et les CV sont conservés dans un espace de stockage privé, consultés uniquement par les personnes habilitées."
+    }
+  ],
+  "audiences": [
+    {
+      "title": "Entreprises, PME et TPE",
+      "text": "Commerce, industrie, services, BTP : du renfort ponctuel au recrutement de collaborateurs permanents.",
+      "roles": [
+        "Commercial",
+        "Comptable",
+        "Chef de chantier",
+        "Magasinier"
+      ]
+    },
+    {
+      "title": "Enseignement et formation",
+      "text": "Établissements privés, universités, centres de formation professionnelle : corps enseignant, encadrement et personnel administratif.",
+      "roles": [
+        "Enseignant",
+        "Formateur",
+        "Surveillant",
+        "Secrétaire"
+      ]
+    },
+    {
+      "title": "ONG et organisations internationales",
+      "text": "Chefs de projet, agents de terrain, consultants : des recrutements locaux pour vos programmes.",
+      "roles": [
+        "Chef de projet",
+        "Agent de terrain",
+        "Consultant"
+      ]
+    },
+    {
+      "title": "Secteur public",
+      "text": "Ministères, collectivités locales, établissements publics : des profils qualifiés et un processus traçable.",
+      "roles": [
+        "Agent administratif",
+        "Juriste",
+        "Ingénieur"
+      ]
+    },
+    {
+      "title": "Santé",
+      "text": "Cliniques, cabinets médicaux, pharmacies, laboratoires : personnel soignant, technique et d'accueil.",
+      "roles": [
+        "Infirmier",
+        "Pharmacien",
+        "Technicien de laboratoire"
+      ]
+    }
+  ],
+  "faqShown": [
+    0,
+    1,
+    3,
+    2,
+    -1
+  ],
+  "faq": [
+    {
+      "q": "Qu'est-ce que Rabotka Business ?",
+      "a": "L'espace de recrutement de Rabotka pour les organisations : entreprises, ONG, écoles, structures de santé, administrations. Vous y publiez vos offres, recevez et triez les candidatures, menez vos entretiens et décidez en équipe, au même endroit. Vos offres sont diffusées auprès des candidats de Rabotka dans votre pays, et votre page carrières reçoit les candidatures venues d'ailleurs."
+    },
+    {
+      "q": "Que puis-je faire avec Rabotka Business ?",
+      "a": "Rédiger et publier une offre en quelques minutes, recevoir les candidatures et les suivre étape par étape, faire lire et classer des CV pour un poste, obtenir le contact des candidats qui vous intéressent, proposer des entretiens en visio ou sur place avec un compte rendu à partager, et travailler à plusieurs avec vos recruteurs et évaluateurs. Le détail dépend de votre formule."
+    },
+    {
+      "q": "Puis-je importer des CV depuis Gmail ?",
+      "a": "Oui. Connectez votre messagerie Gmail une fois, en lecture seule : vous voyez les e-mails récents qui contiennent un CV, vous cochez ceux à analyser, et seules ces pièces jointes sont lues. Aucun e-mail n'est conservé ni envoyé, et vous pouvez déconnecter Gmail à tout moment. Vous pouvez aussi déposer des PDF, des fichiers Word ou des photos de CV depuis votre appareil."
+    },
+    {
+      "q": "Puis-je publier mes offres sur LinkedIn ?",
+      "a": "Oui. Connectez votre compte LinkedIn une fois depuis une offre : elle se publie sur votre profil en carte, avec un texte prêt que vous relisez et l'image de votre choix. La carte ouvre votre page carrières, où les candidats postulent ; leurs candidatures sont repérées comme venues de LinkedIn. Chaque recruteur de l'équipe publie sur son propre profil."
+    },
+    {
+      "q": "Comment fonctionne l'analyse de CV ?",
+      "a": "Vous choisissez le poste — une de vos offres ou un poste décrit pour l'occasion — puis les CV. Rabotka lit chaque CV, le compare au poste et lui attribue une note sur 100, avec ses points forts, ses points d'attention et une lecture de son parcours. Le classement est prêt en quelques minutes ; une notification vous prévient."
+    },
+    {
+      "q": "Quels CV puis-je envoyer ?",
+      "a": "Des PDF, des fichiers Word (.docx) et des photos ou scans (JPG, PNG, WEBP), déposés depuis votre appareil ou choisis directement dans votre messagerie Gmail. Un fichier illisible, ou qui n'est pas un CV, n'est pas décompté."
+    },
+    {
+      "q": "Que fait Rabotka dans ma messagerie ?",
+      "a": "Rien d'autre que ce que vous lui demandez. La connexion est en lecture seule : vous voyez les e-mails récents qui contiennent un CV, vous cochez ceux à analyser, et seules ces pièces jointes sont lues. Aucun e-mail n'est conservé ni envoyé, et vous pouvez déconnecter votre messagerie à tout moment."
+    },
+    {
+      "q": "Combien de temps les CV sont-ils conservés ?",
+      "a": "Les fichiers et les coordonnées des CV analysés sont supprimés automatiquement au bout de la durée indiquée lors de l'analyse. Les notes et le classement restent consultables."
+    },
+    {
+      "q": "Comment se passe un entretien en visio ?",
+      "a": "Au moment de proposer l'entretien, créez un lien de visio : l'appel a lieu dans Rabotka, sans application à installer. Le candidat le rejoint depuis son invitation, sur ordinateur ou sur téléphone, sans compte. Vous pouvez inviter un collègue ou un responsable : il reçoit son propre lien par e-mail et entre sous son nom. Vous pouvez aussi coller un lien Meet ou Zoom si vous préférez."
+    },
+    {
+      "q": "Qu'est-ce que le compte rendu d'entretien ?",
+      "a": "Pendant ou après l'entretien, prenez vos notes : tapez-les ou dictez-les. En visio Rabotka, l'entretien est transcrit automatiquement, phrase après phrase, et chacun voit qu'il l'est. Rabotka rédige à partir de vos notes et de la transcription un compte rendu : résumé, points forts, points de vigilance, infos pratiques et prochaines étapes. Vous le relisez, le modifiez, l'envoyez à votre équipe par e-mail ou l'enregistrez en PDF. Ni le son ni l'image de l'appel ne sont enregistrés."
+    },
+    {
+      "q": "Les entretiens apparaissent-ils dans mon agenda ?",
+      "a": "Oui. Ajoutez une fois le lien de votre agenda d'entretiens à Google Agenda, Outlook ou Apple Calendrier : chaque entretien y apparaît et s'y met à jour seul, qu'il soit confirmé, déplacé ou annulé."
+    },
+    {
+      "q": "Quelles organisations peuvent ouvrir un compte entreprise ?",
+      "a": "Les entreprises de toute taille, startups, coopératives et GIE, les établissements d'enseignement et de formation, les ONG, associations et fondations, les structures de santé, les administrations, les établissements publics et les organisations internationales."
+    },
+    {
+      "q": "Quelles pièces justificatives sont demandées ?",
+      "a": "Elles dépendent de votre pays et de votre statut : registre du commerce (RCCM) et identifiant fiscal pour une société, récépissé de déclaration et statuts pour une association ou une ONG, autorisation d'ouverture ou agrément pour un établissement d'enseignement ou de santé, acte de création pour une entité publique. Le formulaire vous indique précisément les pièces attendues."
+    },
+    {
+      "q": "Comment se connecter à l'espace entreprise ?",
+      "a": "Avec l'adresse e-mail du compte : un code à usage unique est envoyé à chaque connexion. Aucun mot de passe à gérer."
+    }
+  ],
+  "pipeline": [
+    {
+      "title": "Diffusion",
+      "text": "Rabotka, page carrières, Google, LinkedIn"
+    },
+    {
+      "title": "Candidatures",
+      "text": "Toutes reçues au même endroit"
+    },
+    {
+      "title": "Tri et classement",
+      "text": "Chaque CV lu, noté et expliqué"
+    },
+    {
+      "title": "Entretiens",
+      "text": "Créneaux au choix, visio et compte rendu"
+    },
+    {
+      "title": "Décision",
+      "text": "Avis de l'équipe, candidat retenu"
+    },
+    {
+      "title": "Contrat et mission",
+      "text": "Contrat généré, mission suivie"
+    }
+  ],
+  "atsPillars": [
+    {
+      "title": "Le tri fait pour vous",
+      "text": "Chaque candidature est lue et notée par rapport au poste, même un CV scanné ou pris en photo. Vous savez pourquoi un candidat est en tête, critère par critère."
+    },
+    {
+      "title": "Un pipeline lisible",
+      "text": "De la candidature reçue au candidat retenu, chacun a son statut et son historique. Rien ne se perd entre deux e-mails."
+    },
+    {
+      "title": "Recruter à plusieurs",
+      "text": "Recruteurs et évaluateurs donnent leur avis et laissent leurs notes. L'Activité de l'équipe garde la trace de chaque décision."
+    },
+    {
+      "title": "Pensé pour l'Afrique",
+      "text": "Pièces officielles de votre pays, paiement par mobile money dans votre monnaie, candidats joints sur WhatsApp et agents de terrain."
+    }
+  ],
+  "featurePages": {
+    "cv": {
+      "metaTitle": "Analyse de CV",
+      "metaDescription": "Déposez vos CV ou choisissez-les dans Gmail : Rabotka les lit, les note sur 100 par rapport au poste et les classe en quelques minutes.",
+      "heading": "L'analyse de CV qui lit vraiment chaque candidat",
+      "intro": "Des dizaines de CV pour un poste ? Rabotka les lit à votre place, même scannés ou pris en photo, et vous rend un classement expliqué. Vous passez votre temps sur les bons candidats, pas sur la pile.",
+      "benefits": [
+        {
+          "title": "Tous vos CV, d'où qu'ils viennent",
+          "text": "PDF, Word, photos et scans, déposés depuis votre appareil ou choisis directement dans votre messagerie Gmail, en lecture seule."
+        },
+        {
+          "title": "Une note que l'on comprend",
+          "text": "Une note sur 100, les points forts, les points d'attention et le parcours relu : années en lien avec le poste, temps plein ou partiel."
+        },
+        {
+          "title": "Une conversation avec le CV",
+          "text": "Posez vos questions sur un candidat, ou comparez jusqu'à 5 CV côte à côte pour départager les derniers."
+        },
+        {
+          "title": "Un classement à partager",
+          "text": "Exportez le classement et vos échanges en PDF pour votre direction ou le responsable du poste."
+        }
+      ]
+    },
+    "offer": {
+      "metaTitle": "Rédaction et diffusion d'offres",
+      "metaDescription": "Décrivez votre besoin en quelques mots : Rabotka rédige l'offre, la publie sur votre page carrières, sur Google, sur LinkedIn et auprès des candidats Rabotka.",
+      "heading": "Une offre claire en quelques mots, diffusée partout",
+      "intro": "Décrivez le poste comme vous le diriez à un collègue. Rabotka rédige l'intitulé et la description, propose le métier, et met l'offre en ligne là où sont les candidats.",
+      "benefits": [
+        {
+          "title": "Rédigée pour vous",
+          "text": "Un intitulé et une description prêts à publier, sans les critères qui écartent des candidats sans rapport avec le poste. Vous relisez et ajustez."
+        },
+        {
+          "title": "Des questions de présélection",
+          "text": "Ajoutez vos questions à l'offre, dont des questions éliminatoires : les réponses arrivent avec chaque candidature."
+        },
+        {
+          "title": "Multidiffusion",
+          "text": "Candidats Rabotka ciblés par ville et par métier, page carrières visible sur Google, publication LinkedIn, partage WhatsApp et Facebook, affiche à QR code."
+        },
+        {
+          "title": "Des candidats prévenus",
+          "text": "Si la rémunération, la date ou le lieu change, les candidats déjà engagés sont prévenus. Une offre expirée se republie en un clic."
+        }
+      ]
+    },
+    "linkedin": {
+      "metaTitle": "Publication sur LinkedIn",
+      "metaDescription": "Connectez LinkedIn une fois : chaque offre s'y publie avec un texte prêt et son image, et mène à votre page carrières.",
+      "heading": "Vos offres sur LinkedIn, sans copier-coller",
+      "intro": "Votre réseau professionnel est un vivier : chaque offre s'y publie en carte, avec votre texte et votre image, et les candidatures qui en viennent sont repérées comme telles.",
+      "benefits": [
+        {
+          "title": "Un texte prêt",
+          "text": "Le post est rédigé pour vous, à relire et ajuster avant de publier."
+        },
+        {
+          "title": "Une image soignée",
+          "text": "L'image de l'offre est générée pour vous, ou vous choisissez la vôtre."
+        },
+        {
+          "title": "Chaque recruteur, son profil",
+          "text": "Chaque recruteur de l'équipe publie sur son propre profil LinkedIn."
+        },
+        {
+          "title": "La provenance suivie",
+          "text": "Les candidatures venues de LinkedIn sont repérées dans votre boîte de réception."
+        }
+      ]
+    },
+    "applicants": {
+      "metaTitle": "Suivi des candidatures (ATS)",
+      "metaDescription": "Un ATS complet : toutes vos candidatures au même endroit, classées par adéquation, avec statut, historique, réponses en masse et exports.",
+      "heading": "Le suivi des candidatures, comme un vrai ATS",
+      "intro": "Candidats Rabotka, page carrières, LinkedIn : toutes les candidatures arrivent dans une seule boîte, classées par adéquation avec le poste. Chaque candidat avance d'étape en étape, avec son historique.",
+      "benefits": [
+        {
+          "title": "Une seule boîte de réception",
+          "text": "Les candidatures de toutes vos sources au même endroit, avec leur provenance : Rabotka, page carrières, LinkedIn, QR code."
+        },
+        {
+          "title": "Les meilleurs en tête",
+          "text": "Chaque candidature reçoit une note : métier, expérience, lieu et fiabilité. « Pourquoi ce score ? » détaille chaque critère."
+        },
+        {
+          "title": "Retenir, refuser, répondre",
+          "text": "Retenez un candidat en un clic. Répondez aux autres avec un message prêt à l'emploi, un par un ou tous à la fois."
+        },
+        {
+          "title": "Exports et rapports",
+          "text": "La liste des candidats d'une offre en Excel, et le rapport de recrutement en PDF pour votre direction."
+        }
+      ]
+    },
+    "interviews": {
+      "metaTitle": "Entretiens en visio, notes et compte rendu",
+      "metaDescription": "Proposez plusieurs créneaux, menez l'entretien en visio dans Rabotka, prenez vos notes à la voix et partagez un compte rendu rédigé à partir d'elles.",
+      "heading": "Des entretiens menés et suivis au même endroit",
+      "intro": "Proposez vos créneaux, le candidat choisit depuis l'e-mail qu'il reçoit. Le jour venu, la visio s'ouvre dans Rabotka avec vos notes à côté, et le compte rendu se partage avec l'équipe en un clic.",
+      "benefits": [
+        {
+          "title": "Plusieurs créneaux au choix",
+          "text": "Proposez jusqu'à trois moments : le candidat choisit celui qui lui convient, ou en demande un autre, sans compte ni mot de passe."
+        },
+        {
+          "title": "La visio dans Rabotka",
+          "text": "Aucune application à installer : le candidat rejoint l'appel par son lien, sur ordinateur ou sur téléphone. Meet ou Zoom restent possibles."
+        },
+        {
+          "title": "Un collègue dans l'appel",
+          "text": "Invitez un responsable ou un expert : il reçoit son propre lien par e-mail et entre sous son nom, sans compte."
+        },
+        {
+          "title": "L'entretien transcrit",
+          "text": "La visio transcrit l'appel automatiquement : chaque phrase devient du texte pendant l'entretien. Vos notes, tapées ou dictées, restent à côté."
+        },
+        {
+          "title": "Le compte rendu prêt",
+          "text": "Rédigé par IA à partir de vos notes et de la transcription : résumé, points forts, points de vigilance, prochaines étapes. Vous le relisez, l'envoyez à l'équipe ou l'enregistrez en PDF."
+        },
+        {
+          "title": "Votre agenda synchronisé",
+          "text": "Google Agenda, Outlook ou Apple Calendrier : chaque entretien y apparaît et s'y met à jour, avec un rappel la veille pour vous et le candidat."
+        }
+      ],
+      "steps": [
+        {
+          "kicker": "Pendant l'entretien",
+          "title": "La visio dans Rabotka",
+          "text": "Le jour venu, l'appel s'ouvre dans votre espace, sans application à installer. Le candidat le rejoint par le lien de son invitation, sur ordinateur ou sur téléphone, sans compte.",
+          "points": [
+            "Un collègue ou un responsable invité, sous son nom",
+            "Une page d'attente pour le candidat, avec l'heure d'ouverture",
+            "« Terminer l'entretien » ferme l'appel pour tous"
+          ],
+          "alt": "Un ordinateur portable ouvert sur un appel vidéo à plusieurs, une tasse posée à côté."
+        },
+        {
+          "kicker": "En même temps",
+          "title": "La voix de chacun mise en texte",
+          "text": "La visio transcrit l'entretien automatiquement, phrase après phrase, sans rien à activer. Vos notes, tapées ou dictées, restent à côté de l'appel.",
+          "points": [
+            "Les deux voix réunies dans l'ordre où elles ont été dites",
+            "Une phrase importante ajoutée à vos notes d'un clic",
+            "Ni le son ni l'image ne sont enregistrés"
+          ],
+          "alt": "Un homme en entretien vidéo avec une recruteuse qui apparaît sur l'écran de son ordinateur."
+        },
+        {
+          "kicker": "Après l'entretien",
+          "title": "Le compte rendu, prêt à partager",
+          "text": "Rabotka rédige le compte rendu à partir de la transcription et de vos notes, pendant que vous passez à autre chose : une notification vous prévient quand il est prêt. Vous le relisez, le modifiez, l'envoyez à l'équipe ou l'enregistrez en PDF.",
+          "points": [
+            "Résumé, points forts, points de vigilance et prochaines étapes",
+            "Les heures réelles de l'entretien, pas seulement celles prévues",
+            "Rédigé par IA : à relire avant de l'envoyer"
+          ],
+          "alt": "Une équipe autour d'une table, ordinateurs ouverts, qui échange sur un entretien."
+        }
+      ]
+    },
+    "tracking": {
+      "metaTitle": "Missions, contrats et tableau de bord",
+      "metaDescription": "Contrat généré dès qu'un candidat est retenu, missions suivies, tableau de bord de recrutement et rapports en PDF et Excel.",
+      "heading": "Du contrat au bilan, tout reste au même endroit",
+      "intro": "Le recrutement ne s'arrête pas au « oui ». Le contrat est prêt dès qu'un candidat est retenu, la mission se suit jusqu'à la fin, et vos chiffres de recrutement sont toujours à jour.",
+      "benefits": [
+        {
+          "title": "Le contrat généré",
+          "text": "Consultable et imprimable depuis votre espace dès qu'un candidat est retenu."
+        },
+        {
+          "title": "Les missions suivies",
+          "text": "Qui arrive, qui est en mission, qui a terminé ; et votre avis sur chaque mission terminée."
+        },
+        {
+          "title": "Un tableau de bord",
+          "text": "Candidatures, entretiens, délais et postes pourvus sur 7, 30 ou 90 jours, comparés à la période d'avant."
+        },
+        {
+          "title": "Des exports RH",
+          "text": "Le rapport de recrutement en PDF, vos données en Excel, et le registre du personnel."
+        }
+      ]
+    },
+    "profiles": {
+      "metaTitle": "Recherche de profils",
+      "metaDescription": "Cherchez parmi les profils vérifiés par métier, compétence ou ville, gardez les plus intéressants et obtenez leur contact.",
+      "heading": "N'attendez pas les candidats : allez les chercher",
+      "intro": "Recherchez parmi les profils vérifiés de Rabotka par métier, compétence ou ville. Gardez les plus prometteurs dans « Mes profils » et invitez-les à postuler à vos offres.",
+      "benefits": [
+        {
+          "title": "Des profils vérifiés",
+          "text": "L'identité des profils est vérifiée avant qu'ils ne vous soient proposés."
+        },
+        {
+          "title": "Mes profils",
+          "text": "Gardez les candidats prometteurs avec vos notes et vos mots-clés, et retrouvez ceux que vous avez déjà recrutés."
+        },
+        {
+          "title": "Invités à vos offres",
+          "text": "Proposez une offre en ligne à un profil gardé : il est invité à postuler."
+        },
+        {
+          "title": "Des agents sur le terrain",
+          "text": "Nos agents mobilisent aussi les candidats absents des plateformes."
+        }
+      ]
+    },
+    "team": {
+      "metaTitle": "Recrutement en équipe",
+      "metaDescription": "Invitez recruteurs et évaluateurs : avis Oui, Peut-être, Non, notes partagées, historique et Activité de l'équipe.",
+      "heading": "Recrutez à plusieurs, décidez ensemble",
+      "intro": "Un recrutement se décide rarement seul. Invitez vos collègues : chacun a son rôle, donne son avis et laisse ses notes, et l'Activité garde la trace de tout.",
+      "benefits": [
+        {
+          "title": "Des rôles clairs",
+          "text": "L'Administrateur gère le compte, les Recruteurs mènent les offres, les Évaluateurs donnent leur avis."
+        },
+        {
+          "title": "L'avis de chacun",
+          "text": "Oui, Peut-être ou Non sur chaque candidat : la décision se lit d'un coup d'œil."
+        },
+        {
+          "title": "Des notes privées",
+          "text": "Ce que l'équipe écrit sur un candidat n'est jamais vu de lui."
+        },
+        {
+          "title": "Activité et historique",
+          "text": "Qui a fait quoi, et quand : pour l'équipe comme pour chaque candidature."
+        }
+      ]
+    }
+  },
+  "guides": {
+    "rediger-une-offre-qui-attire": {
+      "title": "Rédiger une offre qui attire les bons candidats",
+      "description": "Intitulé, missions, conditions : ce qui fait qu'un candidat qualifié postule, et ce qui le fait fuir.",
+      "sections": [
+        {
+          "heading": "Un intitulé que le candidat cherche",
+          "paragraphs": [
+            "Le candidat tape un métier, pas le nom interne du poste. « Caissière » trouve plus de monde que « Hôtesse de caisse niveau 2 ». Gardez l'intitulé court et précis, avec le métier en premier."
+          ]
+        },
+        {
+          "heading": "Les missions avant le profil",
+          "paragraphs": [
+            "Décrivez d'abord ce que la personne fera au quotidien, en quelques lignes concrètes. Le profil recherché vient ensuite : les compétences réellement nécessaires, pas une liste idéale."
+          ],
+          "list": [
+            "Trois à cinq missions principales, avec des verbes d'action",
+            "Les compétences indispensables, séparées des « plus »",
+            "Le lieu, les horaires et le type de contrat dès le début"
+          ]
+        },
+        {
+          "heading": "Écarter ce qui écarte à tort",
+          "paragraphs": [
+            "Un âge, un sexe ou une situation familiale n'ont pas leur place dans une offre, et éloignent des candidats compétents. Rabotka retire ces critères quand il rédige l'offre pour vous."
+          ]
+        },
+        {
+          "heading": "Une question pour gagner du temps",
+          "paragraphs": [
+            "Une question de présélection bien choisie (« Avez-vous le permis C ? ») trie mieux qu'un long texte. Rendez-la éliminatoire seulement si la réponse est vraiment bloquante."
+          ]
+        }
+      ]
+    },
+    "trier-des-dizaines-de-cv": {
+      "title": "Trier des dizaines de CV sans y passer la journée",
+      "description": "Une méthode en trois temps pour passer d'une pile de CV à une liste courte, avec l'Analyse de CV.",
+      "sections": [
+        {
+          "heading": "1. Décrire le poste avant de lire",
+          "paragraphs": [
+            "Avant d'ouvrir un seul CV, écrivez ce qui compte vraiment : l'expérience utile, les compétences indispensables, la ville. C'est ce texte que l'Analyse de CV compare à chaque candidat."
+          ]
+        },
+        {
+          "heading": "2. Laisser Rabotka faire la première lecture",
+          "paragraphs": [
+            "Déposez tous les CV d'un coup, ou choisissez-les dans votre messagerie Gmail. Chacun est lu, noté sur 100 et accompagné de ses points forts et de ses points d'attention."
+          ],
+          "list": [
+            "Commencez par les notes les plus hautes, mais lisez le « pourquoi »",
+            "Regardez les points d'attention : une absence d'information n'est pas un défaut",
+            "Gardez une deuxième liste pour les profils atypiques"
+          ]
+        },
+        {
+          "heading": "3. Départager les derniers",
+          "paragraphs": [
+            "Comparez jusqu'à 5 CV côte à côte et posez vos questions : « Lequel a déjà encadré une équipe ? ». Exportez le classement en PDF pour le partager avec le responsable du poste."
+          ]
+        }
+      ]
+    },
+    "organiser-ses-entretiens": {
+      "title": "Organiser ses entretiens sans échanges sans fin",
+      "description": "Proposer ses créneaux, mener la visio, partager le compte rendu : un entretien qui sert vraiment la décision.",
+      "sections": [
+        {
+          "heading": "Proposer, pas négocier",
+          "paragraphs": [
+            "Proposez un créneau précis, ou jusqu'à trois au choix, avec le format (sur place, téléphone ou visio) et le lieu. Le candidat choisit, confirme ou demande un autre moment depuis son e-mail : vous évitez les allers-retours. En visio, créez le lien dans Rabotka : l'appel s'y déroule, sans application à installer."
+          ]
+        },
+        {
+          "heading": "Les mêmes questions pour tous",
+          "paragraphs": [
+            "Pour comparer des candidats, posez-leur les mêmes questions principales, liées aux missions du poste. Notez les réponses pendant l'entretien ou juste après, pendant qu'elles sont fraîches : tapées ou dictées, à côté de la visio."
+          ],
+          "list": [
+            "Une question sur une situation déjà vécue",
+            "Une question sur une difficulté du poste",
+            "Le temps pour les questions du candidat"
+          ]
+        },
+        {
+          "heading": "Décider à plusieurs",
+          "paragraphs": [
+            "Invitez le responsable du poste dans l'appel : il entre par son propre lien, sans compte. Après l'entretien, Rabotka rédige le compte rendu à partir de vos notes ; relisez-le et envoyez-le à l'équipe. Chaque membre donne son avis (Oui, Peut-être, Non) : la décision se prend sur des éléments partagés, et le candidat retenu reçoit son contrat dans la foulée."
+          ]
+        }
+      ]
+    }
+  },
+  "mockups": {
+    "ranked": [
+      {
+        "name": "Grâce Loubaki",
+        "job": "Caissière · 4 ans"
+      },
+      {
+        "name": "Jean-Baptiste Kiminou",
+        "job": "Vendeur · 3 ans"
+      },
+      {
+        "name": "Awa Mbemba",
+        "job": "Hôtesse d'accueil · 2 ans"
+      },
+      {
+        "name": "Prince Nganga",
+        "job": "Magasinier · 1 an"
+      }
+    ],
+    "criteria": {
+      "skills": "Compétences",
+      "experience": "Expérience",
+      "location": "Lieu",
+      "trade": "Métier",
+      "reliability": "Fiabilité"
+    },
+    "hero": {
+      "label": "Aperçu : une analyse de CV classe quatre candidats pour un poste de caissier, du plus adapté au moins adapté.",
+      "title": "Analyse de CV · Caissier en supermarché",
+      "heading": "Caissier en supermarché",
+      "ranked": "4 CV classés",
+      "gmail": "2 CV importés de Gmail",
+      "gmailAddress": "recrutement@monentreprise.cg",
+      "confirmed": "Entretien confirmé",
+      "confirmedWhen": "Grâce · jeudi 10 h"
+    },
+    "cv": {
+      "label": "Aperçu : la fiche d'un CV analysé, avec sa note, ses critères, ses points forts et son parcours.",
+      "title": "Analyse de CV",
+      "summary": "Caissière principale · 4 ans et 2 mois en lien avec le poste",
+      "strengthsTitle": "Points forts",
+      "strengths": [
+        "Tenue de caisse et inventaires",
+        "Encadrement d'une équipe de 3",
+        "Disponible immédiatement"
+      ],
+      "pathTitle": "Parcours",
+      "path": [
+        {
+          "role": "Caissière principale · Supermarché Mayaka",
+          "tag": "Temps plein"
+        },
+        {
+          "role": "Vendeuse · Boutique Les Palmiers",
+          "tag": "Temps partiel"
+        }
+      ],
+      "fromMailbox": "Depuis votre messagerie"
+    },
+    "offer": {
+      "label": "Aperçu : quelques mots décrivant un besoin deviennent une offre rédigée, avec son intitulé, sa description et son métier.",
+      "title": "Rédiger avec l'IA",
+      "prompt": "2 serveurs pour un mariage samedi soir à Pointe-Noire",
+      "badge": "Offre rédigée",
+      "heading": "Serveurs pour une réception de mariage",
+      "p1": "Nous recherchons deux serveurs pour assurer le service d'une réception de mariage, samedi soir à Pointe-Noire : accueil des invités, service à table et au buffet, débarrassage.",
+      "p2": "Expérience en restauration appréciée ; présentation soignée et sens du service attendus.",
+      "use": "Utiliser cette offre",
+      "tradeLabel": "Métier proposé :",
+      "trade": "Serveur"
+    },
+    "linkedin": {
+      "label": "Aperçu : une offre publiée sur LinkedIn par un recruteur, en carte qui mène à la page carrières, et les candidatures qui en viennent.",
+      "title": "LinkedIn · votre fil",
+      "author": "Sandrine Massamba",
+      "role": "Responsable RH · Hôtel Les Cocotiers · 2 min",
+      "post": "Nous recrutons 2 serveurs pour une réception de mariage samedi soir à Pointe-Noire. Expérience en restauration appréciée. Postulez en ligne 👇",
+      "company": "Hôtel Les Cocotiers",
+      "hiring": "Recrute",
+      "offerTitle": "Serveurs pour une réception de mariage",
+      "type": "Mission",
+      "apply": "Postuler",
+      "applyAt": "Postuler chez Hôtel Les Cocotiers",
+      "like": "J'aime",
+      "comment": "Commenter",
+      "repost": "Republier",
+      "applications": "6 candidatures via LinkedIn",
+      "applicationsWhen": "Serveurs · cette semaine"
+    },
+    "applicants": {
+      "label": "Aperçu : les candidatures d'une offre classées par note, avec le détail d'une note et des réponses groupées.",
+      "title": "Offre · Vendeur en boutique",
+      "selected": "2 sélectionnés",
+      "decline": "Refuser avec un message"
+    },
+    "interviews": {
+      "label": "Aperçu : des entretiens confirmés, dont un en visio dans Rabotka, et le compte rendu rédigé à partir des notes.",
+      "title": "Entretiens",
+      "rows": [
+        {
+          "day": "jeu.",
+          "who": "Grâce Loubaki · Caissière",
+          "when": "10 h 00 · Sur place",
+          "status": "Confirmé"
+        },
+        {
+          "day": "ven.",
+          "who": "Jean-Baptiste Kiminou · Vendeur",
+          "when": "15 h 30 · Visio dans Rabotka",
+          "status": "Rejoindre"
+        },
+        {
+          "day": "lun.",
+          "who": "Awa Mbemba · Hôtesse d'accueil",
+          "when": "9 h 00 · Par téléphone",
+          "status": "Envoyée"
+        }
+      ],
+      "reportTitle": "Compte rendu · Grâce Loubaki",
+      "reportText": "Accueil soigné, à l'aise avec la caisse. Disponible dès lundi.",
+      "reportPoints": [
+        "Expérience en grande surface",
+        "Rendu de monnaie rapide"
+      ],
+      "calendars": "Aussi dans Google Agenda, Outlook, Apple Calendrier"
+    },
+    "tracking": {
+      "label": "Aperçu : un tableau de bord de recrutement sur 30 jours et son rapport en PDF. Chiffres d'exemple.",
+      "title": "Tableau de bord · exemple",
+      "heading": "Vos recrutements",
+      "ranges": [
+        "7 j",
+        "30 j",
+        "90 j"
+      ],
+      "tiles": [
+        "Candidatures",
+        "Entretiens",
+        "Retenus"
+      ],
+      "funnel": [
+        "Reçues",
+        "Examinées",
+        "Entretiens",
+        "Retenues"
+      ],
+      "pdf": "Rapport PDF",
+      "contract": "Contrat de mission"
+    },
+    "profiles": {
+      "label": "Aperçu : une recherche de profils vérifiés par métier et par ville.",
+      "title": "Trouver des profils",
+      "search": "électricien, aide-soignante, chauffeur…",
+      "people": [
+        {
+          "job": "Électricien bâtiment",
+          "tags": [
+            "Habilitation B1",
+            "6 ans"
+          ]
+        },
+        {
+          "job": "Aide-soignante",
+          "tags": [
+            "Diplômée",
+            "Nuits"
+          ]
+        },
+        {
+          "job": "Chauffeur-livreur",
+          "tags": [
+            "Permis C",
+            "Disponible"
+          ]
+        }
+      ]
+    },
+    "pipeline": {
+      "label": "Aperçu : le tableau d'une offre, candidats rangés par étape, avec leur note, leur provenance, la visio et le compte rendu.",
+      "title": "Caissier — Supermarché du Plateau",
+      "columns": [
+        "À examiner",
+        "Présélectionnées",
+        "Entretien",
+        "Retenues"
+      ],
+      "careersPage": "Page carrières",
+      "visio": "Visio · jeu.",
+      "report": "Compte rendu",
+      "reportReady": "Compte rendu prêt · Jean-Baptiste",
+      "hired": "Awa Mbemba retenue · contrat prêt"
+    },
+    "team": {
+      "label": "Aperçu : les avis de l'équipe et une note sur un candidat.",
+      "title": "Avis de l'équipe",
+      "candidate": "Caissière · 4 ans · Brazzaville",
+      "opinions": [
+        "Fabrice · Recruteur",
+        "Nadège · Évaluatrice",
+        "Steve · Évaluateur"
+      ],
+      "verdict": {
+        "yes": "Oui",
+        "maybe": "Peut-être",
+        "no": "Non"
+      },
+      "note": "Très à l'aise avec la caisse et les clients. À revoir : disponibilité le dimanche.",
+      "gaveOpinion": "Nadège a donné son avis"
+    }
+  }
+}

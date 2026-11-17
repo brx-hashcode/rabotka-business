@@ -9,8 +9,9 @@ const EXAMPLES: { match: RegExp; example: string }[] = [
   { match: /^AIRTEL.*_COG$/, example: "05 123 45 67" },
 ];
 
-export function phonePlaceholder(operatorCode: string | null | undefined, dialCode: string): string {
+/** Null when no example is known: the field then just says « Numéro ». */
+export function phonePlaceholder(operatorCode: string | null | undefined, dialCode: string): string | null {
   const known = operatorCode && EXAMPLES.find((e) => e.match.test(operatorCode));
   if (known) return known.example;
-  return dialCode === "242" ? "06 123 45 67" : "Numéro";
+  return dialCode === "242" ? "06 123 45 67" : null;
 }

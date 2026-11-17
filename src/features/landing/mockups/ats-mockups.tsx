@@ -1,6 +1,7 @@
 import { IconCheck, IconFileText, IconMessageCircle, IconNote, IconQuestionMark, IconVideo, IconX } from "@tabler/icons-react";
 
 import { ScoreRing } from "#/features/cv-screening/components/cv-bits";
+import { useSiteCopy } from "../copy";
 import { cn } from "#/lib/utils";
 import { FloatCard, MockupFrame } from "./frame";
 
@@ -19,33 +20,26 @@ type Person = {
   dragging?: boolean;
 };
 
-const COLUMNS: { title: string; people: Person[] }[] = [
-  {
-    title: "À examiner",
-    people: [
-      { name: "Didier Ondongo", source: "LinkedIn", score: 71 },
-      { name: "Mireille Tchibota", source: "Page carrières", score: 64 },
-    ],
-  },
-  {
-    title: "Présélectionnées",
-    people: [
-      { name: "Grâce Loubaki", source: "Rabotka", score: 88, dragging: true },
-      { name: "Patrick Mavoungou", source: "QR code", score: 76 },
-    ],
-  },
-  {
-    title: "Entretien",
-    people: [
-      { name: "Jean-Baptiste Kiminou", source: "Rabotka", score: 79, extra: "report" },
-      { name: "Sandra Ebolo", source: "Page carrières", score: 73, extra: "visio" },
-    ],
-  },
-  {
-    title: "Retenues",
-    people: [{ name: "Awa Mbemba", source: "Page carrières", score: 91 }],
-  },
+/** The board's columns, in order; their titles are mockups.pipeline.columns. "careers": the careers page. */
+const COLUMNS: Person[][] = [
+  [
+    { name: "Didier Ondongo", source: "LinkedIn", score: 71 },
+    { name: "Mireille Tchibota", source: "careers", score: 64 },
+  ],
+  [
+    { name: "Grâce Loubaki", source: "Rabotka", score: 88, dragging: true },
+    { name: "Patrick Mavoungou", source: "QR code", score: 76 },
+  ],
+  [
+    { name: "Jean-Baptiste Kiminou", source: "Rabotka", score: 79, extra: "report" },
+    { name: "Sandra Ebolo", source: "careers", score: 73, extra: "visio" },
+  ],
+  [{ name: "Awa Mbemba", source: "careers", score: 91 }],
 ];
+
+function useCopy() {
+  return useSiteCopy().mockups;
+}
 
 /** « Grâce L. »: a board's card is narrow. */
 function shortName(name: string) {
@@ -64,14 +58,13 @@ function initials(name: string) {
  * dragged, an interview in visio and a compte rendu written, then the hire.
  */
 export function PipelineMockup() {
+  const m = useCopy().pipeline;
+  const columns = COLUMNS.map((people, i) => ({ title: m.columns[i], people }));
   return (
     <div className="relative">
-      <MockupFrame
-        label="Aperçu : le tableau d'une offre, candidats rangés par étape, avec leur note, leur provenance, la visio et le compte rendu."
-        title="Caissier — Supermarché du Plateau"
-      >
+      <MockupFrame label={m.label} title={m.title}>
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-          {COLUMNS.map((col) => (
+          {columns.map((col) => (
             <div key={col.title} className="min-w-0 space-y-2.5 rounded-2xl bg-page p-2.5">
               <p className="flex items-center justify-between gap-1 px-1 pt-0.5 font-medium text-[10px] leading-tight">
                 <span className="whitespace-nowrap">{col.title}</span>
@@ -85,19 +78,19 @@ export function PipelineMockup() {
                   <p className="truncate font-medium text-[11px]">{shortName(p.name)}</p>
                   <div className="flex flex-wrap items-center gap-1.5">
                     <ScoreRing score={p.score} size={20} />
-                    <span className="whitespace-nowrap rounded-full bg-page px-1.5 py-0.5 text-[9.5px] text-muted-foreground">{p.source}</span>
+                    <span className="whitespace-nowrap rounded-full bg-page px-1.5 py-0.5 text-[9.5px] text-muted-foreground">{p.source === "careers" ? m.careersPage : p.source}</span>
                   </div>
                   <div className="flex flex-wrap gap-1 empty:hidden">
                     {p.extra === "visio" && (
                       <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-chip-sky px-1.5 py-0.5 text-[9.5px] text-chip-sky-foreground">
                         <IconVideo className="size-2.5" />
-                        Visio · jeu.
+                        {m.visio}
                       </span>
                     )}
                     {p.extra === "report" && (
                       <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-chip-green px-1.5 py-0.5 text-[9.5px] text-chip-green-foreground">
                         <IconFileText className="size-2.5" />
-                        Compte rendu
+                        {m.report}
                       </span>
                     )}
                   </div>
@@ -111,35 +104,34 @@ export function PipelineMockup() {
         <span className="flex size-6 items-center justify-center rounded-full bg-chip-green text-chip-green-foreground">
           <IconFileText className="size-3.5" />
         </span>
-        <span className="font-medium text-xs">Compte rendu prêt · Jean-Baptiste</span>
+        <span className="font-medium text-xs">{m.reportReady}</span>
       </FloatCard>
       <FloatCard className="-bottom-5 left-4 hidden items-center gap-2 sm:flex">
         <span className="flex size-6 items-center justify-center rounded-full bg-whatsapp text-white">
           <IconCheck className="size-3.5" strokeWidth={3} />
         </span>
-        <span className="font-medium text-xs">Awa Mbemba retenue · contrat prêt</span>
+        <span className="font-medium text-xs">{m.hired}</span>
       </FloatCard>
     </div>
   );
 }
 
-const OPINIONS = [
-  { who: "Fabrice · Recruteur", verdict: "yes" },
-  { who: "Nadège · Évaluatrice", verdict: "maybe" },
-  { who: "Steve · Évaluateur", verdict: "yes" },
-] as const;
+/** Each opinion's verdict, beside mockups.team.opinions in order. */
+const OPINION_VERDICTS = ["yes", "maybe", "yes"] as const;
 
 const VERDICT = {
-  yes: { label: "Oui", icon: IconCheck, className: "bg-chip-green text-chip-green-foreground" },
-  maybe: { label: "Peut-être", icon: IconQuestionMark, className: "bg-chip-amber text-chip-amber-foreground" },
-  no: { label: "Non", icon: IconX, className: "bg-chip-violet text-chip-violet-foreground" },
+  yes: { icon: IconCheck, className: "bg-chip-green text-chip-green-foreground" },
+  maybe: { icon: IconQuestionMark, className: "bg-chip-amber text-chip-amber-foreground" },
+  no: { icon: IconX, className: "bg-chip-violet text-chip-violet-foreground" },
 } as const;
 
 /** A candidate as the team sees it: everyone's opinion, a private note, the history. */
 export function TeamMockup() {
+  const m = useCopy().team;
+  const OPINIONS = m.opinions.map((who, i) => ({ who, verdict: OPINION_VERDICTS[i] }));
   return (
     <div className="relative">
-      <MockupFrame label="Aperçu : les avis de l'équipe et une note sur un candidat." title="Avis de l'équipe">
+      <MockupFrame label={m.label} title={m.title}>
         <div className="space-y-2.5">
           <div className="flex items-center gap-3 rounded-2xl bg-page p-3">
             <span className="flex size-10 items-center justify-center rounded-full bg-card font-semibold text-[11px] text-muted-foreground">
@@ -147,7 +139,7 @@ export function TeamMockup() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium text-sm">Grâce Loubaki</p>
-              <p className="truncate text-muted-foreground text-xs">Caissière · 4 ans · Brazzaville</p>
+              <p className="truncate text-muted-foreground text-xs">{m.candidate}</p>
             </div>
             <ScoreRing score={88} size={40} />
           </div>
@@ -158,20 +150,20 @@ export function TeamMockup() {
                 <span className="truncate text-xs">{o.who}</span>
                 <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium text-[11px]", v.className)}>
                   <v.icon className="size-3" strokeWidth={3} />
-                  {v.label}
+                  {m.verdict[o.verdict]}
                 </span>
               </div>
             );
           })}
           <div className="flex gap-2 rounded-2xl bg-page p-3 text-xs">
             <IconNote className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-            <p>Très à l&apos;aise avec la caisse et les clients. À revoir : disponibilité le dimanche.</p>
+            <p>{m.note}</p>
           </div>
         </div>
       </MockupFrame>
       <FloatCard className="-right-2 -bottom-4 hidden items-center gap-2 md:flex">
         <IconMessageCircle className="size-4 text-whatsapp-dark" />
-        <span className="text-xs">Nadège a donné son avis</span>
+        <span className="text-xs">{m.gaveOpinion}</span>
       </FloatCard>
     </div>
   );

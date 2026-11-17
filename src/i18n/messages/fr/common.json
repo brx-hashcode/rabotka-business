@@ -1,0 +1,26 @@
+{
+  "language": {
+    "label": "Langue",
+    "fr": "Français",
+    "en": "English"
+  },
+  "errors": {
+    "network": "Impossible de joindre Rabotka. Vérifiez votre connexion internet et réessayez.",
+    "server": "Un problème est survenu de notre côté. Réessayez dans un instant.",
+    "session": "Votre session a expiré. Reconnectez-vous.",
+    "permission": "Vous n'avez pas l'autorisation de faire ceci.",
+    "rateLimit": "Trop de tentatives. Patientez un instant et réessayez."
+  },
+  "time": {
+    "justNow": "À l'instant",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "thisWeek": "Cette semaine",
+    "older": "Plus ancien"
+  },
+  "loading": "Chargement…",
+  "seeMore": "Voir plus",
+  "search": "Rechercher…",
+  "noResult": "Aucun résultat.",
+  "close": "Fermer"
+}

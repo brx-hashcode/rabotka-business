@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
@@ -32,8 +33,9 @@ export function Step1EmailForm({
   isLoading,
   serverError,
 }: Readonly<Step1EmailFormProps>) {
+  const t = useTranslations("auth");
   const form = useForm<{ email: string }>({
-    resolver: zodResolver(z.object({ email: emailSchema })),
+    resolver: zodResolver(z.object({ email: emailSchema(t("validation.email")) })),
     defaultValues: { email: defaultEmail ?? "" },
     mode: "onSubmit",
   });
@@ -56,12 +58,12 @@ export function Step1EmailForm({
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="font-medium text-sm">Adresse e-mail</FormLabel>
+              <FormLabel className="font-medium text-sm">{t("emailForm.label")}</FormLabel>
               <FormControl>
                 <Input
                   {...field}
                   type="email"
-                  placeholder="vous@exemple.com"
+                  placeholder={t("emailForm.placeholder")}
                   autoComplete="email"
                   disabled={isLoading}
                   autoFocus
@@ -82,10 +84,10 @@ export function Step1EmailForm({
           {isLoading ? (
             <>
               <Loader className="mr-2 h-4 w-4 animate-spin" />
-              Envoi…
+              {t("emailForm.sending")}
             </>
           ) : (
-            "Recevoir le code"
+            t("emailForm.submit")
           )}
         </Button>
       </form>

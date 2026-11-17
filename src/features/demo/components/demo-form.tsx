@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,13 +9,17 @@ import { IconCheck } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
 
 import { Illustration } from "#/components/illustration";
+import { LocalLink as Link } from "#/components/local-link";
 import { Button } from "#/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "#/components/ui/form";
 import { Textarea } from "#/components/ui/textarea";
 import { Combobox } from "#/features/sign-up/components/combobox";
 import { FIELD_CLASS, FieldLabel, TextField } from "#/features/sign-up/components/form-bits";
 import type { BusinessCountryName } from "#/lib/api/catalog-server";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { countryName } from "#/features/landing/country-name";
+import type { Locale } from "#/i18n/config";
+import type { Translator } from "#/i18n/translator";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { requestDemo } from "#/lib/api/public-controller";
 import { dialCode } from "#/lib/phone";
 import { cn } from "#/lib/utils";
@@ -23,26 +27,26 @@ import { DEMO_INTERESTS, DEMO_SIZES } from "../demo-options";
 
 const required = (message: string, max = 120) => z.string().trim().min(1, message).max(max);
 
-const schema = z.object({
-  lastName: required("Indiquez votre nom.", 80),
-  firstName: required("Indiquez votre prénom.", 80),
-  email: z.string().trim().email("Cet e-mail ne semble pas valide."),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^[0-9 ().-]{6,20}$/, "Ce numéro ne semble pas valide."),
-  company: required("Indiquez le nom de votre entreprise."),
-  jobTitle: required("Indiquez votre fonction."),
-  country: z.string().length(2, "Choisissez votre pays."),
-  companySize: z
-    .string()
-    .refine((v) => (DEMO_SIZES as readonly string[]).includes(v), "Choisissez la taille de votre entreprise."),
-  interests: z.array(z.string()),
-  message: z.string().trim().max(2000, "Votre message est trop long (2 000 caractères au plus)."),
-  website: z.string(),
-});
+/** The demo request's fields, with the reader's sentences (site.demoForm.*). */
+const demoSchema = (t: Translator<"site.demoForm">) =>
+  z.object({
+    lastName: required(t("lastNameRequired"), 80),
+    firstName: required(t("firstNameRequired"), 80),
+    email: z.string().trim().email(t("emailInvalid")),
+    phone: z
+      .string()
+      .trim()
+      .regex(/^[0-9 ().-]{6,20}$/, t("phoneInvalid")),
+    company: required(t("companyRequired")),
+    jobTitle: required(t("jobTitleRequired")),
+    country: z.string().length(2, t("countryRequired")),
+    companySize: z.string().refine((v) => (DEMO_SIZES as readonly string[]).includes(v), t("sizeRequired")),
+    interests: z.array(z.string()),
+    message: z.string().trim().max(2000, t("messageTooLong")),
+    website: z.string(),
+  });
 
-type DemoValues = z.input<typeof schema>;
+type DemoValues = z.input<ReturnType<typeof demoSchema>>;
 
 /**
  * « Demander une démo »: who they are, their company, what they want to see.
@@ -51,6 +55,10 @@ type DemoValues = z.input<typeof schema>;
 export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryName[] }>) {
   const [sent, setSent] = useState<{ firstName: string; email: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const t = useTranslations("site.demoForm");
+  const locale = useLocale() as Locale;
+  const friendlyError = useFriendlyError();
+  const schema = useMemo(() => demoSchema(t), [t]);
 
   const form = useForm<DemoValues>({
     resolver: zodResolver(schema),
@@ -83,7 +91,7 @@ export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryNam
       });
       setSent({ firstName: v.firstName, email: v.email });
     } catch (err) {
-      setError(friendlyError(err, "Votre demande n'a pas pu être envoyée. Réessayez dans un instant."));
+      setError(friendlyError(err, t("failed")));
     }
   }
 
@@ -93,20 +101,20 @@ export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryNam
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="relative space-y-5 rounded-3xl bg-card p-6 sm:p-8">
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextField control={form.control} name="lastName" label="Nom" autoComplete="family-name" placeholder="Mabiala" />
-          <TextField control={form.control} name="firstName" label="Prénom" autoComplete="given-name" placeholder="Grâce" />
+          <TextField control={form.control} name="firstName" label={t("firstName")} autoComplete="given-name" placeholder={t("firstNamePlaceholder")} />
+          <TextField control={form.control} name="lastName" label={t("lastName")} autoComplete="family-name" placeholder={t("lastNamePlaceholder")} />
         </div>
         <TextField
           control={form.control}
           name="email"
-          label="E-mail professionnel"
+          label={t("email")}
           type="email"
           autoComplete="email"
-          placeholder="prenom.nom@entreprise.com"
+          placeholder={t("emailPlaceholder")}
         />
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextField control={form.control} name="company" label="Entreprise" autoComplete="organization" placeholder="Le nom de votre organisation" />
-          <TextField control={form.control} name="jobTitle" label="Fonction" autoComplete="organization-title" placeholder="Responsable RH, gérant…" />
+          <TextField control={form.control} name="company" label={t("company")} autoComplete="organization" placeholder={t("companyPlaceholder")} />
+          <TextField control={form.control} name="jobTitle" label={t("jobTitle")} autoComplete="organization-title" placeholder={t("jobTitlePlaceholder")} />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField
@@ -114,12 +122,12 @@ export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryNam
             name="country"
             render={({ field, fieldState }) => (
               <FormItem>
-                <FieldLabel>Pays</FieldLabel>
+                <FieldLabel>{t("country")}</FieldLabel>
                 <Combobox
                   value={field.value}
                   onChange={field.onChange}
-                  options={countries.map((c) => ({ value: c.code, label: c.name }))}
-                  placeholder="Choisissez votre pays"
+                  options={countries.map((c) => ({ value: c.code, label: countryName(c, locale) }))}
+                  placeholder={t("countryPlaceholder")}
                   invalid={!!fieldState.error}
                 />
                 <FormMessage />
@@ -129,12 +137,12 @@ export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryNam
           <TextField
             control={form.control}
             name="phone"
-            label="Téléphone"
+            label={t("phone")}
             type="tel"
             inputMode="tel"
             autoComplete="tel-national"
             prefix={dialCode(country)}
-            placeholder="Votre numéro, sans indicatif"
+            placeholder={t("phonePlaceholder")}
           />
         </div>
 
@@ -143,8 +151,8 @@ export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryNam
           name="companySize"
           render={({ field }) => (
             <FormItem>
-              <FieldLabel>Taille de l&apos;entreprise</FieldLabel>
-              <div role="radiogroup" aria-label="Taille de l'entreprise" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <FieldLabel>{t("size")}</FieldLabel>
+              <div role="radiogroup" aria-label={t("size")} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {DEMO_SIZES.map((size) => {
                   const active = field.value === size;
                   return (
@@ -161,7 +169,7 @@ export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryNam
                     >
                       <span className="font-semibold">{size}</span>
                       <span className={cn("text-[11px] leading-none", active ? "text-white/70" : "text-muted-foreground")}>
-                        salariés
+                        {t("employees")}
                       </span>
                     </button>
                   );
@@ -177,7 +185,7 @@ export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryNam
           name="interests"
           render={({ field }) => (
             <FormItem>
-              <FieldLabel optional>Ce qui vous intéresse</FieldLabel>
+              <FieldLabel optional>{t("interests")}</FieldLabel>
               <div className="flex flex-wrap gap-2">
                 {DEMO_INTERESTS.map((interest) => {
                   const active = field.value.includes(interest.value);
@@ -197,7 +205,7 @@ export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryNam
                       )}
                     >
                       {active && <IconCheck className="size-3.5" strokeWidth={3} />}
-                      {interest.label}
+                      {t(`interestOptions.${interest.value}`)}
                     </button>
                   );
                 })}
@@ -211,13 +219,13 @@ export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryNam
           name="message"
           render={({ field }) => (
             <FormItem>
-              <FieldLabel optional>Message</FieldLabel>
+              <FieldLabel optional>{t("message")}</FieldLabel>
               <FormControl>
                 <Textarea
                   {...field}
                   rows={4}
                   maxLength={2000}
-                  placeholder="Les postes à pourvoir, le nombre de recrutements par an, vos outils actuels…"
+                  placeholder={t("messagePlaceholder")}
                   className={cn(FIELD_CLASS, "h-auto min-h-28 py-3")}
                 />
               </FormControl>
@@ -248,14 +256,16 @@ export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryNam
             aria-busy={pending || undefined}
             className="h-12 w-full rounded-full bg-ink text-[15px] text-white hover:bg-ink/90 disabled:opacity-100 sm:h-12 sm:text-[15px]"
           >
-            {pending ? <Loader aria-label="Envoi" className="size-5 animate-spin text-white" /> : "Demander ma démo"}
+            {pending ? <Loader aria-label={t("sending")} className="size-5 animate-spin text-white" /> : t("submit")}
           </Button>
           <p className="text-center text-muted-foreground text-xs">
-            Vos informations servent uniquement à vous recontacter au sujet de Rabotka Business. Voir notre{" "}
-            <a href="https://www.rabotka.work/privacy" className="underline underline-offset-2">
-              politique de confidentialité
-            </a>
-            .
+            {t.rich("privacy", {
+              link: (chunks) => (
+                <a href="https://www.rabotka.work/privacy" className="underline underline-offset-2">
+                  {chunks}
+                </a>
+              ),
+            })}
           </p>
         </div>
       </form>
@@ -264,20 +274,20 @@ export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryNam
 }
 
 function DemoSent({ firstName, email }: Readonly<{ firstName: string; email: string }>) {
+  const t = useTranslations("site.demoForm");
   return (
     <div role="status" className="space-y-5 rounded-3xl bg-card p-6 text-center sm:p-10">
       <Illustration name="sent" className="mx-auto h-40 w-auto" />
-      <h2 className="font-semibold text-2xl tracking-tight">Merci {firstName}, votre demande est envoyée</h2>
+      <h2 className="font-semibold text-2xl tracking-tight">{t("sentTitle", { firstName })}</h2>
       <p className="text-muted-foreground">
-        Un membre de notre équipe vous recontacte sous 24 h ouvrées pour convenir d&apos;un créneau. Une confirmation
-        vient de partir à <span className="font-medium text-foreground">{email}</span>.
+        {t.rich("sentText", { email, strong: (chunks) => <span className="font-medium text-foreground">{chunks}</span> })}
       </p>
       <Button
         variant="ghost"
         render={<Link href="/fonctionnalites" />}
         className="h-11 rounded-full bg-page px-5 hover:bg-page/70"
       >
-        Découvrir les fonctionnalités en attendant
+        {t("discover")}
       </Button>
     </div>
   );

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { IconLink, IconLock, IconX } from "@tabler/icons-react";
 
 import { ActionDialog } from "#/components/action-dialog";
@@ -11,7 +12,7 @@ import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
 import { Input } from "#/components/ui/input";
 import { useMember } from "#/features/team/use-member";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import {
   interviewGuestsKey,
   inviteInterviewGuest,
@@ -59,6 +60,8 @@ export function InviteGuestDialog({
   onOpenChange: (o: boolean) => void;
 }>) {
   const queryClient = useQueryClient();
+  const t = useTranslations("interviews.guests");
+  const friendlyError = useFriendlyError();
   const { member } = useMember();
   const key = interviewGuestsKey(i.id);
   const guests = useQuery({ queryKey: key, queryFn: () => listInterviewGuests(i.id), enabled: open });
@@ -70,20 +73,20 @@ export function InviteGuestDialog({
     mutationFn: () => inviteInterviewGuest(i.id, { name: name.trim(), email: email.trim() }),
     onSuccess: (g) => {
       void queryClient.invalidateQueries({ queryKey: key });
-      toast.success(`Invitation envoyée à ${g.name}.`);
+      toast.success(t("sent", { name: g.name }));
       setName("");
       setEmail("");
     },
-    onError: (err) => toast.error(friendlyError(err, "L'invitation n'a pas pu être envoyée.")),
+    onError: (err) => toast.error(friendlyError(err, t("failed"))),
   });
   const remove = useMutation({
     mutationFn: (guestId: string) => removeInterviewGuest(i.id, guestId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: key });
       setRemoving(null);
-      toast.success("Accès retiré : son lien ne fonctionne plus.");
+      toast.success(t("removed"));
     },
-    onError: (err) => toast.error(friendlyError(err, "L'accès n'a pas pu être retiré.")),
+    onError: (err) => toast.error(friendlyError(err, t("removeFailed"))),
   });
 
   const list = guests.data ?? [];
@@ -96,9 +99,9 @@ export function InviteGuestDialog({
     if (!i.location) return;
     try {
       await navigator.clipboard.writeText(i.location);
-      toast.success("Lien copié : c'est celui du candidat. Ajoutez un collègue ci-dessus pour qu'il ait le sien.");
+      toast.success(t("candidateLink"));
     } catch {
-      toast.error("Le lien n'a pas pu être copié.");
+      toast.error(t("copyFailed"));
     }
   };
 
@@ -106,10 +109,8 @@ export function InviteGuestDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[calc(100vw-2rem)] gap-6 rounded-3xl border-0 bg-card p-6 shadow-soft sm:max-w-lg sm:p-7">
         <div className="space-y-1 pr-8">
-          <DialogTitle className="text-xl">Partager la visio</DialogTitle>
-          <DialogDescription>
-            Entretien avec {i.candidateName} · {i.jobTitle}
-          </DialogDescription>
+          <DialogTitle className="text-xl">{t("title")}</DialogTitle>
+          <DialogDescription>{t("with", { name: i.candidateName, job: i.jobTitle })}</DialogDescription>
         </div>
 
         {/* Add someone: the e-mail first; the name once it is one. */}
@@ -121,12 +122,12 @@ export function InviteGuestDialog({
           }}
         >
           <label className="block space-y-1.5">
-            <span className="font-medium text-muted-foreground text-xs">Ajouter une personne</span>
+            <span className="font-medium text-muted-foreground text-xs">{t("add")}</span>
             <Input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Son adresse e-mail"
+              placeholder={t("emailPlaceholder")}
               maxLength={200}
               autoFocus
               className="h-12 rounded-2xl border-0 bg-page px-4"
@@ -137,26 +138,26 @@ export function InviteGuestDialog({
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Son nom, tel qu'il s'affichera dans l'appel"
-                aria-label="Nom"
+                placeholder={t("namePlaceholder")}
+                aria-label={t("name")}
                 maxLength={80}
                 className="h-12 flex-1 rounded-2xl border-0 bg-page px-4"
               />
               <Button type="submit" className="h-12 rounded-full px-6 sm:h-12" disabled={!name.trim() || full} loading={invite.isPending}>
-                {again ? "Renvoyer" : "Envoyer"}
+                {again ? t("resend") : t("send")}
               </Button>
             </div>
           )}
-          {adding && full && <p className="text-muted-foreground text-xs">{MAX_GUESTS} invités au plus par entretien : retirez un accès pour en ajouter.</p>}
+          {adding && full && <p className="text-muted-foreground text-xs">{t("full", { max: MAX_GUESTS })}</p>}
         </form>
 
         <section className="space-y-2">
-          <h3 className="font-semibold text-sm">Personnes ayant accès</h3>
+          <h3 className="font-semibold text-sm">{t("access")}</h3>
           <ul className="space-y-1">
             {member && (
-              <Person initials={initials(member.name)} tone="bg-ink text-white" name={`${member.name} (vous)`} detail={member.email} role="Organisateur" />
+              <Person initials={initials(member.name)} tone="bg-ink text-white" name={t("you", { name: member.name })} detail={member.email} role={t("organiser")} />
             )}
-            <Person initials={initials(i.candidateName)} tone="bg-chip-green text-chip-green-foreground" name={i.candidateName} detail="Par le lien de son invitation" role="Candidat" />
+            <Person initials={initials(i.candidateName)} tone="bg-chip-green text-chip-green-foreground" name={i.candidateName} detail={t("byInvitation")} role={t("candidate")} />
             {guests.isLoading ? (
               <li>
                 <Bone className="h-12 w-full rounded-2xl" />
@@ -169,7 +170,7 @@ export function InviteGuestDialog({
                   tone={AVATAR[n % AVATAR.length] ?? ""}
                   name={g.name}
                   detail={g.email}
-                  role="Invité"
+                  role={t("guest")}
                   onRemove={() => setRemoving(g)}
                 />
               ))
@@ -178,15 +179,15 @@ export function InviteGuestDialog({
         </section>
 
         <section className="space-y-2">
-          <h3 className="font-semibold text-sm">Accès</h3>
+          <h3 className="font-semibold text-sm">{t("accessTitle")}</h3>
           <div className="flex items-start gap-3">
             <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-page">
               <IconLock className="size-4 text-muted-foreground" />
             </span>
             <div className="min-w-0 pt-0.5">
-              <p className="font-medium text-sm">Sur invitation</p>
+              <p className="font-medium text-sm">{t("onInvitation")}</p>
               <p className="text-muted-foreground text-xs leading-relaxed">
-                Chacun entre avec son propre lien, sans compte, de la veille de l&apos;entretien à 2 heures après la fin. Votre équipe rejoint depuis son espace.
+                {t("onInvitationText")}
               </p>
             </div>
           </div>
@@ -195,7 +196,7 @@ export function InviteGuestDialog({
         <div className="flex items-center justify-between gap-3">
           <Button type="button" variant="ghost" className="h-11 rounded-full bg-page px-5 sm:h-11" onClick={() => void copy()} disabled={!i.location}>
             <IconLink className="size-4" />
-            Copier le lien
+            {t("copyLink")}
           </Button>
           <Button type="button" className="h-11 rounded-full px-7 sm:h-11" onClick={() => onOpenChange(false)}>
             OK
@@ -206,9 +207,9 @@ export function InviteGuestDialog({
           open={removing !== null}
           onOpenChange={(o) => !o && setRemoving(null)}
           tone="warning"
-          title={removing ? `Retirer l'accès de ${removing.name} ?` : ""}
-          description="Son lien ne fonctionnera plus : il ne pourra pas rejoindre la visio. Vous pourrez l'ajouter à nouveau."
-          confirmLabel="Retirer l'accès"
+          title={removing ? t("removeTitle", { name: removing.name }) : ""}
+          description={t("removeText")}
+          confirmLabel={t("remove")}
           onConfirm={() => removing && remove.mutate(removing.id)}
           pending={remove.isPending}
         />
@@ -226,6 +227,7 @@ function Person({
   role,
   onRemove,
 }: Readonly<{ initials: string; tone: string; name: string; detail: string; role: string; onRemove?: () => void }>) {
+  const t = useTranslations("interviews.guests");
   return (
     <li className="flex items-center gap-3 rounded-2xl px-1 py-1.5">
       <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-full font-semibold text-xs", tone)}>{letters}</span>
@@ -237,8 +239,8 @@ function Person({
       {onRemove ? (
         <button
           type="button"
-          aria-label={`Retirer l'accès de ${name}`}
-          title="Retirer l'accès"
+          aria-label={t("removeOf", { name })}
+          title={t("remove")}
           onClick={onRemove}
           className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-page hover:text-destructive"
         >

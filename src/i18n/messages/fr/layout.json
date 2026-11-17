@@ -1,0 +1,83 @@
+{
+  "nav": {
+    "recruitment": "Recrutement",
+    "profiles": "Profils",
+    "account": "Mon compte",
+    "dashboard": "Tableau de bord",
+    "messages": "Messages",
+    "offers": "Offres",
+    "careersPage": "Page carrières",
+    "applications": "Candidatures",
+    "interviews": "Entretiens",
+    "missions": "Missions",
+    "search": "Trouver des profils",
+    "pool": "Mes profils",
+    "cvAnalysis": "Analyse de CV",
+    "organisation": "Organisation",
+    "team": "Équipe",
+    "subscription": "Abonnement",
+    "invoices": "Factures",
+    "help": "Aide",
+    "soon": "Bientôt",
+    "soonTitle": "Bientôt disponible",
+    "homeLabel": "{name} — tableau de bord",
+    "menu": "Menu",
+    "openMenu": "Ouvrir le menu",
+    "builtAt": "Compilée le {date} UTC"
+  },
+  "theme": {
+    "label": "Thème",
+    "dark": "Sombre",
+    "light": "Clair"
+  },
+  "refused": {
+    "title": "Cette page est réservée",
+    "reviewer": "Un évaluateur lit les candidatures et donne son avis ; cette page est pour ceux qui recrutent.",
+    "admin": "Elle est réservée à l'administrateur de votre organisation.",
+    "back": "Retour au tableau de bord"
+  },
+  "account": {
+    "myAccount": "Mon compte",
+    "businessAccount": "Compte entreprise",
+    "verified": "Organisation vérifiée",
+    "verifying": "Vérification en cours",
+    "trial": "Essai gratuit",
+    "active": "Actif",
+    "trialUntil": "Essai jusqu'au {date}",
+    "until": "Jusqu'au {date}",
+    "choosePlan": "Choisir une formule",
+    "emails": "Recevoir les e-mails",
+    "emailsOn": "Vous recevrez les e-mails de l'espace.",
+    "emailsOff": "Vous ne recevrez plus les e-mails de l'espace.",
+    "emailsFailed": "Le réglage n'a pas pu être enregistré.",
+    "signOut": "Se déconnecter"
+  },
+  "logout": {
+    "title": "Se déconnecter ?",
+    "description": "Vous devrez saisir à nouveau votre e-mail et un code pour revenir.",
+    "confirm": "Se déconnecter"
+  },
+  "search": {
+    "trigger": "Rechercher un profil : métier, compétence…",
+    "title": "Rechercher",
+    "description": "Rechercher un candidat ou une page",
+    "placeholder": "Métier, compétence, description…",
+    "candidates": "Candidats",
+    "searching": "Recherche",
+    "planRequired": "La recherche de profils est incluse dans certaines formules : voir « Abonnement ».",
+    "seePlans": "Voir les formules",
+    "unavailable": "La recherche est indisponible pour le moment.",
+    "none": "Aucun candidat pour « {query} ».",
+    "reliability": "Fiabilité {score}",
+    "hint": "Décrivez le profil recherché : un métier, une compétence, un savoir-faire (au moins 2 lettres).",
+    "pages": "Pages"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "unreadLabel": "Notifications, {count} non lues",
+    "markAllRead": "Tout marquer comme lu",
+    "empty": "Aucune notification",
+    "emptyHint": "Candidatures, analyses de CV, entretiens et abonnement s'afficheront ici.",
+    "unread": "Non lue"
+  }
+}

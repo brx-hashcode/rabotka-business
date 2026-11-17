@@ -1,0 +1,41 @@
+{
+  "titles": {
+    "applications": "Candidatures",
+    "conversation": "Conversation",
+    "missions": "Missions",
+    "offers": "Offres",
+    "newOffer": "Nouvelle offre",
+    "offer": "Offre",
+    "editOffer": "Modifier l'offre",
+    "payment": "Paiement",
+    "talents": "Mes profils",
+    "help": "Aide",
+    "newClaim": "Nouvelle demande",
+    "claim": "Demande d'aide",
+    "search": "Trouver des profils",
+    "interviews": "Entretiens",
+    "visio": "Visio d'entretien",
+    "candidate": "Profil candidat",
+    "cvAnalysis": "Analyse de CV",
+    "newCvAnalysis": "Nouvelle analyse",
+    "invoices": "Factures",
+    "organisation": "Organisation",
+    "team": "Équipe",
+    "subscription": "Abonnement",
+    "careersPage": "Page carrières"
+  },
+  "site": {
+    "description": "Le recrutement des organisations au même endroit : offres rédigées en quelques mots, CV lus et classés pour chaque poste (même depuis Gmail), candidatures triées, entretiens synchronisés avec votre agenda.",
+    "shareTitle": "Recrutez avec Rabotka"
+  },
+  "error": {
+    "title": "Une erreur est survenue",
+    "text": "Cette page n'a pas pu se charger. Réessayez — si le problème persiste, vérifiez votre connexion internet.",
+    "retry": "Réessayer"
+  },
+  "notFound": {
+    "title": "Page introuvable",
+    "text": "Ce lien n'existe pas ou n'est plus valable.",
+    "home": "Retour à l'accueil"
+  }
+}

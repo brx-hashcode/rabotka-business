@@ -1,0 +1,41 @@
+{
+  "titles": {
+    "applications": "Applications",
+    "conversation": "Conversation",
+    "missions": "Missions",
+    "offers": "Jobs",
+    "newOffer": "New job",
+    "offer": "Job",
+    "editOffer": "Edit the job",
+    "payment": "Payment",
+    "talents": "My profiles",
+    "help": "Help",
+    "newClaim": "New request",
+    "claim": "Help request",
+    "search": "Find profiles",
+    "interviews": "Interviews",
+    "visio": "Video interview",
+    "candidate": "Candidate profile",
+    "cvAnalysis": "CV analysis",
+    "newCvAnalysis": "New analysis",
+    "invoices": "Invoices",
+    "organisation": "Organisation",
+    "team": "Team",
+    "subscription": "Subscription",
+    "careersPage": "Careers page"
+  },
+  "site": {
+    "description": "Recruitment for organisations in one place: jobs written in a few words, CVs read and ranked for each role (even from Gmail), applications sorted, interviews synced with your calendar.",
+    "shareTitle": "Recruit with Rabotka"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "text": "This page couldn't load. Try again — if the problem persists, check your internet connection.",
+    "retry": "Try again"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "text": "This link doesn't exist or is no longer valid.",
+    "home": "Back to home"
+  }
+}

@@ -1,0 +1,289 @@
+{
+  "header": {
+    "home": "Rabotka Business — home",
+    "nav": "Main navigation",
+    "features": "Features",
+    "resources": "Resources",
+    "about": "About",
+    "contact": "Contact",
+    "signIn": "Sign in",
+    "signUp": "Open an account",
+    "demoShort": "Demo",
+    "demo": "Request a demo",
+    "atsTitle": "A complete ATS, six steps",
+    "atsText": "From posting the job to the contract, in one pipeline",
+    "allFeatures": "All features",
+    "nextGen": "Next-generation ATS",
+    "demoTitle": "See Rabotka on your own roles",
+    "demoText": "30 minutes with our team, reply within one business day.",
+    "guideMinutes": "Guide · {minutes} min",
+    "readGuide": "Read the guide",
+    "menu": "Menu"
+  },
+  "stages": {
+    "kicker": "Features",
+    "title": "A tool for every step of hiring",
+    "text": "Attract, sort, evaluate, decide: each tool prepares the next step.",
+    "allDetails": "All features in detail"
+  },
+  "footer": {
+    "email": "Write to our team",
+    "call": "Call us",
+    "visit": "Visit us",
+    "helpTitle": "Need some help?",
+    "helpText": "Our team advises you and helps you set up your account.",
+    "features": "Features",
+    "resources": "Resources",
+    "company": "Company",
+    "account": "Account",
+    "openAccount": "Open a business account",
+    "signIn": "Sign in",
+    "jobSeeker": "I'm looking for a job",
+    "home": "Rabotka Business — home",
+    "statement": "Publish, sort, meet, decide.",
+    "statementMuted": "All your hiring, in one place.",
+    "countries": "Available in {count} countries",
+    "seeMap": "See the map",
+    "follow": "Follow Rabotka",
+    "on": "Rabotka on {network}",
+    "rights": "© {year} Rabotka. All rights reserved.",
+    "terms": "Terms of use",
+    "privacy": "Privacy policy",
+    "top": "Back to top"
+  },
+  "pages": {
+    "home": {
+      "metaTitle": "Rabotka Business - the next-generation ATS for hiring in Africa",
+      "metaDescription": "Complete recruitment software: job posts written and published everywhere, CVs read and ranked for each role, a pipeline followed as a team, video interviews and shared reports.",
+      "keywords": [
+        "ATS Africa",
+        "HR software",
+        "applicant management",
+        "Google for Jobs",
+        "LinkedIn",
+        "interview report"
+      ]
+    },
+    "features": {
+      "metaTitle": "Features",
+      "metaDescription": "A complete ATS: writing and multi-posting jobs, CV analysis, applicant tracking, interviews, team hiring, contracts and dashboard.",
+      "title": "A complete ATS, from job post to contract",
+      "text": "Rabotka Business brings together everything a hire needs: publish the job, sort applications, meet the best and decide as a team.",
+      "kicker": "Key features",
+      "heading": "Pick a tool, see what it does",
+      "headingText": "The tools follow the order of a hire: from the job post that attracts candidates to the hired candidate's contract."
+    },
+    "feature": {
+      "how": "How it works",
+      "gains": "What you gain",
+      "inPipeline": "In your hiring pipeline"
+    },
+    "resources": {
+      "metaTitle": "Resources",
+      "metaDescription": "Practical guides to write your job posts, sort your applications and run your interviews with Rabotka Business.",
+      "title": "Hire better, faster",
+      "text": "Practical guides to write your job posts, sort your applications and run your interviews.",
+      "kicker": "Recruiter guides",
+      "heading": "Methods, not promises",
+      "readingTime": "{minutes} min read",
+      "read": "Read the guide"
+    },
+    "guide": {
+      "all": "All resources",
+      "readingTime": "Guide · {minutes} min read",
+      "inThisGuide": "In this guide",
+      "others": "Other guides",
+      "apply": "Apply this method with Rabotka"
+    },
+    "about": {
+      "metaTitle": "About",
+      "metaDescription": "Rabotka Business is Rabotka's hiring platform for companies and organisations: an ATS built for the African job market.",
+      "title": "Hiring for African organisations, finally equipped",
+      "text": "Rabotka connects people looking for work with those who hire, all the way to WhatsApp. Rabotka Business is its workspace for companies, institutions and organisations: a complete ATS, built for the African job market.",
+      "kicker": "What guides us",
+      "heading": "Three beliefs behind every feature",
+      "beliefs": [
+        {
+          "title": "The right candidate often already exists",
+          "text": "They're in the pile of CVs, in your mailbox or on WhatsApp. Our job: make sure they no longer go unnoticed."
+        },
+        {
+          "title": "A hire is decided as a team",
+          "text": "The hiring manager, HR, management: everyone should see the same candidates and give their opinion in the same place."
+        },
+        {
+          "title": "Tools made for here",
+          "text": "Your country's official documents, mobile money payments, candidates reached where they are: on their phone."
+        }
+      ],
+      "whereKicker": "Where we are",
+      "whereTitle": "Available in {count} African countries",
+      "whereText": "The documents required, the cities and where your jobs are published are your country's; your plan is paid by mobile money, in your currency."
+    },
+    "contact": {
+      "metaTitle": "Contact",
+      "metaDescription": "Contact the Rabotka Business team: a demo, a question about your account or your hiring.",
+      "title": "Let's talk about your hiring",
+      "text": "A demo, a question about your account or getting set up: our team will answer.",
+      "newTitle": "New to Rabotka Business?",
+      "newText": "Request a 30-minute demo: we get back to you within one business day to show you Rabotka on your roles.",
+      "newCta": "Request a demo",
+      "clientTitle": "You already have an account",
+      "clientText": "Sign in and open “Help” in your workspace: your request goes straight to our team, with its follow-up.",
+      "clientCta": "Sign in",
+      "directTitle": "Reach us directly",
+      "directText": "By email, by phone or at our offices."
+    },
+    "demo": {
+      "metaTitle": "Request a demo",
+      "metaDescription": "30 minutes to see Rabotka Business on your real hiring. We get back to you within one business day.",
+      "title": "30 minutes to see Rabotka on your real hiring",
+      "text": "A member of our team shows you the ATS on your open roles and answers your questions. We reply within one business day.",
+      "youWillSee": [
+        "A job post written and published in minutes",
+        "Your CVs read, scored and ranked for the role",
+        "Your applications' pipeline, from receipt to contract",
+        "Interviews and your team's opinions, in one place"
+      ]
+    },
+    "seo": {
+      "shareAlt": "Rabotka Business — the ATS for African organisations",
+      "suffix": "{title} - Rabotka Business",
+      "orgDescription": "Recruitment software (ATS) for companies and organisations in Africa: job posting, CV analysis, applicant tracking, interviews and team hiring."
+    }
+  },
+  "hero": {
+    "title": "Receive, sort and meet <mark>the right candidates</mark>, in one place",
+    "text": "Complete recruitment software: your jobs published, <mark>every CV read and ranked</mark>, your video interviews and their reports.",
+    "publishedOn": "Published on",
+    "careersPage": "Your careers page",
+    "countries": "{count} African countries"
+  },
+  "buttons": {
+    "demo": "Request a demo",
+    "signUp": "Open a business account"
+  },
+  "ats": {
+    "kicker": "Next-generation ATS",
+    "title": "All of hiring in one pipeline",
+    "text": "Rabotka Business isn't just a job board: it's complete recruitment software. Each candidate moves from the job being posted all the way to the contract, and nothing gets lost along the way.",
+    "allFeatures": "See all features"
+  },
+  "tabs": {
+    "label": "Features",
+    "seeDetail": "See {label} in detail"
+  },
+  "spotlight": {
+    "kicker": "Interviews",
+    "title": "Your interviews, from video call to report",
+    "text": "The call opens in Rabotka, everyone's voice becomes text, and the report writes itself while you move on to something else.",
+    "discover": "Discover interviews"
+  },
+  "trust": {
+    "kicker": "Security and privacy",
+    "title": "Your data and candidates' data, protected",
+    "text": "Hiring with Rabotka also means knowing what is read, kept and deleted."
+  },
+  "audiences": {
+    "kicker": "Sectors",
+    "title": "For every kind of organisation",
+    "text": "From legal status to supporting documents, Rabotka adapts to the nature of your organisation.",
+    "roles": "Roles often hired",
+    "otherTitle": "Your sector isn't listed?",
+    "otherText": "Start-ups, cooperatives, economic interest groups, associations, foundations: open your account, we'll help you along.",
+    "otherCta": "Open an account"
+  },
+  "countriesFaq": {
+    "q": "In which countries is Rabotka Business available?",
+    "a": "Today: {list}. The documents required, the cities offered and where your jobs are published are your country's; subscriptions are paid by mobile money, in your country's currency."
+  },
+  "countries": {
+    "kicker": "Where we are",
+    "title": "Available in {count} African countries",
+    "text": "Each organisation hires in its own country: its documents, its cities, and a subscription paid by mobile money in its currency.",
+    "elsewhere": "Elsewhere",
+    "regions": {
+      "central": "Central Africa",
+      "west": "West Africa",
+      "east": "East and Southern Africa"
+    }
+  },
+  "faq": {
+    "kicker": "Frequently asked questions",
+    "title": "Everything to know before you start",
+    "other": "Another question?",
+    "contact": "Contact us"
+  },
+  "demoBlock": {
+    "kicker": "Get started",
+    "title": "See Rabotka on your own hiring",
+    "text": "A member of our team shows you how to publish, sort and hire with Rabotka Business, on the roles you need to fill.",
+    "promises": [
+      {
+        "title": "30 minutes, by video or phone",
+        "text": "Enough to see what matters to you: publishing a job, sorting applications, organising interviews."
+      },
+      {
+        "title": "On your real roles",
+        "text": "Bring a role you need to fill: we start from your needs and your candidates, not a ready-made example."
+      },
+      {
+        "title": "A reply within one business day",
+        "text": "A member of our team gets back to you to set a time that suits you."
+      }
+    ]
+  },
+  "connections": {
+    "title": "Rabotka at the heart of your hiring",
+    "text": "Your candidates come from LinkedIn, Google, WhatsApp or your mailbox; your interviews go into your calendar, your reports to your team. Everything is decided in Rabotka.",
+    "calendar": "Your calendar",
+    "video": "Video",
+    "files": "PDF and Excel",
+    "team": "Your team"
+  },
+  "demoForm": {
+    "lastNameRequired": "Enter your last name.",
+    "firstNameRequired": "Enter your first name.",
+    "emailInvalid": "This email doesn't look valid.",
+    "phoneInvalid": "This number doesn't look valid.",
+    "companyRequired": "Enter your company's name.",
+    "jobTitleRequired": "Enter your job title.",
+    "countryRequired": "Choose your country.",
+    "sizeRequired": "Choose your company's size.",
+    "messageTooLong": "Your message is too long (2,000 characters at most).",
+    "failed": "Your request could not be sent. Try again in a moment.",
+    "lastName": "Last name",
+    "lastNamePlaceholder": "Mabiala",
+    "firstName": "First name",
+    "firstNamePlaceholder": "Grâce",
+    "email": "Work email",
+    "emailPlaceholder": "firstname.lastname@company.com",
+    "company": "Company",
+    "companyPlaceholder": "Your organisation's name",
+    "jobTitle": "Job title",
+    "jobTitlePlaceholder": "HR manager, owner…",
+    "country": "Country",
+    "countryPlaceholder": "Choose your country",
+    "phone": "Phone",
+    "phonePlaceholder": "Your number, without the country code",
+    "size": "Company size",
+    "employees": "employees",
+    "interests": "What interests you",
+    "message": "Message",
+    "messagePlaceholder": "The roles to fill, how many hires a year, the tools you use today…",
+    "sending": "Sending",
+    "submit": "Request my demo",
+    "privacy": "Your details are only used to contact you about Rabotka Business. See our <link>privacy policy</link>.",
+    "sentTitle": "Thank you {firstName}, your request is sent",
+    "sentText": "A member of our team will get back to you within one business day to set a time. A confirmation has just been sent to <strong>{email}</strong>.",
+    "discover": "Explore the features in the meantime",
+    "interestOptions": {
+      "analyse-cv": "CV analysis",
+      "offres-candidatures": "Jobs and applicant tracking",
+      "entretiens": "Interviews",
+      "missions": "Missions and contracts",
+      "trouver-des-profils": "Profile search",
+      "equipe": "Hiring as a team"
+    }
+  }
+}

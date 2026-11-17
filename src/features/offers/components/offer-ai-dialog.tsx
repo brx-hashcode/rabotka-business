@@ -1,5 +1,7 @@
 "use client";
 
+import { useTradeName } from "#/lib/api/use-trade-name";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconInfoCircle, IconListCheck, IconRefresh, IconWand } from "@tabler/icons-react";
@@ -8,14 +10,9 @@ import { Loader } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
 import { Textarea } from "#/components/ui/textarea";
 import { draftOffer, mySubscriptionKey } from "#/lib/api/business-controller";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import type { OfferDraft, OfferDraftInput } from "#/lib/api/types";
 
-const EXAMPLES = [
-  "2 serveurs pour un mariage samedi soir à Pointe-Noire, 15 000 FCFA chacun",
-  "Un agent d'entretien pour nos bureaux, 3 matinées par semaine",
-  "Un chauffeur-livreur avec permis B pour nos livraisons en ville",
-];
 
 /**
  * « Rédiger avec l'IA »: a few words in, an offer out, in the form's shape.
@@ -35,6 +32,10 @@ export function OfferAiDialog({
   onUse: (draft: OfferDraft) => void;
 }>) {
   const queryClient = useQueryClient();
+  const t = useTranslations("offers.ai");
+  const trade = useTradeName();
+  const friendlyError = useFriendlyError();
+  const EXAMPLES = t.raw("examples") as string[];
   const [brief, setBrief] = useState(context.title ?? "");
   const write = useMutation({
     mutationFn: () => draftOffer({ ...context, brief: brief.trim() }),
@@ -55,11 +56,8 @@ export function OfferAiDialog({
       <DialogContent className="w-[calc(100vw-2rem)] max-w-xl gap-0 overflow-hidden rounded-3xl border-0 bg-card p-0 shadow-soft">
         <div className="max-h-[85svh] space-y-5 overflow-y-auto px-6 pt-6 pb-2">
           <div className="space-y-1">
-            <DialogTitle className="font-semibold text-xl">Rédiger avec l&apos;IA</DialogTitle>
-            <DialogDescription className="text-muted-foreground text-sm">
-              Décrivez le besoin en quelques mots : l&apos;IA rédige l&apos;intitulé et la description, et propose le métier. Vous
-              relisez avant de publier.
-            </DialogDescription>
+            <DialogTitle className="font-semibold text-xl">{t("title")}</DialogTitle>
+            <DialogDescription className="text-muted-foreground text-sm">{t("text")}</DialogDescription>
           </div>
 
           <div className="space-y-2">
@@ -90,7 +88,7 @@ export function OfferAiDialog({
 
           {write.isError && (
             <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-destructive text-sm">
-              {friendlyError(write.error, "La rédaction n'a pas abouti. Réessayez dans un instant.")}
+              {friendlyError(write.error, t("failed"))}
             </p>
           )}
 
@@ -100,28 +98,22 @@ export function OfferAiDialog({
               <p className="whitespace-pre-line text-sm leading-relaxed">{draft.description}</p>
               {draft.categoryName && (
                 <p className="text-muted-foreground text-xs">
-                  Métier proposé : <span className="font-medium text-foreground">{draft.categoryName}</span>
+                  {t("trade")} <span className="font-medium text-foreground">{trade(draft.categoryName)}</span>
                 </p>
               )}
               {!!draft.toConfirm?.length && (
                 <div className="flex gap-2 rounded-xl bg-card px-3 py-2 text-xs">
                   <IconListCheck className="mt-px size-4 shrink-0 text-whatsapp-dark" />
                   <span>
-                    <span className="font-medium">À préciser avant de publier :</span>{" "}
-                    <span className="text-muted-foreground">
-                      {draft.toConfirm.join(", ")}. L&apos;IA ne les invente pas : ajoutez-les dans le formulaire, les candidats les
-                      recherchent en premier.
-                    </span>
+                    <span className="font-medium">{t("toConfirm")}</span>{" "}
+                    <span className="text-muted-foreground">{t("toConfirmText", { items: draft.toConfirm.join(", ") })}</span>
                   </span>
                 </div>
               )}
               {draft.removed.length > 0 && (
                 <p className="flex gap-2 rounded-xl bg-chip-amber/60 px-3 py-2 text-chip-amber-foreground text-xs">
                   <IconInfoCircle className="mt-px size-4 shrink-0" />
-                  <span>
-                    Retiré de l&apos;offre : {draft.removed.join(", ")}. Ces critères écartent des candidats pour des raisons sans
-                    rapport avec le poste.
-                  </span>
+                  <span>{t("removed", { items: draft.removed.join(", ") })}</span>
                 </p>
               )}
             </div>
@@ -129,9 +121,7 @@ export function OfferAiDialog({
 
           {left !== undefined && left !== null && (
             <p className="text-muted-foreground text-xs">
-              {left === 0
-                ? "C'était la dernière rédaction incluse dans votre formule pour cette période."
-                : `${left} rédaction${left > 1 ? "s" : ""} restante${left > 1 ? "s" : ""} pour cette période.`}
+              {left === 0 ? t("lastOne") : t("left", { count: left })}
             </p>
           )}
         </div>
@@ -146,7 +136,7 @@ export function OfferAiDialog({
                 className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-page font-medium hover:bg-page/70 disabled:opacity-40"
               >
                 {write.isPending ? <Loader className="size-4 animate-spin" /> : <IconRefresh className="size-4" />}
-                Autre version
+                {t("again")}
               </button>
               <button
                 type="button"
@@ -157,7 +147,7 @@ export function OfferAiDialog({
                 }}
                 className="h-12 flex-[2] rounded-full bg-ink font-medium text-white hover:bg-ink/90"
               >
-                Utiliser cette offre
+                {t("use")}
               </button>
             </>
           ) : (
@@ -167,7 +157,7 @@ export function OfferAiDialog({
                 onClick={() => onOpenChange(false)}
                 className="h-12 flex-1 rounded-full bg-page font-medium hover:bg-page/70"
               >
-                Annuler
+                {t("cancel")}
               </button>
               <button
                 type="button"
@@ -176,7 +166,7 @@ export function OfferAiDialog({
                 className="inline-flex h-12 flex-[2] items-center justify-center gap-2 rounded-full bg-ink font-medium text-white hover:bg-ink/90 disabled:opacity-40"
               >
                 {write.isPending ? <Loader className="size-4 animate-spin" /> : <IconWand className="size-4" />}
-                {write.isPending ? "Rédaction…" : "Rédiger"}
+                {write.isPending ? t("writing") : t("write")}
               </button>
             </>
           )}

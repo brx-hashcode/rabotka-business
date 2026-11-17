@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -9,7 +10,8 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
 import { Textarea } from "#/components/ui/textarea";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import {
   connectLinkedin,
   disconnectLinkedin,
@@ -42,6 +44,9 @@ export function LinkedinPostDialog({
   slug,
 }: Readonly<{ open: boolean; onOpenChange: (open: boolean) => void; offer: LinkedinOffer; slug: string }>) {
   const queryClient = useQueryClient();
+  const t = useTranslations("offers.linkedin");
+  const locale = useLocale() as Locale;
+  const friendlyError = useFriendlyError();
   const info = useQuery({ queryKey: linkedinKey, queryFn: getLinkedin, enabled: open });
   const posts = useQuery({
     queryKey: linkedinPostsKey(offer.id),
@@ -62,11 +67,11 @@ export function LinkedinPostDialog({
   const pickImage = (file: File | undefined) => {
     if (!file) return;
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      toast.error("Choisissez une image JPEG, PNG ou WEBP.");
+      toast.error(t("badType"));
       return;
     }
     if (file.size > 8 * 1024 * 1024) {
-      toast.error("Cette image dépasse 8 Mo.");
+      toast.error(t("tooBig"));
       return;
     }
     setOwnImage(file);
@@ -91,15 +96,15 @@ export function LinkedinPostDialog({
     onSuccess: () => {
       setOwnImage(null);
       setBackToOffer(false);
-      toast.success("Publication en cours : elle sera sur LinkedIn dans quelques secondes.");
+      toast.success(t("posting"));
       void queryClient.invalidateQueries({ queryKey: linkedinPostsKey(offer.id) });
     },
-    onError: (err) => toast.error(friendlyError(err, "L'offre n'a pas pu être publiée sur LinkedIn.")),
+    onError: (err) => toast.error(friendlyError(err, t("failed"))),
   });
   const disconnect = useMutation({
     mutationFn: disconnectLinkedin,
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: linkedinKey }),
-    onError: (err) => toast.error(friendlyError(err, "LinkedIn n'a pas pu être déconnecté.")),
+    onError: (err) => toast.error(friendlyError(err, t("disconnectFailed"))),
   });
 
   const account = info.data?.account;
@@ -124,10 +129,8 @@ export function LinkedinPostDialog({
         <IconBrandLinkedin className="size-5" />
       </span>
       <div className="min-w-0 flex-1 space-y-0.5">
-        <DialogTitle className="font-semibold text-xl">Publier sur LinkedIn</DialogTitle>
-        <DialogDescription className="text-muted-foreground text-sm">
-          Les candidats ouvrent l&apos;offre sur votre page carrières et postulent directement.
-        </DialogDescription>
+        <DialogTitle className="font-semibold text-xl">{t("title")}</DialogTitle>
+        <DialogDescription className="text-muted-foreground text-sm">{t("text")}</DialogDescription>
       </div>
     </div>
   );
@@ -148,39 +151,34 @@ export function LinkedinPostDialog({
             ) : state === "upgrade" ? (
               // The plan leaves it out: say so, keep LinkedIn's own share box, and where to get it.
               <div className="space-y-4">
-                <p className="rounded-2xl bg-page px-4 py-3 text-sm">
-                  La publication sur LinkedIn depuis Rabotka n&apos;est pas incluse dans votre formule. Vous pouvez partager l&apos;offre
-                  vous-même : LinkedIn s&apos;ouvre avec son lien et son aperçu.
-                </p>
+                <p className="rounded-2xl bg-page px-4 py-3 text-sm">{t("notIncluded")}</p>
                 <a href={shareBox} target="_blank" rel="noreferrer" className={`${BUTTON} ${LINKEDIN_BLUE} w-full`}>
                   <IconBrandLinkedin className="size-4" />
-                  Partager sur LinkedIn
+                  {t("shareOn")}
                 </a>
                 <Link href="/espace/abonnement" onClick={() => onOpenChange(false)} className={`${BUTTON} w-full bg-page hover:bg-page/70`}>
-                  Voir les formules
+                  {t("seePlans")}
                 </Link>
               </div>
             ) : state === "share" ? (
               <div className="space-y-4">
-                <p className="text-sm">LinkedIn s&apos;ouvre avec le lien de l&apos;offre et son aperçu : vous n&apos;avez plus qu&apos;à publier.</p>
+                <p className="text-sm">{t("shareBox")}</p>
                 <a href={shareBox} target="_blank" rel="noreferrer" className={`${BUTTON} ${LINKEDIN_BLUE} w-full`}>
                   <IconBrandLinkedin className="size-4" />
-                  Ouvrir LinkedIn
+                  {t("open")}
                 </a>
               </div>
             ) : (
               <div className="space-y-4">
                 <p className="text-sm">
-                  {state === "expired"
-                    ? "Votre connexion LinkedIn a expiré : connectez-la de nouveau pour publier depuis Rabotka."
-                    : "Connectez votre compte LinkedIn une fois : vos offres s'y publient ensuite depuis Rabotka, en un clic."}
+                  {state === "expired" ? t("expired") : t("connectOnce")}
                 </p>
                 <button type="button" onClick={() => void connect()} disabled={connecting} className={`${BUTTON} ${LINKEDIN_BLUE} w-full`}>
                   {connecting ? <IconLoader2 className="size-4 animate-spin" /> : <IconBrandLinkedin className="size-4" />}
-                  {state === "expired" ? "Reconnecter LinkedIn" : "Connecter LinkedIn"}
+                  {state === "expired" ? t("reconnect") : t("connect")}
                 </button>
                 <a href={shareBox} target="_blank" rel="noreferrer" className={`${BUTTON} w-full bg-page hover:bg-page/70`}>
-                  Partager sans connecter
+                  {t("withoutConnecting")}
                 </a>
               </div>
             )}
@@ -193,7 +191,7 @@ export function LinkedinPostDialog({
               {state === "pending" && (
                 <p className="flex items-center gap-2 rounded-2xl bg-page px-4 py-3 text-sm">
                   <IconLoader2 className="size-4 animate-spin" />
-                  Publication en cours : elle sera sur LinkedIn dans quelques secondes.
+                  {t("posting")}
                 </p>
               )}
               {published && state !== "pending" && (
@@ -204,10 +202,13 @@ export function LinkedinPostDialog({
                   <div className="min-w-0 flex-1 text-sm">
                     <p className="flex items-center gap-1.5 font-medium">
                       <IconCheck className="size-4 shrink-0" />
-                      Publiée sur LinkedIn
-                      {published.publishedAt ? ` le ${new Date(published.publishedAt).toLocaleDateString("fr", { day: "numeric", month: "long" })}` : ""}
+                      {t("published", {
+                        date: published.publishedAt
+                          ? new Date(published.publishedAt).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long" })
+                          : "none",
+                      })}
                     </p>
-                    <p className="opacity-80">Vous pouvez la publier à nouveau, après une modification par exemple.</p>
+                    <p className="opacity-80">{t("again")}</p>
                   </div>
                   {published.url && (
                     <a
@@ -216,7 +217,7 @@ export function LinkedinPostDialog({
                       rel="noreferrer"
                       className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 font-medium text-foreground text-sm hover:bg-card/80"
                     >
-                      Voir
+                      {t("see")}
                       <IconExternalLink className="size-4" />
                     </a>
                   )}
@@ -224,7 +225,7 @@ export function LinkedinPostDialog({
               )}
               {failed && (
                 <p className="rounded-2xl bg-chip-amber px-4 py-3 text-chip-amber-foreground text-sm">
-                  La dernière publication n&apos;a pas abouti : {failed.error ?? "réessayez"}.
+                  {t("lastFailed", { error: failed.error ?? t("retry") })}
                 </p>
               )}
 
@@ -232,32 +233,28 @@ export function LinkedinPostDialog({
                 {/* The text: what LinkedIn shows above the picture, with the link to apply. */}
                 <div className="flex min-w-0 flex-col gap-2">
                   <div className="flex items-baseline justify-between">
-                    <span className="font-medium text-sm">Texte de la publication</span>
+                    <span className="font-medium text-sm">{t("postText")}</span>
                     <span className="text-muted-foreground text-xs tabular-nums">{text.length} / 3000</span>
                   </div>
                   <Textarea
                     value={text}
                     onChange={(e) => setText(e.target.value.slice(0, 3000))}
-                    aria-label="Texte de la publication"
+                    aria-label={t("postText")}
                     className="min-h-72 flex-1 resize-none rounded-2xl border-0 bg-page px-4 py-3 text-[15px] leading-relaxed shadow-none md:min-h-96"
                   />
-                  <p className="text-muted-foreground text-xs">Le lien pour postuler est dans le texte : gardez-le, ou il sera ajouté à la fin.</p>
+                  <p className="text-muted-foreground text-xs">{t("linkNote")}</p>
                 </div>
 
                 {/* The picture, shown large under the text. */}
                 <div className="flex flex-col gap-2">
-                  <span className="font-medium text-sm">Image</span>
+                  <span className="font-medium text-sm">{t("image")}</span>
                   {/* A fixed block, so the dialog keeps its size, filled by the picture. */}
                   <div className="flex aspect-[1200/630] w-full items-center justify-center overflow-hidden rounded-2xl bg-page">
                     {/* eslint-disable-next-line @next/next/no-img-element -- a local preview or the careers page's own OG image */}
                     <img src={previewSrc} alt="" className="block h-full w-full object-cover" />
                   </div>
                   <p className="text-muted-foreground text-xs">
-                    {ownImage
-                      ? "Votre image, publiée en grand sous le texte."
-                      : keptImage
-                        ? "L'image de votre dernière publication, reprise si vous publiez à nouveau."
-                        : "L'image de l'offre, publiée en grand sous le texte."}
+                    {ownImage ? t("ownImage") : keptImage ? t("keptImage") : t("offerImage")}
                   </p>
                   <button
                     type="button"
@@ -265,7 +262,7 @@ export function LinkedinPostDialog({
                     className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 font-medium text-background text-sm hover:bg-foreground/85"
                   >
                     <IconPhotoEdit className="size-[18px]" />
-                    {showsOwn ? "Changer d'image" : "Mettre ma propre image"}
+                    {showsOwn ? t("changeImage") : t("useOwn")}
                   </button>
                   {showsOwn && (
                     <button
@@ -277,10 +274,10 @@ export function LinkedinPostDialog({
                       className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-full bg-page px-5 font-medium text-sm hover:bg-page/70"
                     >
                       <IconArrowBackUp className="size-4" />
-                      Reprendre l&apos;image de l&apos;offre
+                      {t("backToOffer")}
                     </button>
                   )}
-                  <p className="text-center text-muted-foreground text-xs">JPEG, PNG ou WEBP · 8 Mo au plus · idéalement 1200 × 630</p>
+                  <p className="text-center text-muted-foreground text-xs">{t("formats")}</p>
                   {fileInput}
                 </div>
               </div>
@@ -297,9 +294,9 @@ export function LinkedinPostDialog({
                   <div className="min-w-0 text-sm">
                     <p className="truncate font-medium">{account.name}</p>
                     <p className="text-muted-foreground text-xs">
-                      Sur votre fil, visible par tous ·{" "}
+                      {t("onFeed")}{" "}
                       <button type="button" onClick={() => disconnect.mutate()} disabled={disconnect.isPending} className="underline underline-offset-2 hover:text-foreground">
-                        Déconnecter
+                        {t("disconnect")}
                       </button>
                     </p>
                   </div>
@@ -312,7 +309,7 @@ export function LinkedinPostDialog({
                 className={`${BUTTON} ${LINKEDIN_BLUE} sm:min-w-52`}
               >
                 {publish.isPending ? <IconLoader2 className="size-4 animate-spin" /> : <IconBrandLinkedin className="size-4" />}
-                {state === "posted" ? "Publier à nouveau" : "Publier"}
+                {state === "posted" ? t("publishAgain") : t("publish")}
               </button>
             </div>
           </>
@@ -344,6 +341,8 @@ function usePickedImage(): [File | null, (file: File | null) => void, string | n
 /** LinkedIn's consent screen in a popup; the callback page tells us how it went. */
 function useLinkedinConnect() {
   const queryClient = useQueryClient();
+  const t = useTranslations("offers.linkedin");
+  const friendlyError = useFriendlyError();
   const [connecting, setConnecting] = useState(false);
   const handler = useRef<((ev: MessageEvent) => void) | null>(null);
 
@@ -365,7 +364,7 @@ function useLinkedinConnect() {
     } catch (err) {
       popup?.close();
       setConnecting(false);
-      toast.error(friendlyError(err, "La connexion à LinkedIn n'a pas pu commencer. Réessayez dans un instant."));
+      toast.error(friendlyError(err, t("connectFailed")));
       return;
     }
 
@@ -378,7 +377,7 @@ function useLinkedinConnect() {
       handler.current = null;
       setConnecting(false);
       if (status === "connected") void queryClient.invalidateQueries({ queryKey: linkedinKey });
-      else if (status !== "denied") toast.error("La connexion à LinkedIn n'a pas abouti. Réessayez.");
+      else if (status !== "denied") toast.error(t("connectError"));
     };
     handler.current = onMessage;
     window.addEventListener("message", onMessage);

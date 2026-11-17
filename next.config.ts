@@ -1,5 +1,9 @@
 import { execSync } from "node:child_process";
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
+
+// The request's language and messages: src/i18n/request.ts.
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 /**
  * The commit this build is of, shown in the space's sidebar: the deploy
@@ -50,4 +54,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

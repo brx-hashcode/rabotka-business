@@ -2,16 +2,10 @@
 
 import Link from "next/link";
 import { IconArrowLeft, IconCheck } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "#/lib/utils";
 import { STEPS } from "../steps";
-
-/** The ink card's message once the request is sent. */
-export const DONE_STEP = {
-  kicker: "Demande envoyée",
-  title: "Bienvenue sur Rabotka Business",
-  text: "Nos équipes examinent votre organisation. Vous pouvez déjà découvrir votre espace.",
-};
 
 /**
  * Above the form: where you are, what is done and what is left. Steps by name
@@ -33,6 +27,7 @@ export function ProgressHeader({
   showSignIn?: boolean;
 }>) {
   const current = done ? STEPS.length : index;
+  const t = useTranslations("signUp");
 
   return (
     <div className="space-y-4">
@@ -42,7 +37,7 @@ export function ProgressHeader({
             <button
               type="button"
               onClick={onBack}
-              aria-label="Étape précédente"
+              aria-label={t("progress.previous")}
               className="-ml-1 flex size-9 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-page"
             >
               <IconArrowLeft className="size-4.5" />
@@ -50,24 +45,24 @@ export function ProgressHeader({
           )}
           <div className="min-w-0 leading-tight">
             <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
-              {done ? "Inscription terminée" : `Étape ${index + 1} sur ${STEPS.length}`}
+              {done ? t("progress.finished") : t("progress.stepOf", { n: index + 1, total: STEPS.length })}
             </p>
             <p className="truncate font-semibold text-[15px]">
-              {done ? "Bienvenue" : STEPS[index].kicker}
+              {done ? t("progress.welcome") : t(`steps.${STEPS[index].id}.kicker`)}
             </p>
           </div>
         </div>
         {!done && showSignIn && (
           <p className="shrink-0 text-muted-foreground text-sm">
-            <span className="hidden sm:inline">Déjà un compte ? </span>
+            <span className="hidden sm:inline">{t("progress.haveAccount")}</span>
             <Link href="/auth/sign-in" className="font-medium text-foreground underline-offset-4 hover:underline">
-              Se connecter
+              {t("progress.signIn")}
             </Link>
           </p>
         )}
       </div>
 
-      <ol aria-label="Étapes de l'inscription" className="grid grid-cols-5 gap-1.5">
+      <ol aria-label={t("progress.steps")} className="grid grid-cols-5 gap-1.5">
         {STEPS.map((s, i) => {
           const complete = i < current;
           const isCurrent = i === current;
@@ -91,7 +86,7 @@ export function ProgressHeader({
                 )}
               >
                 {complete && <IconCheck className="size-3.5 shrink-0" strokeWidth={3} />}
-                <span className="truncate">{s.label}</span>
+                <span className="truncate">{t(`steps.${s.id}.label`)}</span>
               </span>
             </li>
           );

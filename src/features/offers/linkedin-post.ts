@@ -1,6 +1,7 @@
 import type { LinkedinInfo, LinkedinPost } from "#/lib/api/linkedin-controller";
 import type { EmploymentType, PaymentFlow } from "#/lib/api/offer-controller";
-import { EMPLOYMENT_LABEL, PAYMENT_SUFFIX } from "./offer-labels";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import { contentLocale, contentMessages } from "#/i18n/content";
 
 /** What the LinkedIn post says about the offer. */
 export type LinkedinOfferText = {
@@ -44,27 +45,34 @@ export function descriptionExcerpt(text: string, max = 380): string {
 /**
  * The post's text before the recruiter edits it: who hires and what, the
  * essentials in one glance, the start of the description, and the link to
- * apply — the picture above carries no link of its own.
+ * apply — the picture above carries no link of its own. Written in the
+ * offer's language (its title and description tell), not the screen's.
  */
-export function defaultLinkedinText(o: LinkedinOfferText, { hashtags = true }: { hashtags?: boolean } = {}): string {
-  const place = o.isRemote ? "Télétravail" : o.city?.trim();
+export function defaultLinkedinText(
+  o: LinkedinOfferText,
+  { hashtags = true, locale = contentLocale([o.description, o.title]) }: { hashtags?: boolean; locale?: Locale } = {},
+): string {
+  const { offers, labels } = contentMessages(locale);
+  const place = o.isRemote ? offers("linkedinPost.remote") : o.city?.trim();
   const facts = [
     place ? `📍 ${place}` : null,
-    `💼 ${EMPLOYMENT_LABEL[o.employmentType]}`,
-    o.amount && o.amount > 0 ? `💰 ${fcfa(o.amount)}${o.paymentFlow ? ` ${PAYMENT_SUFFIX[o.paymentFlow]}` : ""}` : null,
+    `💼 ${labels(`employmentType.${o.employmentType}`)}`,
+    o.amount && o.amount > 0 ? `💰 ${fcfa(o.amount)}${o.paymentFlow ? ` ${labels(`paymentSuffix.${o.paymentFlow}`)}` : ""}` : null,
   ].filter(Boolean);
   const date = o.scheduledAt ? new Date(o.scheduledAt) : null;
   const when =
     date && !Number.isNaN(date.getTime())
-      ? `📅 ${o.employmentType === "MISSION" ? "Mission le" : "Candidatures jusqu'au"} ${date.toLocaleDateString("fr", { day: "numeric", month: "long" })}`
+      ? `📅 ${offers(o.employmentType === "MISSION" ? "linkedinPost.missionOn" : "linkedinPost.applyUntil", {
+          date: date.toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long" }),
+        })}`
       : null;
-  const tags = ["#recrutement", "#emploi", hashtag(place), hashtag(o.categoryName)].filter((t, i, all): t is string => !!t && all.indexOf(t) === i);
+  const tags = [...(offers.raw("linkedinPost.tags") as string[]).map((tag) => `#${tag}`), hashtag(place), hashtag(o.categoryName)].filter((t, i, all): t is string => !!t && all.indexOf(t) === i);
 
   return [
-    `🚀 ${o.companyName ? `${o.companyName} recrute` : "Nous recrutons"} : ${o.title}`,
+    `🚀 ${o.companyName ? offers("linkedinPost.hiring", { company: o.companyName, title: o.title }) : offers("linkedinPost.weHire", { title: o.title })}`,
     [facts.join(" · "), when].filter(Boolean).join("\n"),
     o.description.trim() ? descriptionExcerpt(o.description) : null,
-    `👉 Postulez en ligne, sans créer de compte : ${o.url}`,
+    `👉 ${offers("linkedinPost.apply", { url: o.url })}`,
     hashtags ? tags.join(" ") : null,
   ]
     .filter(Boolean)

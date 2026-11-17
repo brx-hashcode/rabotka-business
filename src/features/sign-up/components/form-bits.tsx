@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { Control, FieldPath, FieldValues } from "react-hook-form";
 import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "#/components/ui/button";
 import {
@@ -78,10 +79,11 @@ export function TextField<T extends FieldValues>({
 }
 
 export function FieldLabel({ children, optional }: Readonly<{ children: ReactNode; optional?: boolean }>) {
+  const t = useTranslations("signUp.form");
   return (
     <FormLabel className="font-medium text-sm">
       {children}
-      {optional && <span className="font-normal text-muted-foreground"> (facultatif)</span>}
+      {optional && <span className="font-normal text-muted-foreground"> ({t("optional")})</span>}
     </FormLabel>
   );
 }
@@ -99,7 +101,7 @@ export function StepHeading({ title, text }: Readonly<{ title: string; text: str
 /** Back and continue, the same on every step. */
 export function StepActions({
   onBack,
-  continueLabel = "Continuer",
+  continueLabel,
   pending,
   disabled,
   type = "submit",
@@ -112,12 +114,13 @@ export function StepActions({
   type?: "submit" | "button";
   onContinue?: () => void;
 }>) {
+  const t = useTranslations("signUp.form");
   return (
     <div className={cn("flex items-center gap-3 pt-2", onBack ? "justify-between" : "justify-end")}>
       {onBack && (
         <Button type="button" variant="ghost" onClick={onBack} disabled={pending} className="h-12 rounded-full px-5 hover:bg-page sm:h-12">
           <IconArrowLeft />
-          Retour
+          {t("back")}
         </Button>
       )}
       <Button
@@ -135,10 +138,10 @@ export function StepActions({
         {/* Not Button's `loading`: its spinner takes the ghost variant's dark
             text colour, invisible on this ink button. */}
         {pending ? (
-          <Loader aria-label="Chargement" className="size-5 animate-spin text-white opacity-100" />
+          <Loader aria-label={t("loading")} className="size-5 animate-spin text-white opacity-100" />
         ) : (
           <>
-            {continueLabel}
+            {continueLabel ?? t("continue")}
             <IconArrowRight />
           </>
         )}

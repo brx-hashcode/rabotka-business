@@ -1,11 +1,14 @@
 "use client";
 
+import { useTradeName } from "#/lib/api/use-trade-name";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { IconBrandWhatsapp, IconCopy, IconMail, IconPhone } from "@tabler/icons-react";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
+import { INTL_LOCALE } from "#/i18n/config";
 import type { ContactedProfile } from "#/lib/api/types";
 import { cn, getInitials } from "#/lib/utils";
 
@@ -14,8 +17,11 @@ import { cn, getInitials } from "#/lib/utils";
  * through which offers, since when. In the contact dialog of a candidate.
  */
 export function ContactDetails({ contact: c }: Readonly<{ contact: ContactedProfile }>) {
+  const t = useTranslations("candidates.contact");
+  const trade = useTradeName();
+  const locale = useLocale();
   const name = `${c.firstName} ${c.lastName}`.trim();
-  const subtitle = [c.categoryName, c.city].filter(Boolean).join(" · ");
+  const subtitle = [c.categoryName && trade(c.categoryName), c.city].filter(Boolean).join(" · ");
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-5">
       <div className="flex items-center gap-4">
@@ -36,32 +42,32 @@ export function ContactDetails({ contact: c }: Readonly<{ contact: ContactedProf
         <Channel
           icon={IconBrandWhatsapp}
           tone="whatsapp"
-          label={c.directPhone ? "WhatsApp" : "WhatsApp et appels"}
+          label={c.directPhone ? "WhatsApp" : t("whatsappAndCalls")}
           value={readable(c.phone)}
           copyValue={c.phone}
           phone
           actions={[
             { label: "WhatsApp", icon: IconBrandWhatsapp, href: `https://wa.me/${digits(c.phone)}`, external: true, tone: "whatsapp" },
-            ...(c.directPhone ? [] : [{ label: "Appeler", icon: IconPhone, href: `tel:${c.phone}` }]),
+            ...(c.directPhone ? [] : [{ label: t("call"), icon: IconPhone, href: `tel:${c.phone}` }]),
           ]}
         />
         {c.directPhone && (
           <Channel
             icon={IconPhone}
-            label="Appel direct"
+            label={t("directCall")}
             value={readable(c.directPhone)}
             copyValue={c.directPhone}
             phone
-            actions={[{ label: "Appeler", icon: IconPhone, href: `tel:${c.directPhone.replace(/\s+/g, "")}` }]}
+            actions={[{ label: t("call"), icon: IconPhone, href: `tel:${c.directPhone.replace(/\s+/g, "")}` }]}
           />
         )}
         {c.email && (
           <Channel
             icon={IconMail}
-            label="E-mail"
+            label={t("email")}
             value={c.email}
             copyValue={c.email}
-            actions={[{ label: "Écrire", icon: IconMail, href: `mailto:${c.email}` }]}
+            actions={[{ label: t("write"), icon: IconMail, href: `mailto:${c.email}` }]}
           />
         )}
       </div>
@@ -81,7 +87,7 @@ export function ContactDetails({ contact: c }: Readonly<{ contact: ContactedProf
           </div>
         )}
         <p className="text-muted-foreground text-xs">
-          Obtenu le {new Date(c.unlockedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+          {t("obtainedOn", { date: new Date(c.unlockedAt).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long", year: "numeric" }) })}
         </p>
       </div>
     </div>
@@ -112,12 +118,13 @@ function Channel({
   actions: ChannelAction[];
   phone?: boolean;
 }>) {
+  const t = useTranslations("candidates.contact");
   async function copy() {
     try {
       await navigator.clipboard.writeText(copyValue);
-      toast.success("Copié.");
+      toast.success(t("copied"));
     } catch {
-      toast.error("La copie n'a pas fonctionné.");
+      toast.error(t("copyFailed"));
     }
   }
   return (
@@ -141,8 +148,8 @@ function Channel({
         <button
           type="button"
           onClick={() => void copy()}
-          aria-label={`Copier : ${label}`}
-          title="Copier"
+          aria-label={t("copyLabel", { label })}
+          title={t("copy")}
           className="flex size-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:bg-card hover:text-foreground"
         >
           <IconCopy className="size-4" />

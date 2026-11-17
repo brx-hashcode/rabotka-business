@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IconLock, IconPlus, IconVideo, IconX } from "@tabler/icons-react";
@@ -9,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/compone
 import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { getMyBusiness, myBusinessKey } from "#/lib/api/business-controller";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import {
   createInterview,
   INTERVIEW_DURATIONS,
@@ -43,11 +44,8 @@ function jitsiLink(): string {
   return `${window.location.origin}/visio/Rabotka-${id}`;
 }
 
-const LOCATION: Record<InterviewMode, { label: string; placeholder: string; optional?: boolean }> = {
-  IN_PERSON: { label: "Adresse", placeholder: "Ex. : 12 avenue de la Paix, Brazzaville" },
-  PHONE: { label: "Numéro à appeler", placeholder: "Le vôtre, si le candidat doit appeler", optional: true },
-  VIDEO: { label: "Lien de la visio", placeholder: "https://meet.google.com/…" },
-};
+/** Where each format is held is optional only by phone; the words are interviews.schedule.location* . */
+const LOCATION_OPTIONAL: Record<InterviewMode, boolean> = { IN_PERSON: false, PHONE: true, VIDEO: false };
 
 /**
  * Proposes an interview (or moves one): the date and time, how long, how and
@@ -69,6 +67,9 @@ export function ScheduleInterviewDialog({
   existing?: Interview;
 }>) {
   const queryClient = useQueryClient();
+  const t = useTranslations("interviews.schedule");
+  const ti = useTranslations("interviews");
+  const friendlyError = useFriendlyError();
   const business = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness, enabled: open });
   const videoPlan = useVideoPlan();
   // One time, or up to three for the candidate to choose from.
@@ -122,10 +123,10 @@ export function ScheduleInterviewDialog({
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: interviewsKey });
-      toast.success(existing ? `Entretien déplacé : ${candidate.name} est prévenu.` : `Invitation envoyée à ${candidate.name}.`);
+      toast.success(existing ? t("moved", { name: candidate.name }) : t("sent", { name: candidate.name }));
       onOpenChange(false);
     },
-    onError: (err) => toast.error(friendlyError(err, "L'invitation n'a pas pu être envoyée.")),
+    onError: (err) => toast.error(friendlyError(err, t("failed"))),
   });
 
   const field = "h-12 rounded-xl border-0 bg-page px-4 text-base shadow-none md:text-[15px]";
@@ -135,7 +136,7 @@ export function ScheduleInterviewDialog({
       <DialogContent className="w-[calc(100vw-2rem)] max-w-lg gap-0 overflow-hidden rounded-3xl border-0 bg-card p-0 shadow-soft">
         <div className="max-h-[85svh] space-y-5 overflow-y-auto px-6 pt-6 pb-2">
           <div className="space-y-1">
-            <DialogTitle className="font-semibold text-xl">{existing ? "Modifier l'entretien" : "Planifier un entretien"}</DialogTitle>
+            <DialogTitle className="font-semibold text-xl">{existing ? t("editTitle") : t("newTitle")}</DialogTitle>
             <DialogDescription className="text-muted-foreground text-sm">
               {candidate.name} · {jobTitle}
             </DialogDescription>
@@ -143,14 +144,14 @@ export function ScheduleInterviewDialog({
 
           <div className="space-y-2">
             <div className="flex items-baseline justify-between gap-2">
-              <span className="font-medium text-sm">{slots.length > 1 ? "Créneaux proposés" : "Date et heure"}</span>
-              {slots.length > 1 && <span className="text-muted-foreground text-xs">Le candidat choisit celui qui lui convient.</span>}
+              <span className="font-medium text-sm">{slots.length > 1 ? t("slots") : t("dateTime")}</span>
+              {slots.length > 1 && <span className="text-muted-foreground text-xs">{t("candidateChooses")}</span>}
             </div>
             {slots.map((x, i) => (
               <div key={i} className="flex items-center gap-2">
                 <Input
                   type="date"
-                  aria-label={`Date du créneau ${i + 1}`}
+                  aria-label={t("slotDate", { n: i + 1 })}
                   value={x.date}
                   min={dateValue(new Date())}
                   onChange={(e) => setSlot(i, { date: e.target.value })}
@@ -158,7 +159,7 @@ export function ScheduleInterviewDialog({
                 />
                 <Input
                   type="time"
-                  aria-label={`Heure du créneau ${i + 1}`}
+                  aria-label={t("slotTime", { n: i + 1 })}
                   value={x.time}
                   step={300}
                   onChange={(e) => setSlot(i, { time: e.target.value })}
@@ -168,7 +169,7 @@ export function ScheduleInterviewDialog({
                   <button
                     type="button"
                     onClick={() => setSlots((all) => all.filter((_, n) => n !== i))}
-                    aria-label={`Retirer le créneau ${i + 1}`}
+                    aria-label={t("removeSlot", { n: i + 1 })}
                     className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-page hover:text-foreground"
                   >
                     <IconX className="size-4" />
@@ -183,13 +184,13 @@ export function ScheduleInterviewDialog({
                 className="inline-flex items-center gap-1.5 rounded-full px-1 py-1 font-medium text-sm text-whatsapp-dark hover:underline"
               >
                 <IconPlus className="size-4" />
-                {slots.length === 1 ? "Proposer plusieurs créneaux" : "Ajouter un créneau"}
+                {slots.length === 1 ? t("severalSlots") : t("addSlot")}
               </button>
             )}
           </div>
 
           <div className="space-y-1.5">
-            <span className="font-medium text-sm">Durée</span>
+            <span className="font-medium text-sm">{t("duration")}</span>
             <div className="flex flex-wrap gap-1.5">
               {INTERVIEW_DURATIONS.filter((d) => d >= 15).map((d) => (
                 <button
@@ -201,15 +202,15 @@ export function ScheduleInterviewDialog({
                     duration === d ? "bg-ink text-white" : "bg-page text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  {d < 60 ? `${d} min` : `${d / 60} h${d % 60 ? ` ${d % 60}` : ""}`}
+                  {d < 60 ? t("minutes", { n: d }) : t("hours", { h: Math.floor(d / 60), m: d % 60 })}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <span className="font-medium text-sm">Format</span>
-            <div role="radiogroup" aria-label="Format" className="grid grid-cols-3 gap-1 rounded-2xl bg-page p-1">
+            <span className="font-medium text-sm">{t("format")}</span>
+            <div role="radiogroup" aria-label={t("format")} className="grid grid-cols-3 gap-1 rounded-2xl bg-page p-1">
               {MODES.map((m) => (
                 <button
                   key={m.key}
@@ -223,7 +224,7 @@ export function ScheduleInterviewDialog({
                   )}
                 >
                   <m.icon className="size-4" />
-                  {m.label}
+                  {ti(`mode.${m.key}`)}
                 </button>
               ))}
             </div>
@@ -231,16 +232,16 @@ export function ScheduleInterviewDialog({
 
           <label className="block space-y-1.5">
             <span className="font-medium text-sm">
-              {LOCATION[mode].label}
-              {LOCATION[mode].optional && <span className="font-normal text-muted-foreground"> (facultatif)</span>}
+              {t(`location.${mode}`)}
+              {LOCATION_OPTIONAL[mode] && <span className="font-normal text-muted-foreground"> ({t("optional")})</span>}
             </span>
             <Input
               value={location}
               onChange={(e) => setLocations((l) => ({ ...l, [mode]: e.target.value }))}
-              placeholder={LOCATION[mode].placeholder}
+              placeholder={t(`locationPlaceholder.${mode}`)}
               className={field}
             />
-            {mode === "PHONE" && !location.trim() && <span className="text-muted-foreground text-xs">Sinon, le candidat sera prévenu que vous l&apos;appelez.</span>}
+            {mode === "PHONE" && !location.trim() && <span className="text-muted-foreground text-xs">{t("callYou")}</span>}
             {mode === "VIDEO" &&
               (videoPlan.allowed ? (
                 <button
@@ -249,16 +250,16 @@ export function ScheduleInterviewDialog({
                   className="inline-flex items-center gap-1.5 pt-1 font-medium text-sm text-whatsapp-dark hover:underline"
                 >
                   <IconVideo className="size-4" />
-                  Créer un lien de visio
-                  <span className="font-normal text-muted-foreground">(dans Rabotka, sans compte)</span>
+                  {t("createLink")}
+                  <span className="font-normal text-muted-foreground">{t("inRabotka")}</span>
                 </button>
               ) : (
                 !videoPlan.loading && (
                   // Not in the plan, and not clickable: a Meet or Zoom link above still works.
                   <span aria-disabled className="inline-flex cursor-not-allowed items-center gap-1.5 pt-1 font-medium text-muted-foreground/70 text-sm">
                     <IconLock className="size-4" />
-                    Créer un lien de visio
-                    <span className="font-normal">· inclus dans les formules supérieures</span>
+                    {t("createLink")}
+                    <span className="font-normal">{t("higherPlans")}</span>
                   </span>
                 )
               ))}
@@ -266,21 +267,21 @@ export function ScheduleInterviewDialog({
 
           {isCv && !existing && (
             <label className="block space-y-1.5">
-              <span className="font-medium text-sm">E-mail du candidat</span>
-              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="L'invitation lui est envoyée ici" className={field} />
+              <span className="font-medium text-sm">{t("email")}</span>
+              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("emailPlaceholder")} className={field} />
             </label>
           )}
 
           <label className="block space-y-1.5">
             <span className="font-medium text-sm">
-              Message <span className="font-normal text-muted-foreground">(facultatif)</span>
+              {t("message")} <span className="font-normal text-muted-foreground">({t("optional")})</span>
             </span>
             <Textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={3}
               maxLength={2000}
-              placeholder="Ce qu'il faut apporter, à qui se présenter…"
+              placeholder={t("messagePlaceholder")}
               className="rounded-xl border-0 bg-page px-4 py-3 text-base shadow-none md:text-[15px]"
             />
           </label>
@@ -293,7 +294,7 @@ export function ScheduleInterviewDialog({
             disabled={save.isPending}
             className="h-12 flex-1 rounded-full bg-page font-medium hover:bg-page/70"
           >
-            Annuler
+            {t("cancel")}
           </button>
           <button
             type="button"
@@ -301,7 +302,7 @@ export function ScheduleInterviewDialog({
             disabled={save.isPending || !complete}
             className="h-12 flex-[2] rounded-full bg-ink font-medium text-white hover:bg-ink/90 disabled:opacity-40"
           >
-            {save.isPending ? "Envoi…" : existing ? "Enregistrer et prévenir" : "Envoyer l'invitation"}
+            {save.isPending ? t("sending") : existing ? t("saveNotify") : t("send")}
           </button>
         </div>
       </DialogContent>

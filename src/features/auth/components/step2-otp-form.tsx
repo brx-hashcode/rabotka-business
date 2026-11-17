@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
@@ -57,8 +58,10 @@ export function Step2OtpForm({
   const [otpValues, setOtpValues] = useState<string[]>([...EMPTY_OTP]);
   const [resendCooldown, setResendCooldown] = useState<number>(RESEND_COOLDOWN_SECONDS);
 
+  const t = useTranslations("auth.codeForm");
+  const tValidation = useTranslations("auth.validation");
   const form = useForm<{ otp: string }>({
-    resolver: zodResolver(z.object({ otp: otpSchema })),
+    resolver: zodResolver(z.object({ otp: otpSchema(tValidation("otp")) })),
     defaultValues: { otp: "" },
   });
 
@@ -141,19 +144,22 @@ export function Step2OtpForm({
     resendButtonContent = (
       <>
         <Loader className="mr-2 h-4 w-4 animate-spin" />
-        Envoi…
+        {t("sending")}
       </>
     );
   } else if (resendCooldown > 0) {
-    resendButtonContent = `Renvoyer dans ${formatTime(resendCooldown)}`;
+    resendButtonContent = t("resendIn", { time: formatTime(resendCooldown) });
   } else {
-    resendButtonContent = "Renvoyer le code";
+    resendButtonContent = t("resend");
   }
 
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Code envoyé à <span className="font-medium text-foreground">{email}</span>
+        {t.rich("sentTo", {
+          email,
+          strong: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
+        })}
       </p>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -181,7 +187,7 @@ export function Step2OtpForm({
                         className="h-14 w-full rounded-2xl border-0 bg-page text-center font-bold text-xl shadow-none focus-visible:ring-2 focus-visible:ring-whatsapp/40"
                         autoFocus={index === 0}
                         autoComplete={index === 0 ? "one-time-code" : "off"}
-                        aria-label={`Chiffre ${index + 1}`}
+                        aria-label={t("digit", { n: index + 1 })}
                       />
                     ))}
                   </div>
@@ -201,10 +207,10 @@ export function Step2OtpForm({
               {isVerifying ? (
                 <>
                   <Loader className="mr-2 h-4 w-4 animate-spin" />
-                  Vérification…
+                  {t("verifying")}
                 </>
               ) : (
-                "Se connecter"
+                t("submit")
               )}
             </Button>
             <Button
@@ -223,7 +229,7 @@ export function Step2OtpForm({
               onClick={onBack}
               disabled={isVerifying || isResending}
             >
-              Changer d&apos;email
+              {t("changeEmail")}
             </Button>
           </div>
         </form>

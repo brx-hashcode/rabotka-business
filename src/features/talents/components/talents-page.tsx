@@ -1,5 +1,7 @@
 "use client";
 
+import { useTradeName } from "#/lib/api/use-trade-name";
+import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { debounce, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
 import Link from "next/link";
@@ -31,22 +33,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#
 import { Skeleton } from "#/components/ui/skeleton";
 import { Textarea } from "#/components/ui/textarea";
 import { CardGridSkeleton } from "#/components/page-skeletons";
-import { ReachButton, RELIABILITY_HINT } from "#/features/candidates/components/candidate-card";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { ReachButton } from "#/features/candidates/components/candidate-card";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import { formatRating } from "#/i18n/format";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { listOffers, offersKey } from "#/lib/api/offer-controller";
 import { inviteTalent, listTalents, removeTalent, saveTalent, talentsKey, type Talent } from "#/lib/api/talent-controller";
 import { cn, getInitials } from "#/lib/utils";
 import { PoolCandidatesSection } from "./pool-candidates-section";
 
 const fold = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
-const monthYear = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
 
 const SOURCE_KEYS = ["rabotka", "external", "cv"] as const;
-const SOURCES: { key: (typeof SOURCE_KEYS)[number]; label: string }[] = [
-  { key: "rabotka", label: "Candidats Rabotka" },
-  { key: "external", label: "Candidatures gardées" },
-  { key: "cv", label: "CV analysés" },
-];
 
 const TAB_KEYS = ["all", "kept", "alumni"] as const;
 type Tab = (typeof TAB_KEYS)[number];
@@ -57,6 +55,11 @@ type Tab = (typeof TAB_KEYS)[number];
  * to apply to an open offer, or their contact.
  */
 export function TalentsPage() {
+  const t = useTranslations("talents.page");
+  const locale = useLocale();
+  // The search reads the trade as the card shows it, and as the server names it.
+  const trade = useTradeName();
+  const friendlyError = useFriendlyError();
   const talents = useQuery({ queryKey: talentsKey, queryFn: listTalents });
   // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
   const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TAB_KEYS).withDefault("all"));
@@ -68,39 +71,39 @@ export function TalentsPage() {
   const [source, setSource] = useQueryState("source", parseAsStringLiteral(SOURCE_KEYS).withDefault("rabotka"));
   const all = useMemo(() => talents.data ?? [], [talents.data]);
 
-  const tags = useMemo(() => [...new Set(all.flatMap((t) => t.tags))].sort((a, b) => a.localeCompare(b, "fr")), [all]);
+  const tags = useMemo(() => [...new Set(all.flatMap((x) => x.tags))].sort((a, b) => a.localeCompare(b, locale)), [all, locale]);
   const shown = all.filter(
-    (t) =>
-      (tab === "all" || (tab === "kept" ? t.saved : t.missionsWithUs > 0)) &&
-      (!tag || t.tags.includes(tag)) &&
-      (!q.trim() || fold(`${t.firstName} ${t.lastName} ${t.categoryName ?? ""} ${t.city ?? ""} ${t.description ?? ""} ${t.note ?? ""} ${t.tags.join(" ")}`).includes(fold(q.trim()))),
+    (x) =>
+      (tab === "all" || (tab === "kept" ? x.saved : x.missionsWithUs > 0)) &&
+      (!tag || x.tags.includes(tag)) &&
+      (!q.trim() || fold(`${x.firstName} ${x.lastName} ${x.categoryName ?? ""} ${x.categoryName ? trade(x.categoryName) : ""} ${x.city ?? ""} ${x.description ?? ""} ${x.note ?? ""} ${x.tags.join(" ")}`).includes(fold(q.trim()))),
   );
-  const count = (k: Tab) => (k === "all" ? all.length : all.filter((t) => (k === "kept" ? t.saved : t.missionsWithUs > 0)).length);
+  const count = (k: Tab) => (k === "all" ? all.length : all.filter((x) => (k === "kept" ? x.saved : x.missionsWithUs > 0)).length);
 
   return (
     <div className="w-full space-y-6 pt-2">
       <div className="space-y-1.5">
-        <h1 className="font-semibold text-3xl tracking-tight">Mes profils</h1>
+        <h1 className="font-semibold text-3xl tracking-tight">{t("title")}</h1>
         <p className="text-muted-foreground">
-          Les profils que vous gardez, ceux qui ont déjà travaillé pour vous et les CV que vous avez reçus : retrouvez-les par ce que dit leur CV, invitez-les sur une nouvelle offre.
+          {t("intro")}
         </p>
       </div>
 
       {/* Rabotka workers, or beyond: careers candidates kept with consent, CVs analysed. */}
-      <div role="tablist" aria-label="Origine des profils" className="inline-flex flex-wrap rounded-full bg-card p-1">
-        {SOURCES.map((x) => (
+      <div role="tablist" aria-label={t("sourcesLabel")} className="inline-flex flex-wrap rounded-full bg-card p-1">
+        {SOURCE_KEYS.map((key) => (
           <button
-            key={x.key}
+            key={key}
             type="button"
             role="tab"
-            aria-selected={source === x.key}
-            onClick={() => void setSource(x.key)}
+            aria-selected={source === key}
+            onClick={() => void setSource(key)}
             className={cn(
               "rounded-full px-4 py-2 font-medium text-sm transition-colors",
-              source === x.key ? "bg-ink text-white" : "text-muted-foreground hover:text-foreground",
+              source === key ? "bg-ink text-white" : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {x.label}
+            {t(`sources.${key}`)}
           </button>
         ))}
       </div>
@@ -111,13 +114,7 @@ export function TalentsPage() {
       <section className="space-y-5 rounded-3xl bg-card p-6">
         <div className="flex flex-wrap items-center gap-3">
           <div role="tablist" className="inline-flex rounded-full bg-page p-1">
-            {(
-              [
-                ["all", "Tous"],
-                ["kept", "Gardés"],
-                ["alumni", "Déjà recrutés"],
-              ] as const
-            ).map(([key, label]) => (
+            {TAB_KEYS.map((key) => (
               <button
                 key={key}
                 type="button"
@@ -129,7 +126,7 @@ export function TalentsPage() {
                   tab === key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {label}
+                {t(`tabs.${key}`)}
                 <span className="tabular-nums opacity-70">{count(key)}</span>
               </button>
             ))}
@@ -139,25 +136,25 @@ export function TalentsPage() {
             <Input
               value={q}
               onChange={(e) => void setQ(e.target.value)}
-              placeholder="Nom, métier, ville, note, mot-clé…"
+              placeholder={t("searchPlaceholder")}
               className="h-11 rounded-full border-0 bg-page pl-10 shadow-none focus-visible:ring-2 focus-visible:ring-ink/10"
             />
           </div>
         </div>
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            {tags.map((t) => (
+            {tags.map((x) => (
               <button
-                key={t}
+                key={x}
                 type="button"
-                aria-pressed={tag === t}
-                onClick={() => void setTag(tag === t ? null : t)}
+                aria-pressed={tag === x}
+                onClick={() => void setTag(tag === x ? null : x)}
                 className={cn(
                   "rounded-full px-3 py-1 font-medium text-xs transition-colors",
-                  tag === t ? "bg-ink text-white" : "bg-page text-muted-foreground hover:text-foreground",
+                  tag === x ? "bg-ink text-white" : "bg-page text-muted-foreground hover:text-foreground",
                 )}
               >
-                {t}
+                {x}
               </button>
             ))}
           </div>
@@ -166,28 +163,28 @@ export function TalentsPage() {
         {talents.isLoading ? (
           <CardGridSkeleton kind="talent" />
         ) : !talents.data ? (
-          <p className="text-muted-foreground">{friendlyError(talents.error, "Vos profils sont indisponibles pour le moment.")}</p>
+          <p className="text-muted-foreground">{friendlyError(talents.error, t("unavailable"))}</p>
         ) : shown.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-2xl bg-page px-6 py-14 text-center">
             <span className="flex size-12 items-center justify-center rounded-2xl bg-card">
               <IconBookmark className="size-6 text-muted-foreground" />
             </span>
-            <p className="font-medium">{all.length === 0 ? "Aucun profil pour le moment" : "Personne ici"}</p>
+            <p className="font-medium">{all.length === 0 ? t("emptyTitle") : t("nobody")}</p>
             <p className="max-w-md text-muted-foreground text-sm">
               {all.length === 0
-                ? "Gardez un profil avec le bouton « Garder », depuis la recherche ou une fiche : il apparaît ici, comme ceux que vous avez déjà recrutés."
-                : "Changez d'onglet, de mot-clé ou de recherche."}
+                ? t("emptyText")
+                : t("nobodyText")}
             </p>
             {all.length === 0 && (
               <Link href="/espace/recherche" className="font-medium text-sm text-whatsapp-dark hover:underline">
-                Chercher des profils
+                {t("searchLink")}
               </Link>
             )}
           </div>
         ) : (
           <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {shown.map((t) => (
-              <TalentCard key={t.workerId} talent={t} />
+            {shown.map((x) => (
+              <TalentCard key={x.workerId} talent={x} />
             ))}
           </ul>
         )}
@@ -198,6 +195,12 @@ export function TalentsPage() {
 }
 
 function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
+  const tt = useTranslations("talents.page");
+  const trade = useTradeName();
+  const tCard = useTranslations("candidates.card");
+  const locale = useLocale();
+  const friendlyError = useFriendlyError();
+  const monthYear = (iso: string) => new Date(iso).toLocaleDateString(INTL_LOCALE[locale], { month: "long", year: "numeric" });
   const queryClient = useQueryClient();
   const name = `${t.firstName} ${t.lastName}`.trim();
   const [dialog, setDialog] = useState<"note" | "invite" | "remove" | null>(null);
@@ -207,18 +210,18 @@ function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
     mutationFn: () => saveTalent(t.workerId),
     onSuccess: () => {
       refresh();
-      toast.success(`Profil de ${name} ajouté à « Mes profils ».`);
+      toast.success(tt("added", { name }));
     },
-    onError: (err) => toast.error(friendlyError(err, "Vos profils n'ont pas pu être mis à jour.")),
+    onError: (err) => toast.error(friendlyError(err, tt("updateFailed"))),
   });
   const remove = useMutation({
     mutationFn: () => removeTalent(t.workerId),
     onSuccess: () => {
       refresh();
       setDialog(null);
-      toast.success(`Profil de ${name} retiré de « Mes profils ».`);
+      toast.success(tt("removed", { name }));
     },
-    onError: (err) => toast.error(friendlyError(err, "Vos profils n'ont pas pu être mis à jour.")),
+    onError: (err) => toast.error(friendlyError(err, tt("updateFailed"))),
   });
 
   return (
@@ -235,17 +238,17 @@ function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
             {name}
           </Link>
           {(t.categoryName || t.city) && (
-            <p className="truncate text-muted-foreground text-sm">{[t.categoryName, t.city].filter(Boolean).join(" · ")}</p>
+            <p className="truncate text-muted-foreground text-sm">{[t.categoryName && trade(t.categoryName), t.city].filter(Boolean).join(" · ")}</p>
           )}
           <p className="mt-1 flex flex-wrap items-center gap-x-3 text-xs">
             {t.ratingAvg !== null && t.ratingCount > 0 && (
               <span className="inline-flex items-center gap-1 font-medium">
                 <IconStarFilled className="size-3.5 text-amber-400" />
-                {Number(t.ratingAvg).toFixed(1)}
+                {formatRating(t.ratingAvg, locale as Locale)}
               </span>
             )}
             {t.reliabilityScore !== null && (
-              <span className="inline-flex items-center gap-1 font-medium" title={RELIABILITY_HINT}>
+              <span className="inline-flex items-center gap-1 font-medium" title={tCard("reliabilityHint")}>
                 <IconShieldCheck className="size-3.5 text-whatsapp-dark" />
                 {t.reliabilityScore}/100
               </span>
@@ -253,7 +256,7 @@ function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
           </p>
         </div>
         <DropdownMenu>
-          <DropdownMenuTrigger aria-label="Plus d'actions" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card outline-none hover:bg-card/70">
+          <DropdownMenuTrigger aria-label={tt("moreActions")} className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card outline-none hover:bg-card/70">
             <IconDots className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-60 rounded-2xl border-0 bg-card p-1.5 shadow-soft">
@@ -261,20 +264,20 @@ function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
               <>
                 <DropdownMenuItem onSelect={() => setDialog("note")} className="cursor-pointer gap-2.5 rounded-xl px-3 py-2.5 text-sm focus:bg-page">
                   <IconNote className="size-4" />
-                  Note et mots-clés
+                  {tt("noteAndTags")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onSelect={() => setDialog("remove")}
                   className="cursor-pointer gap-2.5 rounded-xl px-3 py-2.5 text-destructive text-sm focus:bg-destructive/10 focus:text-destructive"
                 >
                   <IconTrash className="size-4" />
-                  Ne plus garder
+                  {tt("stopKeeping")}
                 </DropdownMenuItem>
               </>
             ) : (
               <DropdownMenuItem onSelect={() => keep.mutate()} className="cursor-pointer gap-2.5 rounded-xl px-3 py-2.5 text-sm focus:bg-page">
                 <IconBookmark className="size-4" />
-                Garder dans mes profils
+                {tt("keepInMine")}
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
@@ -285,16 +288,16 @@ function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
         {t.missionsWithUs > 0 && (
           <span className="inline-flex items-center gap-1 rounded-full bg-chip-green px-2.5 py-0.5 font-medium text-chip-green-foreground text-xs">
             <IconBriefcase className="size-3.5" />
-            {t.missionsWithUs} mission{t.missionsWithUs > 1 ? "s" : ""} avec vous
+            {tt("missionsWithUs", { count: t.missionsWithUs })}
           </span>
         )}
         {t.saved && (
           <span className="inline-flex items-center gap-1 rounded-full bg-brand-lime px-2.5 py-0.5 font-medium text-[#0f2414] text-xs">
             <IconBookmark className="size-3.5" />
-            Gardé
+            {tt("kept")}
           </span>
         )}
-        {!t.available && <span className="rounded-full bg-card px-2.5 py-0.5 font-medium text-muted-foreground text-xs">Plus disponible</span>}
+        {!t.available && <span className="rounded-full bg-card px-2.5 py-0.5 font-medium text-muted-foreground text-xs">{tt("notAvailable")}</span>}
         {t.tags.map((x) => (
           <span key={x} className="rounded-full bg-card px-2.5 py-0.5 font-medium text-xs">
             {x}
@@ -304,11 +307,15 @@ function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
 
       {t.lastMissionTitle && t.lastMissionAt && (
         <p className="text-muted-foreground text-xs">
-          Dernière mission : <span className="font-medium text-foreground">{t.lastMissionTitle}</span>, {monthYear(t.lastMissionAt)}
+          {tt.rich("lastMission", {
+            title: t.lastMissionTitle,
+            date: monthYear(t.lastMissionAt),
+            b: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
+          })}
         </p>
       )}
       {t.description && <p className="line-clamp-2 text-muted-foreground text-sm leading-relaxed">{t.description}</p>}
-      {t.note && <p className="line-clamp-3 rounded-2xl bg-card p-3 text-sm italic">« {t.note} »</p>}
+      {t.note && <p className="line-clamp-3 rounded-2xl bg-card p-3 text-sm italic">{tt("quoted", { note: t.note })}</p>}
 
       <div className="mt-auto flex gap-2">
         <button
@@ -318,7 +325,7 @@ function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
           className="inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm hover:bg-brand-lime/80 disabled:opacity-50"
         >
           <IconSend className="size-4 shrink-0" />
-          Inviter
+          {tt("invite")}
         </button>
         {t.available && <ReachButton workerId={t.workerId} name={name} />}
       </div>
@@ -330,9 +337,9 @@ function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
         onOpenChange={(o) => setDialog(o ? "remove" : null)}
         tone="warning"
         icon={<IconTrash className="size-5" />}
-        title={`Ne plus garder ${name} ?`}
-        description={t.missionsWithUs > 0 ? "Votre note et vos mots-clés seront effacés. Ce profil restera parmi les déjà recrutés." : "Votre note et vos mots-clés seront effacés."}
-        confirmLabel="Ne plus garder"
+        title={tt("removeTitle", { name })}
+        description={t.missionsWithUs > 0 ? tt("removeTextAlumni") : tt("removeText")}
+        confirmLabel={tt("stopKeeping")}
         pending={remove.isPending}
         onConfirm={() => remove.mutate()}
       />
@@ -348,6 +355,8 @@ function NoteDialog({
   onOpenChange,
 }: Readonly<{ talent: Talent; name: string; open: boolean; onOpenChange: (o: boolean) => void }>) {
   const queryClient = useQueryClient();
+  const tt = useTranslations("talents.page");
+  const friendlyError = useFriendlyError();
   const [note, setNote] = useState(t.note ?? "");
   const [tags, setTags] = useState<string[]>(t.tags);
   const [draft, setDraft] = useState("");
@@ -357,9 +366,9 @@ function NoteDialog({
       void queryClient.invalidateQueries({ queryKey: talentsKey });
       setDraft("");
       onOpenChange(false);
-      toast.success("Enregistré.");
+      toast.success(tt("saved"));
     },
-    onError: (err) => toast.error(friendlyError(err, "La note n'a pas pu être enregistrée.")),
+    onError: (err) => toast.error(friendlyError(err, tt("noteFailed"))),
   });
   const addDraft = () => {
     const v = draft.trim();
@@ -372,9 +381,9 @@ function NoteDialog({
       open={open}
       onOpenChange={onOpenChange}
       icon={<IconNote className="size-5" />}
-      title={`Note sur ${name}`}
-      description="Visible de votre organisation seulement."
-      confirmLabel="Enregistrer"
+      title={tt("noteTitle", { name })}
+      description={tt("noteDescription")}
+      confirmLabel={tt("save")}
       pending={save.isPending}
       onConfirm={() => save.mutate()}
     >
@@ -384,14 +393,14 @@ function NoteDialog({
           onChange={(e) => setNote(e.target.value)}
           maxLength={1000}
           rows={4}
-          placeholder="Ex. : très ponctuelle, préfère les missions du matin…"
+          placeholder={tt("notePlaceholder")}
           className="min-h-24 rounded-xl border-0 bg-page px-4 py-3 shadow-none"
         />
         <div className="flex flex-wrap items-center gap-1.5 rounded-xl bg-page p-2">
           {tags.map((x) => (
             <span key={x} className="inline-flex items-center gap-1 rounded-full bg-card py-1 pr-1.5 pl-2.5 font-medium text-xs">
               {x}
-              <button type="button" aria-label={`Retirer ${x}`} onClick={() => setTags(tags.filter((y) => y !== x))} className="rounded-full p-0.5 hover:bg-page">
+              <button type="button" aria-label={tt("removeTag", { tag: x })} onClick={() => setTags(tags.filter((y) => y !== x))} className="rounded-full p-0.5 hover:bg-page">
                 <IconX className="size-3" />
               </button>
             </span>
@@ -407,7 +416,7 @@ function NoteDialog({
             }}
             onBlur={addDraft}
             maxLength={30}
-            placeholder={tags.length < 8 ? "Ajouter un mot-clé…" : "8 mots-clés au plus"}
+            placeholder={tags.length < 8 ? tt("addTag") : tt("maxTags", { max: 8 })}
             disabled={tags.length >= 8}
             className="min-w-32 flex-1 bg-transparent px-1.5 py-1 text-sm outline-none placeholder:text-muted-foreground"
           />
@@ -424,6 +433,8 @@ function InviteDialog({
   open,
   onOpenChange,
 }: Readonly<{ workerId: string; name: string; open: boolean; onOpenChange: (o: boolean) => void }>) {
+  const tt = useTranslations("talents.page");
+  const friendlyError = useFriendlyError();
   const offers = useQuery({
     queryKey: [...offersKey, "list", "open"],
     queryFn: () => listOffers({ statuses: ["ACTIVE", "PARTIALLY_FILLED"] }),
@@ -435,9 +446,9 @@ function InviteDialog({
     onSuccess: () => {
       onOpenChange(false);
       setOfferId("");
-      toast.success(`Invitation envoyée à ${name}.`);
+      toast.success(tt("invited", { name }));
     },
-    onError: (err) => toast.error(friendlyError(err, "L'invitation n'a pas pu être envoyée.")),
+    onError: (err) => toast.error(friendlyError(err, tt("inviteFailed"))),
   });
   const list = offers.data?.items ?? [];
 
@@ -446,9 +457,9 @@ function InviteDialog({
       open={open}
       onOpenChange={onOpenChange}
       icon={<IconSend className="size-5" />}
-      title={`Inviter ${name} à postuler`}
-      description="L'invitation arrive dans ses notifications, et par e-mail s'il en a un : un geste suffit pour postuler."
-      confirmLabel="Envoyer l'invitation"
+      title={tt("inviteTitle", { name })}
+      description={tt("inviteDescription")}
+      confirmLabel={tt("sendInvite")}
       confirmDisabled={!offerId}
       pending={invite.isPending}
       onConfirm={() => invite.mutate()}
@@ -457,15 +468,15 @@ function InviteDialog({
         <Skeleton className="h-11 rounded-full" />
       ) : list.length === 0 ? (
         <p className="rounded-2xl bg-page p-4 text-muted-foreground text-sm">
-          Aucune offre en cours.{" "}
+          {tt("noOffer")}{" "}
           <Link href="/espace/offres/nouvelle" className="font-medium text-whatsapp-dark underline">
-            Publier une offre
+            {tt("publish")}
           </Link>
         </p>
       ) : (
         <Select value={offerId} onValueChange={setOfferId}>
-          <SelectTrigger aria-label="Offre" className="h-11 w-full rounded-full border-0 bg-page px-4 font-medium shadow-none dark:bg-page">
-            <SelectValue placeholder="Choisir une offre en cours" />
+          <SelectTrigger aria-label={tt("offerLabel")} className="h-11 w-full rounded-full border-0 bg-page px-4 font-medium shadow-none dark:bg-page">
+            <SelectValue placeholder={tt("chooseOffer")} />
           </SelectTrigger>
           <SelectContent position="popper" sideOffset={8} className="z-[60] max-h-72 w-[var(--radix-select-trigger-width)]">
             {list.map((o) => (

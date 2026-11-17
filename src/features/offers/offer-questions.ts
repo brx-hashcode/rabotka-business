@@ -2,45 +2,31 @@ import type { ApplicantAnswer, OfferQuestion, QuestionKind } from "#/lib/api/off
 
 export const MAX_QUESTIONS = 5;
 
-export const KIND_LABEL: Record<QuestionKind, string> = {
-  YES_NO: "Oui / Non",
-  CHOICE: "Choix",
-  SHORT_TEXT: "Réponse courte",
-  LONG_TEXT: "Réponse longue",
-  NUMBER: "Nombre",
-  DATE: "Date",
-};
-
-/** What the candidate is asked to give, under the type picker. */
-export const KIND_HINT: Record<QuestionKind, string> = {
-  YES_NO: "Le candidat répond par oui ou par non.",
-  CHOICE: "Le candidat choisit une des réponses que vous proposez.",
-  SHORT_TEXT: "Le candidat répond en quelques mots (300 caractères).",
-  LONG_TEXT: "Le candidat écrit un texte, comme une lettre de motivation (3 000 caractères).",
-  NUMBER: "Le candidat répond par un nombre, comme ses années d'expérience.",
-  DATE: "Le candidat choisit une date, comme sa disponibilité.",
-};
+/*
+ * The kinds' names and hints are offers.questions.kind.* / .hint.*; the
+ * suggestions' words offers.questions.suggestions, in this order.
+ */
 
 /** Kinds whose answer can set an application aside. */
 export const CAN_KNOCK_OUT: QuestionKind[] = ["YES_NO", "CHOICE", "NUMBER", "DATE"];
 
-/** Ready-made questions, offered while the offer has none. */
-export const SUGGESTIONS: OfferQuestion[] = [
-  { kind: "YES_NO", label: "Avez-vous le permis B ?", options: [], required: true, knockout: true, accepted: ["yes"] },
-  { kind: "LONG_TEXT", label: "Lettre de motivation", options: [], required: false, knockout: false, accepted: [] },
-  { kind: "NUMBER", label: "Combien d'années d'expérience avez-vous ?", options: [], required: true, knockout: false, accepted: [] },
-  {
-    kind: "CHOICE",
-    label: "Quand pouvez-vous commencer ?",
-    options: ["Immédiatement", "Sous 2 semaines", "Dans plus d'un mois"],
-    required: true,
-    knockout: false,
-    accepted: [],
-  },
-  { kind: "YES_NO", label: "Parlez-vous lingala ?", options: [], required: true, knockout: false, accepted: [] },
-  { kind: "YES_NO", label: "Avez-vous déjà occupé ce poste ?", options: [], required: true, knockout: false, accepted: [] },
-  { kind: "SHORT_TEXT", label: "Quelles sont vos prétentions salariales ?", options: [], required: false, knockout: false, accepted: [] },
+/** Ready-made questions, offered while the offer has none; their words come from the messages. */
+const SUGGESTION_SHAPES: Omit<OfferQuestion, "label" | "options">[] = [
+  { kind: "YES_NO", required: true, knockout: true, accepted: ["yes"] },
+  { kind: "LONG_TEXT", required: false, knockout: false, accepted: [] },
+  { kind: "NUMBER", required: true, knockout: false, accepted: [] },
+  { kind: "CHOICE", required: true, knockout: false, accepted: [] },
+  { kind: "YES_NO", required: true, knockout: false, accepted: [] },
+  { kind: "YES_NO", required: true, knockout: false, accepted: [] },
+  { kind: "SHORT_TEXT", required: false, knockout: false, accepted: [] },
 ];
+
+export function suggestions(words: { label: string; options: string[] }[]): OfferQuestion[] {
+  return SUGGESTION_SHAPES.map((shape, i) => ({ ...shape, ...words[i] }));
+}
+
+/** Why a question cannot be saved yet: a key of offers.questions.problem. */
+export type QuestionProblem = "tooShort" | "twoAnswers" | "tickAccepted" | "allAccepted" | "expected" | "minimum" | "deadline";
 
 export function blankQuestion(kind: QuestionKind = "YES_NO"): OfferQuestion {
   return {
@@ -76,22 +62,22 @@ export function cleanQuestions(questions: OfferQuestion[]): OfferQuestion[] {
 }
 
 /** Why a question cannot be saved yet, in words; null when it can. */
-export function questionProblem(q: OfferQuestion): string | null {
+export function questionProblem(q: OfferQuestion): QuestionProblem | null {
   const label = q.label.trim();
-  if (label.length > 0 && label.length < 3) return "La question est trop courte.";
+  if (label.length > 0 && label.length < 3) return "tooShort";
   if (!label) return null;
   if (q.kind === "CHOICE") {
     const options = new Set(q.options.map((o) => o.trim()).filter(Boolean));
-    if (options.size < 2) return "Proposez au moins deux réponses.";
+    if (options.size < 2) return "twoAnswers";
     if (q.knockout) {
       const ok = q.accepted.filter((a) => options.has(a));
-      if (ok.length === 0) return "Cochez les réponses acceptées.";
-      if (ok.length === options.size) return "Toutes les réponses sont acceptées : la question n'élimine personne.";
+      if (ok.length === 0) return "tickAccepted";
+      if (ok.length === options.size) return "allAccepted";
     }
   }
-  if (q.kind === "YES_NO" && q.knockout && q.accepted.length === 0) return "Indiquez la réponse attendue.";
-  if (q.kind === "NUMBER" && q.knockout && !/^\d+([.,]\d{1,2})?$/.test(q.accepted[0] ?? "")) return "Indiquez le minimum accepté.";
-  if (q.kind === "DATE" && q.knockout && !q.accepted[0]) return "Indiquez la date limite acceptée.";
+  if (q.kind === "YES_NO" && q.knockout && q.accepted.length === 0) return "expected";
+  if (q.kind === "NUMBER" && q.knockout && !/^\d+([.,]\d{1,2})?$/.test(q.accepted[0] ?? "")) return "minimum";
+  if (q.kind === "DATE" && q.knockout && !q.accepted[0]) return "deadline";
   return null;
 }
 

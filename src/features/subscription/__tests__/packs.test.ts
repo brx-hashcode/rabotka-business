@@ -1,17 +1,24 @@
+import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
+
+import { MESSAGES } from "#/i18n/messages";
 
 import type { MySubscription } from "#/lib/api/types";
 import { cvOutOfReach, offerWriterOutOfReach, packCredits, packUnits, planShare, readPackDescription } from "../packs";
+
+const fr = createTranslator({ locale: "fr", messages: MESSAGES.fr, namespace: "subscription" });
+const en = createTranslator({ locale: "en", messages: MESSAGES.en, namespace: "subscription" });
 
 type E = MySubscription["entitlements"];
 const e = (over: Partial<E>): E => over as E;
 
 describe("packs", () => {
   it("says what a pack brings as the invoice and the bell do", () => {
-    expect(packUnits("CV", 50)).toBe("50 CV à analyser");
-    expect(packUnits("OFFER", 1)).toBe("1 offre à publier");
-    expect(packUnits("CONTACT", 10)).toBe("10 contacts à obtenir");
-    expect(packUnits("OFFER_DRAFT", 5)).toBe("5 offres rédigées par l’IA");
+    expect(packUnits("CV", 50, fr)).toBe("50 CV à analyser");
+    expect(packUnits("OFFER", 1, fr)).toBe("1 offre à publier");
+    expect(packUnits("CONTACT", 10, fr)).toBe("10 contacts à obtenir");
+    expect(packUnits("OFFER_DRAFT", 5, fr)).toBe("5 offres rédigées par l’IA");
+    expect(packUnits("CONTACT", 1, en)).toBe("1 contact to get");
   });
 
   it("tells a pack's payment from a plan's", () => {

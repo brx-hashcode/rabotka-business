@@ -1,0 +1,85 @@
+{
+  "title": "Careers page",
+  "subtitle": "Your organisation's public page: your open jobs, your photos and what you offer.",
+  "seePage": "View the page",
+  "notBusiness": "This account isn't a business account.",
+  "lockedTitle": "Your page opens as soon as your organisation is verified.",
+  "lockedText": "You'll then be able to add a cover photo, your presentation, photos and your benefits, and share its link.",
+  "lockedLink": "See where the verification stands",
+  "saveFailed": "Your changes couldn't be saved.",
+  "updateFailed": "The page couldn't be updated.",
+  "loadFailed": "Your careers page couldn't be loaded.",
+  "photoTooBig": "This photo is over 8 MB.",
+  "steps": {
+    "logo": "Logo",
+    "cover": "Cover",
+    "presentation": "Presentation",
+    "photos": "Photos",
+    "benefits": "Benefits"
+  },
+  "view": "View",
+  "edit": "Edit",
+  "preview": "Preview",
+  "previewHint": "What candidates see.",
+  "cancel": "Cancel",
+  "save": "Save",
+  "add": "Add",
+  "address": {
+    "title": "Page address",
+    "hint": "Share it where your candidates are: WhatsApp, Facebook, a poster, your website.",
+    "copied": "Link copied.",
+    "copyFailed": "The link couldn't be copied.",
+    "copy": "Copy"
+  },
+  "distribute": {
+    "on": "Your jobs are being distributed.",
+    "off": "Your jobs are no longer distributed.",
+    "label": "Distribute my jobs on Google and job sites",
+    "text": "Your open jobs show up in job searches. Applications arrive here, like the others."
+  },
+  "progress": {
+    "completeTitle": "Your page is complete",
+    "title": "Complete your page",
+    "completeText": "Candidates see who you are before applying.",
+    "text": "A complete page builds trust and attracts more candidates."
+  },
+  "cover": {
+    "title": "Cover photo",
+    "hint": "At the top of the page, in a wide format: your premises, your team, your site.",
+    "change": "Change",
+    "remove": "Remove the cover photo",
+    "add": "Add a cover photo",
+    "format": "Wide format · JPG, PNG or WEBP · 8 MB at most"
+  },
+  "presentation": {
+    "title": "Presentation",
+    "hint": "What you do, your mission, your values: what candidates should know about you.",
+    "placeholder": "E.g. Family restaurant in Brazzaville since 2012, we serve 300 meals a day…",
+    "saved": "Presentation saved.",
+    "empty": "Your presentation will appear here."
+  },
+  "photos": {
+    "title": "Photos",
+    "hint": "Daily life with you: the team at work, the premises, an event.",
+    "remove": "Remove photo {n}",
+    "removing": "Removing…"
+  },
+  "benefits": {
+    "title": "Benefits",
+    "hint": "What you offer on top of the salary.",
+    "already": "This benefit is already on your page.",
+    "remove": "Remove {name}",
+    "placeholder": "A benefit, for example: year-end bonus",
+    "ideasTitle": "Ideas",
+    "ideas": [
+      "Free meal",
+      "Transport",
+      "Training",
+      "Health insurance",
+      "Bonuses",
+      "Flexible hours",
+      "Uniform provided",
+      "Remote work"
+    ]
+  }
+}

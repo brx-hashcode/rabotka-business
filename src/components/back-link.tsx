@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { IconArrowLeft, IconChevronRight } from "@tabler/icons-react";
 
@@ -6,11 +7,12 @@ import { IconArrowLeft, IconChevronRight } from "@tabler/icons-react";
  * parent page, then this page's own name when it has one.
  */
 export function BackLink({ href, label, current }: Readonly<{ href: string; label: string; current?: string | null }>) {
+  const t = useTranslations("ui");
   return (
-    <nav aria-label="Fil d'Ariane" className="flex min-w-0 items-center gap-2 text-sm">
+    <nav aria-label={t("breadcrumb")} className="flex min-w-0 items-center gap-2 text-sm">
       <Link
         href={href}
-        aria-label={`Retour : ${label}`}
+        aria-label={t("backTo", { label })}
         className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card text-muted-foreground transition-colors hover:bg-card/70 hover:text-foreground"
       >
         <IconArrowLeft className="size-4" />

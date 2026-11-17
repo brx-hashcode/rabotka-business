@@ -1,5 +1,7 @@
 "use client";
 
+import { useTradeName } from "#/lib/api/use-trade-name";
+import { useLocale, useTranslations } from "next-intl";
 import { DescriptionText } from "#/features/careers/components/description-text";
 import { useEffect, useState } from "react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
@@ -67,7 +69,7 @@ import {
 } from "#/lib/api/careers-controller";
 import { findCandidates } from "#/lib/api/candidate-controller";
 import { cvScreeningsKey, getCvScreening } from "#/lib/api/cv-screening-controller";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import {
   closeOffer,
   deleteOffer,
@@ -84,22 +86,22 @@ import {
   type Offer,
   type OfferApplicant,
 } from "#/lib/api/offer-controller";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
 import { cn, getInitials } from "#/lib/utils";
 import {
-  APPLICATION_STATUS,
+  applicationStatusLabel,
   applicationStage,
-  EMPLOYMENT_LABEL,
   fcfa,
   isDatedMission,
   offerChip,
   closingTile,
   offerDate,
-  PAYMENT_SUFFIX,
   pillStatus,
   statusClass,
   type ApplicationStage,
 } from "../offer-labels";
-import { failedLabel, KIND_LABEL } from "../offer-questions";
+import { failedLabel } from "../offer-questions";
+import { OfferLanguageProvider } from "../offer-language";
 import { ApplicationActions, useApplicationChat } from "./application-actions";
 import { MoreActionsMenu, opinionLabel, type MoreAction } from "./more-actions-menu";
 import { useConfirmedShortlist } from "../use-shortlist";
@@ -128,6 +130,8 @@ import { pollEvery } from "#/features/layout/socket-status";
  */
 export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const router = useRouter();
+  const t = useTranslations("offers.detail");
+  const friendlyError = useFriendlyError();
   const queryClient = useQueryClient();
   const offer = useQuery({ queryKey: [...offersKey, id], queryFn: () => getOffer(id) });
   const { data: business } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
@@ -181,18 +185,18 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
       void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
       await refresh();
       setConfirmClose(false);
-      toast.success("Offre fermée. Les candidats en attente sont prévenus.");
+      toast.success(t("closed"));
     },
-    onError: (err) => toast.error(friendlyError(err, "L'offre n'a pas pu être fermée.")),
+    onError: (err) => toast.error(friendlyError(err, t("closeFailed"))),
   });
   const finish = useMutation({
     mutationFn: () => confirmOfferHire(id),
     onSuccess: async () => {
       await refresh();
       setConfirmFinish(false);
-      toast.success("Offre terminée. Vous pouvez noter votre recrutement.");
+      toast.success(t("finished"));
     },
-    onError: (err) => toast.error(friendlyError(err, "L'offre n'a pas pu être terminée.")),
+    onError: (err) => toast.error(friendlyError(err, t("finishFailed"))),
   });
   const remove = useMutation({
     mutationFn: () => deleteOffer(id),
@@ -200,10 +204,10 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
       // Gone: nothing of it to wait for, the list it goes back to refetches.
       queryClient.removeQueries({ queryKey: [...offersKey, id] });
       void refresh();
-      toast.success("Offre supprimée. Les candidats en attente sont prévenus.");
+      toast.success(t("deleted"));
       router.push("/espace/offres");
     },
-    onError: (err) => toast.error(friendlyError(err, "L'offre n'a pas pu être supprimée.")),
+    onError: (err) => toast.error(friendlyError(err, t("deleteFailed"))),
   });
   const republish = useMutation({
     // The same hour: a mission keeps its start, a closing date its end of day.
@@ -215,16 +219,17 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
     onSuccess: async () => {
       await refresh();
       setRepublishing(false);
-      toast.success("Offre republiée.");
+      toast.success(t("republished"));
     },
-    onError: (err) => toast.error(friendlyError(err, "L'offre n'a pas pu être republiée.")),
+    onError: (err) => toast.error(friendlyError(err, t("republishFailed"))),
   });
 
   const o = offer.data;
 
   return (
+    <OfferLanguageProvider offer={o}>
     <div className="w-full space-y-6 pt-2">
-      <BackLink href="/espace/offres" label="Offres" current={o?.title} />
+      <BackLink href="/espace/offres" label={t("back")} current={o?.title} />
 
       {offer.isLoading ? (
         <>
@@ -241,7 +246,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
           </div>
         </>
       ) : !o ? (
-        <p className="rounded-3xl bg-card p-6 text-muted-foreground">{friendlyError(offer.error, "Cette offre est introuvable.")}</p>
+        <p className="rounded-3xl bg-card p-6 text-muted-foreground">{friendlyError(offer.error, t("notFound"))}</p>
       ) : (
         <>
           <OfferHeader
@@ -260,7 +265,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                     className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white hover:bg-ink/90"
                   >
                     <IconPencil className="size-4" />
-                    Modifier
+                    {t("edit")}
                   </Link>
                 )}
                 {hire && o.status === "FILLED" && !isDatedMission(o.employmentType) && (
@@ -270,7 +275,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                     className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white hover:bg-ink/90"
                   >
                     <IconCircleCheck className="size-4" />
-                    Terminer l&apos;offre
+                    {t("finish")}
                   </button>
                 )}
                 {/* Expired, or closed by hand with posts still free: it can recruit again. */}
@@ -281,7 +286,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                     className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 font-medium text-sm text-white hover:bg-ink/90"
                   >
                     <IconRefresh className="size-4" />
-                    Republier
+                    {t("republish")}
                   </button>
                 )}
                 {/* Closing and deleting end the offer: one step away, not beside « Modifier ». */}
@@ -292,9 +297,9 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                     // « Exports RH »: Excel of every candidate; without the service, to the plans.
                     {
                       key: "export",
-                      label: "Exporter les candidats",
+                      label: t("export"),
                       icon: IconFileSpreadsheet,
-                      hint: subscription?.entitlements.hrExports ? "Excel, avec statut, score et origine" : "Inclus dans les formules supérieures",
+                      hint: subscription?.entitlements.hrExports ? t("exportHint") : t("higherPlans"),
                       onSelect: () => {
                         if (!subscription?.entitlements.hrExports) {
                           router.push("/espace/abonnement");
@@ -302,17 +307,17 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                         }
                         downloadFile(
                           `${appConfig.apiUrl}/business/me/exports/offers/${encodeURIComponent(o.id)}/candidates`,
-                          `candidats-${o.reference}.xlsx`,
+                          t("exportFile", { reference: o.reference }),
                         ).catch((err: unknown) =>
-                          toast.error((err instanceof Error && err.message) || "L'export n'a pas pu être créé. Réessayez dans un instant."),
+                          toast.error((err instanceof Error && err.message) || t("exportFailed")),
                         );
                       },
                     },
                     ...(hire && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED")
-                      ? [{ key: "close", label: "Fermer l'offre", icon: IconCircleX, onSelect: () => setConfirmClose(true), hint: "Plus de candidatures, les candidats en attente sont prévenus" }]
+                      ? [{ key: "close", label: t("close"), icon: IconCircleX, onSelect: () => setConfirmClose(true), hint: t("closeHint") }]
                       : []),
                     ...(hire && (o.status === "ACTIVE" || o.status === "EXPIRED")
-                      ? [{ key: "delete", label: "Supprimer l'offre", icon: IconTrash, onSelect: () => setConfirmDelete(true), tone: "danger" as const }]
+                      ? [{ key: "delete", label: t("delete"), icon: IconTrash, onSelect: () => setConfirmDelete(true), tone: "danger" as const }]
                       : []),
                   ]}
                 />
@@ -371,9 +376,9 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
         onOpenChange={setConfirmDelete}
         tone="warning"
         icon={<IconTrash className="size-5" />}
-        title="Supprimer cette offre ?"
-        description="Elle n'est plus visible des candidats ; ceux qui attendaient une réponse en sont prévenus. Impossible si quelqu'un est déjà engagé."
-        confirmLabel="Supprimer"
+        title={t("deleteTitle")}
+        description={t("deleteText")}
+        confirmLabel={t("deleteConfirm")}
         pending={remove.isPending}
         onConfirm={() => remove.mutate()}
       />
@@ -382,9 +387,9 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
         open={confirmClose}
         onOpenChange={setConfirmClose}
         icon={<IconCircleX className="size-5" />}
-        title="Fermer cette offre ?"
-        description="Elle ne recevra plus de candidatures et les candidats en attente sont prévenus. Vos candidats retenus restent."
-        confirmLabel="Fermer l'offre"
+        title={t("closeTitle")}
+        description={t("closeText")}
+        confirmLabel={t("close")}
         tone="warning"
         pending={close.isPending}
         onConfirm={() => close.mutate()}
@@ -394,9 +399,9 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
         open={confirmFinish}
         onOpenChange={setConfirmFinish}
         icon={<IconCircleCheck className="size-5" />}
-        title="Terminer cette offre ?"
-        description="Vous confirmez votre recrutement. L'offre est terminée, et vous pouvez noter les personnes recrutées."
-        confirmLabel="Terminer l'offre"
+        title={t("finishTitle")}
+        description={t("finishText")}
+        confirmLabel={t("finish")}
         pending={finish.isPending}
         onConfirm={() => finish.mutate()}
       />
@@ -405,13 +410,9 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
         open={republishing}
         onOpenChange={setRepublishing}
         icon={<IconRefresh className="size-5" />}
-        title="Republier l'offre"
-        description={
-          noOfferLeft
-            ? "Votre formule n'a plus d'offre à publier sur cette période."
-            : `${needsDate ? "Choisissez jusqu'à quand vous acceptez des candidatures : la mission peut commencer aujourd'hui. " : ""}Elle compte comme une offre publiée sur votre formule.`
-        }
-        confirmLabel="Republier"
+        title={t("republishTitle")}
+        description={noOfferLeft ? t("noOfferLeft") : t("republishText", { needsDate: needsDate ? "yes" : "no" })}
+        confirmLabel={t("republish")}
         confirmDisabled={(needsDate && !newDate) || noOfferLeft}
         pending={republish.isPending}
         onConfirm={() => republish.mutate()}
@@ -426,11 +427,13 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
         )}
       </ActionDialog>
     </div>
+    </OfferLanguageProvider>
   );
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const longDate = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+const longDate = (iso: string, locale: Locale) =>
+  new Date(iso).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long", year: "numeric" });
 
 /** Days from today to the offer's date: what is left to fill it. */
 function daysUntil(iso: string): number {
@@ -445,7 +448,11 @@ function OfferHeader({
   outsiders,
   actions,
 }: Readonly<{ offer: Offer; category?: string; applicants?: OfferApplicant[]; outsiders: ExternalApplication[]; actions: React.ReactNode }>) {
-  const status = offerChip(o);
+  const tLabels = useTranslations("labels");
+  const t = useTranslations("offers.detail");
+  const locale = useLocale() as Locale;
+  const trade = useTradeName();
+  const status = offerChip(o, tLabels);
   const list = applicants ?? [];
   const toReview = list.filter((a) => applicationStage(a.status) === "new").length + outsiders.filter((a) => externalStage(a) === "new").length;
   // `acceptedCount` counts ACCEPTED only; a hire that has started or ended still fills its seat.
@@ -454,7 +461,7 @@ function OfferHeader({
   const filled = Math.min(Math.max(o.acceptedCount, hired), o.quantity);
   const left = o.scheduledAt ? daysUntil(o.scheduledAt) : null;
   const open = o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED";
-  const closing = closingTile(o, left);
+  const closing = closingTile(o, left, tLabels, locale);
 
   return (
     <section className="space-y-8 rounded-3xl bg-card p-6 sm:p-8">
@@ -462,27 +469,27 @@ function OfferHeader({
         <div className="min-w-0 space-y-3">
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className={cn("rounded-full px-2.5 py-1 font-medium", status.className)}>{status.label}</span>
-            <span className="rounded-full bg-page px-2.5 py-1 font-medium">{EMPLOYMENT_LABEL[o.employmentType]}</span>
-            {category && <span className="rounded-full bg-page px-2.5 py-1 font-medium">{category}</span>}
+            <span className="rounded-full bg-page px-2.5 py-1 font-medium">{tLabels(`employmentType.${o.employmentType}`)}</span>
+            {category && <span className="rounded-full bg-page px-2.5 py-1 font-medium">{trade(category)}</span>}
           </div>
           <h1 className="break-words font-semibold text-3xl tracking-tight sm:text-4xl">{o.title}</h1>
           <p className="text-muted-foreground text-sm">
-            Réf. {o.reference}
-            {o.createdAt && ` · publiée le ${longDate(o.createdAt)}`}
+            {t("reference", { reference: o.reference })}
+            {o.createdAt && t("publishedOn", { date: longDate(o.createdAt, locale) })}
           </p>
         </div>
         {actions}
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        <Tile icon={IconInbox} label="Candidatures" value={applicants ? String(list.length + outsiders.length) : "—"} />
+        <Tile icon={IconInbox} label={t("applications")} value={applicants ? String(list.length + outsiders.length) : "—"} />
         <Tile
           icon={IconUsers}
-          label="À examiner"
+          label={t("toReview")}
           value={applicants ? String(toReview) : "—"}
-          hint={toReview > 0 ? "en attente de votre réponse" : "aucune en attente"}
+          hint={toReview > 0 ? t("waitingReply") : t("noneWaiting")}
         />
-        <Tile icon={IconUserCheck} label="Postes pourvus" value={`${filled}/${o.quantity}`}>
+        <Tile icon={IconUserCheck} label={t("filled")} value={`${filled}/${o.quantity}`}>
           <div className="h-1.5 overflow-hidden rounded-full bg-card">
             <div className="h-full rounded-full bg-whatsapp-dark" style={{ width: `${(filled / o.quantity) * 100}%` }} />
           </div>
@@ -491,7 +498,7 @@ function OfferHeader({
           icon={IconCalendarEvent}
           label={closing.label}
           value={closing.value}
-          hint={closing.hint ?? (o.scheduledAt ? (offerDate(o.scheduledAt, o.employmentType) ?? undefined) : undefined)}
+          hint={closing.hint ?? (o.scheduledAt ? (offerDate(o.scheduledAt, o.employmentType, tLabels, locale) ?? undefined) : undefined)}
           muted={!open}
         />
       </div>
@@ -525,13 +532,13 @@ function Tile({
 /** `?vue=`: the candidates as a list or a board; the page and the card share it. */
 const VIEW = parseAsStringLiteral(["liste", "tableau"] as const).withDefault("liste");
 
-const TABS: { key: "all" | ApplicationStage; label: string }[] = [
-  { key: "all", label: "Toutes" },
-  { key: "new", label: "Nouvelles" },
-  { key: "viewed", label: "Vues" },
-  { key: "shortlisted", label: "Présélectionnées" },
-  { key: "hired", label: "Retenues" },
-  { key: "closed", label: "Refusées ou annulées" },
+const TABS: { key: "all" | ApplicationStage }[] = [
+  { key: "all" },
+  { key: "new" },
+  { key: "viewed" },
+  { key: "shortlisted" },
+  { key: "hired" },
+  { key: "closed" },
 ];
 
 /** A CV analysis's score, once it is in. */
@@ -556,8 +563,9 @@ function ApplicantsCard({
   outsiders,
   loading,
 }: Readonly<{ offer: Offer; applicants?: OfferApplicant[]; outsiders: ExternalApplication[]; loading: boolean }>) {
+  const t = useTranslations("offers.applicants");
   // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
-  const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS.map((t) => t.key)).withDefault("all"));
+  const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS.map((x) => x.key)).withDefault("all"));
   // The list, or the board (one column per step); in the URL too.
   const [view, setView] = useQueryState("vue", VIEW);
   const switchView = (next: "liste" | "tableau") => {
@@ -652,13 +660,13 @@ function ApplicantsCard({
   const oneScreening = comparable.every((e) => e.analysis?.screeningId === comparedScreening);
   const compareBlocked =
     picked.length < 2
-      ? "Choisissez au moins 2 candidats"
+      ? t("pickTwo")
       : comparable.length < picked.length
-        ? "Analysez d'abord le CV de chaque candidat choisi"
+        ? t("analyseFirst")
         : picked.length > MAX_COMPARED
-          ? `${MAX_COMPARED} candidats au plus`
+          ? t("atMost", { max: MAX_COMPARED })
           : !oneScreening
-            ? "Ces analyses ne peuvent pas être comparées ensemble"
+            ? t("notComparable")
             : null;
   const comparedResumes = useQuery({
     queryKey: [...cvScreeningsKey, comparedScreening, "compare-rows", [...compareIds].sort().join(",")],
@@ -691,17 +699,15 @@ function ApplicantsCard({
     <section className="space-y-5 rounded-3xl bg-card p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
-          <h2 className="font-semibold text-xl">Candidats</h2>
-          <p className="text-muted-foreground text-sm">
-            Classés par adéquation avec l&apos;offre, qu&apos;ils aient postulé sur Rabotka ou sur votre page carrières.
-          </p>
+          <h2 className="font-semibold text-xl">{t("title")}</h2>
+          <p className="text-muted-foreground text-sm">{t("intro")}</p>
         </div>
         {list.length + outsiders.length > 0 && (
-          <div role="tablist" aria-label="Affichage" className="flex shrink-0 gap-1 rounded-full bg-page p-1">
+          <div role="tablist" aria-label={t("display")} className="flex shrink-0 gap-1 rounded-full bg-page p-1">
             {(
               [
-                { key: "liste", label: "Liste", icon: IconList },
-                { key: "tableau", label: "Tableau", icon: IconLayoutKanban },
+                { key: "liste", label: t("list"), icon: IconList },
+                { key: "tableau", label: t("board"), icon: IconLayoutKanban },
               ] as const
             ).map((v) => (
               <button
@@ -730,11 +736,9 @@ function ApplicantsCard({
           <span className="flex size-12 items-center justify-center rounded-2xl bg-card">
             <IconUsers className="size-6 text-muted-foreground" />
           </span>
-          <p className="font-medium">Aucune candidature pour le moment</p>
+          <p className="font-medium">{t("none")}</p>
           <p className="max-w-sm text-muted-foreground text-sm">
-            {open
-              ? "Les profils correspondants ont été prévenus de votre offre. Les candidatures apparaîtront ici."
-              : "Cette offre n'a reçu aucune candidature."}
+            {open ? t("noneOpen") : t("noneClosed")}
           </p>
         </div>
       ) : view === "tableau" ? (
@@ -766,21 +770,21 @@ function ApplicantsCard({
         </div>
       ) : (
         <div className="space-y-5 motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-[0.99] motion-safe:duration-500 motion-safe:ease-[cubic-bezier(0.22,1,0.36,1)]">
-          <div role="tablist" aria-label="Étape" className="flex gap-1 overflow-x-auto rounded-full bg-page p-1">
-            {TABS.map((t) => (
+          <div role="tablist" aria-label={t("stage")} className="flex gap-1 overflow-x-auto rounded-full bg-page p-1">
+            {TABS.map((x) => (
               <button
-                key={t.key}
+                key={x.key}
                 type="button"
                 role="tab"
-                aria-selected={tab === t.key}
-                onClick={() => void setTab(t.key)}
+                aria-selected={tab === x.key}
+                onClick={() => void setTab(x.key)}
                 className={cn(
                   "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 font-medium text-sm transition-colors",
-                  tab === t.key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
+                  tab === x.key ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {t.label}
-                <span className="tabular-nums opacity-70">{count(t.key)}</span>
+                {t(`tabs.${x.key}`)}
+                <span className="tabular-nums opacity-70">{count(x.key)}</span>
               </button>
             ))}
           </div>
@@ -788,7 +792,7 @@ function ApplicantsCard({
           {outCount > 0 && (
             <label className="flex w-fit cursor-pointer items-center gap-2 text-sm">
               <Checkbox checked={hideOut} onCheckedChange={(v) => setHideOut(v === true)} className="size-4 rounded" />
-              Masquer les candidats qui ne remplissent pas les critères
+              {t("hideOut")}
               <span className="text-muted-foreground tabular-nums">({outCount})</span>
             </label>
           )}
@@ -796,33 +800,31 @@ function ApplicantsCard({
           {pending > 0 && (
             <p className="flex items-center gap-2 text-muted-foreground text-sm">
               <Loader className="size-4 animate-spin" />
-              {pending === 1 ? "1 candidature en cours d'analyse" : `${pending} candidatures en cours d'analyse`} : le classement se met à
-              jour seul.
+              {t("pending", { count: pending })}
             </p>
           )}
 
           {filled && stillWaiting > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-chip-violet/60 px-4 py-3 text-chip-violet-foreground text-sm">
               <span>
-                Tous les postes sont pourvus.{" "}
-                {stillWaiting === 1 ? "1 candidature attend" : `${stillWaiting} candidatures attendent`} encore une réponse.
+                {t("allFilled", { count: stillWaiting })}
               </span>
               <button
                 type="button"
                 onClick={() => setBulk("remaining")}
                 className="h-10 rounded-full bg-card px-4 font-medium text-foreground hover:bg-card/70"
               >
-                Refuser les autres candidatures
+                {t("refuseRemaining")}
               </button>
             </div>
           )}
 
           {selected.size > 0 && (
             <div className="sticky top-20 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-ink px-4 py-3 text-sm text-white">
-              <span>{selected.size === 1 ? "1 candidature sélectionnée" : `${selected.size} candidatures sélectionnées`}</span>
+              <span>{t("selected", { count: selected.size })}</span>
               <span className="flex flex-wrap gap-2">
                 <button type="button" onClick={() => setSelected(new Set())} className="h-9 rounded-full px-3 hover:bg-white/10">
-                  Annuler
+                  {t("cancel")}
                 </button>
                 <button
                   type="button"
@@ -831,7 +833,7 @@ function ApplicantsCard({
                   title={compareBlocked ?? undefined}
                   className="h-9 rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] disabled:opacity-50"
                 >
-                  Comparer{picked.length > 1 ? ` (${picked.length})` : ""}
+                  {t("compare", { count: picked.length > 1 ? String(picked.length) : "none" })}
                 </button>
                 {hire && (
                   <button
@@ -839,7 +841,7 @@ function ApplicantsCard({
                     onClick={() => setWriting(true)}
                     className="h-9 rounded-full bg-white/10 px-4 font-medium hover:bg-white/15"
                   >
-                    Écrire
+                    {t("write")}
                   </button>
                 )}
                 {hire && shortlistAction && (
@@ -856,13 +858,13 @@ function ApplicantsCard({
                     className="h-9 rounded-full bg-white/10 px-4 font-medium hover:bg-white/15 disabled:opacity-50"
                   >
                     {shortlistAction === "add"
-                      ? `Présélectionner${toShortlist.length < selected.size ? ` (${toShortlist.length})` : ""}`
-                      : "Retirer de la présélection"}
+                      ? t("shortlist", { count: toShortlist.length < selected.size ? String(toShortlist.length) : "none" })
+                      : t("unshortlist")}
                   </button>
                 )}
                 {refuseCount > 0 && (
                   <button type="button" onClick={() => setBulk("selected")} className="h-9 rounded-full bg-white px-4 font-medium text-ink hover:bg-white/90">
-                    Refuser la sélection{refuseCount < selected.size ? ` (${refuseCount})` : ""}
+                    {t("refuseSelection", { count: refuseCount < selected.size ? String(refuseCount) : "none" })}
                   </button>
                 )}
               </span>
@@ -906,7 +908,7 @@ function ApplicantsCard({
           <AnalyseAllBar offerId={o.id} outsiders={outsiders} />
 
           {ranked.length === 0 ? (
-            <p className="rounded-2xl bg-page p-4 text-muted-foreground text-sm">Aucun candidat à cette étape.</p>
+            <p className="rounded-2xl bg-page p-4 text-muted-foreground text-sm">{t("noneAtStage")}</p>
           ) : (
             <ul className="flex flex-col gap-3">
               {ranked.map((e, i) => {
@@ -946,12 +948,10 @@ function ApplicantsCard({
   );
 }
 
-const APPLICANT_CRITERIA = [
-  { key: "trade", label: "Métier" },
-  { key: "experience", label: "Expérience" },
-  { key: "location", label: "Proximité" },
-  { key: "reliability", label: "Fiabilité" },
-] as const;
+/** The applicant score's criteria; their names are labels.criterion.* . */
+const APPLICANT_CRITERIA = ["trade", "experience", "location", "reliability"] as const;
+/** « Lieu » reads « Proximité » on an applicant's score. */
+const APPLICANT_CRITERION_KEY = { trade: "trade", experience: "experience", location: "proximity", reliability: "reliability" } as const;
 
 /** One applicant: rank, score and verdict as in CV analysis, and why on demand. */
 function ApplicantRow({
@@ -989,6 +989,10 @@ function ApplicantRow({
   detailsOpen?: boolean;
 }>) {
   const [open, setOpen] = useState(detailsOpen);
+  const tLabels = useTranslations("labels");
+  const t = useTranslations("offers.row");
+  const tc = useTranslations("offers.candidate");
+  const locale = useLocale() as Locale;
   const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
   // What « ⋯ » opens: the CVs, the team's opinions; « Message » goes straight there.
   const [panel, setPanel] = useState<"own-cv" | "rabotka-cv" | "opinion" | "interview" | null>(null);
@@ -999,21 +1003,21 @@ function ApplicantRow({
     ...(a.cv?.kind === "UPLOADED"
       ? [
           a.cv.available
-            ? { key: "own-cv", label: "CV du candidat", icon: IconFileText, onSelect: () => setPanel("own-cv") }
+            ? { key: "own-cv", label: tc("cv"), icon: IconFileText, onSelect: () => setPanel("own-cv") }
             : {
                 key: "own-cv",
-                label: "CV du candidat",
+                label: tc("cv"),
                 icon: IconLock,
                 onSelect: () => undefined,
                 disabled: true,
-                hint: "S'ouvre une fois son contact obtenu",
+                hint: t("lockedCv"),
               },
         ]
       : []),
-    { key: "rabotka-cv", label: "CV Rabotka", icon: IconFileCv, onSelect: () => setPanel("rabotka-cv") },
-    { key: "opinion", label: opinionLabel(opinions), icon: IconUsers, onSelect: () => setPanel("opinion") },
+    { key: "rabotka-cv", label: t("rabotkaCv"), icon: IconFileCv, onSelect: () => setPanel("rabotka-cv") },
+    { key: "opinion", label: opinionLabel(opinions, tc), icon: IconUsers, onSelect: () => setPanel("opinion") },
     ...(hire && chat.available
-      ? [{ key: "message", label: "Message", icon: IconMessageCircle, onSelect: chat.open, disabled: chat.pending }]
+      ? [{ key: "message", label: t("message"), icon: IconMessageCircle, onSelect: chat.open, disabled: chat.pending }]
       : []),
     // The business's own step before deciding; the candidate is not told.
     ...(hire && recruiting && (a.status === "PENDING" || a.status === "VIEWED")
@@ -1021,14 +1025,14 @@ function ApplicantRow({
           a.shortlistedAt
             ? {
                 key: "shortlist",
-                label: "Retirer de la présélection",
+                label: tc("unshortlist"),
                 icon: IconStarOff,
                 onSelect: () => shortlist.ask({ targets: { rabotka: [a.applicationId], external: [] }, shortlisted: false, who: name }),
                 disabled: shortlist.isPending,
               }
             : {
                 key: "shortlist",
-                label: "Présélectionner",
+                label: tc("shortlist"),
                 icon: IconStar,
                 onSelect: () => shortlist.ask({ targets: { rabotka: [a.applicationId], external: [] }, shortlisted: true, who: name }),
                 disabled: shortlist.isPending,
@@ -1037,7 +1041,7 @@ function ApplicantRow({
       : []),
     // Invited by e-mail and in the app, as from « Candidatures ».
     ...(hire && recruiting && applicationStage(a.status) !== "closed"
-      ? [{ key: "interview", label: "Planifier un entretien", icon: IconCalendarPlus, onSelect: () => setPanel("interview") }]
+      ? [{ key: "interview", label: tc("schedule"), icon: IconCalendarPlus, onSelect: () => setPanel("interview") }]
       : []),
   ];
   // The CV analysis, once in, speaks for the candidate as it does for a
@@ -1050,7 +1054,7 @@ function ApplicantRow({
         strengths: analysed.strengths ?? [],
         gaps: analysed.gaps ?? [],
         criteria: CRITERIA.filter((k) => typeof analysed.criteria?.[k.key] === "number").map((k) => ({
-          label: k.label,
+          label: tLabels(`criterion.${k.key}`),
           value: analysed.criteria?.[k.key] ?? 0,
         })),
       }
@@ -1059,9 +1063,9 @@ function ApplicantRow({
           summary: assessment.summary,
           strengths: assessment.strengths,
           gaps: assessment.gaps,
-          criteria: APPLICANT_CRITERIA.filter((k) => typeof assessment.criteria?.[k.key] === "number").map((k) => ({
-            label: k.label,
-            value: assessment.criteria?.[k.key] ?? 0,
+          criteria: APPLICANT_CRITERIA.filter((k) => typeof assessment.criteria?.[k] === "number").map((k) => ({
+            label: tLabels(`criterion.${APPLICANT_CRITERION_KEY[k]}`),
+            value: assessment.criteria?.[k] ?? 0,
           })),
         }
       : null;
@@ -1077,7 +1081,7 @@ function ApplicantRow({
         {/* No rank outside the ranked list (the board's window passes 0). */}
         {(rank > 0 || onToggle) && (
           <span className="flex w-5 shrink-0 flex-col items-center gap-1">
-            {onToggle && <Checkbox checked={selected} onCheckedChange={onToggle} aria-label={`Sélectionner ${name}`} className="size-4 rounded" />}
+            {onToggle && <Checkbox checked={selected} onCheckedChange={onToggle} aria-label={t("select", { name })} className="size-4 rounded" />}
             {rank > 0 && <span className="font-semibold text-muted-foreground text-xs tabular-nums">{rank}</span>}
           </span>
         )}
@@ -1087,7 +1091,7 @@ function ApplicantRow({
           // A spinner only while scores are on their way; otherwise no score (yet).
           <span
             className="flex size-[46px] shrink-0 items-center justify-center rounded-full bg-card text-muted-foreground"
-            title={waiting ? "Analyse en cours" : "Pas encore de score"}
+            title={waiting ? t("analysing") : t("noScore")}
           >
             {waiting ? <Loader className="size-4 animate-spin" /> : "–"}
           </span>
@@ -1103,25 +1107,25 @@ function ApplicantRow({
               {score !== null && <VerdictChip score={score} />}
               {failed ? (
                 <span className="rounded-full bg-chip-amber px-2.5 py-1 font-medium text-chip-amber-foreground text-xs">
-                  Ne remplit pas : {failed}
+                  {t("fails", { what: failed })}
                 </span>
               ) : (
                 asked &&
                 answers.length === 0 && (
                   <span className="rounded-full bg-foreground/[0.07] px-2.5 py-1 font-medium text-muted-foreground text-xs">
-                    Questions non répondues
+                    {t("unanswered")}
                   </span>
                 )
               )}
             </span>
             <span className="block truncate text-muted-foreground text-xs">
-              Candidature du {new Date(a.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
-              {a.worker.reliabilityScore !== null && ` · fiabilité ${a.worker.reliabilityScore}/100`}
+              {t("appliedOn", { date: new Date(a.createdAt).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long" }) })}
+              {a.worker.reliabilityScore !== null && t("reliability", { score: a.worker.reliabilityScore })}
             </span>
           </span>
         </Link>
         <span className={cn("shrink-0 rounded-full px-2.5 py-1 font-medium text-xs", statusClass(pillStatus(a.status, a.shortlistedAt)))}>
-          {APPLICATION_STATUS[pillStatus(a.status, a.shortlistedAt)] ?? a.status}
+          {applicationStatusLabel(pillStatus(a.status, a.shortlistedAt), tLabels)}
         </span>
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
@@ -1132,7 +1136,7 @@ function ApplicantRow({
             aria-expanded={open}
             className="mr-auto inline-flex h-10 shrink-0 items-center gap-1 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70"
           >
-            {detailsLabel(!!insight, answers.length > 0)}
+            {detailsLabel(!!insight, answers.length > 0, tc)}
             <IconChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
           </button>
         )}
@@ -1180,6 +1184,8 @@ function ApplicantRow({
  */
 function ReanalyseButton({ offerId, applicationId }: Readonly<{ offerId: string; applicationId: string }>) {
   const queryClient = useQueryClient();
+  const t = useTranslations("offers.row");
+  const friendlyError = useFriendlyError();
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: [...offersKey, offerId, "applicants"] });
     void queryClient.invalidateQueries({ queryKey: [...offersKey, offerId, "assessments"] });
@@ -1188,27 +1194,25 @@ function ReanalyseButton({ offerId, applicationId }: Readonly<{ offerId: string;
     mutationFn: () => reanalyseApplicant(offerId, applicationId),
     onSuccess: ({ analysis }) => {
       toast.success(
-        analysis === "no-room"
-          ? "Nouveau CV pris en compte dans le score. Plus de CV inclus pour relancer l'analyse détaillée."
-          : "Nouveau CV pris en compte : l'analyse est relancée.",
+        analysis === "no-room" ? t("newCvNoRoom") : t("newCv"),
       );
       void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
       refresh();
       // The score is made in the background: fetched again once it is likely in.
       setTimeout(refresh, 15_000);
     },
-    onError: (err) => toast.error(friendlyError(err, "L'analyse n'a pas pu être relancée. Réessayez.")),
+    onError: (err) => toast.error(friendlyError(err, t("reanalyseFailed"))),
   });
   return (
     <button
       type="button"
       onClick={() => run.mutate()}
       disabled={run.isPending}
-      title="Le candidat a ajouté un CV depuis sa candidature"
+      title={t("newCvTitle")}
       className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-brand-lime px-3.5 font-medium text-ink text-sm hover:brightness-95 disabled:opacity-60"
     >
       <IconRefresh className={cn("size-4", run.isPending && "animate-spin")} />
-      Nouveau CV · Réanalyser
+      {t("reanalyse")}
     </button>
   );
 }
@@ -1227,6 +1231,8 @@ function ApplicantCvAnalysis({
   analysis: CvAnalysis | null;
 }>) {
   const [chatting, setChatting] = useState(false);
+  const t = useTranslations("offers.row");
+  const tc = useTranslations("offers.candidate");
   const scored = analysis?.status === "SCORED";
   // One request per screening, shared by every candidate of the offer; each picks its own.
   const resume = useQuery({
@@ -1240,7 +1246,7 @@ function ApplicantCvAnalysis({
     return (
       <span className="inline-flex h-10 items-center gap-2 px-1 text-muted-foreground text-sm">
         <Loader className="size-4 animate-spin" />
-        Analyse du CV…
+        {t("analysingCv")}
       </span>
     );
   }
@@ -1253,7 +1259,7 @@ function ApplicantCvAnalysis({
           onClick={() => setChatting(true)}
           className="inline-flex h-10 shrink-0 items-center rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm disabled:opacity-60"
         >
-          Interroger le CV
+          {tc("ask")}
         </button>
         {chatting && resume.data && (
           <CvChatSheet
@@ -1270,8 +1276,8 @@ function ApplicantCvAnalysis({
   // The model gave nothing usable: the backend tries again on its own.
   if (analysis?.status === "FAILED") {
     return (
-      <span className="inline-flex h-10 items-center px-1 text-muted-foreground text-sm" title="L'analyse de son CV a échoué ; elle sera relancée automatiquement.">
-        Analyse du CV à refaire
+      <span className="inline-flex h-10 items-center px-1 text-muted-foreground text-sm" title={t("failedTitle")}>
+        {t("redo")}
       </span>
     );
   }
@@ -1282,9 +1288,10 @@ function ApplicantCvAnalysis({
 
 /** What a candidate answered to the offer's questions; ✓ / ✕ on the « éliminatoires ». */
 function Answers({ answers }: Readonly<{ answers: NonNullable<OfferApplicant["answers"]> }>) {
+  const tc = useTranslations("offers.candidate");
   return (
     <div className="mt-4 space-y-2 rounded-2xl bg-card p-4">
-      <p className="font-medium text-sm">Réponses aux questions</p>
+      <p className="font-medium text-sm">{tc("answers")}</p>
       <dl className="space-y-2">
         {answers.map((x) => (
           <div key={x.label} className="flex items-start gap-2.5 text-sm">
@@ -1319,10 +1326,13 @@ function Answers({ answers }: Readonly<{ answers: NonNullable<OfferApplicant["an
 
 /** The offer's questions, as candidates see them, with the « éliminatoires » marked. */
 function QuestionsCard({ offer: o }: Readonly<{ offer: Offer }>) {
+  const t = useTranslations("offers.cards");
+  const tc = useTranslations("offers.candidate");
+  const tq = useTranslations("offers.questions");
   if (o.questions.length === 0) return null;
   return (
     <section className="space-y-3 rounded-3xl bg-card p-6">
-      <h2 className="font-semibold text-lg">Questions aux candidats</h2>
+      <h2 className="font-semibold text-lg">{t("questions")}</h2>
       <ol className="space-y-2.5">
         {o.questions.map((q, i) => (
           <li key={i} className="space-y-1 rounded-2xl bg-page p-3 text-sm">
@@ -1330,12 +1340,12 @@ function QuestionsCard({ offer: o }: Readonly<{ offer: Offer }>) {
               {i + 1}. {q.label}
             </p>
             <p className="flex flex-wrap items-center gap-1.5 text-muted-foreground text-xs">
-              {KIND_LABEL[q.kind]}
-              {q.kind === "CHOICE" && ` : ${q.options.join(", ")}`}
-              {!q.required && " · facultative"}
+              {tq(`kind.${q.kind}`)}
+              {q.kind === "CHOICE" && t("choiceOptions", { options: q.options.join(", ") })}
+              {!q.required && t("optional")}
               {q.knockout && (
                 <span className="rounded-full bg-chip-amber px-2 py-0.5 font-medium text-chip-amber-foreground">
-                  Éliminatoire : {q.kind === "YES_NO" ? (q.accepted[0] === "yes" ? "Oui" : "Non") : q.accepted.join(", ")} attendu
+                  {t("knockout", { value: q.kind === "YES_NO" ? (q.accepted[0] === "yes" ? tc("yes") : tc("no")) : q.accepted.join(", ") })}
                 </span>
               )}
             </p>
@@ -1357,6 +1367,9 @@ function QuestionsCard({ offer: o }: Readonly<{ offer: Offer }>) {
  */
 function AnalyseAllBar({ offerId, outsiders }: Readonly<{ offerId: string; outsiders: ExternalApplication[] }>) {
   const queryClient = useQueryClient();
+  const t = useTranslations("offers.cards");
+  const tc = useTranslations("offers.candidate");
+  const friendlyError = useFriendlyError();
   const [confirm, setConfirm] = useState(false);
   const waiting = outsiders.filter((a) => a.status === "PENDING" && recruiting(a) && a.hasCv && !a.analysis).length;
   const analyse = useMutation({
@@ -1365,31 +1378,30 @@ function AnalyseAllBar({ offerId, outsiders }: Readonly<{ offerId: string; outsi
       void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
       void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
       setConfirm(false);
-      if (left > 0) toast.info(`Encore ${left} CV à analyser : votre formule en lit un nombre limité à la fois.`);
+      if (left > 0) toast.info(t("left", { count: left }));
     },
-    onError: (err) => toast.error(friendlyError(err, "Les CV n'ont pas pu être analysés.")),
+    onError: (err) => toast.error(friendlyError(err, t("analyseFailed"))),
   });
   if (waiting === 0) return null;
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-page p-4">
       <p className="text-sm">
-        {waiting === 1 ? "1 candidat sans analyse de CV" : `${waiting} candidats sans analyse de CV`} : analysez-les pour les
-        interroger et les comparer.
+        {t("withoutAnalysis", { count: waiting })}
       </p>
       <button
         type="button"
         onClick={() => setConfirm(true)}
         className="inline-flex h-10 items-center rounded-full bg-ink px-4 font-medium text-sm text-white"
       >
-        Analyser tout
+        {t("analyseAll")}
       </button>
       <ActionDialog
         open={confirm}
         onOpenChange={setConfirm}
         icon={<IconFileSearch className="size-5" />}
-        title="Analyser ces CV ?"
-        description="Chaque CV lu utilise 1 CV inclus de votre formule."
-        confirmLabel="Analyser"
+        title={t("analyseTitle")}
+        description={t("analyseText")}
+        confirmLabel={tc("analyseConfirm")}
         pending={analyse.isPending}
         onConfirm={() => analyse.mutate()}
       />
@@ -1410,6 +1422,7 @@ function SuggestedCard({
   wide?: boolean;
 }>) {
   const max = wide ? 6 : 4;
+  const t = useTranslations("offers.cards");
   const filters = { categoryId: o.categoryId ?? undefined, city: o.isRemote ? undefined : (o.city ?? undefined), minReliability: 70 };
   const found = useQuery({
     queryKey: ["candidates", "for-offer", o.id],
@@ -1434,13 +1447,13 @@ function SuggestedCard({
     <section className="space-y-4 rounded-3xl bg-card p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <h2 className="font-semibold text-xl">Profils suggérés</h2>
+          <h2 className="font-semibold text-xl">{t("suggested")}</h2>
         </div>
         <Link href={`/espace/recherche?${more}`} className="font-medium text-sm text-whatsapp-dark hover:underline">
-          Voir plus de profils
+          {t("moreProfiles")}
         </Link>
       </div>
-      <p className="-mt-2 text-muted-foreground text-sm">Ils correspondent à cette offre et n&apos;ont pas encore postulé : contactez-les directement.</p>
+      <p className="-mt-2 text-muted-foreground text-sm">{t("suggestedText")}</p>
       <ul className={cn("grid gap-3 md:grid-cols-2", wide && "xl:grid-cols-3")}>
         {shown.map((c) => (
           <CandidateCard key={c.id} candidate={c} compact />
@@ -1451,29 +1464,36 @@ function SuggestedCard({
 }
 
 function DetailsCard({ offer: o, category }: Readonly<{ offer: Offer; category?: string }>) {
-  const place = o.isRemote ? "À distance" : [o.city, o.countryName].filter(Boolean).join(", ");
+  const tLabels = useTranslations("labels");
+  const t = useTranslations("offers.cards");
+  const locale = useLocale() as Locale;
+  const trade = useTradeName();
+  const place = o.isRemote ? tLabels("offer.remote") : [o.city, o.countryName].filter(Boolean).join(", ");
   const rows: { icon: TablerIcon; label: string; value: string; hint?: string }[] = [
     ...(isDatedMission(o.employmentType) || o.scheduledAt
       ? [
           {
             icon: IconCalendarEvent,
-            label: isDatedMission(o.employmentType) ? "Candidatures jusqu'au" : "Clôture des candidatures",
-            value: offerDate(o.scheduledAt, o.employmentType)?.replace(/^Candidatures jusqu'au /, "") ?? "Non renseignée",
+            label: isDatedMission(o.employmentType) ? t("applicationsUntil") : t("closing"),
+            value: (isDatedMission(o.employmentType)
+              ? offerDate(o.scheduledAt, o.employmentType, tLabels, locale)
+              : o.scheduledAt &&
+                new Date(o.scheduledAt).toLocaleDateString(INTL_LOCALE[locale], { weekday: "short", day: "numeric", month: "long", year: "numeric" })) ?? t("notSetF"),
           },
         ]
       : []),
-    { icon: IconMapPin, label: "Lieu", value: place || "Non renseigné", hint: o.isRemote ? undefined : (o.address ?? undefined) },
-    { icon: IconUsers, label: "Postes", value: `${o.quantity} personne${o.quantity > 1 ? "s" : ""}` },
+    { icon: IconMapPin, label: t("place"), value: place || t("notSet"), hint: o.isRemote ? undefined : (o.address ?? undefined) },
+    { icon: IconUsers, label: t("positions"), value: t("people", { count: o.quantity }) },
     {
       icon: IconCash,
-      label: "Rémunération",
-      value: o.amount === null ? "À discuter avec le candidat" : `${fcfa(o.amount)}${o.paymentFlow ? ` ${PAYMENT_SUFFIX[o.paymentFlow]}` : ""}`,
+      label: t("pay"),
+      value: o.amount === null ? t("toDiscuss") : `${fcfa(o.amount, locale)}${o.paymentFlow ? ` ${tLabels(`paymentSuffix.${o.paymentFlow}`)}` : ""}`,
     },
-    { icon: IconBriefcase, label: "Type et métier", value: [EMPLOYMENT_LABEL[o.employmentType], category].filter(Boolean).join(" · ") },
+    { icon: IconBriefcase, label: t("type"), value: [tLabels(`employmentType.${o.employmentType}`), category && trade(category)].filter(Boolean).join(" · ") },
   ];
   return (
     <section className="space-y-4 rounded-3xl bg-card p-6">
-      <h2 className="font-semibold text-lg">Détails</h2>
+      <h2 className="font-semibold text-lg">{t("details")}</h2>
       <dl className="space-y-3">
         {rows.map((r) => (
           <div key={r.label} className="flex items-start gap-3">

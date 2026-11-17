@@ -2,6 +2,7 @@
 
 import type { ComponentType } from "react";
 import { IconDots } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { Fragment } from "react";
 
@@ -12,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import type { Translator } from "#/i18n/translator";
 import { cn } from "#/lib/utils";
 
 export type MoreAction = {
@@ -35,11 +37,12 @@ export function MoreActionsMenu({
   name,
   className,
 }: Readonly<{ actions: MoreAction[]; name: string; className?: string }>) {
+  const t = useTranslations("offers.candidate");
   if (actions.length === 0) return null;
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger
-        aria-label={`Plus d'actions pour ${name}`}
+        aria-label={t("moreActions", { name })}
         className={cn(
           "inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-card outline-none hover:bg-card/70",
           className,
@@ -74,7 +77,7 @@ export function MoreActionsMenu({
 }
 
 /** « Avis de l'équipe », with how many gave one. */
-export function opinionLabel(summary?: { YES: number; MAYBE: number; NO: number }): string {
+export function opinionLabel(summary: { YES: number; MAYBE: number; NO: number } | undefined, t: Translator<"offers.candidate">): string {
   const total = summary ? summary.YES + summary.MAYBE + summary.NO : 0;
-  return total > 0 ? `Avis de l'équipe (${total})` : "Avis de l'équipe";
+  return total > 0 ? t("teamOpinionCount", { count: total }) : t("teamOpinion");
 }

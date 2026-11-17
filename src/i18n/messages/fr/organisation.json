@@ -1,0 +1,80 @@
+{
+  "page": {
+    "saved": "Modifications enregistrées.",
+    "savedReview": "Modifications enregistrées. Elles seront vérifiées par notre équipe.",
+    "saveFailed": "Vos modifications n'ont pas pu être enregistrées.",
+    "title": "Organisation",
+    "intro": "Les informations et documents de votre organisation, et leur vérification.",
+    "notBusiness": "Ce compte n'est pas un compte entreprise.",
+    "details": "Informations",
+    "locked": "Votre organisation est vérifiée : son identité, ses identifiants officiels et ses documents ne se modifient plus ici. Pour un changement, <link>faites une demande à l'équipe</link>. Le siège, l'effectif et la présentation restent modifiables.",
+    "save": "Enregistrer",
+    "nothing": "Aucune modification à enregistrer."
+  },
+  "review": {
+    "refusedTitle": "Vérification refusée",
+    "refusedText": "{reason, select, none {} other {Motif : {reason}. }}Corrigez vos informations ou remplacez les documents concernés : la vérification reprendra automatiquement.",
+    "docRefusedTitle": "Un document a été refusé",
+    "docRefusedText": "Votre organisation est vérifiée. Pour remplacer ce document, faites une demande à l'équipe Rabotka depuis Aide.",
+    "replaceTitle": "Des documents sont à remplacer",
+    "replaceText": "Envoyez une nouvelle version des documents refusés pour que la vérification se poursuive.",
+    "pendingTitle": "Vérification en cours",
+    "pendingText": "Notre équipe examine vos documents. Vous serez prévenu par e-mail et dans votre espace."
+  },
+  "owner": {
+    "title": "Responsable du compte",
+    "email": "E-mail de connexion",
+    "phone": "Téléphone",
+    "directPhone": "Appel direct",
+    "createdAt": "Compte créé le"
+  },
+  "logo": {
+    "badType": "Format non accepté : envoyez une image JPG, PNG ou WEBP.",
+    "tooBig": "Image trop lourde : 5 Mo maximum.",
+    "updated": "Logo mis à jour.",
+    "failed": "Le logo n'a pas pu être envoyé. Réessayez.",
+    "change": "Changer le logo",
+    "hint": "Logo visible par les candidats sur vos offres. JPG, PNG ou WEBP, 5 Mo maximum."
+  },
+  "documents": {
+    "status": {
+      "PENDING": "En attente",
+      "VERIFIED": "Accepté",
+      "REJECTED": "Refusé"
+    },
+    "title": "Documents",
+    "lockedText": "Ceux de votre vérification. Pour en ajouter un, faites une demande à l'équipe. Vos documents restent confidentiels.",
+    "toReplace": "{count, plural, one {# document} other {# documents}} à remplacer.",
+    "formats": "PDF, JPG, PNG ou WEBP, 10 Mo maximum. Vos documents restent confidentiels.",
+    "file": "Document",
+    "resubmitted": "nouvelle version envoyée",
+    "reason": "Motif : {reason}",
+    "noReason": "non précisé",
+    "view": "Voir",
+    "replace": "Remplacer",
+    "recommended": "Documents recommandés",
+    "recommendedHint": ": ils accélèrent la vérification",
+    "extra": "Documents complémentaires",
+    "optional": "(facultatif)",
+    "addExtra": "Ajouter un document complémentaire",
+    "badType": "Format non accepté : envoyez un PDF, JPG, PNG ou WEBP.",
+    "tooBig": "Fichier trop lourd : 10 Mo maximum.",
+    "replaced": "Nouvelle version envoyée : elle sera vérifiée.",
+    "added": "Document ajouté : il sera vérifié.",
+    "failed": "Le document n'a pas pu être envoyé. Réessayez.",
+    "sending": "Envoi"
+  },
+  "mailboxes": {
+    "connected": "{provider} connecté.",
+    "disconnectFailed": "La messagerie n'a pas pu être déconnectée.",
+    "title": "Messageries connectées",
+    "text": "Pour choisir des CV reçus par e-mail dans « Analyse de CV ». Rabotka ne lit que les pièces jointes que vous choisissez.",
+    "expired": "À reconnecter",
+    "reconnect": "Reconnecter",
+    "disconnect": "Déconnecter",
+    "connectAccount": "Connecter votre compte",
+    "confirmTitle": "Déconnecter cette messagerie ?",
+    "confirmText": "Vous ne pourrez plus y choisir de CV dans « Analyse de CV ». Les analyses déjà faites sont conservées, et vous pourrez la reconnecter à tout moment.",
+    "cancel": "Annuler"
+  }
+}

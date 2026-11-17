@@ -4,8 +4,9 @@ import { useState } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
-import { friendlyError } from "#/lib/api/friendly-error";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { appConfig } from "#/config";
 import { safeRedirectPath } from "#/lib/safe-redirect";
 import { cn } from "#/lib/utils";
@@ -33,6 +34,8 @@ export function SignInFlow({
   belowForm?: React.ReactNode;
 }>) {
   const split = layout === "split";
+  const t = useTranslations("auth.signIn");
+  const friendlyError = useFriendlyError();
   const searchParams = useSearchParams();
   const redirectTo = safeRedirectPath(searchParams.get("next")) ?? appConfig.homePath;
 
@@ -49,7 +52,7 @@ export function SignInFlow({
       await sendOtp.mutateAsync(value);
       setEmail(value);
     } catch (err) {
-      setError(friendlyError(err, "Impossible d'envoyer le code. Réessayez."));
+      setError(friendlyError(err, t("sendFailed")));
     }
   }
 
@@ -58,10 +61,10 @@ export function SignInFlow({
     setError(null);
     try {
       await verify.mutateAsync({ email, otp });
-      toast.success("Vous êtes connecté");
+      toast.success(t("signedIn"));
     } catch (err) {
       setError(
-        friendlyError(err, "Ce code n'a pas fonctionné. Réessayez.", {
+        friendlyError(err, t("codeFailed"), {
           keepUnauthorized: true,
         }),
       );
@@ -73,9 +76,9 @@ export function SignInFlow({
     setError(null);
     try {
       await resendOtp.mutateAsync(email);
-      toast.success("Nouveau code envoyé");
+      toast.success(t("resent"));
     } catch (err) {
-      toast.error(friendlyError(err, "Impossible de renvoyer le code."));
+      toast.error(friendlyError(err, t("resendFailed")));
     }
   }
 
@@ -103,12 +106,10 @@ export function SignInFlow({
               split ? "text-3xl" : "text-xl",
             )}
           >
-            {email ? "Saisissez votre code" : "Connexion entreprise"}
+            {email ? t("titleCode") : t("titleEmail")}
           </h2>
           <p className="text-muted-foreground text-sm">
-            {email
-              ? "Nous vous avons envoyé un code à 6 chiffres par e-mail."
-              : "Recevez un code de connexion sur l'adresse e-mail de votre compte, ou celle de votre invitation."}
+            {email ? t("introCode") : t("introEmail")}
           </p>
         </div>
       </div>

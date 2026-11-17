@@ -9,12 +9,15 @@ import {
   IconTrash,
   IconUpload,
 } from "@tabler/icons-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Spinner } from "#/components/ui/spinner";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { INTL_LOCALE } from "#/i18n/config";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { uploadSignUpDocument } from "#/lib/api/signup-controller";
 import type { BusinessCatalog } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
+import { requiredDocuments } from "../required-documents";
 import { DocumentPreviewDialog } from "./document-preview";
 import { FormError, StepActions, StepHeading } from "./form-bits";
 
@@ -26,15 +29,16 @@ const ACCEPT = "image/jpeg,image/png,image/webp,application/pdf";
 const MAX_BYTES = 10 * 1024 * 1024;
 
 /**
- * The organisation's papers. None is required: the catalog for the chosen
- * country and type lists the usual ones first (« recommandés »), the others
- * below; an organisation sends what it has, and the review asks for the rest.
- * Files go to the private KYC store as soon as they are picked, with the
- * signup token.
+ * The organisation's papers. The catalog for the chosen country, type and
+ * legal form says which ones it must send (« obligatoires »: every group, one
+ * paper of each — the RCCM and the NIU, the récépissé or the arrêté…); the
+ * others follow, recommended then complementary. Files go to the private KYC
+ * store as soon as they are picked, with the signup token.
  */
 export function DocumentsStep({
   catalog,
   category,
+  legalForm,
   signupToken,
   value,
   previews,
@@ -45,6 +49,8 @@ export function DocumentsStep({
 }: Readonly<{
   catalog: BusinessCatalog;
   category: string;
+  /** Empty or undefined when none was chosen. */
+  legalForm?: string;
   signupToken: string;
   value: DocumentsValue;
   previews: Record<string, string>;
@@ -57,14 +63,23 @@ export function DocumentsStep({
   const documents = catalog.categories.find((c) => c.value === category)?.documents ?? {
     recommended: [],
     optional: [],
+    required: [],
   };
+  const { groups, anyPaper, recommended, optional, missing } = requiredDocuments(documents, legalForm, value);
   const label = new Map(catalog.documentTypes.map((d) => [d.value, d.label]));
+  const t = useTranslations("signUp");
+  const locale = useLocale();
   const [error, setError] = useState<string | null>(null);
   // A type with nothing usual (« Autre organisation ») shows the whole list.
   const [showOptional, setShowOptional] = useState(
-    documents.recommended.length === 0 || documents.optional.some((t) => value[t]),
+    recommended.length === 0 || optional.some((t) => value[t]),
   );
-  const sent = Object.keys(value).length;
+  // « A » ou « B » et « C »: the language's own "or" and "and".
+  const or = new Intl.ListFormat(INTL_LOCALE[locale], { type: "disjunction" });
+  const and = new Intl.ListFormat(INTL_LOCALE[locale], { type: "conjunction" });
+  const missingText = anyPaper
+    ? t("documents.anyDocument")
+    : and.format(missing.map((group) => or.format(group.map((d) => t("documents.quoted", { name: label.get(d) ?? d })))));
   const [viewing, setViewing] = useState<string | null>(null);
   const viewed = viewing ? value[viewing] : undefined;
   const rowProps = { signupToken, onError: setError, onPreview, onView: setViewing };
@@ -79,29 +94,57 @@ export function DocumentsStep({
   return (
     <div className="space-y-8">
       <StepHeading
-        title="Pièces justificatives"
-        text="Envoyez ceux dont vous disposez : ils accélèrent la vérification de votre organisation. Vous pourrez en ajouter depuis votre espace. PDF, JPG, PNG ou WEBP, 10 Mo maximum par fichier ; vos documents restent confidentiels."
+        title={t("documents.title")}
+        text={t("documents.text")}
       />
 
-      {documents.recommended.length > 0 && (
+      {groups.length > 0 && (
+        <section className="space-y-3">
+          <p className="font-semibold text-sm">{t("documents.required")}</p>
+          {groups.map((group) =>
+            group.length === 1 ? (
+              <DocumentRow
+                key={group[0]}
+                type={group[0]}
+                title={label.get(group[0]) ?? group[0]}
+                doc={value[group[0]]}
+                onSet={set}
+                {...rowProps}
+              />
+            ) : (
+              <div key={group.join("|")} className="space-y-2 rounded-3xl bg-page/60 p-2">
+                <p className="px-2 pt-1 text-muted-foreground text-xs">{t("documents.eitherOne")}</p>
+                {group.map((type) => (
+                  <DocumentRow key={type} type={type} title={label.get(type) ?? type} doc={value[type]} onSet={set} {...rowProps} />
+                ))}
+              </div>
+            ),
+          )}
+        </section>
+      )}
+
+      {recommended.length > 0 && (
         <section className="space-y-3">
           <p className="font-semibold text-sm">
-            Documents recommandés <span className="font-normal text-muted-foreground">(facultatif)</span>
+            {t("documents.recommended")} <span className="font-normal text-muted-foreground">({t("form.optional")})</span>
           </p>
-          {documents.recommended.map((type) => (
+          {recommended.map((type) => (
             <DocumentRow key={type} type={type} title={label.get(type) ?? type} doc={value[type]} onSet={set} {...rowProps} />
           ))}
         </section>
       )}
 
-      {documents.optional.length > 0 && (
+      {optional.length > 0 && (
         <section className="space-y-3">
           {showOptional ? (
             <>
               <p className="font-semibold text-sm">
-                Documents complémentaires <span className="font-normal text-muted-foreground">(facultatif)</span>
+                {anyPaper ? t("documents.yours") : t("documents.complementary")}{" "}
+                <span className="font-normal text-muted-foreground">
+                  ({anyPaper ? t("documents.atLeastOne") : t("form.optional")})
+                </span>
               </p>
-              {documents.optional.map((type) => (
+              {optional.map((type) => (
                 <DocumentRow
                   key={type}
                   type={type}
@@ -119,13 +162,16 @@ export function DocumentsStep({
               className="inline-flex items-center gap-2 rounded-full bg-page px-4 py-2.5 font-medium text-sm transition-colors hover:bg-page/70"
             >
               <IconPlus className="size-4" />
-              Ajouter des documents complémentaires
+              {t("documents.addComplementary")}
             </button>
           )}
         </section>
       )}
 
       <FormError message={error} />
+      {missing.length > 0 && (
+        <p className="text-muted-foreground text-sm">{t("documents.missing", { list: missingText })}</p>
+      )}
       <DocumentPreviewDialog
         title={viewing ? (label.get(viewing) ?? viewing) : ""}
         doc={viewed ?? null}
@@ -138,7 +184,7 @@ export function DocumentsStep({
         type="button"
         onBack={onBack}
         onContinue={onDone}
-        continueLabel={sent === 0 ? "Continuer sans document" : "Continuer"}
+        disabled={missing.length > 0}
       />
     </div>
   );
@@ -169,11 +215,13 @@ function DocumentRow({
 } & RowCallbacks>) {
   const input = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const t = useTranslations("signUp.documents");
+  const friendlyError = useFriendlyError();
 
   async function upload(file: File) {
     onError(null);
     if (file.size > MAX_BYTES) {
-      onError(`« ${file.name} » dépasse 10 Mo.`);
+      onError(t("tooBig", { name: file.name }));
       return;
     }
     setUploading(true);
@@ -182,7 +230,7 @@ function DocumentRow({
       onPreview(result.key, URL.createObjectURL(file));
       onSet(type, { url: result.url, key: result.key, fileName: file.name, mimeType: file.type });
     } catch (err) {
-      onError(friendlyError(err, `« ${file.name} » n'a pas pu être envoyé. Réessayez.`));
+      onError(friendlyError(err, t("uploadFailed", { name: file.name })));
     } finally {
       setUploading(false);
       if (input.current) input.current.value = "";
@@ -195,7 +243,7 @@ function DocumentRow({
         type="button"
         disabled={!doc}
         onClick={() => onView(type)}
-        aria-label={doc ? `Aperçu : ${title}` : undefined}
+        aria-label={doc ? t("previewOf", { title }) : undefined}
         className="group flex min-w-0 flex-1 items-center gap-4 rounded-xl text-left disabled:cursor-default"
       >
         <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-xl", doc ? "bg-whatsapp text-white" : "bg-card")}>
@@ -204,7 +252,7 @@ function DocumentRow({
         <span className="min-w-0 flex-1">
           <span className="block font-medium text-sm">{title}</span>
           <span className="block truncate text-muted-foreground text-xs group-enabled:group-hover:text-foreground group-enabled:group-hover:underline">
-            {doc ? `${doc.fileName} · Aperçu` : "Aucun fichier"}
+            {doc ? t("preview", { fileName: doc.fileName }) : t("noFile")}
           </span>
         </span>
       </button>
@@ -222,10 +270,10 @@ function DocumentRow({
         <Spinner className="size-5" />
       ) : doc ? (
         <span className="flex shrink-0 gap-1">
-          <button type="button" onClick={() => input.current?.click()} aria-label="Remplacer" className="rounded-full p-2 hover:bg-black/5">
+          <button type="button" onClick={() => input.current?.click()} aria-label={t("replace")} className="rounded-full p-2 hover:bg-black/5">
             <IconRefresh className="size-4" />
           </button>
-          <button type="button" onClick={() => onSet(type, null)} aria-label="Retirer" className="rounded-full p-2 hover:bg-black/5">
+          <button type="button" onClick={() => onSet(type, null)} aria-label={t("remove")} className="rounded-full p-2 hover:bg-black/5">
             <IconTrash className="size-4" />
           </button>
         </span>
@@ -236,7 +284,7 @@ function DocumentRow({
           className="inline-flex shrink-0 items-center gap-2 rounded-full bg-card px-4 py-2 font-medium text-sm transition-colors hover:bg-card/70"
         >
           <IconUpload className="size-4" />
-          Téléverser
+          {t("upload")}
         </button>
       )}
     </div>

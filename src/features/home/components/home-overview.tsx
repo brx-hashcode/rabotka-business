@@ -1,9 +1,11 @@
 "use client";
 
-import { de } from "#/features/subscription/french";
+import { useTradeName } from "#/lib/api/use-trade-name";
+import { startsWithVowel } from "#/features/subscription/french";
 import { useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import {
   IconArrowDownRight,
   IconArrowRight,
@@ -21,7 +23,9 @@ import {
 import { Skeleton } from "#/components/ui/skeleton";
 import { PreviewSheet } from "#/components/preview-sheet";
 import { appConfig } from "#/config";
-import { STATUS } from "#/features/offers/offer-labels";
+import { offerChip } from "#/features/offers/offer-labels";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import { formatPercent } from "#/i18n/format";
 import { SubscriptionBanner } from "#/features/subscription/components/subscription-banner";
 import { useSessionUser } from "#/hooks/use-session-user";
 import {
@@ -41,15 +45,12 @@ import { ReportExportMenu } from "./report-export-menu";
 import { StatTile } from "./stat-tile";
 import { offersUsed } from "#/features/subscription/offers-quota";
 
-const PERIODS: { days: StatsPeriod; label: string }[] = [
-  { days: 7, label: "7 jours" },
-  { days: 30, label: "30 jours" },
-  { days: 90, label: "90 jours" },
-];
+const PERIODS: StatsPeriod[] = [7, 30, 90];
 
-const date = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-const nf = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 1 });
-const percent = (n: number | null) => (n === null ? "—" : `${n} %`);
+const date = (iso: string, locale: Locale) =>
+  new Date(iso).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long", year: "numeric" });
+const nf = (n: number, locale: Locale) => n.toLocaleString(INTL_LOCALE[locale], { maximumFractionDigits: 1 });
+const percent = (n: number | null, locale: Locale) => (n === null ? "—" : formatPercent(n, locale));
 
 /**
  * The business space's home: how recruitment is going over a chosen period —
@@ -58,6 +59,8 @@ const percent = (n: number | null) => (n === null ? "—" : `${n} %`);
  */
 export function HomeOverview() {
   const { data: user } = useSessionUser();
+  const t = useTranslations("home");
+  const locale = useLocale();
   const [days, setDays] = useState<StatsPeriod>(30);
   const [reportOpen, setReportOpen] = useState(false);
   const business = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
@@ -72,9 +75,9 @@ export function HomeOverview() {
       <section className="rounded-3xl bg-card p-6 sm:p-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="space-y-1.5">
-            <h1 className="font-semibold text-3xl tracking-tight sm:text-4xl">Tableau de bord</h1>
+            <h1 className="font-semibold text-3xl tracking-tight sm:text-4xl">{t("title")}</h1>
             <p className="text-muted-foreground">
-              {greeting(user?.first_name || b?.owner?.firstName, b?.name, days)}
+              {t("greeting", greeting(user?.first_name || b?.owner?.firstName, b?.name, days))}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -86,12 +89,12 @@ export function HomeOverview() {
         <PreviewSheet
           open={reportOpen}
           onOpenChange={setReportOpen}
-          title="Rapport de recrutement"
-          subtitle={`${b?.name ?? "Votre organisation"} · ${days} derniers jours`}
+          title={t("report.title")}
+          subtitle={t("report.subtitle", { name: b?.name ?? t("report.yourOrganisation"), days })}
           src={`${appConfig.apiUrl}/business/me/report.pdf?days=${days}`}
           kind="pdf"
-          fileName={`rapport-recrutement-${days}-jours.pdf`}
-          unavailable="Le rapport n'a pas pu être créé. Réessayez dans un instant."
+          fileName={t("report.fileName", { days })}
+          unavailable={t("report.unavailable")}
         />
         {/* Only when something is to do about the plan. */}
         <SubscriptionBanner className="mt-4 rounded-2xl p-4" />
@@ -107,37 +110,37 @@ export function HomeOverview() {
             <>
               <StatTile
                 icon={IconInbox}
-                label="Candidatures reçues"
-                value={nf(st.applications.received)}
+                label={t("tiles.received")}
+                value={nf(st.applications.received, locale)}
                 href="/espace/candidatures?onglet=all"
-                footer={<TrendLine trend={trend(st.applications.received, st.applications.receivedPrevious)} days={days} />}
+                footer={<TrendLine trend={trend(st.applications.received, st.applications.receivedPrevious, false, locale)} days={days} />}
               />
               <StatTile
                 icon={IconUsers}
-                label="À examiner"
-                value={nf(st.applications.toReview)}
+                label={t("tiles.toReview")}
+                value={nf(st.applications.toReview, locale)}
                 href="/espace/candidatures?onglet=new"
                 hint={
                   st.applications.overdue > 0
-                    ? `dont ${st.applications.overdue} en attente depuis plus de 48 h`
+                    ? t("tiles.overdue", { count: st.applications.overdue })
                     : st.applications.toReview > 0
-                      ? "toutes reçues il y a moins de 48 h"
-                      : "aucune candidature en attente"
+                      ? t("tiles.recent")
+                      : t("tiles.noneWaiting")
                 }
               />
               <StatTile
                 icon={IconUserCheck}
-                label="Candidats retenus"
-                value={nf(st.hires.count)}
+                label={t("tiles.hires")}
+                value={nf(st.hires.count, locale)}
                 href="/espace/candidatures?onglet=hired"
-                footer={<TrendLine trend={trend(st.hires.count, st.hires.previous)} days={days} />}
+                footer={<TrendLine trend={trend(st.hires.count, st.hires.previous, false, locale)} days={days} />}
               />
               <StatTile
                 icon={IconFileText}
-                label="Postes ouverts"
-                value={nf(st.offers.openPositions)}
+                label={t("tiles.openPositions")}
+                value={nf(st.offers.openPositions, locale)}
                 href="/espace/offres"
-                hint={`sur ${st.offers.open} offre${st.offers.open > 1 ? "s" : ""} en ligne`}
+                hint={t("tiles.onOffers", { count: st.offers.open })}
               />
             </>
           )}
@@ -151,11 +154,11 @@ export function HomeOverview() {
           <div className="grid gap-6 lg:grid-cols-3">
             <Card
               className="lg:col-span-2"
-              title="Candidatures par jour"
+              title={t("perDay.title")}
               href="/espace/candidatures?onglet=all"
               action={
                 <span className="text-muted-foreground text-sm">
-                  {st.applications.perOffer === null ? "" : `${nf(st.applications.perOffer)} par offre en moyenne`}
+                  {st.applications.perOffer === null ? "" : t("perDay.perOffer", { n: nf(st.applications.perOffer, locale) })}
                 </span>
               }
             >
@@ -184,21 +187,22 @@ export function HomeOverview() {
 }
 
 function PeriodPicker({ value, onChange }: Readonly<{ value: StatsPeriod; onChange: (d: StatsPeriod) => void }>) {
+  const t = useTranslations("home");
   return (
-    <div role="radiogroup" aria-label="Période" className="inline-flex rounded-full bg-page p-1">
-      {PERIODS.map((p) => (
+    <div role="radiogroup" aria-label={t("period")} className="inline-flex rounded-full bg-page p-1">
+      {PERIODS.map((days) => (
         <button
-          key={p.days}
+          key={days}
           type="button"
           role="radio"
-          aria-checked={value === p.days}
-          onClick={() => onChange(p.days)}
+          aria-checked={value === days}
+          onClick={() => onChange(days)}
           className={cn(
             "rounded-full px-4 py-1.5 font-medium text-sm transition-colors",
-            value === p.days ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
+            value === days ? "bg-selected text-selected-foreground" : "text-muted-foreground hover:text-foreground",
           )}
         >
-          {p.label}
+          {t("days", { days })}
         </button>
       ))}
     </div>
@@ -207,6 +211,7 @@ function PeriodPicker({ value, onChange }: Readonly<{ value: StatsPeriod; onChan
 
 /** « +25 % vs les 30 jours précédents », green when it is good news, red when not. */
 function TrendLine({ trend: t, days }: Readonly<{ trend: Trend | null; days: number }>) {
+  const tr = useTranslations("home");
   if (!t) return null;
   const Icon = t.direction === "up" ? IconArrowUpRight : t.direction === "down" ? IconArrowDownRight : IconMinus;
   return (
@@ -219,17 +224,18 @@ function TrendLine({ trend: t, days }: Readonly<{ trend: Trend | null; days: num
         )}
       >
         <Icon className="size-4" />
-        {t.label}
+        {t.direction === "flat" ? tr("trendStable") : t.label}
       </span>
-      vs les {days} jours précédents
+      {tr("trend", { days })}
     </p>
   );
 }
 
 function Unavailable({ className }: Readonly<{ className?: string }>) {
+  const t = useTranslations("home");
   return (
     <p className={cn("rounded-2xl bg-page p-5 text-muted-foreground text-sm", className)}>
-      Ces informations sont indisponibles pour le moment. Réessayez dans un instant.
+      {t("unavailable")}
     </p>
   );
 }
@@ -281,18 +287,20 @@ function Bar({ value, max, color = "bg-whatsapp-dark" }: Readonly<{ value: numbe
 }
 
 function FunnelCard({ funnel }: Readonly<{ funnel: BusinessStats["funnel"] }>) {
+  const t = useTranslations("home.funnel");
+  const locale = useLocale();
   const steps = [
     // One colour per stage, in order, so each step reads at a glance.
-    { label: "Reçues", value: funnel.received, color: "bg-sky-500" },
-    { label: "Consultées", value: funnel.viewed, color: "bg-violet-500" },
-    { label: "Retenues", value: funnel.hired, color: "bg-whatsapp-dark" },
-    { label: "Mission démarrée", value: funnel.started, color: "bg-amber-500" },
-    { label: "Mission terminée", value: funnel.completed, color: "bg-teal-500" },
+    { label: t("received"), value: funnel.received, color: "bg-sky-500" },
+    { label: t("viewed"), value: funnel.viewed, color: "bg-violet-500" },
+    { label: t("hired"), value: funnel.hired, color: "bg-whatsapp-dark" },
+    { label: t("started"), value: funnel.started, color: "bg-amber-500" },
+    { label: t("completed"), value: funnel.completed, color: "bg-teal-500" },
   ];
   return (
-    <Card title="Où en sont vos candidatures" href="/espace/candidatures?onglet=all">
+    <Card title={t("title")} href="/espace/candidatures?onglet=all">
       {funnel.received === 0 ? (
-        <p className="text-muted-foreground text-sm">Aucune candidature reçue sur la période.</p>
+        <p className="text-muted-foreground text-sm">{t("empty")}</p>
       ) : (
         <ol className="space-y-4">
           {steps.map((step) => (
@@ -304,7 +312,7 @@ function FunnelCard({ funnel }: Readonly<{ funnel: BusinessStats["funnel"] }>) {
                 </span>
                 <span className="tabular-nums">
                   <span className="font-semibold">{step.value}</span>
-                  <span className="text-muted-foreground"> · {Math.round((step.value / funnel.received) * 100)} %</span>
+                  <span className="text-muted-foreground"> · {percent(Math.round((step.value / funnel.received) * 100), locale)}</span>
                 </span>
               </div>
               <Bar value={step.value} max={funnel.received} color={step.color} />
@@ -312,7 +320,7 @@ function FunnelCard({ funnel }: Readonly<{ funnel: BusinessStats["funnel"] }>) {
           ))}
         </ol>
       )}
-      <p className="mt-auto text-muted-foreground text-xs">Les candidatures reçues sur la période, et jusqu&apos;où elles sont allées.</p>
+      <p className="mt-auto text-muted-foreground text-xs">{t("note")}</p>
     </Card>
   );
 }
@@ -349,60 +357,64 @@ function Figure({
 }
 
 function DelaysCard({ timing, days }: Readonly<{ timing: BusinessStats["timing"]; days: number }>) {
+  const t = useTranslations("home.delays");
+  const locale = useLocale();
   const hire = (d: number | null) => (d === null ? null : d * 24);
   return (
-    <Card title="Délais" href="/espace/candidatures?onglet=new">
+    <Card title={t("title")} href="/espace/candidatures?onglet=new">
       <div className="space-y-2">
         <Figure
-          label="Premier candidat"
-          hint="après la publication d'une offre"
-          value={formatDelay(timing.firstApplicantHours)}
-          trend={trend(timing.firstApplicantHours, timing.firstApplicantHoursPrevious, true)}
+          label={t("firstApplicant")}
+          hint={t("firstApplicantHint")}
+          value={formatDelay(timing.firstApplicantHours, t, locale)}
+          trend={trend(timing.firstApplicantHours, timing.firstApplicantHoursPrevious, true, locale)}
           days={days}
         />
         <Figure
-          label="Délai de réponse"
-          hint="avant d'ouvrir ou de répondre"
-          value={formatDelay(timing.responseHours)}
-          trend={trend(timing.responseHours, timing.responseHoursPrevious, true)}
+          label={t("response")}
+          hint={t("responseHint")}
+          value={formatDelay(timing.responseHours, t, locale)}
+          trend={trend(timing.responseHours, timing.responseHoursPrevious, true, locale)}
           days={days}
         />
         <Figure
-          label="Délai de recrutement"
-          hint="de la publication à l'acceptation"
-          value={formatDelay(hire(timing.timeToHireDays))}
-          trend={trend(timing.timeToHireDays, timing.timeToHireDaysPrevious, true)}
+          label={t("hire")}
+          hint={t("hireHint")}
+          value={formatDelay(hire(timing.timeToHireDays), t, locale)}
+          trend={trend(timing.timeToHireDays, timing.timeToHireDaysPrevious, true, locale)}
           days={days}
         />
       </div>
-      <p className="mt-auto text-muted-foreground text-xs">En moyenne sur la période, comparé à la période précédente.</p>
+      <p className="mt-auto text-muted-foreground text-xs">{t("note")}</p>
     </Card>
   );
 }
 
 function Stars({ value }: Readonly<{ value: number | null }>) {
+  const locale = useLocale();
   if (value === null) return <>—</>;
   return (
     <span className="inline-flex items-center gap-1">
-      {nf(value)}
+      {nf(value, locale)}
       <IconStarFilled className="size-4 text-amber-400" />
     </span>
   );
 }
 
 function ResultsCard({ quality: q }: Readonly<{ quality: BusinessStats["quality"] }>) {
+  const t = useTranslations("home.results");
+  const locale = useLocale();
   return (
-    <Card title="Résultats" href="/espace/missions">
+    <Card title={t("title")} href="/espace/missions">
       <div className="space-y-2 rounded-2xl bg-page p-4">
         <div className="flex items-baseline justify-between gap-3">
           <div>
-            <p className="font-medium text-sm">Postes pourvus</p>
+            <p className="font-medium text-sm">{t("filled")}</p>
             <p className="text-muted-foreground text-xs">
-              {q.positionsFilled} poste{q.positionsFilled > 1 ? "s" : ""} pourvu{q.positionsFilled > 1 ? "s" : ""} sur{" "}
-              {q.positionsProposed}
+              {t("filledHint", { filled: q.positionsFilled, proposed: q.positionsProposed })}
             </p>
           </div>
-          <p className="font-semibold text-xl tabular-nums">{percent(q.fillRate)}</p>
+          <p className="font-semibold text-xl tabular-nums">{percent(q.fillRate, locale)}</p>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-card">
           <div className="h-full rounded-full bg-whatsapp-dark" style={{ width: `${q.fillRate ?? 0}%` }} />
@@ -410,12 +422,12 @@ function ResultsCard({ quality: q }: Readonly<{ quality: BusinessStats["quality"
       </div>
       <div className="space-y-2">
         <Figure
-          label="Absences"
-          hint={q.missionsEnded ? `sur ${q.missionsEnded} mission${q.missionsEnded > 1 ? "s" : ""} terminée${q.missionsEnded > 1 ? "s" : ""}` : "aucune mission terminée"}
-          value={percent(q.noShowRate)}
+          label={t("noShows")}
+          hint={q.missionsEnded ? t("noShowsHint", { count: q.missionsEnded }) : t("noMissionEnded")}
+          value={percent(q.noShowRate, locale)}
         />
-        <Figure label="Note donnée" hint={`moyenne de vos ${q.ratingsGivenCount} avis`} value={<Stars value={q.ratingGiven} />} />
-        <Figure label="Note reçue" hint={`${q.ratingsReceivedCount} avis de candidats`} value={<Stars value={q.ratingReceived} />} />
+        <Figure label={t("ratingGiven")} hint={t("ratingGivenHint", { count: q.ratingsGivenCount })} value={<Stars value={q.ratingGiven} />} />
+        <Figure label={t("ratingReceived")} hint={t("ratingReceivedHint", { count: q.ratingsReceivedCount })} value={<Stars value={q.ratingReceived} />} />
       </div>
     </Card>
   );
@@ -427,9 +439,11 @@ function SubscriptionCard({
   unlocked,
   days,
 }: Readonly<{ subscription?: MySubscription; loading: boolean; unlocked: number; days: number }>) {
+  const t = useTranslations("home.subscription");
+  const locale = useLocale();
   if (loading || !subscription) {
     return (
-      <Card title="Abonnement" href="/espace/abonnement">
+      <Card title={t("title")} href="/espace/abonnement">
         {loading ? <Skeleton className="h-52 rounded-2xl" /> : <Unavailable />}
       </Card>
     );
@@ -437,27 +451,25 @@ function SubscriptionCard({
   const e = subscription.entitlements;
   if (!e.plan) {
     return (
-      <Card title="Abonnement" href="/espace/abonnement">
-        <p className="text-muted-foreground text-sm">
-          Aucune formule en cours : vos contacts sont payés à l&apos;unité et vous ne pouvez pas publier d&apos;offres.
-        </p>
+      <Card title={t("title")} href="/espace/abonnement">
+        <p className="text-muted-foreground text-sm">{t("none")}</p>
         <Link
           href="/espace/abonnement"
           className="mt-auto inline-flex h-12 items-center justify-center rounded-full bg-ink font-medium text-[15px] text-white hover:bg-ink/90"
         >
-          Choisir une formule
+          {t("choose")}
         </Link>
       </Card>
     );
   }
   const period = currentPeriod(subscription);
   const meters = [
-    { label: "Contacts inclus", used: e.unlocksUsed, limit: e.unlocksQuota, unit: ["contact", "contacts"] as const },
-    { label: "Offres publiées", used: offersUsed(e), limit: e.activeOffersLimit, unit: ["offre", "offres"] as const },
-    ...(e.cvQuota !== 0 ? [{ label: "CV inclus", used: e.cvUsed, limit: e.cvQuota, unit: ["CV", "CV"] as const }] : []),
+    { label: t("contacts"), used: e.unlocksUsed, limit: e.unlocksQuota, over: "overContacts" as const },
+    { label: t("offers"), used: offersUsed(e), limit: e.activeOffersLimit, over: "overOffers" as const },
+    ...(e.cvQuota !== 0 ? [{ label: t("cvs"), used: e.cvUsed, limit: e.cvQuota, over: "overCvs" as const }] : []),
   ];
   return (
-    <Card title="Abonnement" action={<CardLink href="/espace/abonnement">Gérer</CardLink>}>
+    <Card title={t("title")} action={<CardLink href="/espace/abonnement">{t("manage")}</CardLink>}>
       <div className="flex items-center gap-5">
         {period && <TimeLeftRing period={period} />}
         <div className="min-w-0 space-y-1.5">
@@ -469,12 +481,15 @@ function SubscriptionCard({
                 e.status === "TRIAL" ? "bg-chip-violet text-chip-violet-foreground" : "bg-chip-green text-chip-green-foreground",
               )}
             >
-              {e.status === "TRIAL" ? "Essai" : "Active"}
+              {e.status === "TRIAL" ? t("trial") : t("active")}
             </span>
           </div>
           {e.endsAt && (
             <p className="text-muted-foreground text-sm">
-              {e.status === "TRIAL" ? "Essai jusqu'au" : "Jusqu'au"} <span className="font-medium text-foreground">{date(e.endsAt)}</span>
+              {t.rich(e.status === "TRIAL" ? "trialUntil" : "until", {
+                date: date(e.endsAt, locale),
+                strong: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
+              })}
             </p>
           )}
         </div>
@@ -486,9 +501,7 @@ function SubscriptionCard({
         ))}
       </ul>
 
-      <p className="mt-auto text-muted-foreground text-xs">
-        {unlocked} contact{unlocked > 1 ? "s" : ""} obtenu{unlocked > 1 ? "s" : ""} sur les {days} derniers jours.
-      </p>
+      <p className="mt-auto text-muted-foreground text-xs">{t("unlocked", { count: unlocked, days })}</p>
     </Card>
   );
 }
@@ -515,19 +528,18 @@ function TimeLeftRing({ period }: Readonly<{ period: { startsAt: string; endsAt:
   const left = Math.min(total, daysLeft(period.endsAt));
   const pct = (left / total) * 100;
   const tone = left <= 3 ? "var(--color-destructive)" : left <= 7 ? "rgb(245 158 11)" : "var(--color-whatsapp-dark)";
+  const t = useTranslations("home.subscription");
   return (
     <div
       role="img"
-      aria-label={`${left} jour${left > 1 ? "s" : ""} restant${left > 1 ? "s" : ""} sur ${total}`}
+      aria-label={t("daysLeftLabel", { left, total })}
       className="relative size-24 shrink-0 rounded-full"
       style={{ background: `conic-gradient(${tone} ${pct}%, var(--page) ${pct}% 100%)` }}
     >
       <div className="absolute inset-2.5 flex flex-col items-center justify-center rounded-full bg-card text-center">
         <span className="font-semibold text-2xl leading-none tabular-nums">{left}</span>
         <span className="mt-1 text-[11px] text-muted-foreground leading-tight">
-          jour{left > 1 ? "s" : ""}
-          <br />
-          restant{left > 1 ? "s" : ""}
+          {t.rich("daysLeft", { left, br: () => <br /> })}
         </span>
       </div>
     </div>
@@ -539,8 +551,9 @@ function Meter({
   label,
   used,
   limit,
-  unit,
-}: Readonly<{ label: string; used: number; limit: number | null; unit: readonly [string, string] }>) {
+  over: overKey,
+}: Readonly<{ label: string; used: number; limit: number | null; over: "overContacts" | "overOffers" | "overCvs" }>) {
+  const t = useTranslations("home.subscription");
   const ratio = limit === null || limit === 0 ? 0 : used / limit;
   const over = limit !== null && used > limit;
   const full = limit !== null && used >= limit;
@@ -553,7 +566,7 @@ function Meter({
           {limit === null ? (
             <>
               <span className="font-semibold">{used}</span>
-              <span className="text-muted-foreground"> · illimité</span>
+              <span className="text-muted-foreground"> · {t("unlimited")}</span>
             </>
           ) : (
             <>
@@ -569,21 +582,21 @@ function Meter({
         </div>
       )}
       {over && (
-        <p className="text-destructive text-xs">
-          {used} {unit[1]} pour {limit} inclus{limit > 1 ? "es" : "e"} : changez de formule pour aller au-delà.
-        </p>
+        <p className="text-destructive text-xs">{t(overKey, { used, limit })}</p>
       )}
     </li>
   );
 }
 
 function OffersCard({ offers }: Readonly<{ offers: BusinessStats["topOffers"] }>) {
+  const t = useTranslations("home.offers");
+  const tLabels = useTranslations("labels");
   return (
-    <Card className="lg:col-span-2" title="Offres à suivre" action={<CardLink href="/espace/offres">Toutes les offres</CardLink>}>
+    <Card className="lg:col-span-2" title={t("title")} action={<CardLink href="/espace/offres">{t("all")}</CardLink>}>
       {offers.length === 0 ? (
         <div className="flex flex-col items-start gap-3">
-          <p className="text-muted-foreground text-sm">Vous n&apos;avez encore publié aucune offre.</p>
-          <CardLink href="/espace/offres/nouvelle">Publier une offre</CardLink>
+          <p className="text-muted-foreground text-sm">{t("empty")}</p>
+          <CardLink href="/espace/offres/nouvelle">{t("publish")}</CardLink>
         </div>
       ) : (
         <ul className="space-y-2">
@@ -596,17 +609,15 @@ function OffersCard({ offers }: Readonly<{ offers: BusinessStats["topOffers"] }>
                 <div className="min-w-0 space-y-1">
                   <p className="truncate font-medium">{o.title}</p>
                   <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <span className={cn("rounded-full px-2 py-0.5 font-medium", STATUS[o.status].className)}>
-                      {STATUS[o.status].label}
+                    <span className={cn("rounded-full px-2 py-0.5 font-medium", offerChip(o, tLabels).className)}>
+                      {offerChip(o, tLabels).label}
                     </span>
-                    <span className="text-muted-foreground">
-                      {o.applications} candidature{o.applications > 1 ? "s" : ""}
-                    </span>
+                    <span className="text-muted-foreground">{t("applications", { count: o.applications })}</span>
                   </div>
                 </div>
                 <div className="space-y-1">
                   <p className="text-muted-foreground text-xs">
-                    {Math.min(o.hired, o.quantity)}/{o.quantity} poste{o.quantity > 1 ? "s" : ""} pourvu{o.quantity > 1 ? "s" : ""}
+                    {t("filled", { filled: Math.min(o.hired, o.quantity), quantity: o.quantity })}
                   </p>
                   <Bar value={Math.min(o.hired, o.quantity)} max={o.quantity} />
                 </div>
@@ -616,7 +627,7 @@ function OffersCard({ offers }: Readonly<{ offers: BusinessStats["topOffers"] }>
                     o.toReview > 0 ? "bg-chip-amber text-chip-amber-foreground" : "text-muted-foreground",
                   )}
                 >
-                  {o.toReview > 0 ? `${o.toReview} à examiner` : "À jour"}
+                  {o.toReview > 0 ? t("toReview", { count: o.toReview }) : t("upToDate")}
                 </span>
               </Link>
             </li>
@@ -629,16 +640,18 @@ function OffersCard({ offers }: Readonly<{ offers: BusinessStats["topOffers"] }>
 
 function CategoriesCard({ categories }: Readonly<{ categories: BusinessStats["categories"] }>) {
   const max = Math.max(0, ...categories.map((c) => c.applications));
+  const t = useTranslations("home");
+  const trade = useTradeName();
   return (
-    <Card title="Métiers les plus demandés" href="/espace/offres">
+    <Card title={t("categories.title")} href="/espace/offres">
       {categories.length === 0 ? (
-        <p className="text-muted-foreground text-sm">Aucune candidature reçue sur la période.</p>
+        <p className="text-muted-foreground text-sm">{t("funnel.empty")}</p>
       ) : (
         <ul className="space-y-4">
           {categories.map((c) => (
             <li key={c.name} className="space-y-1.5">
               <div className="flex items-baseline justify-between gap-3 text-sm">
-                <span className="truncate font-medium">{c.name}</span>
+                <span className="truncate font-medium">{trade(c.name)}</span>
                 <span className="shrink-0 tabular-nums">{c.applications}</span>
               </div>
               <Bar value={c.applications} max={max} />
@@ -646,26 +659,28 @@ function CategoriesCard({ categories }: Readonly<{ categories: BusinessStats["ca
           ))}
         </ul>
       )}
-      <p className="mt-auto text-muted-foreground text-xs">Candidatures reçues sur la période, par métier de l&apos;offre.</p>
+      <p className="mt-auto text-muted-foreground text-xs">{t("categories.note")}</p>
     </Card>
   );
 }
 
 function SourcesCard({ sources }: Readonly<{ sources: NonNullable<BusinessStats["sources"]> }>) {
   const max = Math.max(0, ...sources.map((s) => s.received));
+  const t = useTranslations("home");
+  const tLabels = useTranslations("labels");
   return (
-    <Card title="Provenance" href="/espace/candidatures?onglet=all">
+    <Card title={t("sources.title")} href="/espace/candidatures?onglet=all">
       {sources.length === 0 ? (
-        <p className="text-muted-foreground text-sm">Aucune candidature reçue sur la période.</p>
+        <p className="text-muted-foreground text-sm">{t("funnel.empty")}</p>
       ) : (
         <ul className="space-y-4">
           {sources.slice(0, 6).map((s) => (
             <li key={s.source} className="space-y-1.5">
               <div className="flex items-baseline justify-between gap-3 text-sm">
-                <span className="truncate font-medium">{sourceLabel(s.source)}</span>
+                <span className="truncate font-medium">{sourceLabel(s.source, tLabels)}</span>
                 <span className="shrink-0 tabular-nums">
                   {s.received}
-                  {s.hired > 0 && <span className="text-muted-foreground"> · {s.hired} retenu{s.hired > 1 ? "s" : ""}</span>}
+                  {s.hired > 0 && <span className="text-muted-foreground"> · {t("sources.hired", { count: s.hired })}</span>}
                 </span>
               </div>
               <Bar value={s.received} max={max} />
@@ -673,27 +688,28 @@ function SourcesCard({ sources }: Readonly<{ sources: NonNullable<BusinessStats[
           ))}
         </ul>
       )}
-      <p className="mt-auto text-muted-foreground text-xs">D&apos;où viennent les candidatures de la période.</p>
+      <p className="mt-auto text-muted-foreground text-xs">{t("sources.note")}</p>
     </Card>
   );
 }
 
 /** Setting up the account, shown until every step is done. */
 function NextSteps({ business, subscription }: Readonly<{ business: MyBusiness; subscription: MySubscription }>) {
+  const t = useTranslations("home.nextSteps");
   const steps = [
-    { label: "Ajouter le logo de votre organisation", done: !!business.logoUrl, href: "/espace/organisation" },
+    { label: t("logo"), done: !!business.logoUrl, href: "/espace/organisation" },
     {
-      label: "Faire accepter vos documents",
+      label: t("documents"),
       // No paper is required: verified, or every paper sent accepted.
       done:
         business.verificationStatus === "VERIFIED" ||
         (business.documents.length > 0 && business.documents.every((d) => d.verificationStatus === "VERIFIED")),
       href: "/espace/organisation",
     },
-    { label: "Obtenir la vérification de l'organisation", done: business.verificationStatus === "VERIFIED", href: "/espace/organisation" },
-    { label: "Choisir une formule", done: !!subscription.entitlements.plan, href: "/espace/abonnement" },
+    { label: t("verified"), done: business.verificationStatus === "VERIFIED", href: "/espace/organisation" },
+    { label: t("plan"), done: !!subscription.entitlements.plan, href: "/espace/abonnement" },
     {
-      label: "Publier votre première offre",
+      label: t("firstOffer"),
       done: subscription.entitlements.hasPublishedOffer,
       href: "/espace/offres/nouvelle",
     },
@@ -701,7 +717,7 @@ function NextSteps({ business, subscription }: Readonly<{ business: MyBusiness; 
   const done = steps.filter((s) => s.done).length;
   if (done === steps.length) return null;
   return (
-    <Card title="Prochaines étapes" action={<span className="text-muted-foreground text-sm">{done}/{steps.length} faites</span>}>
+    <Card title={t("title")} action={<span className="text-muted-foreground text-sm">{t("done", { done, total: steps.length })}</span>}>
       <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
         {steps.map((s) => (
           <li key={s.label}>
@@ -722,8 +738,17 @@ function NextSteps({ business, subscription }: Readonly<{ business: MyBusiness; 
   );
 }
 
-/** « Bonjour Awa, voici… », or « Voici… » when no first name is known (never a lowercase start). */
-function greeting(firstName: string | undefined, businessName: string | undefined, days: number): string {
-  const what = `${businessName ? `le recrutement ${de(businessName)}` : "votre recrutement"} sur les ${days} derniers jours.`;
-  return firstName?.trim() ? `Bonjour ${firstName.trim()}, voici ${what}` : `Voici ${what}`;
+/**
+ * The values of home.greeting: « Bonjour Awa, voici… », or « Voici… » when no
+ * first name is known (never a lowercase start); « d'… » before a vowel.
+ */
+function greeting(firstName: string | undefined, businessName: string | undefined, days: number) {
+  return {
+    named: firstName?.trim() ? "yes" : "no",
+    firstName: firstName?.trim() ?? "",
+    hasBusiness: businessName ? "yes" : "no",
+    business: businessName ?? "",
+    elision: businessName && startsWithVowel(businessName) ? "vowel" : "other",
+    days,
+  };
 }

@@ -1,4 +1,5 @@
 import { IconArrowRight, IconWorld } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { GoogleLogo, LinkedInLogo } from "#/components/brand-logos";
 
@@ -14,24 +15,28 @@ import { Highlighter } from "./highlighter";
  * cards, each a link to its feature page.
  */
 export function LandingHero({ countries }: Readonly<{ countries: BusinessCountryName[] }>) {
+  const t = useTranslations("site.hero");
   return (
     <section className="overflow-hidden bg-header text-header-foreground">
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-4 pt-10 pb-14 sm:px-6 md:pt-16 lg:grid-cols-[1fr_1.05fr] lg:gap-16 lg:pb-20">
         <div className="space-y-6 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700">
           <h1 className="isolate font-semibold text-4xl leading-[1.12] tracking-tight sm:text-5xl lg:text-[3.5rem]">
-            Recevez, triez et rencontrez{" "}
-            <Highlighter action="underline" color="#FF9800" strokeWidth={3} delay={700}>
-              les bons candidats
-            </Highlighter>
-            , au même endroit
+            {t.rich("title", {
+              mark: (chunks) => (
+                <Highlighter action="underline" color="#FF9800" strokeWidth={3} delay={700}>
+                  {chunks}
+                </Highlighter>
+              ),
+            })}
           </h1>
           <p className="isolate max-w-lg text-header-muted text-lg">
-            Le logiciel de recrutement complet : vos offres diffusées,{" "}
-            <Highlighter action="highlight" color="#87CEFA" delay={1600}>
-              chaque CV lu et classé
-            </Highlighter>
-            , vos entretiens en visio et
-            leur compte rendu.
+            {t.rich("text", {
+              mark: (chunks) => (
+                <Highlighter action="highlight" color="#87CEFA" delay={1600}>
+                  {chunks}
+                </Highlighter>
+              ),
+            })}
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <DemoButton />
@@ -40,12 +45,12 @@ export function LandingHero({ countries }: Readonly<{ countries: BusinessCountry
           {/* One quiet line: where the offers go, and where Rabotka is open. */}
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3 pt-2 text-header-muted text-sm">
             <span className="inline-flex items-center gap-2">
-              <span className="font-medium">Publiées sur</span>
+              <span className="font-medium">{t("publishedOn")}</span>
               <span className="flex -space-x-1.5">
                 {[
                   { label: "Google", icon: <GoogleLogo className="size-4" /> },
                   { label: "LinkedIn", icon: <LinkedInLogo className="size-4" /> },
-                  { label: "Votre page carrières", icon: <IconWorld className="size-4 text-whatsapp-dark" /> },
+                  { label: t("careersPage"), icon: <IconWorld className="size-4 text-whatsapp-dark" /> },
                 ].map((b) => (
                   <span
                     key={b.label}
@@ -68,7 +73,7 @@ export function LandingHero({ countries }: Readonly<{ countries: BusinessCountry
                   <img key={c.code} src={flagUrl(c.code, 80)} alt="" className="size-6 rounded-full object-cover shadow-[0_0_0_2px_var(--header)]" />
                 ))}
               </span>
-              <span className="font-medium group-hover:text-header-foreground">{countries.length} pays d&apos;Afrique</span>
+              <span className="font-medium group-hover:text-header-foreground">{t("countries", { count: countries.length })}</span>
               <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </a>
           </div>

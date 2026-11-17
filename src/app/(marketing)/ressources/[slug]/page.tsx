@@ -1,29 +1,33 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { getSiteCopy } from "#/features/landing/copy";
 import { notFound } from "next/navigation";
 import { IconArrowLeft, IconCheck, IconClock } from "@tabler/icons-react";
+import { getTranslations } from "next-intl/server";
 
 import { Illustration } from "#/components/illustration";
+import { LocalLink as Link } from "#/components/local-link";
 import { DemoBlock } from "#/features/landing/components/demo-block";
 import { PageHero } from "#/features/landing/components/page-hero";
-import { GUIDES } from "#/features/landing/site-content";
+import { GUIDE_SLUGS, guides } from "#/features/landing/site-content";
 import { marketingMetadata } from "#/lib/seo/marketing";
 
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return GUIDES.map((g) => ({ slug: g.slug }));
+  return GUIDE_SLUGS.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: PageProps<"/ressources/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const guide = GUIDES.find((g) => g.slug === slug);
+  const guide = guides(await getSiteCopy()).find((g) => g.slug === slug);
   if (!guide) return {};
   return marketingMetadata({ title: guide.title, description: guide.description, path: `/ressources/${guide.slug}` });
 }
 
 export default async function GuidePage({ params }: PageProps<"/ressources/[slug]">) {
   const { slug } = await params;
+  const GUIDES = guides(await getSiteCopy());
+  const t = await getTranslations("site.pages.guide");
   const guide = GUIDES.find((g) => g.slug === slug);
   if (!guide) notFound();
 
@@ -36,11 +40,11 @@ export default async function GuidePage({ params }: PageProps<"/ressources/[slug
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
             <Link href="/ressources" className="inline-flex items-center gap-1.5 font-medium hover:underline">
               <IconArrowLeft className="size-4" />
-              Toutes les ressources
+              {t("all")}
             </Link>
             <span className="inline-flex items-center gap-1.5 text-header-muted">
               <IconClock className="size-4" />
-              Guide · {guide.minutes} min de lecture
+              {t("readingTime", { minutes: guide.minutes })}
             </span>
           </div>
         }
@@ -57,8 +61,8 @@ export default async function GuidePage({ params }: PageProps<"/ressources/[slug
       <section className="bg-card py-20 md:py-28">
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[16rem_1fr] lg:gap-16">
           <aside className="space-y-6 lg:sticky lg:top-28 lg:self-start">
-            <nav aria-label="Dans ce guide" className="space-y-2">
-              <p className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">Dans ce guide</p>
+            <nav aria-label={t("inThisGuide")} className="space-y-2">
+              <p className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">{t("inThisGuide")}</p>
               <ol className="space-y-1">
                 {guide.sections.map((section, i) => (
                   <li key={section.heading}>
@@ -76,7 +80,7 @@ export default async function GuidePage({ params }: PageProps<"/ressources/[slug
               </ol>
             </nav>
             <div className="hidden space-y-2 lg:block">
-              <p className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">Autres guides</p>
+              <p className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">{t("others")}</p>
               {others.map((g) => (
                 <Link
                   key={g.slug}
@@ -123,7 +127,7 @@ export default async function GuidePage({ params }: PageProps<"/ressources/[slug
         </div>
       </section>
 
-      <DemoBlock title="Appliquez cette méthode avec Rabotka" />
+      <DemoBlock title={t("apply")} />
     </>
   );
 }

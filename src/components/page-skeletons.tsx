@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { cn } from "#/lib/utils";
 
 /**
@@ -26,8 +28,9 @@ function Card({ className, children }: Readonly<{ className?: string; children?:
 }
 
 function Status({ children }: Readonly<{ children: React.ReactNode }>) {
+  const t = useTranslations("ui");
   return (
-    <div role="status" aria-label="Chargement" className="w-full space-y-6 pt-2">
+    <div role="status" aria-label={t("loading")} className="w-full space-y-6 pt-2">
       {children}
     </div>
   );
@@ -482,8 +485,9 @@ export function SubscriptionSkeleton() {
 
 /** A conversation: who, then messages either side, then the field to write. */
 export function ThreadSkeleton() {
+  const t = useTranslations("ui");
   return (
-    <div role="status" aria-label="Chargement" className="flex h-full flex-col">
+    <div role="status" aria-label={t("loading")} className="flex h-full flex-col">
       <div className="flex items-center gap-3 p-4 sm:px-6">
         <Bone className="size-12 rounded-2xl" />
         <div className="flex-1 space-y-2">
@@ -567,8 +571,9 @@ export function ProfileSkeleton() {
 
 /** A page of a PDF, while it is drawn. */
 export function DocumentPageSkeleton() {
+  const t = useTranslations("ui");
   return (
-    <div role="status" aria-label="Chargement" className="mx-auto aspect-[1/1.414] w-full max-w-3xl space-y-4 rounded-xl bg-white p-10 shadow-soft">
+    <div role="status" aria-label={t("loading")} className="mx-auto aspect-[1/1.414] w-full max-w-3xl space-y-4 rounded-xl bg-white p-10 shadow-soft">
       <Bone className="mx-auto size-14 rounded-2xl" />
       <Bone className="mx-auto h-5 w-40" />
       <Bone className="h-px" />

@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import type { InterviewReport } from "#/lib/api/types";
-import { reportStage, untilText, waitProgress } from "./call-ended";
+import { createTranslator } from "next-intl";
+
+import { MESSAGES } from "#/i18n/messages";
+import { reportStage, untilText as until, waitProgress } from "./call-ended";
+
+const fr = createTranslator({ locale: "fr", messages: MESSAGES.fr, namespace: "interviews.ended" });
+const untilText = (at: string, now: number) => until(at, now, fr);
 
 const report = (over: Partial<InterviewReport> = {}): InterviewReport => ({
   notes: "",

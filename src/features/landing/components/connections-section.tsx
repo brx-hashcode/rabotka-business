@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { IconBrandWhatsapp, IconCalendarEvent, IconFileTypePdf, IconMail, IconQrcode, IconVideo } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { GoogleLogo, LinkedInLogo } from "#/components/brand-logos";
 import { GmailLogo } from "#/components/mail-provider-logos";
@@ -21,11 +22,12 @@ const SOURCES: Node[] = [
   { label: "QR code", icon: <IconQrcode className="size-5 text-foreground" /> },
 ];
 
-const OUTPUTS: Node[] = [
-  { label: "Votre agenda", icon: <IconCalendarEvent className="size-5 text-[#4285F4]" /> },
-  { label: "Visio", icon: <IconVideo className="size-5 text-whatsapp-dark" /> },
-  { label: "PDF et Excel", icon: <IconFileTypePdf className="size-5 text-[#E5484D]" /> },
-  { label: "Votre équipe", icon: <IconMail className="size-5 text-foreground" /> },
+/** Where the work goes; the words are site.connections.<key>. */
+const OUTPUTS: (Omit<Node, "label"> & { key: "calendar" | "video" | "files" | "team" })[] = [
+  { key: "calendar", icon: <IconCalendarEvent className="size-5 text-[#4285F4]" /> },
+  { key: "video", icon: <IconVideo className="size-5 text-whatsapp-dark" /> },
+  { key: "files", icon: <IconFileTypePdf className="size-5 text-[#E5484D]" /> },
+  { key: "team", icon: <IconMail className="size-5 text-foreground" /> },
 ];
 
 type Point = { x: number; y: number };
@@ -61,6 +63,8 @@ function curve(a: Point, b: Point, vertical: boolean): string {
 
 /** Beams from every source into Rabotka, and from Rabotka out to every output. */
 function Beams({ layout, vertical, className }: Readonly<{ layout: Layout; vertical: boolean; className?: string }>) {
+  const t = useTranslations("site.connections");
+  const outputs: Node[] = OUTPUTS.map(({ key, icon }) => ({ label: t(key), icon }));
   const { w, h, center } = layout;
   const lines = [
     ...layout.sources.map((p) => curve(p, center, vertical)),
@@ -95,7 +99,7 @@ function Beams({ layout, vertical, className }: Readonly<{ layout: Layout; verti
           </g>
         ))}
       </svg>
-      {[...layout.sources.map((p, i) => ({ p, n: SOURCES[i] })), ...layout.outputs.map((p, i) => ({ p, n: OUTPUTS[i] }))].map(
+      {[...layout.sources.map((p, i) => ({ p, n: SOURCES[i] })), ...layout.outputs.map((p, i) => ({ p, n: outputs[i] }))].map(
         ({ p, n }) =>
           n && (
             <div key={n.label} className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1.5" style={at(p)}>
@@ -122,14 +126,12 @@ function Beams({ layout, vertical, className }: Readonly<{ layout: Layout; verti
 
 /** Where candidates come from, and where the work goes: Rabotka in the middle. */
 export function ConnectionsSection() {
+  const t = useTranslations("site.connections");
   return (
     <div className="space-y-8 rounded-[2rem] bg-page px-4 py-10 sm:px-8 sm:py-12">
       <div className="mx-auto max-w-2xl space-y-2 text-center">
-        <h3 className="font-semibold text-2xl tracking-tight sm:text-3xl">Rabotka au centre de votre recrutement</h3>
-        <p className="text-muted-foreground">
-          Vos candidats arrivent de LinkedIn, de Google, de WhatsApp ou de votre messagerie ; vos entretiens partent dans votre
-          agenda, vos comptes rendus vers votre équipe. Tout se décide dans Rabotka.
-        </p>
+        <h3 className="font-semibold text-2xl tracking-tight sm:text-3xl">{t("title")}</h3>
+        <p className="text-muted-foreground">{t("text")}</p>
       </div>
       <Beams layout={WIDE} vertical={false} className="mx-auto hidden max-w-4xl md:block" />
       <Beams layout={TALL} vertical className="mx-auto max-w-sm md:hidden" />

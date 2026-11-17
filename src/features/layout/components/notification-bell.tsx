@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IconBell, IconChecks } from "@tabler/icons-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { Bone } from "#/components/page-skeletons";
@@ -17,6 +18,7 @@ import {
   type AppNotification,
   type NotificationPage,
 } from "#/lib/api/notification-controller";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
 import { cn } from "#/lib/utils";
 import { notificationLook } from "../notification-look";
 import { useNotificationsSocket } from "../use-notifications-socket";
@@ -31,6 +33,7 @@ const PAGE = 20;
  */
 export function NotificationBell() {
   const router = useRouter();
+  const t = useTranslations();
   const queryClient = useQueryClient();
   useNotificationsSocket();
   const [open, setOpen] = useState(false);
@@ -92,7 +95,7 @@ export function NotificationBell() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
-        aria-label={count > 0 ? `Notifications, ${count} non lues` : "Notifications"}
+        aria-label={count > 0 ? t("layout.notifications.unreadLabel", { count }) : t("layout.notifications.title")}
         className="relative flex size-12 items-center justify-center rounded-2xl bg-card text-foreground transition-colors hover:bg-card/70"
       >
         <IconBell className="size-5" />
@@ -109,7 +112,7 @@ export function NotificationBell() {
       >
         <div className="flex items-center justify-between gap-3 px-5 pt-5 pb-3">
           <div className="flex items-center gap-2">
-            <p className="font-semibold text-lg">Notifications</p>
+            <p className="font-semibold text-lg">{t("layout.notifications.title")}</p>
             {count > 0 && (
               <span className="rounded-full bg-chip-green px-2 py-0.5 font-semibold text-chip-green-foreground text-xs tabular-nums">
                 {count > 99 ? "99+" : count}
@@ -124,7 +127,7 @@ export function NotificationBell() {
               className="-mr-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-medium text-muted-foreground text-xs transition-colors hover:bg-page hover:text-foreground disabled:opacity-60"
             >
               <IconChecks className="size-4" />
-              Tout marquer comme lu
+              {t("layout.notifications.markAllRead")}
             </button>
           )}
         </div>
@@ -138,7 +141,7 @@ export function NotificationBell() {
                 disabled={feed.isFetching}
                 className="w-full rounded-full bg-page py-2.5 font-medium text-sm transition-colors hover:bg-page/70 disabled:opacity-60"
               >
-                {feed.isFetching ? "Chargement…" : "Voir plus"}
+                {feed.isFetching ? t("common.loading") : t("common.seeMore")}
               </button>
             </div>
           )}
@@ -160,9 +163,10 @@ export function NotificationList({
   onOpen?: (n: AppNotification) => void;
   max?: number;
 }>) {
+  const t = useTranslations();
   if (loading) {
     return (
-      <div role="status" aria-label="Chargement" className="px-2 pt-1">
+      <div role="status" aria-label={t("common.loading")} className="px-2 pt-1">
         {[0, 1, 2, 3].map((i) => (
           <div key={i} className="flex items-start gap-3 px-3 py-3">
             <Bone className="size-10 shrink-0 rounded-full" />
@@ -185,16 +189,16 @@ export function NotificationList({
         <span className="flex size-12 items-center justify-center rounded-full bg-page text-muted-foreground">
           <IconBell className="size-6" />
         </span>
-        <p className="font-medium text-sm">Aucune notification</p>
+        <p className="font-medium text-sm">{t("layout.notifications.empty")}</p>
         <p className="text-muted-foreground text-xs leading-relaxed">
-          Candidatures, analyses de CV, entretiens et abonnement s&apos;afficheront ici.
+          {t("layout.notifications.emptyHint")}
         </p>
       </div>
     );
   }
-  return groupByDay(items.slice(0, max)).map(([label, rows]) => (
-    <section key={label}>
-      <h3 className="sticky top-0 z-10 bg-card px-5 pt-3 pb-1.5 font-medium text-muted-foreground text-xs">{label}</h3>
+  return groupByDay(items.slice(0, max)).map(([day, rows]) => (
+    <section key={day}>
+      <h3 className="sticky top-0 z-10 bg-card px-5 pt-3 pb-1.5 font-medium text-muted-foreground text-xs">{t(`common.time.${day}`)}</h3>
       <ul className="px-2">
         {rows.map((n) => (
           <li key={n.id}>
@@ -209,6 +213,8 @@ export function NotificationList({
 function Row({ n, onOpen }: Readonly<{ n: AppNotification; onOpen?: (n: AppNotification) => void }>) {
   const { icon: Icon, tone } = notificationLook(n.type, n.title);
   const unread = !n.readAt;
+  const t = useTranslations();
+  const locale = useLocale();
   return (
     <button
       type="button"
@@ -220,7 +226,7 @@ function Row({ n, onOpen }: Readonly<{ n: AppNotification; onOpen?: (n: AppNotif
           <Icon className="size-5" stroke={1.75} />
         </span>
         {unread && (
-          <span aria-label="Non lue" className="absolute -top-1 -right-1 size-3 rounded-full bg-whatsapp ring-2 ring-card" />
+          <span aria-label={t("layout.notifications.unread")} className="absolute -top-1 -right-1 size-3 rounded-full bg-whatsapp ring-2 ring-card" />
         )}
       </span>
       <span className="min-w-0 flex-1">
@@ -230,9 +236,9 @@ function Row({ n, onOpen }: Readonly<{ n: AppNotification; onOpen?: (n: AppNotif
           </span>
           <span
             className={cn("shrink-0 text-[11px] tabular-nums", unread ? "font-medium text-whatsapp-dark" : "text-muted-foreground")}
-            title={timeAgo(n.createdAt)}
+            title={timeAgo(n.createdAt, locale)}
           >
-            {shortAgo(n.createdAt)}
+            {shortAgo(n.createdAt, locale) ?? t("common.time.justNow")}
           </span>
         </span>
         <span className="mt-0.5 line-clamp-2 block text-[13px] text-muted-foreground leading-snug">{n.body}</span>
@@ -241,19 +247,21 @@ function Row({ n, onOpen }: Readonly<{ n: AppNotification; onOpen?: (n: AppNotif
   );
 }
 
-/** « Aujourd'hui », « Hier », « Cette semaine », « Plus ancien », in feed order. */
-export function groupByDay<T extends { createdAt: string }>(list: T[], now = new Date()): [string, T[]][] {
+export type DayGroup = "today" | "yesterday" | "thisWeek" | "older";
+
+/** Today, yesterday, this week, older (keys of `common.time`), in feed order. */
+export function groupByDay<T extends { createdAt: string }>(list: T[], now = new Date()): [DayGroup, T[]][] {
   const start = new Date(now);
   start.setHours(0, 0, 0, 0);
   const day = 86_400_000;
-  const label = (iso: string) => {
+  const label = (iso: string): DayGroup => {
     const t = new Date(iso).getTime();
-    if (t >= start.getTime()) return "Aujourd'hui";
-    if (t >= start.getTime() - day) return "Hier";
-    if (t >= start.getTime() - 6 * day) return "Cette semaine";
-    return "Plus ancien";
+    if (t >= start.getTime()) return "today";
+    if (t >= start.getTime() - day) return "yesterday";
+    if (t >= start.getTime() - 6 * day) return "thisWeek";
+    return "older";
   };
-  const groups = new Map<string, T[]>();
+  const groups = new Map<DayGroup, T[]>();
   for (const n of list) {
     const key = label(n.createdAt);
     groups.set(key, [...(groups.get(key) ?? []), n]);
@@ -261,17 +269,22 @@ export function groupByDay<T extends { createdAt: string }>(list: T[], now = new
   return [...groups];
 }
 
-/** « 5 min », « 7 h », « 2 j », then the date: short enough to sit beside the title. */
-export function shortAgo(iso: string, now = Date.now()): string {
+/**
+ * « 5 min », « 7 h », « 2 j » (5 mins, 7 hrs, 2 days), then the date: short
+ * enough to sit beside the title. Null under a minute: « À l'instant ».
+ */
+export function shortAgo(iso: string, locale: Locale = "fr", now = Date.now()): string | null {
   const date = new Date(iso);
+  const unit = (n: number, u: "minute" | "hour" | "day") =>
+    new Intl.NumberFormat(INTL_LOCALE[locale], { style: "unit", unit: u, unitDisplay: "short" }).format(n);
   const minutes = Math.floor((now - date.getTime()) / 60_000);
-  if (minutes < 1) return "À l'instant";
-  if (minutes < 60) return `${minutes} min`;
+  if (minutes < 1) return null;
+  if (minutes < 60) return unit(minutes, "minute");
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} h`;
+  if (hours < 24) return unit(hours, "hour");
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days} j`;
-  return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  if (days < 7) return unit(days, "day");
+  return date.toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "short" });
 }
 
 /**

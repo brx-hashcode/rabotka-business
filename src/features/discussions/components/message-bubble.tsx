@@ -5,10 +5,13 @@ import { IconAlertTriangle, IconBan, IconCheck, IconChecks, IconFlag, IconTrash 
 
 import type { DiscussionMessage } from "#/lib/api/discussions-controller";
 import { cn } from "#/lib/utils";
-import { discussionsContent } from "../content";
+import { useLocale } from "next-intl";
+
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import { useDiscussionsContent } from "../content";
 import { redactionSegments } from "../redaction-segments";
 
-const time = (iso: string) => new Date(iso).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+const time = (iso: string, locale: Locale) => new Date(iso).toLocaleTimeString(INTL_LOCALE[locale], { hour: "2-digit", minute: "2-digit" });
 
 /**
  * One message, as the client app draws it: the other side's text arrives
@@ -33,6 +36,8 @@ export function MessageBubble({
   const deleted = message.deletedAt !== null;
   const held = message.status === "HELD";
   const mine = message.mine;
+  const discussionsContent = useDiscussionsContent();
+  const locale = useLocale();
   const warning = discussionsContent.warning;
 
   return (
@@ -72,7 +77,7 @@ export function MessageBubble({
               mine ? "text-[#0f2414]/60" : "text-muted-foreground",
             )}
           >
-            {time(message.createdAt)}
+            {time(message.createdAt, locale)}
             {/* Ticks on the author's side only, and none on what never arrived or is gone. */}
             {mine && !held && !deleted && (message.readAt ? <IconChecks className="size-3.5 text-sky-600" /> : <IconCheck className="size-3.5" />)}
           </p>
@@ -100,7 +105,7 @@ export function MessageBubble({
 /** Under the author's message that did not go through whole: the rule, and a way to contest it (two clicks). */
 function AuthorNotice({ held, reported, onReport }: Readonly<{ held: boolean; reported: boolean; onReport: () => void }>) {
   const [confirming, setConfirming] = useState(false);
-  const warning = discussionsContent.warning;
+  const warning = useDiscussionsContent().warning;
   return (
     <div className="mt-1 max-w-[78%] space-y-0.5 text-right">
       <p className="flex items-start justify-end gap-1.5 text-muted-foreground text-xs">

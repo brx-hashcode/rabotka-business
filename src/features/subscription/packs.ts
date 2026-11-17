@@ -1,3 +1,4 @@
+import type { Translator } from "#/i18n/translator";
 import type { MySubscription, PackKind } from "#/lib/api/types";
 
 type Entitlements = MySubscription["entitlements"];
@@ -8,27 +9,9 @@ export const PACKS_HREF = "/espace/abonnement?onglet=packs";
 /** The packs, in the order the page shows them. */
 export const PACK_KINDS: PackKind[] = ["CV", "OFFER", "CONTACT", "OFFER_DRAFT"];
 
-/** Each pack's name on its card. */
-export const PACK_TITLE: Record<PackKind, string> = {
-  CV: "Pack CV",
-  OFFER: "Pack offres",
-  CONTACT: "Pack contacts",
-  OFFER_DRAFT: "Pack rédactions IA",
-};
-
 /** « 50 CV à analyser », « 1 offre à publier »… as the backend says it (invoice, e-mail, bell). */
-export function packUnits(kind: PackKind, n: number): string {
-  const s = n > 1 ? "s" : "";
-  switch (kind) {
-    case "CV":
-      return `${n} CV à analyser`;
-    case "OFFER":
-      return `${n} offre${s} à publier`;
-    case "CONTACT":
-      return `${n} contact${s} à obtenir`;
-    case "OFFER_DRAFT":
-      return `${n} offre${s} rédigée${s} par l’IA`;
-  }
+export function packUnits(kind: PackKind, n: number, t: Translator<"subscription">): string {
+  return t(`packs.units.${kind}`, { count: n });
 }
 
 const CREDIT_KEY = { CV: "cv", OFFER: "offers", CONTACT: "contacts", OFFER_DRAFT: "offerDrafts" } as const;

@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useTradeName } from "#/lib/api/use-trade-name";
+import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useForm, useWatch, type Control, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +21,9 @@ import { trialLocks } from "#/features/subscription/trial-lock";
 import { offerWriterOutOfReach, PACKS_HREF } from "#/features/subscription/packs";
 import { usePackOnSale } from "#/features/subscription/use-packs";
 import { getJobCategories, type EmploymentType, type Offer, type OfferInput, type PaymentFlow } from "#/lib/api/offer-controller";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import { contentLocale } from "#/i18n/content";
+import type { Translator } from "#/i18n/translator";
 import { cn } from "#/lib/utils";
 import { AVAILABLE_EMPLOYMENT_TYPES, EMPLOYMENT_TYPES, isDatedMission, PAYMENT_FLOWS } from "../offer-labels";
 import { cleanQuestions, questionProblem } from "../offer-questions";
@@ -37,12 +42,16 @@ const END_OF_DAY = "23:59";
 /** The server's bounds (trimmed length), shown under the field as it is typed. */
 const DESCRIPTION_MIN = 20;
 const DESCRIPTION_MAX = 2500;
-const DESCRIPTION_RANGE = `Entre ${DESCRIPTION_MIN} et 2 500 caractères`;
-
-const schema = z
+/** The offer's fields, with the reader's sentences (offers.form.v.*). */
+const offerSchema = (t: Translator<"offers.form.v">, locale: Locale) => {
+  const range = t("description", {
+    min: DESCRIPTION_MIN.toLocaleString(INTL_LOCALE[locale]),
+    max: DESCRIPTION_MAX.toLocaleString(INTL_LOCALE[locale]),
+  });
+  return z
   .object({
-    title: z.string().trim().min(5, "Entre 5 et 100 caractères").max(100, "Entre 5 et 100 caractères"),
-    description: z.string().trim().min(DESCRIPTION_MIN, DESCRIPTION_RANGE).max(DESCRIPTION_MAX, DESCRIPTION_RANGE),
+    title: z.string().trim().min(5, t("title")).max(100, t("title")),
+    description: z.string().trim().min(DESCRIPTION_MIN, range).max(DESCRIPTION_MAX, range),
     employmentType: z.enum(["MISSION", "CDD", "CDI", "STAGE"]),
     scheduledDate: z.string(),
     scheduledTime: z.string(),
@@ -53,11 +62,11 @@ const schema = z
     quantity: z
       .string()
       .trim()
-      .refine((v) => /^\d+$/.test(v) && Number(v) >= 1 && Number(v) <= 100, "Entre 1 et 100 personnes"),
+      .refine((v) => /^\d+$/.test(v) && Number(v) >= 1 && Number(v) <= 100, t("quantity")),
     amount: z.string().trim(),
     paymentFlow: z.string(),
-    categoryId: z.string().min(1, "Choisissez un métier"),
-    note: z.string().trim().max(500, "500 caractères au plus"),
+    categoryId: z.string().min(1, t("category")),
+    note: z.string().trim().max(500, t("note")),
     questions: z.array(
       z.object({
         kind: z.enum(["YES_NO", "CHOICE", "SHORT_TEXT", "LONG_TEXT", "NUMBER", "DATE"]),
@@ -71,28 +80,29 @@ const schema = z
   })
   .superRefine((d, ctx) => {
     if (!d.scheduledDate && isDatedMission(d.employmentType as EmploymentType)) {
-      ctx.addIssue({ code: "custom", path: ["scheduledDate"], message: "La date de la mission est requise" });
+      ctx.addIssue({ code: "custom", path: ["scheduledDate"], message: t("date") });
     }
     if (d.address && d.address.length < 10) {
-      ctx.addIssue({ code: "custom", path: ["address"], message: "L'adresse doit contenir au moins 10 caractères" });
+      ctx.addIssue({ code: "custom", path: ["address"], message: t("address") });
     }
     if (!d.isRemote) {
-      if (!d.countryCode) ctx.addIssue({ code: "custom", path: ["countryCode"], message: "Choisissez le pays" });
-      if (!d.city) ctx.addIssue({ code: "custom", path: ["city"], message: "Choisissez la ville" });
+      if (!d.countryCode) ctx.addIssue({ code: "custom", path: ["countryCode"], message: t("country") });
+      if (!d.city) ctx.addIssue({ code: "custom", path: ["city"], message: t("city") });
     }
     if (d.questions.some((q) => questionProblem(q) !== null)) {
-      ctx.addIssue({ code: "custom", path: ["questions"], message: "Complétez ou retirez les questions signalées." });
+      ctx.addIssue({ code: "custom", path: ["questions"], message: t("questions") });
     }
     if (d.amount) {
       const n = Number(d.amount);
       if (!Number.isFinite(n) || n < 1000 || n > 1_000_000) {
-        ctx.addIssue({ code: "custom", path: ["amount"], message: "Entre 1 000 et 1 000 000 FCFA" });
+        ctx.addIssue({ code: "custom", path: ["amount"], message: t("amount") });
       }
-      if (!d.paymentFlow) ctx.addIssue({ code: "custom", path: ["paymentFlow"], message: "Précisez le rythme de paiement" });
+      if (!d.paymentFlow) ctx.addIssue({ code: "custom", path: ["paymentFlow"], message: t("flow") });
     }
   });
+};
 
-export type OfferFormValues = z.infer<typeof schema>;
+export type OfferFormValues = z.infer<ReturnType<typeof offerSchema>>;
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const toDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -178,6 +188,11 @@ export function OfferForm({
   onSubmit: (values: OfferFormValues, countryName: string | undefined) => void;
   onCancel?: () => void;
 }>) {
+  const tLabels = useTranslations("labels");
+  const t = useTranslations("offers.form");
+  const tv = useTranslations("offers.form.v");
+  const locale = useLocale() as Locale;
+  const schema = useMemo(() => offerSchema(tv, locale), [tv, locale]);
   const form = useForm<OfferFormValues>({
     resolver: zodResolver(schema),
     defaultValues,
@@ -186,10 +201,14 @@ export function OfferForm({
   const remote = useWatch({ control: form.control, name: "isRemote" });
   const country = useWatch({ control: form.control, name: "countryCode" });
   const city = useWatch({ control: form.control, name: "city" });
+  // What the offer is written in: its ready-made questions follow it.
+  const title = useWatch({ control: form.control, name: "title" });
+  const description = useWatch({ control: form.control, name: "description" });
   const amount = useWatch({ control: form.control, name: "amount" });
   const { data: countries } = useCountries();
   const { data: cities } = useCities(country);
   const { data: categories } = useQuery({ queryKey: ["job-categories"], queryFn: getJobCategories, staleTime: Infinity });
+  const trade = useTradeName();
   const { data: subscription } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   const [writing, setWriting] = useState(false);
   // No AI writing in the plan nor in a pack: the button says where to find it instead.
@@ -208,7 +227,7 @@ export function OfferForm({
       const iso = scheduledIso(values.scheduledDate, values.scheduledTime);
       if (iso !== keepSchedule && isTooSoon(iso)) {
         form.setError(values.scheduledTime ? "scheduledTime" : "scheduledDate", {
-          message: "Choisissez une date et une heure à venir",
+          message: tv("future"),
         });
         return;
       }
@@ -222,14 +241,17 @@ export function OfferForm({
     <Form {...form}>
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_26rem]">
         <form onSubmit={form.handleSubmit(submit)} noValidate className="space-y-10 rounded-3xl bg-card p-5 sm:p-8">
-          <Section title="L'offre">
+          <Section title={t("offer")}>
             {draftsOut ? (
               <Link
                 href={draftPackOnSale ? PACKS_HREF : "/espace/abonnement"}
                 className="flex items-center gap-3 rounded-2xl bg-page px-4 py-3 text-muted-foreground text-sm hover:text-foreground"
               >
                 <IconWand className="size-5 shrink-0" />
-                {`Plus de rédactions par l'IA${draftsUntil ? ` jusqu'au ${new Date(draftsUntil).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}` : ""} : ${draftPackOnSale ? "ajoutez un pack de rédactions ou changez de formule" : "changez de formule"} pour en avoir davantage.`}
+                {t("noMoreDrafts", {
+                  date: draftsUntil ? new Date(draftsUntil).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long" }) : "none",
+                  pack: draftPackOnSale ? "yes" : "no",
+                })}
               </Link>
             ) : aiIncluded ? (
               <button
@@ -241,10 +263,8 @@ export function OfferForm({
                   <IconWand className="size-5" />
                 </span>
                 <span className="min-w-0">
-                  <span className="block font-medium text-sm">Rédiger avec l&apos;IA</span>
-                  <span className="block text-muted-foreground text-xs">
-                    Quelques mots suffisent : l&apos;intitulé, la description et le métier sont proposés.
-                  </span>
+                  <span className="block font-medium text-sm">{t("aiTitle")}</span>
+                  <span className="block text-muted-foreground text-xs">{t("aiText")}</span>
                 </span>
               </button>
             ) : (
@@ -254,8 +274,8 @@ export function OfferForm({
               >
                 <IconWand className="size-5 shrink-0" />
                 {trialLocks(subscription?.entitlements, "offerWriter")
-                  ? "La rédaction d'offres par l'IA arrive avec une formule payante, après votre essai gratuit."
-                  : "La rédaction d'offres par l'IA est incluse dans les formules supérieures."}
+                  ? t("aiAfterTrial")
+                  : t("aiHigher")}
               </Link>
             )}
             <OfferAiDialog
@@ -284,18 +304,18 @@ export function OfferForm({
                 }
               }}
             />
-            <TextField control={form.control} name="title" label="Intitulé" placeholder="Agent d'entretien pour nos bureaux" autoFocus />
+            <TextField control={form.control} name="title" label={t("title")} placeholder={t("titlePlaceholder")} autoFocus />
             <FormField
               control={form.control}
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FieldLabel>Description</FieldLabel>
+                  <FieldLabel>{t("description")}</FieldLabel>
                   <FormControl>
                     <Textarea
                       {...field}
                       rows={5}
-                      placeholder="Les tâches, le niveau attendu, les conditions de travail…"
+                      placeholder={t("descriptionPlaceholder")}
                       className="min-h-32 rounded-xl border-0 bg-page px-4 py-3 text-base shadow-none md:text-[15px]"
                     />
                   </FormControl>
@@ -311,14 +331,14 @@ export function OfferForm({
               name="categoryId"
               render={({ field, fieldState }) => (
                 <FormItem>
-                  <FieldLabel>Métier</FieldLabel>
+                  <FieldLabel>{t("trade")}</FieldLabel>
                   <Combobox
                     value={field.value}
                     onChange={field.onChange}
                     invalid={!!fieldState.error}
-                    options={(categories ?? []).map((c) => ({ value: c.id, label: c.name }))}
-                    placeholder="Choisir le métier"
-                    searchPlaceholder="Rechercher un métier"
+                    options={(categories ?? []).map((c) => ({ value: c.id, label: trade(c.name) }))}
+                    placeholder={t("tradePlaceholder")}
+                    searchPlaceholder={t("tradeSearch")}
                   />
                   <FormMessage />
                 </FormItem>
@@ -326,17 +346,17 @@ export function OfferForm({
             />
           </Section>
 
-          <Section title={dated ? "Type et date" : "Type"}>
+          <Section title={dated ? t("typeAndDate") : t("type")}>
             <Choice
               control={form.control}
               name="employmentType"
-              label="Type d'offre"
-              options={EMPLOYMENT_TYPES.map((t) => ({
-                value: t.value,
-                label: t.label,
-                hint: t.hint,
+              label={t("offerType")}
+              options={EMPLOYMENT_TYPES.map((value) => ({
+                value,
+                label: tLabels(`employmentType.${value}`),
+                hint: tLabels(`employmentHint.${value}`),
                 // An offer already of that type (made in the app) keeps it.
-                disabled: !AVAILABLE_EMPLOYMENT_TYPES.includes(t.value) && t.value !== defaultValues.employmentType,
+                disabled: !AVAILABLE_EMPLOYMENT_TYPES.includes(value) && value !== defaultValues.employmentType,
               }))}
             />
             {dated ? (
@@ -346,7 +366,7 @@ export function OfferForm({
                   name="scheduledDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FieldLabel>Candidatures jusqu&apos;au</FieldLabel>
+                      <FieldLabel>{t("until")}</FieldLabel>
                       <FormControl>
                         <Input {...field} type="date" min={toDate(new Date())} className={FIELD_CLASS} />
                       </FormControl>
@@ -359,7 +379,7 @@ export function OfferForm({
                   name="scheduledTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FieldLabel optional>Heure</FieldLabel>
+                      <FieldLabel optional>{t("time")}</FieldLabel>
                       <FormControl>
                         <Input {...field} type="time" className={FIELD_CLASS} />
                       </FormControl>
@@ -370,25 +390,22 @@ export function OfferForm({
               </div>
             ) : null}
             {dated ? (
-              <p className="text-muted-foreground text-sm">
-                Vous acceptez des candidatures jusqu&apos;à ce moment, en général le début de la mission : elle peut commencer
-                aujourd&apos;hui, même dans l&apos;heure. L&apos;heure est facultative.
-              </p>
+              <p className="text-muted-foreground text-sm">{t("datedHint")}</p>
             ) : (
-              <p className="text-muted-foreground text-sm">L&apos;offre reste en ligne jusqu&apos;à ce que vous la clôturiez.</p>
+              <p className="text-muted-foreground text-sm">{t("openHint")}</p>
             )}
           </Section>
 
-          <Section title="Lieu">
+          <Section title={t("place")}>
             <FormField
               control={form.control}
               name="isRemote"
               render={({ field }) => (
                 <FormItem>
-                  <div role="radiogroup" aria-label="Lieu" className="grid grid-cols-2 gap-2">
+                  <div role="radiogroup" aria-label={t("place")} className="grid grid-cols-2 gap-2">
                     {[
-                      { v: false, l: "Sur place" },
-                      { v: true, l: "À distance" },
+                      { v: false, l: t("onSite") },
+                      { v: true, l: tLabels("offer.remote") },
                     ].map((o) => (
                       <button
                         key={o.l}
@@ -413,32 +430,32 @@ export function OfferForm({
                 <ComboField
                   control={form.control}
                   name="countryCode"
-                  label="Pays"
-                  placeholder="Choisir le pays"
+                  label={t("country")}
+                  placeholder={t("countryPlaceholder")}
                   options={(countries ?? []).map((c) => ({ value: c.code, label: c.name }))}
                 />
                 <ComboField
                   control={form.control}
                   name="city"
-                  label="Ville"
-                  placeholder={country ? "Choisir la ville" : "Choisissez d'abord le pays"}
+                  label={t("city")}
+                  placeholder={country ? t("cityPlaceholder") : t("cityFirst")}
                   options={(cities ?? []).map((c) => ({ value: c, label: c }))}
                   disabled={!country}
                 />
               </div>
             )}
-            <TextField control={form.control} name="address" label="Adresse" optional placeholder="Quartier, rue, repère" />
+            <TextField control={form.control} name="address" label={t("address")} optional placeholder={t("addressPlaceholder")} />
           </Section>
 
-          <Section title="Postes et rémunération">
-            <TextField control={form.control} name="quantity" label="Nombre de personnes" type="number" min={1} max={100} />
-            <TextField control={form.control} name="amount" label="Montant (FCFA)" optional type="number" min={1000} placeholder="15000" />
+          <Section title={t("positionsAndPay")}>
+            <TextField control={form.control} name="quantity" label={t("quantity")} type="number" min={1} max={100} />
+            <TextField control={form.control} name="amount" label={t("amount")} optional type="number" min={1000} placeholder="15000" />
             {amount && (
               <Choice
                 control={form.control}
                 name="paymentFlow"
-                label="Rythme de paiement"
-                options={PAYMENT_FLOWS.map((f) => ({ value: f.value, label: f.label }))}
+                label={t("flow")}
+                options={PAYMENT_FLOWS.map((value) => ({ value, label: tLabels(`paymentFlow.${value}`) }))}
               />
             )}
             <FormField
@@ -446,12 +463,12 @@ export function OfferForm({
               name="note"
               render={({ field }) => (
                 <FormItem>
-                  <FieldLabel optional>Note pour les candidats</FieldLabel>
+                  <FieldLabel optional>{t("note")}</FieldLabel>
                   <FormControl>
                     <Textarea
                       {...field}
                       rows={3}
-                      placeholder="Tenue, matériel à apporter, horaires…"
+                      placeholder={t("notePlaceholder")}
                       className="min-h-24 rounded-xl border-0 bg-page px-4 py-3 text-base shadow-none md:text-[15px]"
                     />
                   </FormControl>
@@ -461,13 +478,13 @@ export function OfferForm({
             />
           </Section>
 
-          <Section title="Questions aux candidats" optional>
+          <Section title={t("questions")} optional>
             <FormField
               control={form.control}
               name="questions"
               render={({ field }) => (
                 <FormItem>
-                  <OfferQuestionsField value={field.value} onChange={field.onChange} />
+                  <OfferQuestionsField value={field.value} onChange={field.onChange} language={contentLocale([description, title], locale)} />
                   <FormMessage />
                 </FormItem>
               )}
@@ -479,7 +496,10 @@ export function OfferForm({
         <aside className="space-y-6 lg:sticky lg:top-24">
           <OfferSummary
             control={form.control}
-            categoryName={(id) => categories?.find((c) => c.id === id)?.name}
+            categoryName={(id) => {
+              const name = categories?.find((c) => c.id === id)?.name;
+              return name && trade(name);
+            }}
             countryName={(code) => countries?.find((c) => c.code === code)?.name}
           />
           {aside}
@@ -490,12 +510,13 @@ export function OfferForm({
 }
 
 function Section({ title, optional, children }: Readonly<{ title: string; optional?: boolean; children: ReactNode }>) {
+  const t = useTranslations("offers.form");
   return (
     <section className="space-y-5">
       <div className="flex items-center gap-3">
         <h2 className="shrink-0 font-semibold text-base">
           {title}
-          {optional && <span className="font-normal text-muted-foreground"> (facultatif)</span>}
+          {optional && <span className="font-normal text-muted-foreground"> ({t("optional")})</span>}
         </h2>
         <span aria-hidden className="h-px flex-1 bg-page" />
       </div>
@@ -544,6 +565,7 @@ function Choice({
   label: string;
   options: { value: string; label: string; hint?: string; disabled?: boolean }[];
 }>) {
+  const t = useTranslations("offers.form");
   return (
     <FormField
       control={control}
@@ -561,7 +583,7 @@ function Choice({
                   role="radio"
                   aria-checked={active}
                   disabled={o.disabled}
-                  title={o.disabled ? "Bientôt disponible" : o.hint}
+                  title={o.disabled ? t("soon") : o.hint}
                   onClick={() => field.onChange(o.value)}
                   className={cn(
                     "flex h-12 items-center justify-center rounded-xl font-medium text-sm transition-colors",
@@ -583,7 +605,9 @@ function Choice({
 
 /** « 1 234 / 2 500 caractères », red once past the limit. */
 function CharacterCount({ length, min, max }: Readonly<{ length: number; min: number; max: number }>) {
-  const fmt = (n: number) => n.toLocaleString("fr-FR");
+  const t = useTranslations("offers.form");
+  const locale = useLocale() as Locale;
+  const fmt = (n: number) => n.toLocaleString(INTL_LOCALE[locale]);
   return (
     <p
       aria-live="polite"
@@ -593,7 +617,7 @@ function CharacterCount({ length, min, max }: Readonly<{ length: number; min: nu
         length > 0 && length < min && "text-destructive",
       )}
     >
-      {fmt(length)} / {fmt(max)} caractères
+      {t("characters", { length: fmt(length), max: fmt(max) })}
     </p>
   );
 }

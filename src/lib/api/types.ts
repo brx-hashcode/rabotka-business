@@ -28,6 +28,14 @@ export type Paginated<T> = {
 export type DocumentList = {
   recommended: string[];
   optional: string[];
+  /**
+   * The papers to send to sign up: every group, one paper of each
+   * (`[["ARRETE", "RECEPISSE"], ["STATUTS"]]`: the arrêté or the récépissé,
+   * and the statuts).
+   */
+  required: string[][];
+  /** For a school or a clinic: the groups once its legal form is chosen. */
+  requiredByLegalForm?: Record<string, string[][]>;
 };
 
 /** One official identifier field, in the country's words; null: none there. */
@@ -568,6 +576,8 @@ export type InterviewReport = {
 /** An interview's video call, inside the app on our own Jitsi, or the public Jitsi room without its secret. */
 export type VisioJoin = {
   jobTitle: string;
+  /** The language the interview is held in, as the job tells; null or absent when it does not. */
+  language?: "fr" | "en" | null;
   businessName: string;
   candidateName: string;
   startsAt: string;

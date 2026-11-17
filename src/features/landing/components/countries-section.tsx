@@ -1,4 +1,8 @@
+import { useLocale, useTranslations } from "next-intl";
+
+import type { Locale } from "#/i18n/config";
 import type { BusinessCountryName } from "#/lib/api/catalog-server";
+import { countryName } from "../country-name";
 import { flagUrl, PLACES, REGIONS } from "../globe/country-places";
 import { LazyGlobe } from "../globe/globe-lazy";
 
@@ -7,13 +11,18 @@ import { LazyGlobe } from "../globe/globe-lazy";
  * country's flag, and the same countries by region beside it. Dark in both
  * themes, the globe's own colours.
  */
+/** The region names' keys in site.countries.regions. */
+const REGION_KEY = { "Afrique centrale": "central", "Afrique de l'Ouest": "west", "Afrique de l'Est et australe": "east" } as const;
+
 export function CountriesSection({ countries }: Readonly<{ countries: BusinessCountryName[] }>) {
+  const t = useTranslations("site.countries");
+  const locale = useLocale() as Locale;
   const byRegion = REGIONS.map((region) => ({
-    region,
+    region: t(`regions.${REGION_KEY[region]}`),
     countries: countries.filter((c) => PLACES[c.code]?.region === region),
   }));
   const elsewhere = countries.filter((c) => !PLACES[c.code]);
-  const groups = [...byRegion, { region: "Ailleurs", countries: elsewhere }].filter((g) => g.countries.length > 0);
+  const groups = [...byRegion, { region: t("elsewhere"), countries: elsewhere }].filter((g) => g.countries.length > 0);
 
   return (
     <section id="pays" className="overflow-hidden bg-[#0f2414] py-20 text-white md:py-28">
@@ -29,14 +38,9 @@ export function CountriesSection({ countries }: Readonly<{ countries: BusinessCo
 
         <div className="space-y-8">
           <div className="max-w-xl space-y-3">
-            <p className="font-medium text-[#cbffa5] text-sm">Où nous sommes</p>
-            <h2 className="font-semibold text-3xl tracking-tight sm:text-4xl">
-              Disponible dans {countries.length} pays d&apos;Afrique
-            </h2>
-            <p className="text-lg text-white/70">
-              Chaque organisation recrute dans son pays : ses pièces, ses villes, et un abonnement réglé par mobile money
-              dans sa monnaie.
-            </p>
+            <p className="font-medium text-[#cbffa5] text-sm">{t("kicker")}</p>
+            <h2 className="font-semibold text-3xl tracking-tight sm:text-4xl">{t("title", { count: countries.length })}</h2>
+            <p className="text-lg text-white/70">{t("text")}</p>
           </div>
           <div className="grid gap-6 sm:grid-cols-2">
             {groups.map((g) => (
@@ -47,7 +51,7 @@ export function CountriesSection({ countries }: Readonly<{ countries: BusinessCo
                     <li key={c.code} className="flex items-center gap-2.5 text-sm">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={flagUrl(c.code)} alt="" className="h-3.5 w-5 rounded-[3px] object-cover" loading="lazy" />
-                      {c.name}
+                      {countryName(c, locale)}
                     </li>
                   ))}
                 </ul>

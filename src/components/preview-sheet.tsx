@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { IconChevronLeft, IconChevronRight, IconDownload, IconMinus, IconPlus, IconPrinter, IconX } from "@tabler/icons-react";
@@ -32,7 +33,7 @@ export function PreviewSheet({
   src,
   kind,
   fileName,
-  unavailable = "L'aperçu n'est plus disponible.",
+  unavailable,
   nav,
 }: Readonly<{
   open: boolean;
@@ -48,6 +49,7 @@ export function PreviewSheet({
   /** Several files in one panel (a claim's photos): arrows, keys and « 1 / 3 ». */
   nav?: { label: string; onPrev: () => void; onNext: () => void };
 }>) {
+  const t = useTranslations("ui.preview");
   const file = useBlobUrl(open ? src : undefined, kind);
   const [zoom, setZoom] = useState(1);
   const [pages, setPages] = useState(0);
@@ -79,7 +81,7 @@ export function PreviewSheet({
         frame.contentWindow?.focus();
         frame.contentWindow?.print();
       } catch {
-        toast.error("L'impression n'a pas pu s'ouvrir.");
+        toast.error(t("printFailed"));
       }
       setTimeout(() => frame.remove(), 60_000);
     };
@@ -127,7 +129,7 @@ export function PreviewSheet({
                 <button
                   type="button"
                   onClick={nav.onPrev}
-                  aria-label="Précédente"
+                  aria-label={t("previous")}
                   className="flex size-8 items-center justify-center rounded-full hover:bg-card"
                 >
                   <IconChevronLeft className="size-4" />
@@ -136,7 +138,7 @@ export function PreviewSheet({
                 <button
                   type="button"
                   onClick={nav.onNext}
-                  aria-label="Suivante"
+                  aria-label={t("next")}
                   className="flex size-8 items-center justify-center rounded-full hover:bg-card"
                 >
                   <IconChevronRight className="size-4" />
@@ -150,7 +152,7 @@ export function PreviewSheet({
                     type="button"
                     onClick={() => step(-1)}
                     disabled={zoom === ZOOMS[0]}
-                    aria-label="Réduire"
+                    aria-label={t("zoomOut")}
                     className="flex size-8 items-center justify-center rounded-full hover:bg-card disabled:opacity-40"
                   >
                     <IconMinus className="size-4" />
@@ -160,7 +162,7 @@ export function PreviewSheet({
                     type="button"
                     onClick={() => step(1)}
                     disabled={zoom === ZOOMS.at(-1)}
-                    aria-label="Agrandir"
+                    aria-label={t("zoomIn")}
                     className="flex size-8 items-center justify-center rounded-full hover:bg-card disabled:opacity-40"
                   >
                     <IconPlus className="size-4" />
@@ -172,15 +174,15 @@ export function PreviewSheet({
                   className="inline-flex h-10 items-center gap-2 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70"
                 >
                   <IconDownload className="size-4" />
-                  <span className="hidden sm:inline">Télécharger</span>
+                  <span className="hidden sm:inline">{t("download")}</span>
                 </button>
                 {/* A Word file prints from Word: the browser cannot print it as is. */}
                 {kind !== "docx" && (
                   <button
                     type="button"
                     onClick={print}
-                    aria-label="Imprimer"
-                    title="Imprimer"
+                    aria-label={t("print")}
+                    title={t("print")}
                     className="flex size-10 items-center justify-center rounded-full bg-page hover:bg-page/70"
                   >
                     <IconPrinter className="size-4" />
@@ -188,16 +190,16 @@ export function PreviewSheet({
                 )}
               </div>
             )}
-            <SheetPrimitive.Close aria-label="Fermer" className="flex size-10 items-center justify-center rounded-full hover:bg-page">
+            <SheetPrimitive.Close aria-label={t("close")} className="flex size-10 items-center justify-center rounded-full hover:bg-page">
               <IconX className="size-5" />
             </SheetPrimitive.Close>
           </header>
 
           <div className="relative min-h-0 flex-1 overflow-auto bg-page">
             {!src ? (
-              <Message>{unavailable}</Message>
+              <Message>{unavailable ?? t("unavailable")}</Message>
             ) : failed ? (
-              <Message>Le fichier n&apos;a pas pu être affiché. Réessayez dans un instant.</Message>
+              <Message>{t("failed")}</Message>
             ) : !file.url ? (
               <div className="px-4 py-6 sm:px-8">
                 <DocumentPageSkeleton />
