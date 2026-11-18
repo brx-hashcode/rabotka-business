@@ -8,6 +8,7 @@ import { IconArrowRight, IconChevronDown, IconClock, IconLayoutKanban, IconMenu2
 import { useTranslations } from "next-intl";
 
 import { BusinessLockup } from "#/components/business-lockup";
+import { LanguageSwitch } from "#/components/language-switch";
 import { LocalLink as Link } from "#/components/local-link";
 import { Button } from "#/components/ui/button";
 import {
@@ -17,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "#/components/ui/sheet";
+import { OFFERED_LOCALES } from "#/i18n/config";
 import {
   DEMO_HREF,
   FEATURES_HREF,
@@ -278,6 +280,7 @@ function ResourcesPanel({ links }: Readonly<{ links: NavLink[] }>) {
 function MobileMenu() {
   const [open, setOpen] = useState(false);
   const t = useTranslations("site.header");
+  const tLanguage = useTranslations("common.language");
   const GROUPS = stages(useSiteCopy());
   const { menus: MENUS, pages: PAGES } = useNav();
 
@@ -375,6 +378,12 @@ function MobileMenu() {
               {t("signIn")}
             </Button>
           </div>
+          {OFFERED_LOCALES.length > 1 && (
+            <div className="flex items-center justify-between gap-3 px-3">
+              <p className="font-medium text-muted-foreground text-xs">{tLanguage("label")}</p>
+              <LanguageSwitch />
+            </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>
