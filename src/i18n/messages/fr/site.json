@@ -157,7 +157,9 @@
     "text": "Le logiciel de recrutement complet : vos offres diffusées, <mark>chaque CV lu et classé</mark>, vos entretiens en visio et leur compte rendu.",
     "publishedOn": "Publiées sur",
     "careersPage": "Votre page carrières",
-    "countries": "{count} pays d'Afrique"
+    "countries": "{count} pays d'Afrique",
+    "productHuntSoon": "Bientôt sur Product Hunt",
+    "productHuntFeatured": "À la une sur Product Hunt"
   },
   "buttons": {
     "demo": "Demander une démo",
