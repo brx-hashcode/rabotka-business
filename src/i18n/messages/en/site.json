@@ -157,7 +157,9 @@
     "text": "Complete recruitment software: your jobs published, <mark>every CV read and ranked</mark>, your video interviews and their reports.",
     "publishedOn": "Published on",
     "careersPage": "Your careers page",
-    "countries": "{count} African countries"
+    "countries": "{count} African countries",
+    "productHuntSoon": "Coming soon on Product Hunt",
+    "productHuntFeatured": "Featured on Product Hunt"
   },
   "buttons": {
     "demo": "Request a demo",
