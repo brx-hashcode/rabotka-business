@@ -53,7 +53,7 @@ export function LandingHeader() {
   const t = useTranslations("site.header");
   const { menus: MENUS, pages: PAGES } = useNav();
   return (
-    <header data-site-header className="sticky top-[env(safe-area-inset-top)] z-40 bg-header/95 text-header-foreground backdrop-blur">
+    <header data-site-header className="bg-header/95 text-header-foreground backdrop-blur">
       <div className="mx-auto flex h-18 w-full max-w-7xl items-center gap-6 px-4 sm:px-6">
         <Link href="/" aria-label={t("home")} className="shrink-0">
           <BusinessLockup compact />

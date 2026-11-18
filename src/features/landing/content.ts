@@ -67,6 +67,15 @@ export function isProductHuntLaunched(now: Date = new Date()): boolean {
   return now.getTime() >= PRODUCT_HUNT.launchAt.getTime();
 }
 
+/** The 24-hour Product Hunt day the launch is scored in: a live pulse during, then back to a quiet badge. */
+export function isProductHuntLaunchDay(now: Date = new Date()): boolean {
+  const start = PRODUCT_HUNT.launchAt.getTime();
+  return now.getTime() >= start && now.getTime() < start + 24 * 60 * 60 * 1000;
+}
+
+/** Prefix of the cookie the top banner sets when dismissed: variant appended (soon|live). */
+export const PH_BANNER_COOKIE_PREFIX = "rb_ph_banner_";
+
 export type NavLink = {
   href: string;
   label: string;

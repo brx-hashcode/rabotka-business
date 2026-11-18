@@ -159,7 +159,13 @@
     "careersPage": "Votre page carrières",
     "countries": "{count} pays d'Afrique",
     "productHuntSoon": "Bientôt sur Product Hunt",
-    "productHuntFeatured": "À la une sur Product Hunt"
+    "productHuntFeatured": "À la une sur Product Hunt",
+    "productHuntLive": "En direct sur Product Hunt — votez aujourd'hui",
+    "productHuntLiveShort": "En direct",
+    "productHuntBannerSoon": "Nous nous lançons sur Product Hunt — suivez-nous pour être alerté",
+    "productHuntBannerLive": "Nous sommes EN DIRECT sur Product Hunt aujourd'hui — votez pour nous",
+    "productHuntBannerAction": "Y aller",
+    "productHuntBannerDismiss": "Fermer"
   },
   "buttons": {
     "demo": "Demander une démo",

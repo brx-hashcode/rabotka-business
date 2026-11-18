@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { GoogleLogo, LinkedInLogo, ProductHuntLogo } from "#/components/brand-logos";
 
 import type { BusinessCountryName } from "#/lib/api/catalog-server";
-import { isProductHuntLaunched, PRODUCT_HUNT } from "../content";
+import { isProductHuntLaunchDay, isProductHuntLaunched, PRODUCT_HUNT } from "../content";
 import { DemoButton, SignUpButton } from "./demo-button";
 import { flagUrl } from "../globe/country-places";
 import { HeroMockup } from "../mockups/mockups";
@@ -18,6 +18,8 @@ import { Highlighter } from "./highlighter";
 export function LandingHero({ countries }: Readonly<{ countries: BusinessCountryName[] }>) {
   const t = useTranslations("site.hero");
   const isLaunched = isProductHuntLaunched();
+  const isLaunchDay = isProductHuntLaunchDay();
+  const productHuntLabel = isLaunchDay ? t("productHuntLive") : isLaunched ? t("productHuntFeatured") : t("productHuntSoon");
   return (
     <section className="overflow-hidden bg-header text-header-foreground">
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-4 pt-10 pb-14 sm:px-6 md:pt-16 lg:grid-cols-[1fr_1.05fr] lg:gap-16 lg:pb-20">
@@ -83,14 +85,20 @@ export function LandingHero({ countries }: Readonly<{ countries: BusinessCountry
             href={PRODUCT_HUNT.postUrl}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={isLaunched ? t("productHuntFeatured") : t("productHuntSoon")}
-            className="inline-block"
+            aria-label={productHuntLabel}
+            className="inline-flex items-center gap-3"
           >
+            {isLaunchDay && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1.5 font-bold text-white text-xs uppercase tracking-wider motion-safe:animate-pulse">
+                <span aria-hidden className="size-2 rounded-full bg-white" />
+                {t("productHuntLiveShort")}
+              </span>
+            )}
             {isLaunched ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={`https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=${PRODUCT_HUNT.postId}&theme=neutral`}
-                alt={t("productHuntFeatured")}
+                alt={productHuntLabel}
                 width={250}
                 height={54}
               />
