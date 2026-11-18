@@ -17,7 +17,11 @@ function urlIn(locale: Locale): string {
  * a client navigation: cached screens and data were fetched in the other
  * language. Hidden while only French is offered.
  */
-export function LanguageSwitch({ tone = "card", className }: Readonly<{ tone?: "card" | "inverse"; className?: string }>) {
+export function LanguageSwitch({
+  tone = "card",
+  size = "sm",
+  className,
+}: Readonly<{ tone?: "card" | "inverse"; size?: "sm" | "lg"; className?: string }>) {
   const current = useLocale();
   const t = useTranslations("common.language");
   if (OFFERED_LOCALES.length < 2) return null;
@@ -42,14 +46,15 @@ export function LanguageSwitch({ tone = "card", className }: Readonly<{ tone?: "
               if (!on) globalThis.location.assign(urlIn(locale));
             }}
             className={cn(
-              "rounded-full px-3 py-1 font-medium text-xs uppercase transition-colors",
+              "rounded-full font-medium transition-colors",
+              size === "sm" ? "px-3 py-1 text-xs uppercase" : "h-10 flex-1 px-4 text-[15px]",
               on && tone === "card" && "bg-selected text-selected-foreground",
               on && tone === "inverse" && "bg-header text-header-foreground",
               !on && tone === "card" && "text-muted-foreground hover:text-foreground",
               !on && tone === "inverse" && "text-white/70 hover:text-white",
             )}
           >
-            {locale}
+            {size === "sm" ? locale : t(locale)}
           </button>
         );
       })}

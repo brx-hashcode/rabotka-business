@@ -295,6 +295,12 @@ function MobileMenu() {
       <SheetContent side="right" className="w-full gap-0 overflow-y-auto border-0 bg-card p-6 sm:max-w-sm">
         <SheetTitle className="sr-only">{t("menu")}</SheetTitle>
         <div className="mt-8 flex flex-col gap-6">
+          {OFFERED_LOCALES.length > 1 && (
+            <div className="space-y-2">
+              <p className="px-3 font-medium text-muted-foreground text-xs">{tLanguage("label")}</p>
+              <LanguageSwitch size="lg" />
+            </div>
+          )}
           <div className="space-y-3">
             <p className="px-3 font-medium text-muted-foreground text-xs">{t("features")}</p>
             {GROUPS.map((group) => (
@@ -378,12 +384,6 @@ function MobileMenu() {
               {t("signIn")}
             </Button>
           </div>
-          {OFFERED_LOCALES.length > 1 && (
-            <div className="flex items-center justify-between gap-3 px-3">
-              <p className="font-medium text-muted-foreground text-xs">{tLanguage("label")}</p>
-              <LanguageSwitch />
-            </div>
-          )}
         </div>
       </SheetContent>
     </Sheet>
