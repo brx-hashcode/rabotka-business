@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 
 import { Providers } from "#/app/providers";
+import { SessionReplay } from "#/components/session-replay";
 import { OG_LOCALE } from "#/i18n/config";
 import { REFRESH_COOKIE } from "#/lib/auth/cookies";
 import "./globals.css";
@@ -73,6 +74,8 @@ export const viewport: Viewport = {
  */
 export default async function RootLayout({ children, modal }: LayoutProps<"/">) {
   const isAuthenticated = (await cookies()).has(REFRESH_COOKIE);
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
   const locale = await getLocale();
   // Everything but the public site's long copy, which its own layout adds.
   const messages = Object.fromEntries(Object.entries(await getMessages()).filter(([namespace]) => namespace !== "siteCopy"));
@@ -101,6 +104,7 @@ export default async function RootLayout({ children, modal }: LayoutProps<"/">) 
             </Providers>
           </NextIntlClientProvider>
         </div>
+        <SessionReplay host={host} />
       </body>
     </html>
   );
