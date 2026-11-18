@@ -1,9 +1,10 @@
 import { IconArrowRight, IconWorld } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
-import { GoogleLogo, LinkedInLogo } from "#/components/brand-logos";
+import { GoogleLogo, LinkedInLogo, ProductHuntLogo } from "#/components/brand-logos";
 
 import type { BusinessCountryName } from "#/lib/api/catalog-server";
+import { isProductHuntLaunched, PRODUCT_HUNT } from "../content";
 import { DemoButton, SignUpButton } from "./demo-button";
 import { flagUrl } from "../globe/country-places";
 import { HeroMockup } from "../mockups/mockups";
@@ -16,6 +17,7 @@ import { Highlighter } from "./highlighter";
  */
 export function LandingHero({ countries }: Readonly<{ countries: BusinessCountryName[] }>) {
   const t = useTranslations("site.hero");
+  const isLaunched = isProductHuntLaunched();
   return (
     <section className="overflow-hidden bg-header text-header-foreground">
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-4 pt-10 pb-14 sm:px-6 md:pt-16 lg:grid-cols-[1fr_1.05fr] lg:gap-16 lg:pb-20">
@@ -77,6 +79,29 @@ export function LandingHero({ countries }: Readonly<{ countries: BusinessCountry
               <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </a>
           </div>
+          <a
+            href={PRODUCT_HUNT.postUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={isLaunched ? t("productHuntFeatured") : t("productHuntSoon")}
+            className="inline-block"
+          >
+            {isLaunched ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={`https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=${PRODUCT_HUNT.postId}&theme=neutral`}
+                alt={t("productHuntFeatured")}
+                width={250}
+                height={54}
+              />
+            ) : (
+              <span className="group inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm shadow-soft">
+                <ProductHuntLogo className="size-5" />
+                <span className="font-medium text-foreground">{t("productHuntSoon")}</span>
+                <IconArrowRight className="size-4 text-foreground transition-transform group-hover:translate-x-0.5" />
+              </span>
+            )}
+          </a>
         </div>
 
         <div className="min-w-0 text-foreground motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-6 motion-safe:delay-150 motion-safe:duration-700 motion-safe:fill-mode-both">

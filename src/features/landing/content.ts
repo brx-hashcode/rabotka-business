@@ -47,6 +47,26 @@ export const FEATURES_HREF = "/fonctionnalites";
 export const SIGN_IN_HREF = "/auth/sign-in";
 export const PUBLIC_SITE = "https://www.rabotka.work";
 
+/**
+ * The Product Hunt launch: a handmade « coming soon » pill in the hero until
+ * launch day, the official embed badge once it is live. 2026-11-20 at
+ * midnight America/Los_Angeles, which is 08:00 UTC.
+ */
+export const PRODUCT_HUNT = {
+  postId: 1321584,
+  postUrl: "https://www.producthunt.com/posts/rabotka-business",
+  launchAt: new Date("2026-11-20T08:00:00Z"),
+};
+
+/**
+ * Whether the launch has started. Read per request: the landing renders on
+ * the server each time (the root layout reads the cookies), so the pill turns
+ * into the badge on launch day without a deploy.
+ */
+export function isProductHuntLaunched(now: Date = new Date()): boolean {
+  return now.getTime() >= PRODUCT_HUNT.launchAt.getTime();
+}
+
 export type NavLink = {
   href: string;
   label: string;

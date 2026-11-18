@@ -18,6 +18,18 @@ export function GoogleLogo(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Product Hunt's kitten mark, in its orange: the launch we announce from the hero. */
+export function ProductHuntLogo(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden {...props}>
+      <path
+        fill="#DA552F"
+        d="M12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zm1.604 14.4H10.2V18H7.8V6h5.804c2.319 0 4.2 1.881 4.2 4.2 0 2.319-1.881 4.2-4.2 4.2zm0-6.3H10.2V12h3.404c.994 0 1.801-.806 1.801-1.8 0-.994-.807-1.8-1.801-1.8z"
+      />
+    </svg>
+  );
+}
+
 /** LinkedIn's « in », in its blue: where offers are posted, on each recruiter's profile. */
 export function LinkedInLogo(props: SVGProps<SVGSVGElement>) {
   return (
