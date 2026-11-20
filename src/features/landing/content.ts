@@ -48,8 +48,8 @@ export const SIGN_IN_HREF = "/auth/sign-in";
 export const PUBLIC_SITE = "https://www.rabotka.work";
 
 /**
- * The Product Hunt launch: a handmade « coming soon » pill in the hero until
- * launch day, the official embed badge once it is live. 2026-11-20 at
+ * The Product Hunt launch: a « coming soon » pill in the hero until launch
+ * day, then our own badge with the live upvote count. 2026-11-20 at
  * midnight America/Los_Angeles, which is 08:00 UTC.
  */
 export const PRODUCT_HUNT = {
@@ -74,15 +74,26 @@ export function isProductHuntLaunchDay(now: Date = new Date()): boolean {
 }
 
 /**
- * The official badge, with its live upvote count. Product Hunt caches it for
- * 4 hours (Cloudflare and browsers alike), so a plain URL showed a count from
- * hours ago, or the « ??? » of the launch's first 4 hours long after the
- * count appeared. A value that changes every 5 minutes makes each visit fetch
- * a fresh one; the page renders per request, so the server picks it.
+ * Where the upvote count comes from: Product Hunt's own badge, read on the
+ * server. It is cached 4 hours (Cloudflare and browsers alike), so a plain URL
+ * gave a count from hours ago, or the « ??? » of the launch's first 4 hours
+ * long after the count appeared; a value that changes every 2 minutes asks
+ * for a fresh one.
  */
 export function productHuntBadgeUrl(now: Date = new Date()): string {
-  const bucket = Math.floor(now.getTime() / (5 * 60 * 1000));
+  const bucket = Math.floor(now.getTime() / (2 * 60 * 1000));
   return `https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=${PRODUCT_HUNT.postId}&theme=neutral&v=${bucket}`;
+}
+
+/**
+ * The upvote count printed under the badge's ▲, or null when there is none to
+ * show: « ??? » (Product Hunt hides it for a launch's first 4 hours) or a
+ * badge whose shape changed.
+ */
+export function parseProductHuntVotes(svg: string): number | null {
+  const match = /<polygon[^>]*>\s*<\/polygon>\s*<text[^>]*>\s*<tspan[^>]*>([^<]*)<\/tspan>/.exec(svg);
+  const raw = match?.[1]?.trim().replace(/[\s,.\u202f]/g, "") ?? "";
+  return /^\d+$/.test(raw) ? Number(raw) : null;
 }
 
 /** Prefix of the cookie the top banner sets when dismissed: variant appended (soon|live). */

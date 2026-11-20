@@ -9,6 +9,7 @@ import { FeatureStages } from "#/features/landing/components/feature-stages";
 import { InterviewsSpotlight } from "#/features/landing/components/interviews-spotlight";
 import { LandingHero } from "#/features/landing/components/landing-hero";
 import { AudiencesSection, FaqSection } from "#/features/landing/components/landing-sections";
+import { productHuntVotesServer } from "#/features/landing/product-hunt-server";
 import { businessCountriesServer } from "#/lib/api/catalog-server";
 import { careersPartnersServer } from "#/lib/api/careers-server";
 import { jsonLd, marketingMetadata, organizationLd } from "#/lib/seo/marketing";
@@ -30,16 +31,17 @@ export async function generateMetadata(): Promise<Metadata> {
  * The detail lives on the other pages, never repeated here.
  */
 export default async function LandingPage() {
-  const [countries, { origin }, partners, t] = await Promise.all([
+  const [countries, { origin }, partners, t, productHuntVotes] = await Promise.all([
     businessCountriesServer(),
     siteOrigin(),
     careersPartnersServer(),
     getTranslations("site.pages.seo"),
+    productHuntVotesServer(),
   ]);
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(organizationLd(origin, t("orgDescription"))) }} />
-      <LandingHero countries={countries} />
+      <LandingHero countries={countries} productHuntVotes={productHuntVotes} />
       <PartnersStrip partners={partners} className="py-14" />
       <AtsSection />
       <FeatureStages />

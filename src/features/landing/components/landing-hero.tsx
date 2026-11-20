@@ -4,18 +4,22 @@ import { useTranslations } from "next-intl";
 import { GoogleLogo, LinkedInLogo, ProductHuntLogo } from "#/components/brand-logos";
 
 import type { BusinessCountryName } from "#/lib/api/catalog-server";
-import { isProductHuntLaunchDay, isProductHuntLaunched, PRODUCT_HUNT, productHuntBadgeUrl } from "../content";
+import { isProductHuntLaunchDay, isProductHuntLaunched, PRODUCT_HUNT } from "../content";
 import { DemoButton, SignUpButton } from "./demo-button";
 import { flagUrl } from "../globe/country-places";
 import { HeroMockup } from "../mockups/mockups";
 import { Highlighter } from "./highlighter";
+import { ProductHuntBadge } from "./product-hunt-badge";
 
 /**
  * The opening: an ATS, said plainly; the demo first and the account beside
  * it; the product itself on the right. Then the four steps of a hire as
  * cards, each a link to its feature page.
  */
-export function LandingHero({ countries }: Readonly<{ countries: BusinessCountryName[] }>) {
+export function LandingHero({
+  countries,
+  productHuntVotes,
+}: Readonly<{ countries: BusinessCountryName[]; productHuntVotes: number | null }>) {
   const t = useTranslations("site.hero");
   const isLaunched = isProductHuntLaunched();
   const isLaunchDay = isProductHuntLaunchDay();
@@ -85,8 +89,12 @@ export function LandingHero({ countries }: Readonly<{ countries: BusinessCountry
             href={PRODUCT_HUNT.postUrl}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={productHuntLabel}
-            className="inline-flex items-center gap-3"
+            aria-label={
+              isLaunched && productHuntVotes !== null
+                ? `${productHuntLabel} · ${t("productHuntVotes", { count: productHuntVotes })}`
+                : productHuntLabel
+            }
+            className="group inline-flex items-center gap-3"
           >
             {isLaunchDay && (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1.5 font-bold text-white text-xs uppercase tracking-wider motion-safe:animate-pulse">
@@ -95,13 +103,7 @@ export function LandingHero({ countries }: Readonly<{ countries: BusinessCountry
               </span>
             )}
             {isLaunched ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={productHuntBadgeUrl()}
-                alt={productHuntLabel}
-                width={250}
-                height={54}
-              />
+              <ProductHuntBadge live={isLaunchDay} votes={productHuntVotes} />
             ) : (
               <span className="group inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm shadow-soft">
                 <ProductHuntLogo className="size-5" />
