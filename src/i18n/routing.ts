@@ -58,8 +58,8 @@ export function preferredLocale(
   return pickFromAcceptLanguage(acceptLanguage, offered) ?? DEFAULT_LOCALE;
 }
 
-/** The public site beyond the landing: features, resources, about, contact, demo. */
-const MARKETING_PREFIXES = ["/fonctionnalites", "/ressources", "/a-propos", "/contact", "/demo"];
+/** The public site beyond the landing: features, resources, the search-led pages, about, contact, demo. */
+const MARKETING_PREFIXES = ["/fonctionnalites", "/ressources", "/logiciel-de-recrutement", "/a-propos", "/contact", "/demo"];
 
 export function isMarketingPath(pathname: string): boolean {
   return MARKETING_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
