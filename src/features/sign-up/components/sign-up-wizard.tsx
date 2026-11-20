@@ -21,7 +21,7 @@ import { DocumentsStep } from "./documents-step";
 import { IDENTIFIER_KEYS, officialIdentifiers, requiredDocuments } from "../required-documents";
 import { emptyOrganisation, OrganisationStep } from "./organisation-step";
 import { ReviewStep, SignUpDone } from "./review-step";
-import { AuthShell, AuthTabs } from "#/features/auth/components/auth-shell";
+import { AuthShell } from "#/features/auth/components/auth-shell";
 import { ProgressHeader } from "./sign-up-chrome";
 import { VerifyStep } from "./verify-step";
 
@@ -324,17 +324,10 @@ export function SignUpWizard({ visitorCountry }: Readonly<{ visitorCountry?: str
           blur away under it instead of being cut off; a little wider than the
           column so focus rings vanish too. */}
       <div className="sticky top-0 z-20 -mx-3 mt-6 bg-card/70 px-3 pt-4 pb-4 backdrop-blur-xl backdrop-saturate-150 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-8 after:bg-linear-to-b after:from-card/80 after:to-transparent">
-        {/* Sign in instead, while nothing has been filled in yet. */}
-        {step === 0 && !done && (
-          <div className="mb-5">
-            <AuthTabs active="sign-up" />
-          </div>
-        )}
         <ProgressHeader
           index={step}
           done={done}
           onBack={hydrated && step > 0 ? () => go(step - 1) : undefined}
-          showSignIn={step !== 0}
         />
       </div>
 

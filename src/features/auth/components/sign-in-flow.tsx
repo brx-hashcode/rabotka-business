@@ -99,16 +99,16 @@ export function SignInFlow({
             className="rounded-xl"
           />
         )}
-        <div className="space-y-1.5">
+        <div className={split ? "space-y-3" : "space-y-1.5"}>
           <h2
             className={cn(
               "font-semibold tracking-tight",
-              split ? "text-3xl" : "text-xl",
+              split ? "text-balance text-4xl leading-[1.1] sm:text-[2.75rem]" : "text-xl",
             )}
           >
             {email ? t("titleCode") : t("titleEmail")}
           </h2>
-          <p className="text-muted-foreground text-sm">
+          <p className={cn("text-muted-foreground", split ? "text-base leading-relaxed" : "text-sm")}>
             {email ? t("introCode") : t("introEmail")}
           </p>
         </div>
@@ -128,12 +128,15 @@ export function SignInFlow({
           serverError={error}
         />
       ) : (
-        <Step1EmailForm
-          defaultEmail={searchParams.get("email") ?? undefined}
-          onSubmit={handleEmail}
-          isLoading={sendOtp.isPending}
-          serverError={error}
-        />
+        <div className="flex flex-col gap-4">
+          <Step1EmailForm
+            defaultEmail={searchParams.get("email") ?? undefined}
+            onSubmit={handleEmail}
+            isLoading={sendOtp.isPending}
+            serverError={error}
+          />
+          <p className="text-muted-foreground text-sm">{t("invitedHint")}</p>
+        </div>
       )}
 
       {belowForm}
