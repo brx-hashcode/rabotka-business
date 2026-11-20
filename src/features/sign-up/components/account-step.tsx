@@ -62,8 +62,8 @@ export function AccountStep({
           text={t("text")}
         />
         <div className="grid gap-5 sm:grid-cols-2">
-          <TextField control={form.control} name="firstName" label={t("firstName")} autoComplete="given-name" autoFocus />
-          <TextField control={form.control} name="lastName" label={t("lastName")} autoComplete="family-name" />
+          <TextField control={form.control} name="firstName" label={t("firstName")} autoComplete="given-name" placeholder={t("firstNamePlaceholder")} autoFocus />
+          <TextField control={form.control} name="lastName" label={t("lastName")} autoComplete="family-name" placeholder={t("lastNamePlaceholder")} />
           <TextField
             control={form.control}
             name="email"

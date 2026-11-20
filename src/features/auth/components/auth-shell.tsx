@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
 import { BusinessLockup } from "#/components/business-lockup";
-import { PUBLIC_SITE, SIGN_IN_HREF, SIGN_UP_HREF } from "#/features/landing/content";
+import { PUBLIC_SITE } from "#/features/landing/content";
 import { cn } from "#/lib/utils";
 
 /**
@@ -41,7 +41,7 @@ export function AuthShell({
           <BusinessLockup compact />
         </Link>
 
-        <div className={cn("mx-auto flex w-full flex-1 flex-col", wide ? "max-w-136" : "max-w-sm")}>
+        <div className={cn("mx-auto flex w-full flex-1 flex-col", wide ? "max-w-136" : "max-w-md")}>
           {children}
         </div>
 
@@ -64,32 +64,6 @@ export function AuthShell({
 
       <FeatureWall spotlight={spotlight} />
     </div>
-  );
-}
-
-/** « Se connecter / Créer un compte », above the form's title. */
-export function AuthTabs({ active }: Readonly<{ active: "sign-in" | "sign-up" }>) {
-  const tr = useTranslations("auth.tabs");
-  const tabs = [
-    { id: "sign-in", label: tr("signIn"), href: SIGN_IN_HREF },
-    { id: "sign-up", label: tr("signUp"), href: SIGN_UP_HREF },
-  ] as const;
-  return (
-    <nav aria-label={tr("label")} className="inline-flex self-start rounded-full bg-page p-1">
-      {tabs.map((t) => (
-        <Link
-          key={t.id}
-          href={t.href}
-          aria-current={active === t.id ? "page" : undefined}
-          className={cn(
-            "rounded-full px-4 py-1.5 font-medium text-sm no-underline transition-colors",
-            active === t.id ? "bg-card text-foreground" : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          {t.label}
-        </Link>
-      ))}
-    </nav>
   );
 }
 

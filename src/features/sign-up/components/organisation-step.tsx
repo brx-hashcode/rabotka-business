@@ -238,6 +238,7 @@ export function OrganisationStep({
             name="name"
             label={t("name")}
             autoComplete="organization"
+            placeholder={t("namePlaceholder")}
             autoFocus={heading}
             disabled={lockIdentity}
           />
