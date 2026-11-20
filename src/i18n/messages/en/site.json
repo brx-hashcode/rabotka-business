@@ -49,13 +49,16 @@
     "rights": "© {year} Rabotka. All rights reserved.",
     "terms": "Terms of use",
     "privacy": "Privacy policy",
-    "top": "Back to top"
+    "top": "Back to top",
+    "solutions": "Solutions"
   },
   "pages": {
     "home": {
-      "metaTitle": "Rabotka Business - the next-generation ATS for hiring in Africa",
-      "metaDescription": "Complete recruitment software: job posts written and published everywhere, CVs read and ranked for each role, a pipeline followed as a team, video interviews and shared reports.",
+      "metaTitle": "Recruitment software (ATS) for SMBs in Africa - Rabotka",
+      "metaDescription": "Recruitment software for African SMBs: job posts written and published, CVs read and ranked, video interviews and reports, as a team.",
       "keywords": [
+        "recruitment software for SMBs",
+        "ATS for small business",
         "ATS Africa",
         "HR software",
         "applicant management",
@@ -150,11 +153,17 @@
       "shareAlt": "Rabotka Business — the ATS for African organisations",
       "suffix": "{title} - Rabotka Business",
       "orgDescription": "Recruitment software (ATS) for companies and organisations in Africa: job posting, CV analysis, applicant tracking, interviews and team hiring."
+    },
+    "solution": {
+      "featuresKicker": "Features",
+      "countriesKicker": "Where to hire",
+      "countriesTitle": "Open in {count} African countries",
+      "more": "Learn more"
     }
   },
   "hero": {
     "title": "Receive, sort and meet <mark>the right candidates</mark>, in one place",
-    "text": "Complete recruitment software: your jobs published, <mark>every CV read and ranked</mark>, your video interviews and their reports.",
+    "text": "Recruitment software for SMBs in Africa: your jobs published, <mark>every CV read and ranked</mark>, your video interviews and their reports.",
     "publishedOn": "Published on",
     "careersPage": "Your careers page",
     "countries": "{count} African countries",

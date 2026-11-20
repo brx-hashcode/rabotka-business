@@ -45,11 +45,12 @@
     "suggestions": [
       "Who fits the role best, and why?",
       "Rank them for a first interview.",
-      "Compare their hands-on experience.",
+      "Compare their scores by criterion in a chart.",
       "What is each one's main weak point?"
     ],
     "notOpen": "Comparison not open",
     "title": "Compare {count} candidates",
+    "candidates": "Compared candidates",
     "intro": "Who to hire first, where they differ, what to check in the interview: Rabotka answers from their CVs and the job.",
     "placeholder": "A question about these candidates…",
     "usedUp": "You've used all {limit} questions for this comparison.",
@@ -58,7 +59,7 @@
   },
   "chat": {
     "suggestions": [
-      "Summarise their career in a few lines.",
+      "Show their scores by criterion in a chart.",
       "What questions should I ask in the interview?",
       "What should I check before hiring them?",
       "Does their experience match the level required?"

@@ -49,13 +49,16 @@
     "rights": "© {year} Rabotka. Tous droits réservés.",
     "terms": "Conditions d'utilisation",
     "privacy": "Politique de confidentialité",
-    "top": "Haut de page"
+    "top": "Haut de page",
+    "solutions": "Solutions"
   },
   "pages": {
     "home": {
-      "metaTitle": "Rabotka Business - l'ATS nouvelle génération pour recruter en Afrique",
-      "metaDescription": "Logiciel de recrutement complet : offres rédigées et diffusées partout, CV lus et classés pour chaque poste, pipeline suivi en équipe, entretiens en visio et comptes rendus partagés.",
+      "metaTitle": "Logiciel de recrutement (ATS) pour PME en Afrique - Rabotka",
+      "metaDescription": "Le logiciel de recrutement des PME africaines : offres rédigées et diffusées, CV lus et classés, entretiens en visio et comptes rendus, en équipe.",
       "keywords": [
+        "logiciel de recrutement PME",
+        "ATS PME",
         "ATS Afrique",
         "logiciel RH",
         "gestion des candidatures",
@@ -150,11 +153,17 @@
       "shareAlt": "Rabotka Business — l'ATS des organisations africaines",
       "suffix": "{title} - Rabotka Business",
       "orgDescription": "Logiciel de recrutement (ATS) des entreprises et organisations en Afrique : diffusion d'offres, analyse de CV, suivi des candidatures, entretiens et recrutement en équipe."
+    },
+    "solution": {
+      "featuresKicker": "Fonctionnalités",
+      "countriesKicker": "Où recruter",
+      "countriesTitle": "Ouvert dans {count} pays d'Afrique",
+      "more": "En savoir plus"
     }
   },
   "hero": {
     "title": "Recevez, triez et rencontrez <mark>les bons candidats</mark>, au même endroit",
-    "text": "Le logiciel de recrutement complet : vos offres diffusées, <mark>chaque CV lu et classé</mark>, vos entretiens en visio et leur compte rendu.",
+    "text": "Le logiciel de recrutement des PME en Afrique : vos offres diffusées, <mark>chaque CV lu et classé</mark>, vos entretiens en visio et leur compte rendu.",
     "publishedOn": "Publiées sur",
     "careersPage": "Votre page carrières",
     "countries": "{count} pays d'Afrique",

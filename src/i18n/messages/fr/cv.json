@@ -45,11 +45,12 @@
     "suggestions": [
       "Qui est le plus adapté au poste, et pourquoi ?",
       "Classez-les pour un premier entretien.",
-      "Comparez leur expérience pratique.",
+      "Comparez leurs scores par critère sur un graphique.",
       "Quel est le principal point faible de chacun ?"
     ],
     "notOpen": "Comparaison non ouverte",
     "title": "Comparer {count} candidats",
+    "candidates": "Candidats comparés",
     "intro": "Qui retenir en premier, sur quels points ils se distinguent, que vérifier en entretien : Rabotka répond d'après leurs CV et l'offre.",
     "placeholder": "Une question sur ces candidats…",
     "usedUp": "Vous avez posé les {limit} questions prévues pour cette comparaison.",
@@ -58,7 +59,7 @@
   },
   "chat": {
     "suggestions": [
-      "Résumez son parcours en quelques lignes.",
+      "Montrez ses scores par critère sur un graphique.",
       "Quelles questions lui poser en entretien ?",
       "Quels points vérifier avant de le retenir ?",
       "Son expérience correspond-elle au niveau demandé ?"

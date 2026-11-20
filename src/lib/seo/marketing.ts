@@ -105,6 +105,54 @@ export function organizationLd(origin: string, description: string) {
   };
 }
 
+/**
+ * schema.org SoftwareApplication: what Rabotka Business is to a search
+ * engine — an applicant tracking system on the web, where it is open. No
+ * price: the public site never shows one.
+ */
+export function softwareLd(origin: string, description: string, countries: string[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "Rabotka Business",
+    url: origin,
+    description,
+    applicationCategory: "BusinessApplication",
+    applicationSubCategory: "Applicant tracking system (ATS)",
+    operatingSystem: "Web",
+    inLanguage: ["fr", "en"],
+    ...(countries.length && { areaServed: countries.map((name) => ({ "@type": "Country", name })) }),
+    publisher: { "@type": "Organization", name: "Rabotka", url: "https://www.rabotka.work" },
+  };
+}
+
+/** schema.org FAQPage, from the questions a page answers in full on screen. */
+export function faqLd(items: { q: string; a: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
+    })),
+  };
+}
+
+/** schema.org BreadcrumbList: the page's place in the site, absolute URLs in its language. */
+export function breadcrumbLd(origin: string, locale: Locale, trail: { name: string; path: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: trail.map((step, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: step.name,
+      item: `${origin}${localizedPath(step.path, locale) === "/" ? "" : localizedPath(step.path, locale)}`,
+    })),
+  };
+}
+
 /** A JSON-LD script's content, safe inside <script>. */
 export function jsonLd(data: unknown): string {
   return JSON.stringify(data).replace(/</g, "\\u003c");

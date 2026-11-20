@@ -23,7 +23,6 @@ export function ProgressHeader({
   index: number;
   done: boolean;
   onBack?: () => void;
-  /** Off when the « Se connecter / Créer un compte » tabs are already above. */
   showSignIn?: boolean;
 }>) {
   const current = done ? STEPS.length : index;
