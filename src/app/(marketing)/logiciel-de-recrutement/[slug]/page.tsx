@@ -16,7 +16,8 @@ import { FeatureMockup } from "#/features/landing/mockups/mockups";
 import { SOLUTION_SLUGS, solutions } from "#/features/landing/solutions";
 import type { Locale } from "#/i18n/config";
 import { businessCountriesServer } from "#/lib/api/catalog-server";
-import { marketingMetadata } from "#/lib/seo/marketing";
+import { breadcrumbLd, faqLd, jsonLd, marketingMetadata, softwareLd } from "#/lib/seo/marketing";
+import { siteOrigin } from "#/lib/seo/site";
 
 export const dynamicParams = false;
 
@@ -43,17 +44,30 @@ export async function generateMetadata({ params }: PageProps<"/logiciel-de-recru
  */
 export default async function SolutionPage({ params }: PageProps<"/logiciel-de-recrutement/[slug]">) {
   const { slug } = await params;
-  const [copy, countries, t, locale] = await Promise.all([
+  const [copy, countries, t, locale, { origin }] = await Promise.all([
     getSiteCopy(),
     businessCountriesServer(),
     getTranslations("site.pages.solution"),
     getLocale() as Promise<Locale>,
+    siteOrigin(),
   ]);
   const page = solutions(copy).find((s) => s.slug === slug);
   if (!page) notFound();
+  // What the page says, as search engines read it: the product, its questions, its place.
+  const structured = [
+    softwareLd(origin, page.metaDescription, countries.map((c) => countryName(c, locale))),
+    faqLd(page.faq),
+    breadcrumbLd(origin, locale, [
+      { name: "Rabotka Business", path: "/" },
+      { name: page.label, path: page.href },
+    ]),
+  ];
 
   return (
     <>
+      {structured.map((data) => (
+        <script key={data["@type"]} type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(data) }} />
+      ))}
       <PageHero title={page.heading} text={page.intro} aside={<FeatureMockup id={page.mockup} />} />
 
       <section className="py-20 md:py-28">
