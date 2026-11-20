@@ -73,6 +73,18 @@ export function isProductHuntLaunchDay(now: Date = new Date()): boolean {
   return now.getTime() >= start && now.getTime() < start + 24 * 60 * 60 * 1000;
 }
 
+/**
+ * The official badge, with its live upvote count. Product Hunt caches it for
+ * 4 hours (Cloudflare and browsers alike), so a plain URL showed a count from
+ * hours ago, or the « ??? » of the launch's first 4 hours long after the
+ * count appeared. A value that changes every 5 minutes makes each visit fetch
+ * a fresh one; the page renders per request, so the server picks it.
+ */
+export function productHuntBadgeUrl(now: Date = new Date()): string {
+  const bucket = Math.floor(now.getTime() / (5 * 60 * 1000));
+  return `https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=${PRODUCT_HUNT.postId}&theme=neutral&v=${bucket}`;
+}
+
 /** Prefix of the cookie the top banner sets when dismissed: variant appended (soon|live). */
 export const PH_BANNER_COOKIE_PREFIX = "rb_ph_banner_";
 
