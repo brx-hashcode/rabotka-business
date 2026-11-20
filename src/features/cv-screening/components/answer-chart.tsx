@@ -119,7 +119,7 @@ function Chart({ spec }: Readonly<{ spec: ChartSpec }>) {
 /** One bar's value, on hover: the series (when there are several), the category, the value and its unit. */
 function BarTip({ id, value, indexValue, color, named, unit }: BarTooltipProps<BarDatum> & { named: boolean; unit: string }) {
   return (
-    <span className="flex items-center gap-2 rounded-xl bg-card px-3 py-2 text-foreground text-xs shadow-soft">
+    <span className="flex w-max items-center gap-2 whitespace-nowrap rounded-xl bg-card px-3 py-2 text-foreground text-xs shadow-soft [overflow-wrap:normal]">
       <span aria-hidden className="size-2.5 rounded-full" style={{ background: color }} />
       {named ? `${id} · ` : ""}
       {indexValue} : <strong className="tabular-nums">{value}</strong>
