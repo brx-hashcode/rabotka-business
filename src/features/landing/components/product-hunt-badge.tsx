@@ -14,7 +14,7 @@ export function ProductHuntBadge({ live, votes }: Readonly<{ live: boolean; vote
   const t = useTranslations("site.hero");
   const locale = useLocale() as Locale;
   return (
-    <span className="inline-flex items-center gap-3 rounded-2xl bg-[#FF6154] py-2.5 pr-5 pl-3 text-white transition-[translate,filter] group-hover:-translate-y-0.5 group-hover:brightness-105">
+    <span className="inline-flex items-center gap-3 rounded-2xl bg-[#FF6154] py-2.5 pr-5 pl-3 text-white">
       {/* The kitten's disc in white: its « P » is a hole, so the orange shows through. */}
       <svg viewBox="0 0 24 24" aria-hidden className="size-10 shrink-0">
         <path
