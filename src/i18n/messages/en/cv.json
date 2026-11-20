@@ -45,7 +45,7 @@
     "suggestions": [
       "Who fits the role best, and why?",
       "Rank them for a first interview.",
-      "Compare their hands-on experience.",
+      "Compare their scores by criterion in a chart.",
       "What is each one's main weak point?"
     ],
     "notOpen": "Comparison not open",
@@ -59,7 +59,7 @@
   },
   "chat": {
     "suggestions": [
-      "Summarise their career in a few lines.",
+      "Show their scores by criterion in a chart.",
       "What questions should I ask in the interview?",
       "What should I check before hiring them?",
       "Does their experience match the level required?"
