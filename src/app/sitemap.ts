@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 
 import { FEATURE_SLUGS } from "#/features/landing/content";
 import { GUIDE_SLUGS } from "#/features/landing/site-content";
+import { SOLUTION_SLUGS, SOLUTIONS_PATH } from "#/features/landing/solutions";
 import { OFFERED_LOCALES } from "#/i18n/config";
 import { localizedPath } from "#/i18n/routing";
 import { careersSitemapServer } from "#/lib/api/careers-server";
@@ -29,6 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...MARKETING_PATHS.flatMap((p) => page(p, "weekly")),
     ...FEATURE_SLUGS.flatMap((slug) => page(`/fonctionnalites/${slug}`, "monthly")),
     ...GUIDE_SLUGS.flatMap((slug) => page(`/ressources/${slug}`, "monthly")),
+    ...SOLUTION_SLUGS.flatMap((slug) => page(`${SOLUTIONS_PATH}/${slug}`, "monthly")),
   ];
   const map = await careersSitemapServer();
   if (!map) return site;

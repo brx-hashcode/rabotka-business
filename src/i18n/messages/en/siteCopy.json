@@ -853,5 +853,115 @@
       "note": "Very comfortable with the till and with customers. To check: availability on Sundays.",
       "gaveOpinion": "Nadège gave her opinion"
     }
+  },
+  "solutions": {
+    "pme": {
+      "label": "Recruitment software for SMBs",
+      "metaTitle": "Recruitment software for SMBs in Africa",
+      "metaDescription": "Rabotka Business, the ATS for small and medium businesses: job posts written and published, CVs read and scored out of 100, video interviews and team decisions. No HR department needed, nothing to install.",
+      "keywords": [
+        "recruitment software for SMBs",
+        "ATS for small business",
+        "hiring software for small business",
+        "SME recruitment software",
+        "recruitment software Africa"
+      ],
+      "heading": "Recruitment software for small and medium businesses",
+      "intro": "No HR department, little time, dozens of CVs per role? Rabotka Business writes your job posts, publishes them, reads and ranks the CVs and organises your interviews. The decision stays yours.",
+      "whyKicker": "Why SMBs choose Rabotka",
+      "whyTitle": "An ATS sized for your business",
+      "why": [
+        {
+          "title": "No HR department needed",
+          "text": "Describe the role as you would to a colleague: the full job post is written for you, ready to review and publish."
+        },
+        {
+          "title": "Dozens of CVs, sorted in minutes",
+          "text": "Every CV is read, scored out of 100 against the role and ranked, with its strengths and points to watch. Even scanned or photographed."
+        },
+        {
+          "title": "Your jobs seen by the right candidates",
+          "text": "Published to Rabotka's candidates by city and trade, on your careers page, on LinkedIn and in Google for Jobs."
+        },
+        {
+          "title": "The whole team in one place",
+          "text": "Invite your recruiters and reviewers: everyone sees the applications, gives their view and follows the interviews, with no spreadsheets or lost emails."
+        }
+      ],
+      "featuresTitle": "All of hiring, from the job post to the contract",
+      "faq": [
+        {
+          "q": "What is an ATS?",
+          "a": "An ATS (applicant tracking system) brings your job posts, the applications you receive and the stages of each hire into one place. Rabotka Business adds job post writing, CV screening and video interviews."
+        },
+        {
+          "q": "Is Rabotka Business right for a small business?",
+          "a": "Yes. It is built for small and medium businesses that hire without a dedicated HR team: you open an account in minutes, your organisation is verified, then you publish your first job. What you can use depends on your plan."
+        },
+        {
+          "q": "Do I need to install anything?",
+          "a": "No. Rabotka Business runs in the browser, on a computer or a phone. Video interviews take place in Rabotka: the candidate joins from a link, with no account or app to install."
+        },
+        {
+          "q": "How much does Rabotka Business cost?",
+          "a": "There are several plans, depending on your hiring needs. Request a demo: we show you Rabotka on your own roles and recommend the right plan."
+        }
+      ]
+    },
+    "afrique": {
+      "label": "ATS for Africa",
+      "metaTitle": "ATS and recruitment software for hiring in Africa",
+      "metaDescription": "The ATS built for hiring in Africa: jobs published all the way to WhatsApp, CVs read even when photographed, video interviews and verified organisations. Kenya, Uganda, Rwanda, Zambia, Congo, Cameroon and more.",
+      "keywords": [
+        "ATS Africa",
+        "ATS for hiring in Africa",
+        "recruitment software Africa",
+        "ATS Kenya",
+        "recruitment software Uganda",
+        "recruitment software Rwanda",
+        "applicant tracking system Africa"
+      ],
+      "heading": "The ATS built for hiring in Africa",
+      "intro": "Most recruitment software assumes candidates behind a computer and an HR department. Rabotka Business starts from how hiring really works here: candidates on their phones, CVs photographed, organisations verified.",
+      "whyKicker": "Built for the ground",
+      "whyTitle": "What changes when you hire in Africa",
+      "why": [
+        {
+          "title": "Candidates where they are",
+          "text": "Your jobs reach Rabotka's candidates in your country, targeted by city and trade, all the way to WhatsApp."
+        },
+        {
+          "title": "CVs in every shape",
+          "text": "PDF, Word, a scan or a phone photo: Rabotka reads every CV, scores it out of 100 and ranks it for your role."
+        },
+        {
+          "title": "Interviews without travel",
+          "text": "The video call takes place in Rabotka: the candidate joins from a link on their phone, with no account or app. The report is written for you."
+        },
+        {
+          "title": "Trust on both sides",
+          "text": "Every organisation is verified against its official documents (business registration, tax number, licence): candidates know who they are applying to."
+        }
+      ],
+      "featuresTitle": "A complete ATS, from the job post to the contract",
+      "faq": [
+        {
+          "q": "Why an ATS built for Africa?",
+          "a": "Because candidates don't look for work the same way everywhere. Rabotka Business publishes your jobs where candidates see them, WhatsApp included, reads photographed CVs and verifies each organisation against its own country's official documents."
+        },
+        {
+          "q": "Are my jobs visible outside Rabotka?",
+          "a": "Yes. Each job has its page on your careers page, readable by Google for Jobs, and you can post it on LinkedIn in one click. Every application arrives in the same place."
+        },
+        {
+          "q": "Which documents do I need to open an account?",
+          "a": "They depend on your country and your status: business registration and tax number for a company, registration certificate and statutes for an association or NGO, a licence for a school or health facility. The form tells you exactly what is expected."
+        },
+        {
+          "q": "Which languages does Rabotka Business work in?",
+          "a": "English and French, for your team and your candidates alike."
+        }
+      ]
+    }
   }
 }

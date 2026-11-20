@@ -35,6 +35,7 @@ import {
   solutionLinks,
   type NavLink,
 } from "../content";
+import { solutionPageLinks } from "../solutions";
 import { useSiteCopy } from "../copy";
 import { FlickeringGrid } from "./flickering-grid";
 import { SmartLink } from "./smart-link";
@@ -115,6 +116,7 @@ function useFooterColumns(): { title: string; links: NavLink[] }[] {
   const copy = useSiteCopy();
   return [
     { title: t("features"), links: solutionLinks(copy) },
+    { title: t("solutions"), links: solutionPageLinks(copy) },
     { title: t("resources"), links: resourceLinks(copy) },
     { title: t("company"), links: companyLinks(copy) },
     {
@@ -133,7 +135,7 @@ const MAX_FLAGS = 7;
 
 /**
  * The footer, a dark panel set in the page: a statement with where Rabotka is
- * open, how to reach the team and where to follow it (as admins set it), the links in four
+ * open, how to reach the team and where to follow it (as admins set it), the links in five
  * columns, the legal line, then the name in large outlined capitals.
  */
 export function LandingFooter({ countries }: Readonly<{ countries: BusinessCountryName[] }>) {
@@ -241,7 +243,7 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
 
           <div aria-hidden className="mt-14 h-px bg-white/10" />
 
-          <div className="grid grid-cols-2 gap-x-6 gap-y-10 py-12 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 py-12 md:grid-cols-3 lg:grid-cols-5">
             {FOOTER_COLUMNS.map((group) => (
               <nav key={group.title} aria-label={group.title} className="space-y-4">
                 <p className="font-medium text-[11px] text-white/40 uppercase tracking-[0.16em]">{group.title}</p>

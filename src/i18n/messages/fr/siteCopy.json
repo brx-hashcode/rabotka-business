@@ -853,5 +853,115 @@
       "note": "Très à l'aise avec la caisse et les clients. À revoir : disponibilité le dimanche.",
       "gaveOpinion": "Nadège a donné son avis"
     }
+  },
+  "solutions": {
+    "pme": {
+      "label": "Logiciel de recrutement pour PME",
+      "metaTitle": "Logiciel de recrutement pour PME et TPE en Afrique",
+      "metaDescription": "Rabotka Business, l'ATS des PME : offres rédigées et diffusées, CV lus et classés sur 100, entretiens en visio et décisions en équipe. Sans service RH, rien à installer.",
+      "keywords": [
+        "logiciel de recrutement PME",
+        "ATS PME",
+        "logiciel RH PME",
+        "recrutement TPE",
+        "logiciel de recrutement Afrique"
+      ],
+      "heading": "Le logiciel de recrutement des PME",
+      "intro": "Pas de service RH, peu de temps, des dizaines de CV par poste ? Rabotka Business rédige vos offres, les diffuse, lit et classe les CV, et organise vos entretiens. Vous gardez la décision.",
+      "whyKicker": "Pourquoi les PME choisissent Rabotka",
+      "whyTitle": "Un ATS à la taille de votre entreprise",
+      "why": [
+        {
+          "title": "Pas besoin d'un service RH",
+          "text": "Décrivez le poste comme vous le diriez à un collègue : l'offre complète est rédigée pour vous, prête à relire et à publier."
+        },
+        {
+          "title": "Des dizaines de CV, triés en minutes",
+          "text": "Chaque CV est lu, noté sur 100 par rapport au poste et classé, avec ses points forts et ses points d'attention. Même scanné ou pris en photo."
+        },
+        {
+          "title": "Vos offres vues par les bons candidats",
+          "text": "Diffusées auprès des candidats de Rabotka par ville et par métier, sur votre page carrières, sur LinkedIn et dans Google pour l'emploi."
+        },
+        {
+          "title": "Toute l'équipe au même endroit",
+          "text": "Invitez vos recruteurs et évaluateurs : chacun voit les candidatures, donne son avis et suit les entretiens, sans tableur ni e-mails perdus."
+        }
+      ],
+      "featuresTitle": "Tout le recrutement, de l'offre au contrat",
+      "faq": [
+        {
+          "q": "Qu'est-ce qu'un ATS ?",
+          "a": "Un ATS (applicant tracking system, ou logiciel de suivi des candidatures) rassemble au même endroit vos offres, les candidatures reçues et les étapes de chaque recrutement. Rabotka Business y ajoute la rédaction des offres, l'analyse des CV et les entretiens en visio."
+        },
+        {
+          "q": "Rabotka Business convient-il à une petite entreprise ?",
+          "a": "Oui. Il est pensé pour les PME et TPE qui recrutent sans service RH dédié : vous ouvrez un compte en quelques minutes, votre organisation est vérifiée, puis vous publiez votre première offre. Le détail des fonctions dépend de votre formule."
+        },
+        {
+          "q": "Faut-il installer quelque chose ?",
+          "a": "Non. Rabotka Business fonctionne dans le navigateur, sur ordinateur comme sur téléphone. Les entretiens en visio ont lieu dans Rabotka : le candidat les rejoint par un lien, sans compte ni application à installer."
+        },
+        {
+          "q": "Combien coûte Rabotka Business ?",
+          "a": "Plusieurs formules existent selon vos besoins de recrutement. Demandez une démo : nous vous montrons Rabotka sur vos propres postes et vous conseillons la formule adaptée."
+        }
+      ]
+    },
+    "afrique": {
+      "label": "ATS pour l'Afrique",
+      "metaTitle": "ATS et logiciel de recrutement pour l'Afrique",
+      "metaDescription": "L'ATS conçu pour recruter en Afrique : offres diffusées jusque sur WhatsApp, CV lus même pris en photo, entretiens en visio et organisations vérifiées. Congo, RDC, Cameroun, Côte d'Ivoire, Sénégal et plus.",
+      "keywords": [
+        "ATS Afrique",
+        "logiciel de recrutement Afrique",
+        "recrutement en Afrique",
+        "ATS Congo",
+        "logiciel de recrutement Cameroun",
+        "logiciel de recrutement Côte d'Ivoire",
+        "logiciel de recrutement Sénégal"
+      ],
+      "heading": "L'ATS conçu pour recruter en Afrique",
+      "intro": "La plupart des logiciels de recrutement supposent des candidats derrière un ordinateur et un service RH. Rabotka Business part de la réalité du terrain : des candidats sur leur téléphone, des CV pris en photo, des organisations vérifiées.",
+      "whyKicker": "Pensé pour le terrain",
+      "whyTitle": "Ce qui change quand on recrute en Afrique",
+      "why": [
+        {
+          "title": "Des candidats là où ils sont",
+          "text": "Vos offres sont diffusées auprès des candidats de Rabotka dans votre pays, ciblées par ville et par métier, jusque sur WhatsApp."
+        },
+        {
+          "title": "Des CV de toutes les formes",
+          "text": "PDF, Word, scan ou photo prise au téléphone : Rabotka lit chaque CV, le note sur 100 et le classe pour votre poste."
+        },
+        {
+          "title": "Des entretiens sans déplacement",
+          "text": "La visio a lieu dans Rabotka : le candidat la rejoint par un lien depuis son téléphone, sans compte ni application. Le compte rendu est rédigé pour vous."
+        },
+        {
+          "title": "La confiance des deux côtés",
+          "text": "Chaque organisation est vérifiée sur ses pièces officielles (RCCM, identifiant fiscal, agrément) : les candidats savent à qui ils postulent."
+        }
+      ],
+      "featuresTitle": "Un ATS complet, de l'offre au contrat",
+      "faq": [
+        {
+          "q": "Pourquoi un ATS conçu pour l'Afrique ?",
+          "a": "Parce que les candidats ne cherchent pas un emploi de la même façon partout. Rabotka Business diffuse vos offres là où les candidats les voient, y compris sur WhatsApp, lit les CV pris en photo et vérifie chaque organisation sur les pièces officielles de son pays."
+        },
+        {
+          "q": "Mes offres sont-elles visibles en dehors de Rabotka ?",
+          "a": "Oui. Chaque offre a sa page sur votre page carrières, lisible par Google pour l'emploi, et vous pouvez la publier sur LinkedIn en un clic. Toutes les candidatures arrivent au même endroit."
+        },
+        {
+          "q": "Quelles pièces faut-il pour ouvrir un compte ?",
+          "a": "Elles dépendent de votre pays et de votre statut : registre du commerce (RCCM) et identifiant fiscal pour une société, récépissé et statuts pour une association ou une ONG, agrément pour un établissement d'enseignement ou de santé. Le formulaire vous indique les pièces attendues."
+        },
+        {
+          "q": "En quelles langues fonctionne Rabotka Business ?",
+          "a": "En français et en anglais, pour vos équipes comme pour vos candidats."
+        }
+      ]
+    }
   }
 }
