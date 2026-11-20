@@ -50,6 +50,7 @@
     ],
     "notOpen": "Comparison not open",
     "title": "Compare {count} candidates",
+    "candidates": "Compared candidates",
     "intro": "Who to hire first, where they differ, what to check in the interview: Rabotka answers from their CVs and the job.",
     "placeholder": "A question about these candidates…",
     "usedUp": "You've used all {limit} questions for this comparison.",

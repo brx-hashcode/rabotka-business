@@ -5,12 +5,11 @@ import { useRef } from "react";
 
 import { askCvComparison, cvComparisonPdfUrl, cvScreeningsKey, openCvComparison } from "#/lib/api/cv-screening-controller";
 import type { CvResume } from "#/lib/api/types";
+import { shortNames } from "../short-names";
 import { ChatSheet } from "./chat-sheet";
 import { ScoreRing } from "./cv-bits";
 
-
-
-const firstName = (r: CvResume) => (r.candidate?.name ?? r.fileName).split(" ")[0];
+const fullName = (r: CvResume) => r.candidate?.name ?? r.fileName;
 
 /**
  * A conversation comparing the selected CVs of one analysis, to settle whom
@@ -33,6 +32,8 @@ export function CvCompareSheet({
   const t = useTranslations("cv.compare");
   const SUGGESTIONS = t.raw("suggestions") as string[];
   const ids = resumes.map((r) => r.id).sort();
+  // Short, but never two alike: « Glody M. », and more of the name where needed.
+  const names = shortNames(resumes.map(fullName));
   // The conversation's id, known once it is opened.
   const comparisonId = useRef<string | null>(null);
 
@@ -53,22 +54,18 @@ export function CvCompareSheet({
       }}
       title={t("title", { count: resumes.length })}
       subtitle={jobTitle}
-      lead={
-        <span className="flex shrink-0 -space-x-2">
-          {resumes.slice(0, 3).map((r) => (
-            <span key={r.id} className="rounded-full bg-card ring-2 ring-card">
-              <ScoreRing score={r.score ?? 0} size={40} />
-            </span>
-          ))}
-        </span>
-      }
       meta={
-        <span className="max-w-full truncate rounded-full bg-page px-2.5 py-1 font-medium text-xs">
-          {resumes.map(firstName).join(" · ")}
-        </span>
+        <ul aria-label={t("candidates")} className="flex flex-wrap gap-2">
+          {resumes.map((r, i) => (
+            <li key={r.id} title={fullName(r)} className="flex min-w-0 items-center gap-2 rounded-full bg-page py-1 pr-3.5 pl-1">
+              <ScoreRing score={r.score ?? 0} size={36} />
+              <span className="truncate font-medium text-sm">{names[i]}</span>
+            </li>
+          ))}
+        </ul>
       }
       intro={{
-        title: t("introTitle", { names: resumes.map(firstName).join(", ") }),
+        title: t("introTitle", { names: names.join(", ") }),
         text: t("intro"),
       }}
       suggestions={SUGGESTIONS}

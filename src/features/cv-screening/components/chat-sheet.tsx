@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
 import { IconArrowUp, IconFileTypePdf, IconInfoCircle, IconPlayerStopFilled, IconX } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
@@ -17,6 +17,7 @@ import type { AskResult } from "#/lib/api/cv-screening-controller";
 import { downloadFile } from "#/lib/api/download";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import type { CvChat, CvChatMessage } from "#/lib/api/types";
+import { AnswerMarkdown } from "./answer-markdown";
 
 export type ChatAsk = (
   question: string,
@@ -58,7 +59,7 @@ export function ChatSheet({
   subtitle: string;
   /** Beside the title: a score ring, or several. */
   lead?: ReactNode;
-  /** Under the title, before the questions left. */
+  /** Under the title: the candidates, a verdict. */
   meta?: ReactNode;
   intro: { title: string; text: string };
   suggestions: string[];
@@ -162,14 +163,7 @@ export function ChatSheet({
             <div className="min-w-0 flex-1 space-y-1">
               <SheetPrimitive.Title className="truncate font-semibold text-lg leading-tight">{title}</SheetPrimitive.Title>
               <p className="truncate text-muted-foreground text-sm">{subtitle}</p>
-              <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                {meta}
-                {data && (
-                  <span className="text-muted-foreground text-xs tabular-nums">
-                    {t("remaining", { count: remaining, limit: data.limit })}
-                  </span>
-                )}
-              </div>
+              {meta && <div className="flex flex-wrap items-center gap-2 pt-1">{meta}</div>}
             </div>
             {pdfUrl && (
               <button
@@ -283,6 +277,11 @@ export function ChatSheet({
               </form>
             )}
             <p className="px-2 text-center text-muted-foreground text-xs">
+              {data && data.available && data.limit > 0 && (
+                <span className="font-medium text-foreground/70 tabular-nums">
+                  {t("remaining", { count: remaining, limit: data.limit })} ·{" "}
+                </span>
+              )}
               {t("disclaimer")}
             </p>
           </footer>
@@ -354,7 +353,7 @@ function Bubble({ role, text, writing, note }: Readonly<{ role: "user" | "assist
   return (
     <div className="flex">
       <div className="min-w-0 max-w-[90%] overflow-hidden rounded-3xl rounded-tl-lg bg-card px-4 py-3 text-[15px] leading-relaxed [overflow-wrap:anywhere]">
-        <Answer text={text} />
+        <AnswerMarkdown text={text} />
         {writing && <span aria-hidden className="ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 animate-pulse rounded-sm bg-foreground/40" />}
       </div>
     </div>
@@ -375,73 +374,3 @@ function Thinking() {
     </div>
   );
 }
-
-/**
- * An answer, lightly formatted: paragraphs, « - » lists and **bold**, the only
- * marks the assistant is asked to use. Plain text otherwise (React escapes it).
- */
-function Answer({ text }: Readonly<{ text: string }>) {
-  const blocks: { list: boolean; lines: string[] }[] = [];
-  for (const raw of text.split("\n")) {
-    const line = raw.trimEnd();
-    const item = /^\s*(?:[-*•]|\d+[.)])\s+/.exec(line);
-    const last = blocks[blocks.length - 1];
-    if (!line.trim()) {
-      blocks.push({ list: false, lines: [] });
-    } else if (item) {
-      const content = line.slice(item[0].length);
-      if (last?.list) last.lines.push(content);
-      else blocks.push({ list: true, lines: [content] });
-    } else if (last && !last.list && last.lines.length) {
-      last.lines.push(line);
-    } else {
-      blocks.push({ list: false, lines: [line] });
-    }
-  }
-  return (
-    <div className="space-y-2">
-      {blocks
-        .filter((b) => b.lines.length)
-        .map((b, i) =>
-          b.list ? (
-            <ul key={i} className="space-y-1.5">
-              {b.lines.map((l, j) => (
-                <li key={j} className="flex gap-2">
-                  <span aria-hidden className="mt-2.5 size-1.5 shrink-0 rounded-full bg-whatsapp-dark" />
-                  <span className="min-w-0">
-                    <Inline text={l} />
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p key={i}>
-              {b.lines.map((l, j) => (
-                <Fragment key={j}>
-                  {j > 0 && <br />}
-                  <Inline text={l} />
-                </Fragment>
-              ))}
-            </p>
-          ),
-        )}
-    </div>
-  );
-}
-
-function Inline({ text }: Readonly<{ text: string }>) {
-  return (
-    <>
-      {text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
-        part.startsWith("**") && part.endsWith("**") && part.length > 4 ? (
-          <strong key={i} className="font-semibold">
-            {part.slice(2, -2)}
-          </strong>
-        ) : (
-          <Fragment key={i}>{part}</Fragment>
-        ),
-      )}
-    </>
-  );
-}
-

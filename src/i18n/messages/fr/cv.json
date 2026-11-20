@@ -50,6 +50,7 @@
     ],
     "notOpen": "Comparaison non ouverte",
     "title": "Comparer {count} candidats",
+    "candidates": "Candidats comparés",
     "intro": "Qui retenir en premier, sur quels points ils se distinguent, que vérifier en entretien : Rabotka répond d'après leurs CV et l'offre.",
     "placeholder": "Une question sur ces candidats…",
     "usedUp": "Vous avez posé les {limit} questions prévues pour cette comparaison.",
