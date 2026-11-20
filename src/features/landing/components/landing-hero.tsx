@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { GoogleLogo, LinkedInLogo, ProductHuntLogo } from "#/components/brand-logos";
 
 import type { BusinessCountryName } from "#/lib/api/catalog-server";
-import { isProductHuntLaunchDay, isProductHuntLaunched, PRODUCT_HUNT } from "../content";
+import { isProductHuntLaunchDay, isProductHuntLaunched, PRODUCT_HUNT, productHuntBadgeUrl } from "../content";
 import { DemoButton, SignUpButton } from "./demo-button";
 import { flagUrl } from "../globe/country-places";
 import { HeroMockup } from "../mockups/mockups";
@@ -97,7 +97,7 @@ export function LandingHero({ countries }: Readonly<{ countries: BusinessCountry
             {isLaunched ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={`https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=${PRODUCT_HUNT.postId}&theme=neutral`}
+                src={productHuntBadgeUrl()}
                 alt={productHuntLabel}
                 width={250}
                 height={54}
