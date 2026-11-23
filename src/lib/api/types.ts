@@ -620,7 +620,7 @@ export type OfferDraft = {
   description: string;
   categoryId: string | null;
   categoryName: string | null;
-  employmentType: "MISSION" | "CDD" | "CDI" | "STAGE" | null;
+  employmentType: "MISSION" | "CDD" | "CDI" | "STAGE" | "CONSULTANT" | "INTERIM" | "APPRENTISSAGE" | "VOLONTARIAT" | null;
   /** What was left out on purpose (a discriminatory criterion asked for). */
   removed: string[];
   /** What candidates look for and the request did not say (never invented). Absent from an older backend. */
@@ -632,7 +632,7 @@ export type OfferDraft = {
 export type OfferDraftInput = {
   brief: string;
   title?: string;
-  employmentType?: "MISSION" | "CDD" | "CDI" | "STAGE";
+  employmentType?: "MISSION" | "CDD" | "CDI" | "STAGE" | "CONSULTANT" | "INTERIM" | "APPRENTISSAGE" | "VOLONTARIAT";
   city?: string;
   isRemote?: boolean;
   quantity?: number;

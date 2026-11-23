@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useForm, useWatch, type Control, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconWand } from "@tabler/icons-react";
+import { IconBriefcase, IconCalendarEvent, IconWand } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 
@@ -52,7 +52,7 @@ const offerSchema = (t: Translator<"offers.form.v">, locale: Locale) => {
   .object({
     title: z.string().trim().min(5, t("title")).max(100, t("title")),
     description: z.string().trim().min(DESCRIPTION_MIN, range).max(DESCRIPTION_MAX, range),
-    employmentType: z.enum(["MISSION", "CDD", "CDI", "STAGE"]),
+    employmentType: z.enum(["MISSION", "CDD", "CDI", "STAGE", "CONSULTANT", "INTERIM", "APPRENTISSAGE", "VOLONTARIAT"]),
     scheduledDate: z.string(),
     scheduledTime: z.string(),
     isRemote: z.boolean(),
@@ -347,18 +347,7 @@ export function OfferForm({
           </Section>
 
           <Section title={dated ? t("typeAndDate") : t("type")}>
-            <Choice
-              control={form.control}
-              name="employmentType"
-              label={t("offerType")}
-              options={EMPLOYMENT_TYPES.map((value) => ({
-                value,
-                label: tLabels(`employmentType.${value}`),
-                hint: tLabels(`employmentHint.${value}`),
-                // An offer already of that type (made in the app) keeps it.
-                disabled: !AVAILABLE_EMPLOYMENT_TYPES.includes(value) && value !== defaultValues.employmentType,
-              }))}
-            />
+            <EmploymentTypeField control={form.control} />
             {dated ? (
               <div className="grid gap-5 sm:grid-cols-2">
                 <FormField
@@ -554,6 +543,94 @@ function ComboField({
 }
 
 /** A row of choices (type, payment rhythm): few options need no list. */
+/** The contracts, most asked first: everything but a mission. */
+const CONTRACT_TYPES = (["CDI", "CDD", "STAGE", "CONSULTANT", "INTERIM", "APPRENTISSAGE", "VOLONTARIAT"] as const).filter((x) =>
+  EMPLOYMENT_TYPES.includes(x),
+);
+
+/**
+ * « Type d'offre » in two steps, as the offer behaves: a mission (one date, a
+ * one-off job its worker confirms done) or a contract (recruited, then the
+ * business closes the offer); for a contract, which kind.
+ */
+function EmploymentTypeField({ control }: Readonly<{ control: Control<OfferFormValues> }>) {
+  const t = useTranslations("offers.form");
+  const tLabels = useTranslations("labels");
+  // Back to « Contrat » after a look at « Mission »: the kind picked before.
+  const [lastContract, setLastContract] = useState<EmploymentType>("CDI");
+  return (
+    <FormField
+      control={control}
+      name="employmentType"
+      render={({ field }) => {
+        const mission = field.value === "MISSION";
+        const value = field.value as EmploymentType;
+        const pick = (next: EmploymentType) => {
+          if (next !== "MISSION") setLastContract(next);
+          field.onChange(next);
+        };
+        return (
+          <FormItem>
+            <FieldLabel>{t("offerType")}</FieldLabel>
+            <div role="radiogroup" aria-label={t("offerType")} className="grid gap-2 sm:grid-cols-2">
+              {(
+                [
+                  { key: "mission", on: mission, icon: IconCalendarEvent, onClick: () => pick("MISSION") },
+                  { key: "contract", on: !mission, icon: IconBriefcase, onClick: () => pick(mission ? lastContract : value) },
+                ] as const
+              ).map((o) => (
+                <button
+                  key={o.key}
+                  type="button"
+                  role="radio"
+                  aria-checked={o.on}
+                  onClick={o.onClick}
+                  className={cn(
+                    "flex items-start gap-3 rounded-2xl p-4 text-left transition-colors",
+                    o.on ? "bg-ink text-white" : "bg-page hover:bg-page/70",
+                  )}
+                >
+                  <o.icon className="mt-0.5 size-5 shrink-0" />
+                  <span className="min-w-0">
+                    <span className="block font-medium">{t(`${o.key}Choice`)}</span>
+                    <span className={cn("block text-sm", o.on ? "text-white/75" : "text-muted-foreground")}>
+                      {t(`${o.key}ChoiceHint`)}
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+            {!mission && (
+              <div className="space-y-2 pt-2">
+                <p className="font-medium text-muted-foreground text-xs">{t("contractType")}</p>
+                <div role="radiogroup" aria-label={t("contractType")} className="flex flex-wrap gap-2">
+                  {CONTRACT_TYPES.map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      role="radio"
+                      aria-checked={value === type}
+                      onClick={() => pick(type)}
+                      className={cn(
+                        "h-10 rounded-full px-4 font-medium text-sm transition-colors",
+                        value === type ? "bg-ink text-white" : "bg-page hover:bg-page/70",
+                      )}
+                    >
+                      {tLabels(`employmentType.${type}`)}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-muted-foreground text-xs">{tLabels(`employmentHint.${value}`)}</p>
+              </div>
+            )}
+            <FormMessage />
+          </FormItem>
+        );
+      }}
+    />
+  );
+}
+
 function Choice({
   control,
   name,

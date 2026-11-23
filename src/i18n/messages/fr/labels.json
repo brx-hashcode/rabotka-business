@@ -25,13 +25,21 @@
     "MISSION": "Mission",
     "CDD": "CDD",
     "CDI": "CDI",
-    "STAGE": "Stage"
+    "STAGE": "Stage",
+    "CONSULTANT": "Consultant",
+    "INTERIM": "Intérim",
+    "APPRENTISSAGE": "Apprentissage",
+    "VOLONTARIAT": "Volontariat"
   },
   "employmentHint": {
     "MISSION": "Un travail ponctuel, à une date donnée",
     "CDD": "Contrat à durée déterminée",
     "CDI": "Contrat à durée indéterminée",
-    "STAGE": "Stage ou alternance"
+    "STAGE": "Un stage, pour un étudiant ou un jeune diplômé",
+    "CONSULTANT": "Une consultance : un mandat, un livrable",
+    "INTERIM": "Par une agence de travail temporaire",
+    "APPRENTISSAGE": "Une formation en alternance",
+    "VOLONTARIAT": "Volontariat ou bénévolat, souvent pour une ONG"
   },
   "paymentFlow": {
     "TASK": "Par tâche",

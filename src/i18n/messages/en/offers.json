@@ -510,7 +510,12 @@
     "questions": "Questions for candidates",
     "optional": "optional",
     "soon": "Coming soon",
-    "characters": "{length} / {max} characters"
+    "characters": "{length} / {max} characters",
+    "missionChoice": "One-off mission",
+    "missionChoiceHint": "A job on a given date, confirmed once done",
+    "contractChoice": "Contract",
+    "contractChoiceHint": "You recruit, then you close the job",
+    "contractType": "Contract type"
   },
   "ai": {
     "examples": [
