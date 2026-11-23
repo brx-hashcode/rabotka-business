@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
 import { Textarea } from "#/components/ui/textarea";
+import { appConfig } from "#/config";
 import { INTL_LOCALE, type Locale } from "#/i18n/config";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import {
@@ -80,14 +81,15 @@ export function LinkedinPostDialog({
   const shareBox = offerShareLinks(origin, slug, offer.reference, offer.title).linkedin;
   const published = posts.data?.find((p) => p.status === "PUBLISHED");
   // The confirmation shows what went out (the newest post's own picture, or
-  // the offer's); the large preview shows what « Publier » would send.
-  const ogImage = `${offerShareUrl(origin, slug, offer.reference)}/opengraph-image`;
+  // the offer's); the large preview shows what « Publier » would send. The
+  // offer's picture is its social visual (4:5), the one « Partager » gives.
+  const offerVisual = `${appConfig.apiUrl}/business/me/job-offers/${encodeURIComponent(offer.id)}/poster.png?format=post`;
   const postedImage = posts.data?.[0]?.imageUrl ?? null;
   // Posting again keeps the last post's own picture, until another is picked
   // or the recruiter goes back to the offer's.
   const [backToOffer, setBackToOffer] = useState(false);
   const keptImage = state === "posted" && !backToOffer ? postedImage : null;
-  const previewSrc = ownPreview ?? keptImage ?? ogImage;
+  const previewSrc = ownPreview ?? keptImage ?? offerVisual;
   const showsOwn = !!ownImage || !!keptImage;
   const failed = posts.data?.[0]?.status === "FAILED" ? posts.data[0] : null;
 
@@ -200,8 +202,8 @@ export function LinkedinPostDialog({
                   <div className="flex min-w-0 flex-1 items-center gap-4">
                     {/* The picture it carried, marked with LinkedIn's badge. */}
                     <div className="relative hidden shrink-0 sm:block">
-                      {/* eslint-disable-next-line @next/next/no-img-element -- LinkedIn's address for the posted picture, or the OG image */}
-                      <img src={postedImage ?? ogImage} alt="" className="aspect-[1200/630] w-28 rounded-xl object-cover" />
+                      {/* eslint-disable-next-line @next/next/no-img-element -- LinkedIn's address for the posted picture, or the offer's visual */}
+                      <img src={postedImage ?? offerVisual} alt="" className="aspect-4/5 w-14 rounded-lg object-cover" />
                       <span className="absolute -right-1.5 -bottom-1.5 flex size-6 items-center justify-center rounded-lg bg-[#0a66c2] text-white ring-2 ring-page">
                         <IconBrandLinkedin className="size-3.5" />
                       </span>
@@ -253,10 +255,10 @@ export function LinkedinPostDialog({
                 {/* The picture, shown large under the text. */}
                 <div className="flex flex-col gap-2">
                   <span className="font-medium text-sm">{t("image")}</span>
-                  {/* A fixed block, so the dialog keeps its size, filled by the picture. */}
-                  <div className="flex aspect-[1200/630] w-full items-center justify-center overflow-hidden rounded-2xl bg-page">
-                    {/* eslint-disable-next-line @next/next/no-img-element -- a local preview or the careers page's own OG image */}
-                    <img src={previewSrc} alt="" className="block h-full w-full object-cover" />
+                  {/* A fixed 4:5 block, so the dialog keeps its size; a picture of another shape fits inside. */}
+                  <div className="flex aspect-4/5 w-full items-center justify-center overflow-hidden rounded-2xl bg-page">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- a local preview or the offer's social visual */}
+                    <img src={previewSrc} alt="" className="block h-full w-full object-contain" />
                   </div>
                   <p className="text-muted-foreground text-xs">
                     {ownImage ? t("ownImage") : keptImage ? t("keptImage") : t("offerImage")}
