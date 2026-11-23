@@ -8,6 +8,7 @@ import {
   IconFileText,
   IconHash,
   IconListCheck,
+  IconPaperclip,
   IconPlus,
   IconTrash,
 } from "@tabler/icons-react";
@@ -36,6 +37,7 @@ const KINDS: { kind: QuestionKind; icon: typeof IconCheck }[] = [
   { kind: "LONG_TEXT", icon: IconFileText },
   { kind: "NUMBER", icon: IconHash },
   { kind: "DATE", icon: IconCalendar },
+  { kind: "FILE", icon: IconPaperclip },
 ];
 const INPUT = "h-11 rounded-xl border-0 bg-card px-4 text-base shadow-none md:text-[15px]";
 
@@ -88,7 +90,7 @@ function KindPicker({ value, onChange }: Readonly<{ value: QuestionKind; onChang
   return (
     <div className="space-y-2">
       <p className="font-medium text-muted-foreground text-xs">{t("kind")}</p>
-      <div role="radiogroup" aria-label={t("kind")} className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+      <div role="radiogroup" aria-label={t("kind")} className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
         {KINDS.map(({ kind, icon: Icon }) => (
           <button
             key={kind}

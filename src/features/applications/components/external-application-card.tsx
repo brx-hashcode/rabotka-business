@@ -18,6 +18,7 @@ import { CRITERIA, ScoreRing, VerdictChip } from "#/features/cv-screening/compon
 import { CandidateInsight, detailsLabel } from "#/features/offers/components/candidate-insight";
 import { MoreActionsMenu, opinionLabel, type MoreAction } from "#/features/offers/components/more-actions-menu";
 import { DeleteImportedDialog } from "#/features/offers/components/import-cvs";
+import { AnswerFileLink } from "#/features/offers/components/answer-file-link";
 import type { CvAnalysis } from "#/lib/api/offer-controller";
 import { CvChatSheet } from "#/features/cv-screening/components/cv-chat-sheet";
 import {
@@ -383,7 +384,11 @@ export function ExternalApplicationCard({
             <div key={answer.label}>
               <dt className="text-muted-foreground">{answer.label}</dt>
               <dd className="font-medium">
-                <DescriptionText text={answer.value === "yes" ? t("yes") : answer.value === "no" ? t("no") : answer.value} />
+                {answer.fileId ? (
+                  <AnswerFileLink fileId={answer.fileId} name={answer.value} label={answer.label} />
+                ) : (
+                  <DescriptionText text={answer.value === "yes" ? t("yes") : answer.value === "no" ? t("no") : answer.value} />
+                )}
               </dd>
             </div>
           ))}

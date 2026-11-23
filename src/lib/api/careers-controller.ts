@@ -61,6 +61,8 @@ export type ApplyInput = {
   answers: { questionId: string; value: string }[];
   /** « Garder ma candidature pour d'autres postes »: an opt-in. */
   poolConsent?: boolean;
+  /** « Fichier » answers: an answer `file:<i>` is the i-th of these. */
+  answerFiles?: File[];
 };
 
 /** Who applied from the public careers page: the business's side. */
@@ -74,7 +76,8 @@ export type ExternalApplication = {
   /** Applied on the careers page, or a CV the business imported (source import-device / import-gmail). */
   origin?: "CAREERS" | "IMPORT";
   status: "PENDING" | "RETAINED" | "REFUSED";
-  answers: { label: string; kind: CareersQuestion["kind"]; value: string; passed: boolean | null }[];
+  /** A « Fichier » answer: `value` is the file's name, `fileId` opens it. */
+  answers: { label: string; kind: CareersQuestion["kind"]; value: string; fileId?: string | null; passed: boolean | null }[];
   knockedOut: boolean;
   /** Where they came from: google, jooble, qr… Null before it was tracked. */
   source: string | null;
@@ -106,13 +109,14 @@ class CareersController extends BusinessBaseController {
     return this.get(`/public/careers/${encodeURIComponent(slug)}/offers/${encodeURIComponent(reference)}`);
   }
 
-  apply(slug: string, reference: string, { cv, answers, poolConsent, ...fields }: ApplyInput): Promise<{ sent: boolean }> {
+  apply(slug: string, reference: string, { cv, answers, poolConsent, answerFiles = [], ...fields }: ApplyInput): Promise<{ sent: boolean }> {
     const form = new FormData();
     for (const [key, value] of Object.entries(fields)) form.append(key, value);
     form.append("consent", "true");
     if (poolConsent) form.append("poolConsent", "true");
     form.append("answers", JSON.stringify(answers));
     form.append("cv", cv);
+    for (const file of answerFiles) form.append("answerFiles", file);
     return this.post(`/public/careers/${encodeURIComponent(slug)}/offers/${encodeURIComponent(reference)}/apply`, form);
   }
 

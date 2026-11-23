@@ -42,7 +42,8 @@ export function PreviewSheet({
   subtitle?: string;
   /** Same-origin API path, signed URL or `blob:`; none: nothing to show. */
   src: string | undefined;
-  kind: PreviewKind;
+  /** None: read from the file's own type once it is fetched. */
+  kind?: PreviewKind;
   /** The name a download is saved under. */
   fileName?: string;
   unavailable?: string;
@@ -51,6 +52,7 @@ export function PreviewSheet({
 }>) {
   const t = useTranslations("ui.preview");
   const file = useBlobUrl(open ? src : undefined, kind);
+  const shown = kind ?? previewKindOf(file.type);
   const [zoom, setZoom] = useState(1);
   const [pages, setPages] = useState(0);
   const [drawFailed, setDrawFailed] = useState(false);
@@ -177,7 +179,7 @@ export function PreviewSheet({
                   <span className="hidden sm:inline">{t("download")}</span>
                 </button>
                 {/* A Word file prints from Word: the browser cannot print it as is. */}
-                {kind !== "docx" && (
+                {shown !== "docx" && (
                   <button
                     type="button"
                     onClick={print}
@@ -198,18 +200,18 @@ export function PreviewSheet({
           <div className="relative min-h-0 flex-1 overflow-auto bg-page">
             {!src ? (
               <Message>{unavailable ?? t("unavailable")}</Message>
-            ) : failed ? (
+            ) : failed || (file.url && !shown) ? (
               <Message>{t("failed")}</Message>
             ) : !file.url ? (
               <div className="px-4 py-6 sm:px-8">
                 <DocumentPageSkeleton />
               </div>
-            ) : kind === "pdf" ? (
+            ) : shown === "pdf" ? (
               <div className="px-4 py-6 sm:px-8">
                 <PdfPages file={file.url} zoom={zoom} onPages={setPages} onError={() => setDrawFailed(true)} />
                 {pages > 1 && <p className="mt-4 text-center text-muted-foreground text-xs">{pages} pages</p>}
               </div>
-            ) : kind === "docx" ? (
+            ) : shown === "docx" ? (
               <div className="px-4 py-6 sm:px-8">
                 <DocxPages file={file.url} zoom={zoom} onError={() => setDrawFailed(true)} />
               </div>
@@ -234,9 +236,9 @@ export function PreviewSheet({
 }
 
 /** The file as a URL the panel can draw and save: API routes become a local copy. */
-function useBlobUrl(src: string | undefined, kind: PreviewKind) {
+function useBlobUrl(src: string | undefined, kind: PreviewKind | undefined) {
   const sameOrigin = !!src?.startsWith("/");
-  const [state, setState] = useState<{ for?: string; url: string | null; failed: boolean }>({ url: null, failed: false });
+  const [state, setState] = useState<{ for?: string; url: string | null; failed: boolean; type?: string }>({ url: null, failed: false });
 
   useEffect(() => {
     if (!src || !sameOrigin) return;
@@ -250,7 +252,7 @@ function useBlobUrl(src: string | undefined, kind: PreviewKind) {
       .then((blob) => {
         if (cancelled) return;
         url = URL.createObjectURL(kind === "pdf" ? new Blob([blob], { type: "application/pdf" }) : blob);
-        setState({ for: src, url, failed: false });
+        setState({ for: src, url, failed: false, type: blob.type });
       })
       .catch(() => !cancelled && setState({ for: src, url: null, failed: true }));
     return () => {

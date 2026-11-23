@@ -87,6 +87,13 @@
     "retryAnalysis": "Réessayer l'analyse",
     "retryTitle": "Réessayer l'analyse du CV de {name} ?"
   },
+  "answerFile": {
+    "photo": "Photo",
+    "pdf": "Document PDF",
+    "word": "Document Word",
+    "file": "Fichier",
+    "see": "Voir"
+  },
   "detail": {
     "back": "Offres",
     "notFound": "Cette offre est introuvable.",
@@ -220,7 +227,8 @@
       "SHORT_TEXT": "Réponse courte",
       "LONG_TEXT": "Réponse longue",
       "NUMBER": "Nombre",
-      "DATE": "Date"
+      "DATE": "Date",
+      "FILE": "Fichier"
     },
     "hint": {
       "YES_NO": "Le candidat répond par oui ou par non.",
@@ -228,7 +236,8 @@
       "SHORT_TEXT": "Le candidat répond en quelques mots (300 caractères).",
       "LONG_TEXT": "Le candidat écrit un texte, comme une lettre de motivation (3 000 caractères).",
       "NUMBER": "Le candidat répond par un nombre, comme ses années d'expérience.",
-      "DATE": "Le candidat choisit une date, comme sa disponibilité."
+      "DATE": "Le candidat choisit une date, comme sa disponibilité.",
+      "FILE": "Le candidat joint un document : diplôme, lettre, attestation… (PDF, Word ou photo, 10 Mo)."
     },
     "problem": {
       "tooShort": "La question est trop courte.",
@@ -609,7 +618,7 @@
     "withoutConnecting": "Partager sans connecter",
     "published": "Publiée sur LinkedIn{date, select, none {} other { le {date}}}",
     "again": "Vous pouvez la publier à nouveau, après une modification par exemple.",
-    "see": "Voir",
+    "see": "Voir la publication",
     "lastFailed": "La dernière publication n'a pas abouti : {error}.",
     "retry": "réessayez",
     "postText": "Texte de la publication",
@@ -618,8 +627,8 @@
     "ownImage": "Votre image, publiée en grand sous le texte.",
     "keptImage": "L'image de votre dernière publication, reprise si vous publiez à nouveau.",
     "offerImage": "L'image de l'offre, publiée en grand sous le texte.",
-    "changeImage": "Changer d'image",
-    "useOwn": "Mettre ma propre image",
+    "changeImage": "Choisir une autre image",
+    "useOwn": "Changer l'image",
     "backToOffer": "Reprendre l'image de l'offre",
     "formats": "JPEG, PNG ou WEBP · 8 Mo au plus · idéalement 1200 × 630",
     "onFeed": "Sur votre fil, visible par tous ·",
