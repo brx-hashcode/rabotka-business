@@ -510,7 +510,12 @@
     "questions": "Questions aux candidats",
     "optional": "facultatif",
     "soon": "Bientôt disponible",
-    "characters": "{length} / {max} caractères"
+    "characters": "{length} / {max} caractères",
+    "missionChoice": "Mission ponctuelle",
+    "missionChoiceHint": "Un travail à une date donnée, confirmé une fois fait",
+    "contractChoice": "Contrat",
+    "contractChoiceHint": "Vous recrutez, puis vous fermez l'offre",
+    "contractType": "Type de contrat"
   },
   "ai": {
     "examples": [

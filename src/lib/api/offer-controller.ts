@@ -12,7 +12,7 @@ export type OfferStatus =
   | "EXPIRED"
   | "CANCELLED";
 
-export type EmploymentType = "MISSION" | "CDD" | "CDI" | "STAGE";
+export type EmploymentType = "MISSION" | "CDD" | "CDI" | "STAGE" | "CONSULTANT" | "INTERIM" | "APPRENTISSAGE" | "VOLONTARIAT";
 export type PaymentFlow = "TASK" | "HOURLY" | "DAILY" | "MONTHLY";
 
 export type OfferListItem = {

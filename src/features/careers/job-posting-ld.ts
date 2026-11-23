@@ -6,6 +6,10 @@ const EMPLOYMENT_TYPE: Record<CareersOffer["employmentType"], string[]> = {
   CDD: ["FULL_TIME", "TEMPORARY"],
   CDI: ["FULL_TIME"],
   STAGE: ["INTERN"],
+  CONSULTANT: ["CONTRACTOR"],
+  INTERIM: ["TEMPORARY"],
+  APPRENTISSAGE: ["INTERN"],
+  VOLONTARIAT: ["VOLUNTEER"],
 };
 
 const SALARY_UNIT: Partial<Record<NonNullable<CareersOffer["paymentFlow"]>, string>> = {
