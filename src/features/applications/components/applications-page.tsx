@@ -30,6 +30,7 @@ import { TeamOpinionButton } from "#/features/team/components/team-opinion";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
 import { pollEvery } from "#/features/layout/socket-status";
+import { isAnalysing } from "../analysing";
 
 const PAGE = 100;
 const fold = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
@@ -61,7 +62,7 @@ export function ApplicationsPage() {
     queryKey: externalApplicationsKey,
     queryFn: () => listExternalApplications(),
     // A CV being read gets its score in a few seconds.
-    refetchInterval: (q) => (q.state.data?.some((a) => a.analysis?.status === "QUEUED") ? pollEvery(4000, 20_000) : false),
+    refetchInterval: (q) => (q.state.data?.some(isAnalysing) ? pollEvery(4000, 20_000) : false),
   });
   const total = query.data?.pages[0]?.total ?? 0;
 

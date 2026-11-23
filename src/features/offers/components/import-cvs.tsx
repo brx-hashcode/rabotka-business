@@ -37,6 +37,22 @@ export function useCvRoom() {
   return { e, room, loading: subscription.isLoading };
 }
 
+/** Why no CV can be analysed now; null while one can (or it is not known yet). */
+export type CvBlock = { kind: "locked" | "usedUp"; trial: boolean; until: string | null; packOnSale: boolean };
+
+/**
+ * The plan's side of « Analyser »: left out of the plan, or its « CV inclus »
+ * used up for the period. Said where the button would be, rather than a
+ * button that can only fail.
+ */
+export function useCvBlock(): CvBlock | null {
+  const { e, room, loading } = useCvRoom();
+  const packOnSale = usePackOnSale("CV");
+  if (loading || room > 0) return null;
+  if (!e || cvOutOfReach(e)) return { kind: "locked", trial: trialLocks(e, "cvAnalysis"), until: null, packOnSale: false };
+  return { kind: "usedUp", trial: false, until: e.countersResetAt ?? e.endsAt, packOnSale };
+}
+
 /** Sends the CVs in chunks (send-cv-batch.ts), then shows them on the offer. */
 function useImportCvs(offerId: string, onDone: () => void) {
   const t = useTranslations("offers.importCvs");

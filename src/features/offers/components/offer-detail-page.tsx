@@ -110,14 +110,15 @@ import { useConfirmedShortlist } from "../use-shortlist";
 import { BulkRefuseDialog } from "./bulk-refuse-dialog";
 import { BulkMessageDialog } from "#/features/messages/components/bulk-message-dialog";
 import { OfferBoard } from "./offer-board";
-import { DeleteImportedDialog, ImportCvsDialog, useCvRoom, useGmailImport } from "./import-cvs";
+import { DeleteImportedDialog, ImportCvsDialog, useCvBlock, useCvRoom, useGmailImport } from "./import-cvs";
 import { AnswerFileLink } from "./answer-file-link";
 import { OfferDescriptionCard } from "./offer-description-card";
 import { linkedinOffer } from "../linkedin-post";
 import { PublishedShareCard } from "./published-share-card";
 import { ShareOfferMenu } from "./share-offer-menu";
 import { Checkbox } from "#/components/ui/checkbox";
-import { CRITERIA, ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
+import { AnalysingChip, CRITERIA, CvBlockedNote, ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
+import { isAnalysing } from "#/features/applications/analysing";
 import { scheduledIso } from "./offer-form";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
@@ -157,7 +158,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
     queryKey: [...externalApplicationsKey, id],
     queryFn: () => listExternalApplications(id),
     // A CV being read gets its score in a few seconds.
-    refetchInterval: (q) => (q.state.data?.some((a) => a.analysis?.status === "QUEUED") ? pollEvery(4000, 20_000) : false),
+    refetchInterval: (q) => (q.state.data?.some(isAnalysing) ? pollEvery(4000, 20_000) : false),
   });
   const outsiders = (external.data ?? []).filter((a) => a.offer.id === id);
   // The candidate's side moves on its own (paying their part of an unlock): keep up.
@@ -1306,12 +1307,7 @@ function ApplicantCvAnalysis({
   });
 
   if (analysis?.status === "QUEUED") {
-    return (
-      <span className="inline-flex h-10 items-center gap-2 px-1 text-muted-foreground text-sm">
-        <Loader className="size-4 animate-spin" />
-        {t("analysingCv")}
-      </span>
-    );
+    return <AnalysingChip />;
   }
   if (scored) {
     return (
@@ -1434,7 +1430,9 @@ function AnalyseAllBar({ offerId, outsiders }: Readonly<{ offerId: string; outsi
   const tc = useTranslations("offers.candidate");
   const friendlyError = useFriendlyError();
   const [confirm, setConfirm] = useState(false);
-  const waiting = outsiders.filter((a) => a.status === "PENDING" && recruiting(a) && a.hasCv && !a.analysis).length;
+  const block = useCvBlock();
+  // Not those on their way (queued at import, being read): they need nothing.
+  const waiting = outsiders.filter((a) => a.status === "PENDING" && recruiting(a) && a.hasCv && !a.analysis && !isAnalysing(a)).length;
   const analyse = useMutation({
     mutationFn: () => analyseExternalApplications(offerId),
     onSuccess: ({ left }) => {
@@ -1443,9 +1441,17 @@ function AnalyseAllBar({ offerId, outsiders }: Readonly<{ offerId: string; outsi
       setConfirm(false);
       if (left > 0) toast.info(t("left", { count: left }));
     },
-    onError: (err) => toast.error(friendlyError(err, t("analyseFailed"))),
+    onError: (err) => {
+      toast.error(friendlyError(err, t("analyseFailed")));
+      // The plan may have run out meanwhile: the bar then says so.
+      void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
+    },
   });
   if (waiting === 0) return null;
+  // The plan cannot read them now: why, and the way out, rather than a button that fails.
+  if (block) {
+    return <CvBlockedNote block={block} prefix={t("notAnalysed", { count: waiting })} className="rounded-2xl bg-page p-4" />;
+  }
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-page p-4">
       <p className="text-sm">

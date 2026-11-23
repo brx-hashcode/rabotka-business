@@ -23,8 +23,8 @@
   },
   "employmentType": {
     "MISSION": "Mission",
-    "CDD": "Fixed-term",
-    "CDI": "Permanent",
+    "CDD": "Fixed-term (CDD)",
+    "CDI": "Permanent (CDI)",
     "STAGE": "Internship",
     "CONSULTANT": "Consultant",
     "INTERIM": "Temporary (agency)",
