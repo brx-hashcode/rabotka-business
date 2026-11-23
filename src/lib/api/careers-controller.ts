@@ -91,6 +91,8 @@ export type ExternalApplication = {
   offer: { id: string; title: string; status: string };
   /** Once the business asked for it: the score lives in Analyse de CV. */
   analysis: CvAnalysis | null;
+  /** Queued or being read, though no analysis shows yet: its score is on its way. */
+  analysisQueued?: boolean;
 };
 
 export const externalApplicationsKey = ["external-applications"];

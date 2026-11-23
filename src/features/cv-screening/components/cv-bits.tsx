@@ -10,6 +10,28 @@ import type { CvCriterion, CvExperience } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { PACKS_HREF } from "#/features/subscription/packs";
 
+/**
+ * A CV being read: the selected-chip look, with three dots hopping in turn
+ * (still under reduced motion). Said once to a screen reader.
+ */
+export function AnalysingChip({ className }: Readonly<{ className?: string }>) {
+  const t = useTranslations("offers.candidate");
+  return (
+    <span
+      role="status"
+      aria-live="polite"
+      className={cn("inline-flex h-7 w-fit items-center gap-2 rounded-full bg-ink px-3 font-medium text-white text-xs", className)}
+    >
+      {t("analysing")}
+      <span aria-hidden className="flex items-center gap-[3px] pt-0.5">
+        {[0, 1, 2].map((i) => (
+          <span key={i} className="dot-bounce size-1 rounded-full bg-current" style={{ animationDelay: `${i * 140}ms` }} />
+        ))}
+      </span>
+    </span>
+  );
+}
+
 /** The analysis's criteria, in order; their names are labels.criterion.* . */
 export const CRITERIA: { key: CvCriterion }[] = [
   { key: "skills" },
@@ -115,6 +137,51 @@ export function CvUsedUp({ until, packOnSale = false }: Readonly<{ until: string
       <p className="max-w-md text-muted-foreground text-sm">{t("usedUpText", { date: day, pack: packOnSale ? "yes" : "no" })}</p>
       <CvWayOut packOnSale={packOnSale} />
     </section>
+  );
+}
+
+/**
+ * One line for a CV the plan cannot analyse now (no analysis in the plan, or
+ * its « CV inclus » used up), and the one way out: a pack, else the plans.
+ */
+export function CvBlockedNote({
+  block,
+  prefix,
+  compact = false,
+  className,
+}: Readonly<{
+  block: { kind: "locked" | "usedUp"; trial: boolean; until: string | null; packOnSale: boolean };
+  /** Before the reason: « 2 CV pas encore analysés : ». */
+  prefix?: string;
+  /** On a card, one of many: the way out as a link, not a button. */
+  compact?: boolean;
+  className?: string;
+}>) {
+  const t = useTranslations("cv");
+  const locale = useLocale() as Locale;
+  const day = block.until ? new Date(block.until).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long" }) : "none";
+  const reason = block.kind === "locked" ? (block.trial ? t("lockedTrial") : t("locked")) : t("usedUp", { date: day });
+  return (
+    <div className={cn("flex flex-wrap items-center justify-between gap-3", className)}>
+      <p className="flex min-w-0 items-start gap-2 text-sm">
+        <IconLock className="mt-0.5 size-4 shrink-0 text-chip-amber-foreground" />
+        <span>
+          {prefix}
+          {/* After « 2 CV pas encore analysés : », the reason goes on in lower case. */}
+          {prefix ? reason.charAt(0).toLocaleLowerCase(locale) + reason.slice(1) : reason}
+        </span>
+      </p>
+      <Link
+        href={block.packOnSale ? PACKS_HREF : "/espace/abonnement"}
+        className={
+          compact
+            ? "shrink-0 font-medium text-sm underline underline-offset-2 hover:text-foreground/80"
+            : "inline-flex h-10 shrink-0 items-center rounded-full bg-ink px-4 font-medium text-sm text-white hover:bg-ink/90"
+        }
+      >
+        {block.packOnSale ? t("buyPack") : t("seePlans")}
+      </Link>
+    </div>
   );
 }
 
