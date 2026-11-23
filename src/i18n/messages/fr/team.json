@@ -139,7 +139,12 @@
       "MAYBE": "peut-être",
       "NO": "non",
       "none": "—"
-    }
+    },
+    "imported": "CV importé par l'équipe",
+    "analysed": "CV analysé",
+    "analysedScore": "CV analysé : {score}/100",
+    "shortlisted": "Présélectionné",
+    "shortlistedBy": "Présélectionné par {who}"
   },
   "opinion": {
     "button": "Avis de l'équipe",
@@ -159,6 +164,11 @@
     "editNote": "Modifier la note",
     "deleteNote": "Supprimer la note",
     "cancel": "Annuler",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "private": "Visible de votre équipe seulement, jamais du candidat.",
+    "team": "L'équipe",
+    "noOpinion": "Personne n'a encore donné son avis.",
+    "noteHint": "⌘ / Ctrl + Entrée pour ajouter",
+    "noHistory": "Rien pour l'instant."
   }
 }

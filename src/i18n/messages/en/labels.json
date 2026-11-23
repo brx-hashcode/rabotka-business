@@ -25,13 +25,21 @@
     "MISSION": "Mission",
     "CDD": "Fixed-term",
     "CDI": "Permanent",
-    "STAGE": "Internship"
+    "STAGE": "Internship",
+    "CONSULTANT": "Consultant",
+    "INTERIM": "Temporary (agency)",
+    "APPRENTISSAGE": "Apprenticeship",
+    "VOLONTARIAT": "Volunteering"
   },
   "employmentHint": {
     "MISSION": "One-off work, on a given date",
     "CDD": "Fixed-term contract",
     "CDI": "Permanent contract",
-    "STAGE": "Internship or work-study"
+    "STAGE": "An internship, for a student or a recent graduate",
+    "CONSULTANT": "A consultancy: a mandate, a deliverable",
+    "INTERIM": "Through a temporary staffing agency",
+    "APPRENTISSAGE": "Work-study training",
+    "VOLONTARIAT": "Volunteering, often for an NGO"
   },
   "paymentFlow": {
     "TASK": "Per task",
@@ -49,7 +57,9 @@
     "agent": "Rabotka agents",
     "carrieres": "Careers page",
     "direct": "Direct link",
-    "qr": "Poster (QR code)"
+    "qr": "Poster (QR code)",
+    "importDevice": "Import (computer)",
+    "importGmail": "Import (Gmail)"
   },
   "offer": {
     "dayAt": "{day} at {time}",

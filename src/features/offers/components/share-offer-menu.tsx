@@ -5,6 +5,7 @@ import {
   IconBrandFacebook,
   IconBrandLinkedin,
   IconBrandTiktok,
+  IconPhoto,
   IconPrinter,
   IconBrandWhatsapp,
   IconLink,
@@ -36,6 +37,8 @@ export function ShareOfferMenu({ slug, offer }: Readonly<{ slug: string; offer: 
   const t = useTranslations("offers.share");
 
   const [posterOpen, setPosterOpen] = useState(false);
+  // The poster as an image, in the feed's portrait size (4:5).
+  const [visualOpen, setVisualOpen] = useState(false);
   // LinkedIn: published from the recruiter's account, or its share box (the dialog decides).
   const [linkedinOpen, setLinkedinOpen] = useState(false);
 
@@ -80,6 +83,10 @@ export function ShareOfferMenu({ slug, offer }: Readonly<{ slug: string; offer: 
             <IconPrinter className="size-4" />
             {t("poster")}
           </DropdownMenuItem>
+          <DropdownMenuItem className={ITEM} onSelect={() => setVisualOpen(true)}>
+            <IconPhoto className="size-4" />
+            {t("visual")}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <LinkedinPostDialog
@@ -97,6 +104,16 @@ export function ShareOfferMenu({ slug, offer }: Readonly<{ slug: string; offer: 
         src={`${appConfig.apiUrl}/business/me/job-offers/${encodeURIComponent(offerId)}/poster.pdf`}
         kind="pdf"
         fileName={t("posterFile", { reference })}
+        unavailable={t("posterFailed")}
+      />
+      <PreviewSheet
+        open={visualOpen}
+        onOpenChange={setVisualOpen}
+        title={t("visual")}
+        subtitle={title}
+        src={`${appConfig.apiUrl}/business/me/job-offers/${encodeURIComponent(offerId)}/poster.png?format=post`}
+        kind="image"
+        fileName={t("visualFile", { reference })}
         unavailable={t("posterFailed")}
       />
     </>

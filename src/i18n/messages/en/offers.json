@@ -75,7 +75,24 @@
     "refuseTitle": "Decline {name}?",
     "refuseText": "The person is told by email.",
     "refuseNote": "A word for the person (optional)",
-    "compareAria": "Compare {name}"
+    "compareAria": "Compare {name}",
+    "imported": "Imported CV",
+    "noEmail": "No email address found on this CV: contact the person directly.",
+    "decided": "Decision saved.",
+    "retainTextNoEmail": "They count towards your filled positions. There is no email address on their CV: let them know yourself.",
+    "unretainTextNoEmail": "The position is freed and the job is open again. There is no email address on their CV: nobody is told.",
+    "refuseTextNoEmail": "There is no email address on their CV: nobody is told.",
+    "delete": "Delete this imported CV",
+    "analysisFailed": "The analysis did not go through.",
+    "retryAnalysis": "Retry the analysis",
+    "retryTitle": "Retry the analysis of {name}'s CV?"
+  },
+  "answerFile": {
+    "photo": "Photo",
+    "pdf": "PDF document",
+    "word": "Word document",
+    "file": "File",
+    "see": "See"
   },
   "detail": {
     "back": "Jobs",
@@ -115,7 +132,11 @@
     "toReview": "To review",
     "waitingReply": "waiting for your reply",
     "noneWaiting": "none waiting",
-    "filled": "Positions filled"
+    "filled": "Positions filled",
+    "importDevice": "Import CVs from your computer",
+    "importDeviceHint": "Analysed and ranked with the candidates",
+    "importGmail": "Import CVs from Gmail",
+    "importGmailHint": "CVs you received by email, ranked with the candidates"
   },
   "applicants": {
     "tabs": {
@@ -131,7 +152,7 @@
     "atMost": "{max} candidates at most",
     "notComparable": "These analyses can't be compared together",
     "title": "Candidates",
-    "intro": "Ranked by fit with the job, whether they applied on Rabotka or on your careers page.",
+    "intro": "Ranked by fit with the job, whether they applied on Rabotka or on your careers page, or you imported their CV.",
     "display": "View",
     "list": "List",
     "board": "Board",
@@ -150,7 +171,8 @@
     "shortlist": "Shortlist{count, select, none {} other { ({count})}}",
     "unshortlist": "Remove from shortlist",
     "refuseSelection": "Decline the selection{count, select, none {} other { ({count})}}",
-    "noneAtStage": "No candidates at this stage."
+    "noneAtStage": "No candidates at this stage.",
+    "deleteSelection": "Delete{count, select, none { the selection} other { {count} imported CVs}}"
   },
   "row": {
     "rabotkaCv": "Rabotka CV",
@@ -205,7 +227,8 @@
       "SHORT_TEXT": "Short answer",
       "LONG_TEXT": "Long answer",
       "NUMBER": "Number",
-      "DATE": "Date"
+      "DATE": "Date",
+      "FILE": "File"
     },
     "hint": {
       "YES_NO": "The candidate answers yes or no.",
@@ -213,7 +236,8 @@
       "SHORT_TEXT": "The candidate answers in a few words (300 characters).",
       "LONG_TEXT": "The candidate writes a text, like a cover letter (3,000 characters).",
       "NUMBER": "The candidate answers with a number, like their years of experience.",
-      "DATE": "The candidate picks a date, like when they're available."
+      "DATE": "The candidate picks a date, like when they're available.",
+      "FILE": "The candidate attaches a document: a diploma, a letter, a certificate… (PDF, Word or photo, 10 MB)."
     },
     "problem": {
       "tooShort": "The question is too short.",
@@ -486,7 +510,12 @@
     "questions": "Questions for candidates",
     "optional": "optional",
     "soon": "Coming soon",
-    "characters": "{length} / {max} characters"
+    "characters": "{length} / {max} characters",
+    "missionChoice": "One-off mission",
+    "missionChoiceHint": "A job on a given date, confirmed once done",
+    "contractChoice": "Contract",
+    "contractChoiceHint": "You recruit, then you close the job",
+    "contractType": "Contract type"
   },
   "ai": {
     "examples": [
@@ -565,6 +594,8 @@
     "poster": "Printable poster",
     "posterFile": "poster-{reference}.pdf",
     "posterFailed": "The poster could not be created. Try again in a moment.",
+    "visual": "Social media visual",
+    "visualFile": "visual-{reference}.png",
     "textCopied": "Job text copied: paste it into your {network} post.",
     "textFailed": "The text could not be copied.",
     "linkCopied": "Job link copied.",
@@ -594,7 +625,7 @@
     "withoutConnecting": "Share without connecting",
     "published": "Posted on LinkedIn{date, select, none {} other { on {date}}}",
     "again": "You can post it again, after a change for example.",
-    "see": "See",
+    "see": "See the post",
     "lastFailed": "The last post didn't go through: {error}.",
     "retry": "try again",
     "postText": "Post text",
@@ -603,10 +634,10 @@
     "ownImage": "Your image, shown large under the text.",
     "keptImage": "Your last post's image, reused if you post again.",
     "offerImage": "The job's image, shown large under the text.",
-    "changeImage": "Change image",
-    "useOwn": "Use my own image",
+    "changeImage": "Choose another image",
+    "useOwn": "Change the image",
     "backToOffer": "Go back to the job's image",
-    "formats": "JPEG, PNG or WEBP · 8 MB at most · ideally 1200 × 630",
+    "formats": "JPEG, PNG or WEBP · 8 MB at most · ideally 1080 × 1350 (4:5 portrait)",
     "onFeed": "On your feed, visible to everyone ·",
     "disconnect": "Disconnect",
     "publishAgain": "Post again",
@@ -625,5 +656,23 @@
       "hiring",
       "jobs"
     ]
+  },
+  "importCvs": {
+    "deviceTitle": "Import CVs from your computer",
+    "description": "CVs you already have join the candidates for “{title}”: read, scored and ranked with those who applied.",
+    "note": "Each CV uses 1 included CV from your plan. Nobody is told on import; once an email address is found on the CV, the person gets your decisions like a careers-page candidate.",
+    "cancel": "Cancel",
+    "sending": "Sending CVs…",
+    "sendingCount": "Sending CVs… {sent} / {count}",
+    "done": "{count, plural, one {# CV imported} other {# CVs imported}}: analysis in progress.",
+    "partlyFailed": "{count, plural, one {# CV could not be sent} other {# CVs could not be sent}}: import them again.",
+    "failed": "The CVs could not be imported.",
+    "start": "Start the analysis{count, select, none {} 1 { of 1 CV} other { of {count} CVs}}",
+    "delete": "Delete",
+    "deleteTitle": "Delete {count, plural, one {this imported CV} other {these # imported CVs}}?",
+    "deleteOneTitle": "Delete {name}'s imported CV?",
+    "deleteText": "{count, plural, one {The CV, its analysis and the team's opinions are deleted} other {The CVs, their analyses and the team's opinions are deleted}}. Included CVs already used are not given back.",
+    "deleted": "{count, plural, =0 {No CV deleted} one {# CV deleted} other {# CVs deleted}}.",
+    "deleteFailed": "The deletion did not go through."
   }
 }

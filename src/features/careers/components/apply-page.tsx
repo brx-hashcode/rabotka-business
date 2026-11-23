@@ -11,6 +11,7 @@ import {
   IconFileText,
   IconUpload,
   IconX,
+  IconPaperclip,
 } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
 
@@ -28,6 +29,8 @@ import { CareersShell, CompanyLogo } from "./careers-shell";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const ACCEPT = ".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+/** A « Fichier » answer: a document or a photo of it. */
+const FILE_ACCEPT = `${ACCEPT},image/jpeg,image/png,image/webp`;
 const field = "h-12 rounded-xl border-0 bg-page px-4 text-base shadow-none md:text-[15px]";
 const label = "font-medium text-sm";
 
@@ -53,6 +56,8 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
   const [cv, setCv] = useState<File | null>(null);
   const [cvError, setCvError] = useState("");
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  // « Fichier » questions: the file picked for each (its name stands in `answers`).
+  const [files, setFiles] = useState<Record<string, File>>({});
   const [consent, setConsent] = useState(false);
   // Optional, unticked: kept for other posts only if they say so.
   const [keep, setKeep] = useState(false);
@@ -73,7 +78,7 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
         website: trap,
         source: sentFrom(sourceParam),
         poolConsent: keep,
-        answers: questions.flatMap((q) => (answers[q.id]?.trim() ? [{ questionId: q.id, value: answers[q.id].trim() }] : [])),
+        ...withFiles(questions, answers, files),
       }),
     // In the address, so a refresh or « back » shows the confirmation again,
     // not an empty form that invites a second application.
@@ -196,7 +201,22 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
             </div>
 
             {questions.map((q) => (
-              <QuestionField key={q.id} question={q} value={answers[q.id] ?? ""} onChange={(v) => setAnswers({ ...answers, [q.id]: v })} />
+              q.kind === "FILE" ? (
+                <FileQuestionField
+                  key={q.id}
+                  question={q}
+                  file={files[q.id] ?? null}
+                  onChange={(file) => {
+                    const next = { ...files };
+                    if (file) next[q.id] = file;
+                    else delete next[q.id];
+                    setFiles(next);
+                    setAnswers({ ...answers, [q.id]: file?.name ?? "" });
+                  }}
+                />
+              ) : (
+                <QuestionField key={q.id} question={q} value={answers[q.id] ?? ""} onChange={(v) => setAnswers({ ...answers, [q.id]: v })} />
+              )
             ))}
 
             {/* Out of sight and of tab order: only a bot fills it. */}
@@ -260,6 +280,83 @@ function TextField({
       <span className={label}>{title}</span>
       <Input type={type} autoComplete={autoComplete} value={value} onChange={(e) => onChange(e.target.value)} required className={field} />
     </label>
+  );
+}
+
+/**
+ * The answers as the server takes them: a « Fichier » answer is `file:<i>`,
+ * its file the i-th of `answerFiles`, sent in the same request.
+ */
+function withFiles(questions: CareersQuestion[], answers: Record<string, string>, files: Record<string, File>) {
+  const answerFiles: File[] = [];
+  const list = questions.flatMap((q) => {
+    if (q.kind === "FILE") {
+      const file = files[q.id];
+      if (!file) return [];
+      answerFiles.push(file);
+      return [{ questionId: q.id, value: `file:${answerFiles.length - 1}` }];
+    }
+    return answers[q.id]?.trim() ? [{ questionId: q.id, value: answers[q.id].trim() }] : [];
+  });
+  return { answers: list, answerFiles };
+}
+
+/** A question answered with a document: picked here, sent with the application. */
+function FileQuestionField({
+  question: q,
+  file,
+  onChange,
+}: Readonly<{ question: CareersQuestion; file: File | null; onChange: (file: File | null) => void }>) {
+  const input = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState("");
+  return (
+    <div className="space-y-1.5">
+      <p className={label}>
+        {q.label}
+        {q.required && <span className="text-destructive"> *</span>}
+      </p>
+      <input
+        ref={input}
+        type="file"
+        accept={FILE_ACCEPT}
+        className="hidden"
+        onChange={(e) => {
+          const picked = e.target.files?.[0];
+          e.target.value = "";
+          if (!picked) return;
+          if (picked.size > MAX_BYTES) {
+            setError("Ce fichier dépasse 10 Mo.");
+            return;
+          }
+          setError("");
+          onChange(picked);
+        }}
+      />
+      {file ? (
+        <div className="flex items-center gap-3 rounded-xl bg-page p-3">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-card">
+            <IconPaperclip className="size-5" />
+          </span>
+          <span className="min-w-0 flex-1 truncate font-medium text-sm">{file.name}</span>
+          <button type="button" aria-label="Retirer ce fichier" onClick={() => onChange(null)} className="rounded-lg p-2 hover:bg-card">
+            <IconX className="size-4" />
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => input.current?.click()}
+          className="flex w-full items-center gap-3 rounded-xl bg-page px-4 py-3.5 text-left transition-colors hover:bg-page/70"
+        >
+          <IconUpload className="size-5 shrink-0" />
+          <span className="min-w-0">
+            <span className="block font-medium text-sm">Joindre un fichier</span>
+            <span className="block text-foreground/60 text-xs">PDF, Word ou photo, 10 Mo au plus</span>
+          </span>
+        </button>
+      )}
+      {error && <p className="text-destructive text-sm">{error}</p>}
+    </div>
   );
 }
 

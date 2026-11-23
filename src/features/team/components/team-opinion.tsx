@@ -4,15 +4,28 @@ import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  IconArrowBackUp,
+  IconCalendarEvent,
+  IconCircleCheck,
+  IconCircleX,
+  IconEye,
+  IconFileImport,
+  IconFileText,
+  IconGauge,
   IconHistory,
+  IconInbox,
+  IconLock,
   IconMessage2,
   IconMoodHappy,
   IconMoodNeutral,
   IconMoodSad,
   IconPencil,
+  IconSend,
+  IconStar,
   IconTrash,
   IconUsers,
 } from "@tabler/icons-react";
+import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
 import { Bone } from "#/components/page-skeletons";
@@ -31,6 +44,7 @@ import {
   type ApplicationKind,
   type CandidateNote,
   type Opinions,
+  type TimelineEvent,
   type Verdict,
 } from "#/lib/api/candidate-notes-controller";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
@@ -93,9 +107,13 @@ export function TeamOpinionButton({
       )}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="right" className="w-full gap-0 overflow-y-auto border-0 bg-card p-0 sm:max-w-lg">
-          <div className="space-y-1 px-6 pt-6 pb-4">
+          <div className="space-y-1.5 px-6 pt-6 pb-5">
             <SheetTitle className="font-semibold text-xl">{t("title")}</SheetTitle>
-            <SheetDescription>{t("description", { name })}</SheetDescription>
+            <SheetDescription className="font-medium text-foreground">{name}</SheetDescription>
+            <p className="flex items-center gap-1.5 text-muted-foreground text-xs">
+              <IconLock className="size-3.5 shrink-0" />
+              {t("private")}
+            </p>
           </div>
           {open && <TeamPanel kind={kind} id={id} />}
         </SheetContent>
@@ -139,14 +157,21 @@ function TeamPanel({ kind, id }: Readonly<{ kind: ApplicationKind; id: string }>
     },
     onError: (err) => toast.error(friendlyError(err, t("noteAddFailed"))),
   });
+  const submit = () => {
+    if (draft.trim() && !add.isPending) add.mutate();
+  };
 
   const mine = opinions.data?.mine ?? null;
+  const summary = opinions.data?.summary;
+  // Newest first: what changed last is what the team opens it for.
+  const history = [...(timeline.data ?? [])].reverse();
+  const noteList = [...(notes.data ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   return (
-    <div className="space-y-6 px-6 pb-8">
+    <div className="space-y-7 px-6 pb-8">
       <section className="space-y-3">
         <p className="font-medium text-sm">{t("mine")}</p>
-        <div className="grid grid-cols-3 gap-2">
+        <div role="group" aria-label={t("mine")} className="grid grid-cols-3 gap-1 rounded-full bg-page p-1">
           {VERDICTS.map(({ v, icon: Icon, on }) => (
             <button
               key={v}
@@ -155,73 +180,107 @@ function TeamPanel({ kind, id }: Readonly<{ kind: ApplicationKind; id: string }>
               disabled={opinions.isLoading || opinion.isPending}
               onClick={() => opinion.mutate(mine === v ? null : v)}
               className={cn(
-                "flex flex-col items-center gap-1 rounded-2xl py-3 font-medium text-sm transition-colors disabled:opacity-60",
-                mine === v ? on : "bg-page text-muted-foreground hover:text-foreground",
+                "inline-flex h-10 items-center justify-center gap-1.5 rounded-full font-medium text-sm transition-colors disabled:opacity-60",
+                mine === v ? on : "text-muted-foreground hover:bg-card hover:text-foreground",
               )}
             >
-              <Icon className="size-5" />
+              <Icon className="size-4" />
               {tTeam(`verdict.${v}`)}
             </button>
           ))}
         </div>
-        {opinions.data && opinions.data.all.length > 0 && (
-          <ul className="flex flex-wrap gap-2">
-            {opinions.data.all.map((o) => {
-              const style = VERDICTS.find((x) => x.v === o.verdict)!;
-              return (
-                <li key={o.member.id} className={cn("inline-flex items-center gap-1.5 rounded-full py-1 pr-3 pl-1 text-xs", style.on)}>
-                  <span className="flex size-5 items-center justify-center rounded-full bg-card/70 font-semibold text-[10px] text-foreground">
-                    {getInitials(o.member.name)}
+
+        {/* Everyone's, counted, then by name. */}
+        <div className="space-y-2 rounded-2xl bg-page p-3.5">
+          <div className="flex items-center justify-between gap-2">
+            <p className="flex items-center gap-1.5 font-medium text-sm">
+              <IconUsers className="size-4 text-muted-foreground" />
+              {t("team")}
+            </p>
+            {summary && summary.YES + summary.MAYBE + summary.NO > 0 && (
+              <span className="flex gap-1 text-xs tabular-nums">
+                {VERDICTS.filter(({ v }) => summary[v] > 0).map(({ v, on }) => (
+                  <span key={v} className={cn("rounded-full px-2 py-0.5 font-medium", on)}>
+                    {summary[v]} {tTeam(`verdict.${v}`)}
                   </span>
-                  <span className="font-medium">{o.member.name}</span>· {tTeam(`verdict.${o.verdict}`)}
-                </li>
-              );
-            })}
-          </ul>
-        )}
+                ))}
+              </span>
+            )}
+          </div>
+          {opinions.isLoading ? (
+            <Bone className="h-6 rounded-full" />
+          ) : (opinions.data?.all ?? []).length === 0 ? (
+            <p className="text-muted-foreground text-xs">{t("noOpinion")}</p>
+          ) : (
+            <ul className="flex flex-wrap gap-1.5">
+              {opinions.data!.all.map((o) => {
+                const style = VERDICTS.find((x) => x.v === o.verdict)!;
+                return (
+                  <li key={o.member.id} className={cn("inline-flex items-center gap-1.5 rounded-full py-1 pr-3 pl-1 text-xs", style.on)}>
+                    <span className="flex size-5 items-center justify-center rounded-full bg-card/70 font-semibold text-[10px] text-foreground">
+                      {getInitials(o.member.name)}
+                    </span>
+                    <span className="font-medium">{o.member.name}</span>
+                    <style.icon className="size-3.5" aria-label={tTeam(`verdict.${o.verdict}`)} />
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
       </section>
 
       <section className="space-y-3">
         <p className="flex items-center gap-2 font-medium text-sm">
           <IconMessage2 className="size-4" />
           {t("notes")}
+          {noteList.length > 0 && <span className="text-muted-foreground tabular-nums">{noteList.length}</span>}
         </p>
-        {notes.isLoading ? (
-          <Bone className="h-20 rounded-2xl" />
-        ) : (notes.data ?? []).length === 0 ? (
-          <p className="text-muted-foreground text-sm">{t("noNotes")}</p>
-        ) : (
-          <ul className="space-y-2">
-            {notes.data!.map((n) => (
-              <NoteItem key={n.id} note={n} kind={kind} id={id} onChanged={after} />
-            ))}
-          </ul>
-        )}
+        {/* Writing first: the reason the panel is opened most often. */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (draft.trim()) add.mutate();
+            submit();
           }}
-          className="space-y-2"
+          className="rounded-2xl bg-page p-1.5 focus-within:ring-2 focus-within:ring-whatsapp/40"
         >
           <Textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault();
+                submit();
+              }
+            }}
             maxLength={4000}
             rows={3}
             placeholder={t("notePlaceholder")}
-            className="min-h-20 rounded-2xl border-0 bg-page px-4 py-3 shadow-none focus-visible:ring-2 focus-visible:ring-whatsapp/40"
+            className="min-h-20 resize-none border-0 bg-transparent px-2.5 py-2 shadow-none focus-visible:ring-0"
           />
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between gap-2 px-1.5 pb-0.5">
+            <span className="hidden text-muted-foreground text-xs sm:inline">{draft.trim() ? t("noteHint") : ""}</span>
             <button
               type="submit"
               disabled={!draft.trim() || add.isPending}
-              className="h-10 rounded-full bg-ink px-5 font-medium text-sm text-white disabled:opacity-50"
+              className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-full bg-ink px-4 font-medium text-sm text-white disabled:opacity-40"
             >
+              {add.isPending ? <Loader className="size-4 animate-spin" /> : <IconSend className="size-4" />}
               {t("addNote")}
             </button>
           </div>
         </form>
+        {notes.isLoading ? (
+          <Bone className="h-20 rounded-2xl" />
+        ) : noteList.length === 0 ? (
+          <p className="text-muted-foreground text-sm">{t("noNotes")}</p>
+        ) : (
+          <ul className="space-y-2">
+            {noteList.map((n) => (
+              <NoteItem key={n.id} note={n} kind={kind} id={id} onChanged={after} />
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="space-y-3">
@@ -231,22 +290,48 @@ function TeamPanel({ kind, id }: Readonly<{ kind: ApplicationKind; id: string }>
         </p>
         {timeline.isLoading ? (
           <Bone className="h-24 rounded-2xl" />
+        ) : history.length === 0 ? (
+          <p className="text-muted-foreground text-sm">{t("noHistory")}</p>
         ) : (
-          <ol className="relative space-y-3 pl-4">
-            <span aria-hidden className="absolute top-1 bottom-1 left-0 w-0.5 rounded-full bg-page" />
-            {(timeline.data ?? []).map((e, i) => (
-              <li key={`${e.kind}-${e.at}-${i}`} className="relative">
-                <span aria-hidden className="-left-[1.2rem] absolute top-1.5 size-2 rounded-full bg-whatsapp-dark" />
-                <p className="text-sm">{timelineLabel(e, tTimeline, locale)}</p>
-                <p className="text-muted-foreground text-xs">{timeAgo(e.at, locale)}</p>
-              </li>
-            ))}
+          <ol className="space-y-0">
+            {history.map((e, i) => {
+              const { icon: Icon, tone } = EVENT_LOOK[e.kind] ?? EVENT_LOOK.APPLIED;
+              return (
+                <li key={`${e.kind}-${e.at}-${i}`} className="relative flex gap-3 pb-4 last:pb-0">
+                  {/* The thread between two events. */}
+                  {i < history.length - 1 && <span aria-hidden className="absolute top-8 bottom-0 left-[0.9375rem] w-px bg-page" />}
+                  <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-full", tone)}>
+                    <Icon className="size-4" />
+                  </span>
+                  <span className="min-w-0 pt-0.5">
+                    <span className="block text-sm">{timelineLabel(e, tTimeline, locale)}</span>
+                    <span className="block text-muted-foreground text-xs">{timeAgo(e.at, locale)}</span>
+                  </span>
+                </li>
+              );
+            })}
           </ol>
         )}
       </section>
     </div>
   );
 }
+
+/** How each kind of event looks in the history. */
+const EVENT_LOOK: Record<TimelineEvent["kind"], { icon: typeof IconMoodHappy; tone: string }> = {
+  APPLIED: { icon: IconInbox, tone: "bg-page text-foreground" },
+  IMPORTED: { icon: IconFileImport, tone: "bg-page text-foreground" },
+  ANALYSED: { icon: IconGauge, tone: "bg-chip-violet text-chip-violet-foreground" },
+  VIEWED: { icon: IconEye, tone: "bg-page text-muted-foreground" },
+  SHORTLISTED: { icon: IconStar, tone: "bg-chip-amber text-chip-amber-foreground" },
+  RETAINED: { icon: IconCircleCheck, tone: "bg-chip-green text-chip-green-foreground" },
+  REFUSED: { icon: IconCircleX, tone: "bg-destructive/10 text-destructive" },
+  WITHDRAWN: { icon: IconArrowBackUp, tone: "bg-page text-muted-foreground" },
+  INTERVIEW: { icon: IconCalendarEvent, tone: "bg-chip-sky text-chip-sky-foreground" },
+  REPORT: { icon: IconFileText, tone: "bg-chip-sky text-chip-sky-foreground" },
+  NOTE: { icon: IconMessage2, tone: "bg-page text-foreground" },
+  OPINION: { icon: IconUsers, tone: "bg-page text-foreground" },
+};
 
 function NoteItem({
   note,

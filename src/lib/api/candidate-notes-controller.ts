@@ -14,8 +14,22 @@ export type Opinions = {
 };
 export type TimelineEvent = {
   at: string;
-  kind: "APPLIED" | "VIEWED" | "RETAINED" | "REFUSED" | "WITHDRAWN" | "INTERVIEW" | "REPORT" | "NOTE" | "OPINION";
+  kind:
+    | "APPLIED"
+    | "IMPORTED"
+    | "ANALYSED"
+    | "VIEWED"
+    | "SHORTLISTED"
+    | "RETAINED"
+    | "REFUSED"
+    | "WITHDRAWN"
+    | "INTERVIEW"
+    | "REPORT"
+    | "NOTE"
+    | "OPINION";
   member?: Author | null;
+  /** ANALYSED: the CV's score for the offer. */
+  score?: number | null;
   verdict?: Verdict;
   interview?: { startsAt: string; status: string };
   /** WITHDRAWN: who ended it. Absent from an older backend. */

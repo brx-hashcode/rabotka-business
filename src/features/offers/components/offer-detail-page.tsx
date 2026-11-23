@@ -18,6 +18,8 @@ import {
   IconCircleCheck,
   IconCircleX,
   IconFileCv,
+  IconFileUpload,
+  IconMail,
   IconFileSearch,
   IconFileText,
   IconInbox,
@@ -108,6 +110,8 @@ import { useConfirmedShortlist } from "../use-shortlist";
 import { BulkRefuseDialog } from "./bulk-refuse-dialog";
 import { BulkMessageDialog } from "#/features/messages/components/bulk-message-dialog";
 import { OfferBoard } from "./offer-board";
+import { DeleteImportedDialog, ImportCvsDialog, useCvRoom, useGmailImport } from "./import-cvs";
+import { AnswerFileLink } from "./answer-file-link";
 import { OfferDescriptionCard } from "./offer-description-card";
 import { linkedinOffer } from "../linkedin-post";
 import { PublishedShareCard } from "./published-share-card";
@@ -167,6 +171,10 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [republishing, setRepublishing] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
+  // « Importer des CV »: from the computer (a dialog), or from Gmail (its mail sheet).
+  const [importing, setImporting] = useState(false);
+  const gmail = useGmailImport(id);
+  const cvRoom = useCvRoom();
   const [newDate, setNewDate] = useState("");
 
   // This offer (detail, candidates) is awaited, so its dialog closes on the
@@ -292,6 +300,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                 {/* Closing and deleting end the offer: one step away, not beside « Modifier ». */}
                 <MoreActionsMenu
                   name={o.title}
+                  wide
                   className="bg-page hover:bg-page/70"
                   actions={[
                     // « Exports RH »: Excel of every candidate; without the service, to the plans.
@@ -313,8 +322,25 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
                         );
                       },
                     },
+                    // CVs the business already has, ranked with those who applied.
                     ...(hire && (o.status === "ACTIVE" || o.status === "PARTIALLY_FILLED")
-                      ? [{ key: "close", label: t("close"), icon: IconCircleX, onSelect: () => setConfirmClose(true), hint: t("closeHint") }]
+                      ? [
+                          { key: "import", label: t("importDevice"), icon: IconFileUpload, onSelect: () => setImporting(true), hint: t("importDeviceHint") },
+                          ...(gmail.available
+                            ? [
+                                {
+                                  key: "import-gmail",
+                                  label: t("importGmail"),
+                                  icon: IconMail,
+                                  // No CV left to read them with: the dialog says why, rather than a mailbox to pick from for nothing.
+                                  onSelect: () => (cvRoom.room === 0 ? setImporting(true) : gmail.start()),
+                                  hint: t("importGmailHint"),
+                                  disabled: gmail.connecting,
+                                },
+                              ]
+                            : []),
+                          { key: "close", label: t("close"), icon: IconCircleX, onSelect: () => setConfirmClose(true), hint: t("closeHint") },
+                        ]
                       : []),
                     ...(hire && (o.status === "ACTIVE" || o.status === "EXPIRED")
                       ? [{ key: "delete", label: t("delete"), icon: IconTrash, onSelect: () => setConfirmDelete(true), tone: "danger" as const }]
@@ -382,6 +408,9 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
         pending={remove.isPending}
         onConfirm={() => remove.mutate()}
       />
+
+      {o && <ImportCvsDialog offerId={o.id} offerTitle={o.title} open={importing} onOpenChange={setImporting} />}
+      {gmail.sheet}
 
       <ActionDialog
         open={confirmClose}
@@ -682,6 +711,11 @@ function ApplicantsCard({
   const waitingPicked = picked.filter((e) => e.refusable);
   const toShortlist = waitingPicked.filter((e) => e.stage !== "shortlisted");
   const shortlistAction = toShortlist.length > 0 ? "add" : waitingPicked.length > 0 ? "remove" : null;
+  // « Supprimer »: only CVs the business imported, and not a retained one.
+  const deletable = picked
+    .filter((e) => e.kind === "careers" && (e.a as ExternalApplication).origin === "IMPORT" && e.a.status !== "RETAINED")
+    .map((e) => (e.a as ExternalApplication).id);
+  const [deleting, setDeleting] = useState(false);
   // « Écrire » to those picked, a template filled in for each.
   const [writing, setWriting] = useState(false);
   const { data: business } = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness });
@@ -820,12 +854,21 @@ function ApplicantsCard({
           )}
 
           {selected.size > 0 && (
-            <div className="sticky top-20 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-ink px-4 py-3 text-sm text-white">
-              <span>{t("selected", { count: selected.size })}</span>
-              <span className="flex flex-wrap gap-2">
-                <button type="button" onClick={() => setSelected(new Set())} className="h-9 rounded-full px-3 hover:bg-white/10">
-                  {t("cancel")}
+            // Read, move on, write — then the decisions that end it, apart on the right.
+            <div className="sticky top-20 z-10 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl bg-ink px-3 py-2.5 text-sm text-white">
+              <span className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setSelected(new Set())}
+                  aria-label={t("cancel")}
+                  title={t("cancel")}
+                  className="flex size-8 items-center justify-center rounded-full hover:bg-white/10"
+                >
+                  <IconX className="size-4" />
                 </button>
+                <span className="font-medium">{t("selected", { count: selected.size })}</span>
+              </span>
+              <span className="ml-auto flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setComparing(true)}
@@ -835,15 +878,6 @@ function ApplicantsCard({
                 >
                   {t("compare", { count: picked.length > 1 ? String(picked.length) : "none" })}
                 </button>
-                {hire && (
-                  <button
-                    type="button"
-                    onClick={() => setWriting(true)}
-                    className="h-9 rounded-full bg-white/10 px-4 font-medium hover:bg-white/15"
-                  >
-                    {t("write")}
-                  </button>
-                )}
                 {hire && shortlistAction && (
                   <button
                     type="button"
@@ -862,9 +896,31 @@ function ApplicantsCard({
                       : t("unshortlist")}
                   </button>
                 )}
+                {hire && (
+                  <button
+                    type="button"
+                    onClick={() => setWriting(true)}
+                    className="h-9 rounded-full bg-white/10 px-4 font-medium hover:bg-white/15"
+                  >
+                    {t("write")}
+                  </button>
+                )}
+                {(refuseCount > 0 || (hire && deletable.length > 0)) && <span aria-hidden className="mx-1 h-5 w-px bg-white/20" />}
                 {refuseCount > 0 && (
                   <button type="button" onClick={() => setBulk("selected")} className="h-9 rounded-full bg-white px-4 font-medium text-ink hover:bg-white/90">
                     {t("refuseSelection", { count: refuseCount < selected.size ? String(refuseCount) : "none" })}
+                  </button>
+                )}
+                {/* Only imported CVs go: kept small, last, and named in its tooltip. */}
+                {hire && deletable.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setDeleting(true)}
+                    aria-label={t("deleteSelection", { count: deletable.length < selected.size ? String(deletable.length) : "none" })}
+                    title={t("deleteSelection", { count: deletable.length < selected.size ? String(deletable.length) : "none" })}
+                    className="flex size-9 items-center justify-center rounded-full bg-white/10 hover:bg-destructive"
+                  >
+                    <IconTrash className="size-4" />
                   </button>
                 )}
               </span>
@@ -881,6 +937,13 @@ function ApplicantsCard({
             businessName={business?.name ?? ""}
             recipients={{ ...shortlistTargets(picked), firstName: firstName(picked[0]) }}
             onSent={() => setSelected(new Set())}
+          />
+
+          <DeleteImportedDialog
+            ids={deletable}
+            open={deleting}
+            onOpenChange={setDeleting}
+            onDone={() => setSelected(new Set())}
           />
 
           <BulkRefuseDialog
@@ -1314,7 +1377,7 @@ function Answers({ answers }: Readonly<{ answers: NonNullable<OfferApplicant["an
             <div className="min-w-0">
               <dt className="text-muted-foreground">{x.label}</dt>
               <dd className="font-medium">
-                <DescriptionText text={x.value} />
+                {x.fileId ? <AnswerFileLink fileId={x.fileId} name={x.value} label={x.label} /> : <DescriptionText text={x.value} />}
               </dd>
             </div>
           </div>

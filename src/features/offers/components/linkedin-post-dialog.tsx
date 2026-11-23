@@ -4,12 +4,13 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconArrowBackUp, IconBrandLinkedin, IconCheck, IconExternalLink, IconLoader2, IconPhotoEdit } from "@tabler/icons-react";
+import { IconArrowBackUp, IconBrandLinkedin, IconExternalLink, IconLoader2, IconPhotoEdit } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
 import { Textarea } from "#/components/ui/textarea";
+import { appConfig } from "#/config";
 import { INTL_LOCALE, type Locale } from "#/i18n/config";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import {
@@ -80,14 +81,15 @@ export function LinkedinPostDialog({
   const shareBox = offerShareLinks(origin, slug, offer.reference, offer.title).linkedin;
   const published = posts.data?.find((p) => p.status === "PUBLISHED");
   // The confirmation shows what went out (the newest post's own picture, or
-  // the offer's); the large preview shows what « Publier » would send.
-  const ogImage = `${offerShareUrl(origin, slug, offer.reference)}/opengraph-image`;
+  // the offer's); the large preview shows what « Publier » would send. The
+  // offer's picture is its social visual (4:5), the one « Partager » gives.
+  const offerVisual = `${appConfig.apiUrl}/business/me/job-offers/${encodeURIComponent(offer.id)}/poster.png?format=post`;
   const postedImage = posts.data?.[0]?.imageUrl ?? null;
   // Posting again keeps the last post's own picture, until another is picked
   // or the recruiter goes back to the offer's.
   const [backToOffer, setBackToOffer] = useState(false);
   const keptImage = state === "posted" && !backToOffer ? postedImage : null;
-  const previewSrc = ownPreview ?? keptImage ?? ogImage;
+  const previewSrc = ownPreview ?? keptImage ?? offerVisual;
   const showsOwn = !!ownImage || !!keptImage;
   const failed = posts.data?.[0]?.status === "FAILED" ? posts.data[0] : null;
 
@@ -196,26 +198,31 @@ export function LinkedinPostDialog({
               )}
               {published && state !== "pending" && (
                 // What went out: the picture it carried (its own, or the offer's) and the link.
-                <div className="flex items-center gap-3 rounded-2xl bg-chip-green p-2.5 pr-4 text-chip-green-foreground">
-                  {/* eslint-disable-next-line @next/next/no-img-element -- LinkedIn's address for the posted picture, or the OG image */}
-                  <img src={postedImage ?? ogImage} alt="" className="aspect-[1200/630] w-24 shrink-0 rounded-lg object-cover" />
-                  <div className="min-w-0 flex-1 text-sm">
-                    <p className="flex items-center gap-1.5 font-medium">
-                      <IconCheck className="size-4 shrink-0" />
-                      {t("published", {
-                        date: published.publishedAt
-                          ? new Date(published.publishedAt).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long" })
-                          : "none",
-                      })}
-                    </p>
-                    <p className="opacity-80">{t("again")}</p>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl bg-page p-3 sm:flex-nowrap sm:pr-4">
+                  <div className="flex min-w-0 flex-1 items-center gap-4">
+                    {/* The picture it carried, marked with LinkedIn's badge. */}
+                    <div className="relative hidden shrink-0 sm:block">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- LinkedIn's address for the posted picture, or the offer's visual */}
+                      <img src={postedImage ?? offerVisual} alt="" className="aspect-4/5 w-14 rounded-lg object-cover" />
+                      <span className="absolute -right-1.5 -bottom-1.5 flex size-6 items-center justify-center rounded-lg bg-[#0a66c2] text-white ring-2 ring-page">
+                        <IconBrandLinkedin className="size-3.5" />
+                      </span>
+                    </div>
+                    <div className="min-w-0 space-y-0.5">
+                      <p className="font-medium text-sm">
+                        {t("published", {
+                          date: published.publishedAt ? publishedDate(published.publishedAt, INTL_LOCALE[locale]) : "none",
+                        })}
+                      </p>
+                      <p className="text-muted-foreground text-xs leading-relaxed">{t("again")}</p>
+                    </div>
                   </div>
                   {published.url && (
                     <a
                       href={published.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 font-medium text-foreground text-sm hover:bg-card/80"
+                      className="inline-flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-card px-4 font-medium text-sm hover:bg-card/70 sm:w-auto"
                     >
                       {t("see")}
                       <IconExternalLink className="size-4" />
@@ -248,10 +255,10 @@ export function LinkedinPostDialog({
                 {/* The picture, shown large under the text. */}
                 <div className="flex flex-col gap-2">
                   <span className="font-medium text-sm">{t("image")}</span>
-                  {/* A fixed block, so the dialog keeps its size, filled by the picture. */}
-                  <div className="flex aspect-[1200/630] w-full items-center justify-center overflow-hidden rounded-2xl bg-page">
-                    {/* eslint-disable-next-line @next/next/no-img-element -- a local preview or the careers page's own OG image */}
-                    <img src={previewSrc} alt="" className="block h-full w-full object-cover" />
+                  {/* A fixed 4:5 block, so the dialog keeps its size; a picture of another shape fits inside. */}
+                  <div className="flex aspect-4/5 w-full items-center justify-center overflow-hidden rounded-2xl bg-page">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- a local preview or the offer's social visual */}
+                    <img src={previewSrc} alt="" className="block h-full w-full object-contain" />
                   </div>
                   <p className="text-muted-foreground text-xs">
                     {ownImage ? t("ownImage") : keptImage ? t("keptImage") : t("offerImage")}
@@ -317,6 +324,13 @@ export function LinkedinPostDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+/** « 10 novembre », with the year once it is no longer this one. */
+function publishedDate(iso: string, intlLocale: string): string {
+  const date = new Date(iso);
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  return date.toLocaleDateString(intlLocale, { day: "numeric", month: "long", ...(sameYear ? {} : { year: "numeric" }) });
 }
 
 /**

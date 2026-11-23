@@ -10,10 +10,10 @@ import type { EmploymentType, OfferStatus, PaymentFlow } from "#/lib/api/offer-c
  * the colours, and the helpers that put words together.
  */
 
-export const EMPLOYMENT_TYPES: EmploymentType[] = ["MISSION", "CDD", "CDI", "STAGE"];
+export const EMPLOYMENT_TYPES: EmploymentType[] = ["MISSION", "CDD", "CDI", "STAGE", "CONSULTANT", "INTERIM", "APPRENTISSAGE", "VOLONTARIAT"];
 
-/** What a business may publish: every type, the business closing a CDD, CDI or stage itself. */
-export const AVAILABLE_EMPLOYMENT_TYPES: EmploymentType[] = ["MISSION", "CDD", "CDI", "STAGE"];
+/** What a business may publish: every type, the business closing all but a mission itself. */
+export const AVAILABLE_EMPLOYMENT_TYPES: EmploymentType[] = ["MISSION", "CDD", "CDI", "STAGE", "CONSULTANT", "INTERIM", "APPRENTISSAGE", "VOLONTARIAT"];
 
 export const PAYMENT_FLOWS: PaymentFlow[] = ["TASK", "HOURLY", "DAILY", "MONTHLY"];
 
