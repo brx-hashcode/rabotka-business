@@ -35,7 +35,7 @@ export type OfferListItem = {
   address: string | null;
 };
 
-export type QuestionKind = "YES_NO" | "CHOICE" | "SHORT_TEXT" | "LONG_TEXT" | "NUMBER" | "DATE";
+export type QuestionKind = "YES_NO" | "CHOICE" | "SHORT_TEXT" | "LONG_TEXT" | "NUMBER" | "DATE" | "FILE";
 
 /** A question the candidates answer when they apply (« Questions aux candidats »). */
 export type OfferQuestion = {
@@ -61,7 +61,15 @@ export type Offer = OfferListItem & {
 };
 
 /** A candidate's answer, as the business reads it (« Oui », « Non », the choice, the text). */
-export type ApplicantAnswer = { label: string; kind: QuestionKind; value: string; passed: boolean | null };
+export type ApplicantAnswer = {
+  label: string;
+  kind: QuestionKind;
+  /** A « Fichier » answer: the file's name. */
+  value: string;
+  /** A « Fichier » answer: business/me/answer-files/:fileId opens it. */
+  fileId?: string | null;
+  passed: boolean | null;
+};
 
 /** A CV analysis, as both kinds of candidate carry it. */
 export type CvAnalysis = {

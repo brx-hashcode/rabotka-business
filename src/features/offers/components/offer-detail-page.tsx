@@ -111,6 +111,7 @@ import { BulkRefuseDialog } from "./bulk-refuse-dialog";
 import { BulkMessageDialog } from "#/features/messages/components/bulk-message-dialog";
 import { OfferBoard } from "./offer-board";
 import { DeleteImportedDialog, ImportCvsDialog, useCvRoom, useGmailImport } from "./import-cvs";
+import { AnswerFileLink } from "./answer-file-link";
 import { OfferDescriptionCard } from "./offer-description-card";
 import { linkedinOffer } from "../linkedin-post";
 import { PublishedShareCard } from "./published-share-card";
@@ -1376,7 +1377,7 @@ function Answers({ answers }: Readonly<{ answers: NonNullable<OfferApplicant["an
             <div className="min-w-0">
               <dt className="text-muted-foreground">{x.label}</dt>
               <dd className="font-medium">
-                <DescriptionText text={x.value} />
+                {x.fileId ? <AnswerFileLink fileId={x.fileId} name={x.value} label={x.label} /> : <DescriptionText text={x.value} />}
               </dd>
             </div>
           </div>

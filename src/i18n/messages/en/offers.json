@@ -87,6 +87,13 @@
     "retryAnalysis": "Retry the analysis",
     "retryTitle": "Retry the analysis of {name}'s CV?"
   },
+  "answerFile": {
+    "photo": "Photo",
+    "pdf": "PDF document",
+    "word": "Word document",
+    "file": "File",
+    "see": "See"
+  },
   "detail": {
     "back": "Jobs",
     "notFound": "This job can't be found.",
@@ -220,7 +227,8 @@
       "SHORT_TEXT": "Short answer",
       "LONG_TEXT": "Long answer",
       "NUMBER": "Number",
-      "DATE": "Date"
+      "DATE": "Date",
+      "FILE": "File"
     },
     "hint": {
       "YES_NO": "The candidate answers yes or no.",
@@ -228,7 +236,8 @@
       "SHORT_TEXT": "The candidate answers in a few words (300 characters).",
       "LONG_TEXT": "The candidate writes a text, like a cover letter (3,000 characters).",
       "NUMBER": "The candidate answers with a number, like their years of experience.",
-      "DATE": "The candidate picks a date, like when they're available."
+      "DATE": "The candidate picks a date, like when they're available.",
+      "FILE": "The candidate attaches a document: a diploma, a letter, a certificate… (PDF, Word or photo, 10 MB)."
     },
     "problem": {
       "tooShort": "The question is too short.",
@@ -609,7 +618,7 @@
     "withoutConnecting": "Share without connecting",
     "published": "Posted on LinkedIn{date, select, none {} other { on {date}}}",
     "again": "You can post it again, after a change for example.",
-    "see": "See",
+    "see": "See the post",
     "lastFailed": "The last post didn't go through: {error}.",
     "retry": "try again",
     "postText": "Post text",
@@ -618,8 +627,8 @@
     "ownImage": "Your image, shown large under the text.",
     "keptImage": "Your last post's image, reused if you post again.",
     "offerImage": "The job's image, shown large under the text.",
-    "changeImage": "Change image",
-    "useOwn": "Use my own image",
+    "changeImage": "Choose another image",
+    "useOwn": "Change the image",
     "backToOffer": "Go back to the job's image",
     "formats": "JPEG, PNG or WEBP · 8 MB at most · ideally 1200 × 630",
     "onFeed": "On your feed, visible to everyone ·",

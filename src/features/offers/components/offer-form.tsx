@@ -69,7 +69,7 @@ const offerSchema = (t: Translator<"offers.form.v">, locale: Locale) => {
     note: z.string().trim().max(500, t("note")),
     questions: z.array(
       z.object({
-        kind: z.enum(["YES_NO", "CHOICE", "SHORT_TEXT", "LONG_TEXT", "NUMBER", "DATE"]),
+        kind: z.enum(["YES_NO", "CHOICE", "SHORT_TEXT", "LONG_TEXT", "NUMBER", "DATE", "FILE"]),
         label: z.string(),
         options: z.array(z.string()),
         required: z.boolean(),

@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconArrowBackUp, IconBrandLinkedin, IconCheck, IconExternalLink, IconLoader2, IconPhotoEdit } from "@tabler/icons-react";
+import { IconArrowBackUp, IconBrandLinkedin, IconExternalLink, IconLoader2, IconPhotoEdit } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
@@ -196,26 +196,31 @@ export function LinkedinPostDialog({
               )}
               {published && state !== "pending" && (
                 // What went out: the picture it carried (its own, or the offer's) and the link.
-                <div className="flex items-center gap-3 rounded-2xl bg-chip-green p-2.5 pr-4 text-chip-green-foreground">
-                  {/* eslint-disable-next-line @next/next/no-img-element -- LinkedIn's address for the posted picture, or the OG image */}
-                  <img src={postedImage ?? ogImage} alt="" className="aspect-[1200/630] w-24 shrink-0 rounded-lg object-cover" />
-                  <div className="min-w-0 flex-1 text-sm">
-                    <p className="flex items-center gap-1.5 font-medium">
-                      <IconCheck className="size-4 shrink-0" />
-                      {t("published", {
-                        date: published.publishedAt
-                          ? new Date(published.publishedAt).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long" })
-                          : "none",
-                      })}
-                    </p>
-                    <p className="opacity-80">{t("again")}</p>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl bg-page p-3 sm:flex-nowrap sm:pr-4">
+                  <div className="flex min-w-0 flex-1 items-center gap-4">
+                    {/* The picture it carried, marked with LinkedIn's badge. */}
+                    <div className="relative hidden shrink-0 sm:block">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- LinkedIn's address for the posted picture, or the OG image */}
+                      <img src={postedImage ?? ogImage} alt="" className="aspect-[1200/630] w-28 rounded-xl object-cover" />
+                      <span className="absolute -right-1.5 -bottom-1.5 flex size-6 items-center justify-center rounded-lg bg-[#0a66c2] text-white ring-2 ring-page">
+                        <IconBrandLinkedin className="size-3.5" />
+                      </span>
+                    </div>
+                    <div className="min-w-0 space-y-0.5">
+                      <p className="font-medium text-sm">
+                        {t("published", {
+                          date: published.publishedAt ? publishedDate(published.publishedAt, INTL_LOCALE[locale]) : "none",
+                        })}
+                      </p>
+                      <p className="text-muted-foreground text-xs leading-relaxed">{t("again")}</p>
+                    </div>
                   </div>
                   {published.url && (
                     <a
                       href={published.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 font-medium text-foreground text-sm hover:bg-card/80"
+                      className="inline-flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-card px-4 font-medium text-sm hover:bg-card/70 sm:w-auto"
                     >
                       {t("see")}
                       <IconExternalLink className="size-4" />
@@ -317,6 +322,13 @@ export function LinkedinPostDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+/** « 10 novembre », with the year once it is no longer this one. */
+function publishedDate(iso: string, intlLocale: string): string {
+  const date = new Date(iso);
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  return date.toLocaleDateString(intlLocale, { day: "numeric", month: "long", ...(sameYear ? {} : { year: "numeric" }) });
 }
 
 /**
