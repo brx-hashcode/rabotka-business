@@ -1,4 +1,5 @@
 import { BusinessBaseController } from "./base-controller";
+import type { MailAttachmentRef } from "./mailbox-controller";
 import type { CvAnalysis, EmploymentType, PaymentFlow, QuestionKind } from "./offer-controller";
 
 export type CareersCompany = {
@@ -67,8 +68,11 @@ export type ExternalApplication = {
   id: string;
   firstName: string;
   lastName: string;
-  email: string;
-  phone: string;
+  /** Null for an imported CV until its analysis finds them (or if that address already applied). */
+  email: string | null;
+  phone: string | null;
+  /** Applied on the careers page, or a CV the business imported (source import-device / import-gmail). */
+  origin?: "CAREERS" | "IMPORT";
   status: "PENDING" | "RETAINED" | "REFUSED";
   answers: { label: string; kind: CareersQuestion["kind"]; value: string; passed: boolean | null }[];
   knockedOut: boolean;
@@ -123,8 +127,13 @@ class CareersController extends BusinessBaseController {
   }
 
   /** One candidate, or the offer's not yet read. Each CV uses one « CV inclus ». */
-  analyseExternal(offerId: string, applicationId?: string): Promise<{ screeningId: string; analysed: number; left: number }> {
-    return this.post("/business/me/external-applications/analyse", { offerId, ...(applicationId ? { applicationId } : {}) });
+  analyseExternal(offerId: string, applicationId?: string, retry = false): Promise<{ screeningId: string; analysed: number; left: number }> {
+    return this.post("/business/me/external-applications/analyse", {
+      offerId,
+      ...(applicationId ? { applicationId } : {}),
+      // « Réessayer »: one whose analysis failed, without the automatic retry's wait.
+      ...(retry ? { retry: true } : {}),
+    });
   }
 
   retainExternal(id: string): Promise<unknown> {
@@ -134,6 +143,23 @@ class CareersController extends BusinessBaseController {
   /** Takes a retention back: the candidate waits again, and is told by e-mail. */
   unretainExternal(id: string): Promise<unknown> {
     return this.post(`/business/me/external-applications/${encodeURIComponent(id)}/unretain`);
+  }
+
+  /**
+   * CVs the business has (its computer, its mailbox) made candidates of an
+   * offer: read and ranked with the others. Each uses one « CV inclus ».
+   */
+  importCvs(offerId: string, files: File[], mailAttachments: MailAttachmentRef[] = []): Promise<{ imported: number }> {
+    const form = new FormData();
+    form.append("offerId", offerId);
+    for (const file of files) form.append("files", file);
+    if (mailAttachments.length) form.append("mailAttachments", JSON.stringify(mailAttachments));
+    return this.post("/business/me/external-applications/import", form);
+  }
+
+  /** Takes imported CVs off their offer (never an application; a retained one is kept). */
+  deleteImported(ids: string[]): Promise<{ deleted: number; kept: number }> {
+    return this.post("/business/me/external-applications/delete", { ids });
   }
 
   refuseExternal(id: string, message?: string): Promise<unknown> {
@@ -153,3 +179,5 @@ export const analyseExternalApplications = controller.analyseExternal.bind(contr
 export const retainExternalApplication = controller.retainExternal.bind(controller);
 export const refuseExternalApplication = controller.refuseExternal.bind(controller);
 export const unretainExternalApplication = controller.unretainExternal.bind(controller);
+export const importOfferCvs = controller.importCvs.bind(controller);
+export const deleteImportedCvs = controller.deleteImported.bind(controller);

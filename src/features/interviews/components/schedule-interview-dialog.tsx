@@ -99,6 +99,8 @@ export function ScheduleInterviewDialog({
   // In person, the organisation's address until another is typed.
   const location = locations[mode] ?? (mode === "IN_PERSON" ? (business.data?.address ?? "") : "");
   const isCv = !!candidate.cvResumeId;
+  // An analysed CV, or an imported one whose address was not found: typed here.
+  const asksEmail = isCv || (!!candidate.externalApplicationId && !candidate.email);
 
   const save = useMutation({
     mutationFn: () => {
@@ -118,7 +120,7 @@ export function ScheduleInterviewDialog({
               : candidate.externalApplicationId
                 ? { externalApplicationId: candidate.externalApplicationId }
                 : { applicationId: candidate.applicationId }),
-            ...(isCv && email.trim() ? { candidateEmail: email.trim() } : {}),
+            ...(asksEmail && email.trim() ? { candidateEmail: email.trim() } : {}),
           });
     },
     onSuccess: () => {
@@ -265,7 +267,7 @@ export function ScheduleInterviewDialog({
               ))}
           </label>
 
-          {isCv && !existing && (
+          {asksEmail && !existing && (
             <label className="block space-y-1.5">
               <span className="font-medium text-sm">{t("email")}</span>
               <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("emailPlaceholder")} className={field} />

@@ -23,6 +23,9 @@ const LABEL: Record<string, string> = {
 export const SOURCE_KEY = "careers-source";
 
 export function sourceLabel(source: string, t: LabelsT): string {
+  // A CV the business imported into the offer itself.
+  if (source === "import-device") return t("source.importDevice");
+  if (source === "import-gmail") return t("source.importGmail");
   if ((TRANSLATED as Set<string>).has(source)) return t(`source.${source as "agent" | "carrieres" | "direct" | "qr"}`);
   return LABEL[source] ?? source.charAt(0).toUpperCase() + source.slice(1);
 }

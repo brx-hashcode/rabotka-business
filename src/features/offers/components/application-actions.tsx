@@ -1,10 +1,13 @@
 "use client";
 
+import type { ComponentType } from "react";
+
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconAddressBook, IconCheck, IconDots, IconMessageCircle, IconStar, IconStarFilled, IconCircleCheckFilled, IconCircleDashed, IconLockOpen, IconX } from "@tabler/icons-react";
+import { IconAddressBook, IconDots, IconMessageCircle, IconStar, IconStarFilled, IconCircleCheckFilled, IconCircleDashed, IconLockOpen, IconX } from "@tabler/icons-react";
+import { UserRoundCheck, UserRoundX } from "lucide-react";
 import { toast } from "sonner";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -45,7 +48,7 @@ type Dialog = "accept" | "reject" | "cancel" | "unlock" | "rate" | "contact" | n
 type Action = {
   key: string;
   label: string;
-  icon: typeof IconCheck;
+  icon: ComponentType<{ className?: string }>;
   tone: "primary" | "accent" | "default" | "danger";
   onClick?: () => void;
   href?: string;
@@ -213,9 +216,9 @@ function Actions({
   const actions: Action[] = [];
   if (status === "PENDING" || status === "VIEWED") {
     if (recruiting) {
-      actions.push({ key: "accept", label: t("retain"), icon: IconCheck, tone: "primary", onClick: () => setDialog("accept") });
+      actions.push({ key: "accept", label: t("retain"), icon: UserRoundCheck, tone: "primary", onClick: () => setDialog("accept") });
     }
-    actions.push({ key: "reject", label: t("refuse"), icon: IconX, tone: "danger", onClick: () => setDialog("reject") });
+    actions.push({ key: "reject", label: t("refuse"), icon: UserRoundX, tone: "danger", onClick: () => setDialog("reject") });
   }
   if (status === "WAITING_PAYMENT") {
     actions.push({ key: "unlock", label: t("progress"), icon: IconLockOpen, tone: "default", onClick: () => setDialog("unlock") });
@@ -341,7 +344,7 @@ function Actions({
         open={dialog === "reject"}
         onOpenChange={(o) => setDialog(o ? "reject" : null)}
         tone="warning"
-        icon={<IconX className="size-5" />}
+        icon={<UserRoundX className="size-5" />}
         title={t("refuseTitle", { name })}
         description={t("refuseText")}
         confirmLabel={t("refuse")}
@@ -413,7 +416,7 @@ function AcceptDialog({
     <ActionDialog
       open={open}
       onOpenChange={onOpenChange}
-      icon={<IconCheck className="size-5" />}
+      icon={<UserRoundCheck className="size-5" />}
       title={t("retainTitle", { name })}
       description={t("retainText")}
       confirmLabel={t("retain")}
