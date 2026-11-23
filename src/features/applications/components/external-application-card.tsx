@@ -14,10 +14,11 @@ import { PreviewSheet, previewKindOf } from "#/components/preview-sheet";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Textarea } from "#/components/ui/textarea";
-import { CRITERIA, ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
+import { AnalysingChip, CRITERIA, CvBlockedNote, ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
+import { isAnalysing } from "#/features/applications/analysing";
 import { CandidateInsight, detailsLabel } from "#/features/offers/components/candidate-insight";
 import { MoreActionsMenu, opinionLabel, type MoreAction } from "#/features/offers/components/more-actions-menu";
-import { DeleteImportedDialog } from "#/features/offers/components/import-cvs";
+import { DeleteImportedDialog, useCvBlock } from "#/features/offers/components/import-cvs";
 import { AnswerFileLink } from "#/features/offers/components/answer-file-link";
 import type { CvAnalysis } from "#/lib/api/offer-controller";
 import { CvChatSheet } from "#/features/cv-screening/components/cv-chat-sheet";
@@ -30,6 +31,7 @@ import {
   type ExternalApplication,
 } from "#/lib/api/careers-controller";
 import { cvScreeningsKey, getCvScreening } from "#/lib/api/cv-screening-controller";
+import { mySubscriptionKey } from "#/lib/api/business-controller";
 import { sourceLabel } from "#/features/careers/candidate-source";
 import { showExternalStatus } from "#/features/offers/application-cache";
 import { useConfirmedShortlist } from "#/features/offers/use-shortlist";
@@ -111,6 +113,12 @@ export function ExternalApplicationCard({
   const score = a.analysis?.status === "SCORED" ? a.analysis.score : null;
   // The analysis broke (the model, a timeout), not the file: it can be tried again.
   const analysisFailed = a.analysis?.status === "FAILED";
+  // Queued or being read: its score is on its way, nothing to press.
+  const analysingNow = isAnalysing(a);
+  // Not read, and the plan cannot read it now: said on the card, with the way out.
+  const cvBlock = useCvBlock();
+  const canAnalyse = (!a.analysis || analysisFailed) && !analysingNow && a.status === "PENDING" && recruiting(a) && a.hasCv;
+  const blocked = canAnalyse && cvBlock !== null;
   const insight = score !== null && !!a.analysis && hasInsight(a.analysis);
   // Chat reads the resume as Analyse de CV holds it.
   // One request per screening, shared by every card of the offer; each picks its own.
@@ -194,7 +202,18 @@ export function ExternalApplicationCard({
       refreshList();
       setAnalysing(false);
     },
-    onError: (err) => toast.error(friendlyError(err, t("analyseFailed"))),
+    onError: (err) => {
+      // The plan may have run out meanwhile: the card then says so.
+      void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
+      // Already on its way (queued at import, or being read): said, and shown.
+      if ((err as { statusCode?: number }).statusCode === 409) {
+        toast.info(friendlyError(err, t("analyseFailed")));
+        setAnalysing(false);
+        refreshList();
+        return;
+      }
+      toast.error(friendlyError(err, t("analyseFailed")));
+    },
   });
 
   const retain = useMutation({
@@ -247,7 +266,13 @@ export function ExternalApplicationCard({
         {score !== null ? (
           <ScoreRing score={score} />
         ) : (
-          <Avatar className="size-14 rounded-2xl">
+          <Avatar
+            className={cn(
+              "size-14 rounded-2xl",
+              // Being read: a soft pulse around the initials.
+              analysingNow && "ring-2 ring-brand-lime ring-offset-2 ring-offset-page motion-safe:animate-pulse",
+            )}
+          >
             <AvatarFallback className="rounded-2xl bg-brand-lime font-semibold text-[#0f2414]">{getInitials(name)}</AvatarFallback>
           </Avatar>
         )}
@@ -262,7 +287,7 @@ export function ExternalApplicationCard({
               <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px] text-muted-foreground">{t("via", { source: sourceLabel(a.source, tLabels) })}</span>
             )}
           </p>
-          {a.analysis?.status === "QUEUED" && <p className="mt-1 text-muted-foreground text-xs">{t("analysing")}</p>}
+          {analysingNow && <AnalysingChip className="mt-1.5" />}
           {a.analysis && a.analysis.status !== "QUEUED" && score === null && (
             <p className="mt-1 text-muted-foreground text-xs">{analysisFailed ? t("analysisFailed") : t("unreadable")}</p>
           )}
@@ -297,11 +322,13 @@ export function ExternalApplicationCard({
         </div>
       )}
       {/* An imported CV read without an address: nobody can be told by e-mail. */}
-      {imported && !a.email && a.analysis && a.analysis.status !== "QUEUED" && (
+      {imported && !a.email && a.analysis && !analysingNow && (
         <p className="text-muted-foreground text-xs">{t("noEmail")}</p>
       )}
 
       {a.analysis?.summary && <p className="line-clamp-3 text-sm leading-relaxed">{a.analysis.summary}</p>}
+
+      {blocked && cvBlock && <CvBlockedNote block={cvBlock} compact className="rounded-2xl bg-card px-3.5 py-2.5" />}
 
       {a.knockedOut && (
         <p className="flex items-center gap-1.5 text-chip-amber-foreground text-xs">
@@ -323,7 +350,7 @@ export function ExternalApplicationCard({
             <IconChevronDown className={cn("size-4 transition-transform", showDetails && "rotate-180")} />
           </button>
         )}
-        {(!a.analysis || analysisFailed) && a.status === "PENDING" && recruiting(a) && a.hasCv && (
+        {canAnalyse && !blocked && (
           <button
             type="button"
             onClick={() => setAnalysing(true)}
