@@ -22,6 +22,15 @@ describe("chunkCvBatch", () => {
     ]);
   });
 
+  it("sends at most 5 mailbox CVs a request, as the backend reads them", () => {
+    const mails = Array.from({ length: 8 }, (_, i) => mail(`m${i}`, 1));
+    const chunks = chunkCvBatch([file("a", 1), file("b", 1)], mails);
+    expect(chunks.map((c) => [c.files.length, c.mails.length])).toEqual([
+      [2, 5],
+      [0, 3],
+    ]);
+  });
+
   it("keeps a single file larger than the cap in a chunk of its own", () => {
     expect(chunkCvBatch([file("big", 45)], [])).toHaveLength(1);
   });

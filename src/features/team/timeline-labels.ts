@@ -9,8 +9,14 @@ export function timelineLabel(e: TimelineEvent, t: Translator<"team.timeline">, 
   switch (e.kind) {
     case "APPLIED":
       return t("applied");
+    case "IMPORTED":
+      return t("imported");
+    case "ANALYSED":
+      return typeof e.score === "number" ? t("analysedScore", { score: e.score }) : t("analysed");
     case "VIEWED":
       return t("viewed");
+    case "SHORTLISTED":
+      return who ? t("shortlistedBy", { who }) : t("shortlisted");
     case "RETAINED":
       return who ? t("retainedBy", { who }) : t("retained");
     case "REFUSED":

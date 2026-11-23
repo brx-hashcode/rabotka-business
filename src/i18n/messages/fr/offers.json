@@ -75,7 +75,17 @@
     "refuseTitle": "Refuser {name} ?",
     "refuseText": "La personne est prévenue par e-mail.",
     "refuseNote": "Un mot pour la personne (facultatif)",
-    "compareAria": "Comparer {name}"
+    "compareAria": "Comparer {name}",
+    "imported": "CV importé",
+    "noEmail": "Aucune adresse e-mail trouvée sur ce CV : contactez la personne directement.",
+    "decided": "Décision enregistrée.",
+    "retainTextNoEmail": "Elle compte dans vos postes pourvus. Aucune adresse e-mail sur son CV : prévenez-la vous-même.",
+    "unretainTextNoEmail": "Le poste est libéré et l'offre recrute de nouveau. Aucune adresse e-mail sur son CV : personne n'est prévenu.",
+    "refuseTextNoEmail": "Aucune adresse e-mail sur son CV : personne n'est prévenu.",
+    "delete": "Supprimer ce CV importé",
+    "analysisFailed": "L'analyse n'a pas abouti.",
+    "retryAnalysis": "Réessayer l'analyse",
+    "retryTitle": "Réessayer l'analyse du CV de {name} ?"
   },
   "detail": {
     "back": "Offres",
@@ -115,7 +125,11 @@
     "toReview": "À examiner",
     "waitingReply": "en attente de votre réponse",
     "noneWaiting": "aucune en attente",
-    "filled": "Postes pourvus"
+    "filled": "Postes pourvus",
+    "importDevice": "Importer des CV depuis l'ordinateur",
+    "importDeviceHint": "Analysés et classés avec les candidats",
+    "importGmail": "Importer des CV depuis Gmail",
+    "importGmailHint": "Les CV reçus par e-mail, classés avec les candidats"
   },
   "applicants": {
     "tabs": {
@@ -131,7 +145,7 @@
     "atMost": "{max} candidats au plus",
     "notComparable": "Ces analyses ne peuvent pas être comparées ensemble",
     "title": "Candidats",
-    "intro": "Classés par adéquation avec l'offre, qu'ils aient postulé sur Rabotka ou sur votre page carrières.",
+    "intro": "Classés par adéquation avec l'offre, qu'ils aient postulé sur Rabotka ou sur votre page carrières, ou que vous ayez importé leur CV.",
     "display": "Affichage",
     "list": "Liste",
     "board": "Tableau",
@@ -150,7 +164,8 @@
     "shortlist": "Présélectionner{count, select, none {} other { ({count})}}",
     "unshortlist": "Retirer de la présélection",
     "refuseSelection": "Refuser la sélection{count, select, none {} other { ({count})}}",
-    "noneAtStage": "Aucun candidat à cette étape."
+    "noneAtStage": "Aucun candidat à cette étape.",
+    "deleteSelection": "Supprimer{count, select, none { la sélection} other { {count} CV importés}}"
   },
   "row": {
     "rabotkaCv": "CV Rabotka",
@@ -625,5 +640,23 @@
       "recrutement",
       "emploi"
     ]
+  },
+  "importCvs": {
+    "deviceTitle": "Importer des CV depuis l'ordinateur",
+    "description": "Les CV que vous avez déjà rejoignent les candidats de « {title} » : lus, notés et classés avec ceux qui ont postulé.",
+    "note": "Chaque CV utilise 1 CV inclus de votre formule. Personne n'est prévenu à l'import ; une fois l'adresse e-mail trouvée sur le CV, la personne reçoit vos décisions comme un candidat de la page carrières.",
+    "cancel": "Annuler",
+    "sending": "Envoi des CV…",
+    "sendingCount": "Envoi des CV… {sent} / {count}",
+    "done": "{count, plural, one {# CV importé} other {# CV importés}} : analyse en cours.",
+    "partlyFailed": "{count, plural, one {# CV n'a pas pu être envoyé} other {# CV n'ont pas pu être envoyés}} : importez-les à nouveau.",
+    "failed": "Les CV n'ont pas pu être importés.",
+    "start": "Lancer l'analyse{count, select, none {} other { de {count} CV}}",
+    "delete": "Supprimer",
+    "deleteTitle": "Supprimer {count, plural, one {ce CV importé} other {ces # CV importés}} ?",
+    "deleteOneTitle": "Supprimer le CV importé de {name} ?",
+    "deleteText": "{count, plural, one {Le CV, son analyse et les avis de l'équipe sont supprimés} other {Les CV, leur analyse et les avis de l'équipe sont supprimés}}. Les CV inclus déjà utilisés ne sont pas rendus.",
+    "deleted": "{count, plural, =0 {Aucun CV supprimé} one {# CV supprimé} other {# CV supprimés}}.",
+    "deleteFailed": "La suppression n'a pas abouti."
   }
 }

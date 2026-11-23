@@ -11,6 +11,8 @@ import type { MailPick } from "./mail-picks";
 /** At most this many CVs, and this many bytes, per request. */
 export const CHUNK_MAX_FILES = 8;
 export const CHUNK_MAX_BYTES = 40 * 1024 * 1024;
+/** Mailbox CVs per request: the backend reads at most 5 from the mailbox at once. */
+export const CHUNK_MAX_MAILS = 5;
 
 export type CvChunk = { files: File[]; mails: MailPick[] };
 
@@ -18,7 +20,11 @@ export type CvChunk = { files: File[]; mails: MailPick[] };
 export function chunkCvBatch(
   files: File[],
   mails: MailPick[],
-  limits = { maxFiles: CHUNK_MAX_FILES, maxBytes: CHUNK_MAX_BYTES },
+  limits: { maxFiles: number; maxBytes: number; maxMails?: number } = {
+    maxFiles: CHUNK_MAX_FILES,
+    maxBytes: CHUNK_MAX_BYTES,
+    maxMails: CHUNK_MAX_MAILS,
+  },
 ): CvChunk[] {
   const items: ({ kind: "file"; file: File; size: number } | { kind: "mail"; mail: MailPick; size: number })[] = [
     ...files.map((file) => ({ kind: "file" as const, file, size: file.size })),
@@ -29,7 +35,8 @@ export function chunkCvBatch(
   let bytes = 0;
   for (const item of items) {
     const count = current.files.length + current.mails.length;
-    if (count > 0 && (count >= limits.maxFiles || bytes + item.size > limits.maxBytes)) {
+    const mailsFull = item.kind === "mail" && current.mails.length >= (limits.maxMails ?? CHUNK_MAX_MAILS);
+    if (count > 0 && (count >= limits.maxFiles || bytes + item.size > limits.maxBytes || mailsFull)) {
       chunks.push(current);
       current = { files: [], mails: [] };
       bytes = 0;

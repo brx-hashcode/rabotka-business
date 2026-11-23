@@ -217,8 +217,10 @@ export function MailImport({
 /**
  * The recent mails of one mailbox that carry a CV, to tick. Nothing leaves the
  * mailbox until the analysis is started; then the server reads the ticked files.
+ * With `action`, its button starts that itself (an offer's « Importer depuis
+ * Gmail ») rather than handing the picks back to a form.
  */
-function MailCvSheet({
+export function MailCvSheet({
   mailbox,
   open,
   onOpenChange,
@@ -226,6 +228,7 @@ function MailCvSheet({
   room,
   onDone,
   onReconnect,
+  action,
 }: Readonly<{
   mailbox: Mailbox;
   open: boolean;
@@ -234,6 +237,7 @@ function MailCvSheet({
   room: number;
   onDone: (picks: MailPick[]) => void;
   onReconnect: () => void;
+  action?: { label: (count: number) => string; pending: boolean };
 }>) {
   const queryClient = useQueryClient();
   const t = useTranslations("cv.mail");
@@ -484,10 +488,12 @@ function MailCvSheet({
               </div>
               <button
                 type="button"
+                disabled={action && (action.pending || chosen.length === 0)}
                 onClick={() => onDone(chosen)}
-                className="h-12 shrink-0 rounded-full bg-ink px-6 font-medium text-white hover:bg-ink/90"
+                className="inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-ink px-6 font-medium text-white hover:bg-ink/90 disabled:opacity-40"
               >
-                {added > 0 ? t("add", { count: added }) : t("confirm")}
+                {action?.pending && <Loader className="size-4 animate-spin" />}
+                {action ? action.label(chosen.length) : added > 0 ? t("add", { count: added }) : t("confirm")}
               </button>
             </div>
           </footer>

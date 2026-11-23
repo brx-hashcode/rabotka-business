@@ -49,7 +49,9 @@
     "agent": "Rabotka agents",
     "carrieres": "Careers page",
     "direct": "Direct link",
-    "qr": "Poster (QR code)"
+    "qr": "Poster (QR code)",
+    "importDevice": "Import (computer)",
+    "importGmail": "Import (Gmail)"
   },
   "offer": {
     "dayAt": "{day} at {time}",

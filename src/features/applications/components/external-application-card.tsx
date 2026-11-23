@@ -4,7 +4,8 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconAlertTriangle, IconArrowBackUp, IconCalendarPlus, IconCheck, IconChevronDown, IconDownload, IconFileText, IconMail, IconPhone, IconStar, IconStarOff, IconUsers, IconX } from "@tabler/icons-react";
+import { IconAlertTriangle, IconArrowBackUp, IconCalendarPlus, IconChevronDown, IconDownload, IconFileText, IconMail, IconPhone, IconRefresh, IconStar, IconStarOff, IconTrash, IconUsers } from "@tabler/icons-react";
+import { UserRoundCheck, UserRoundX } from "lucide-react";
 import { toast } from "sonner";
 
 import { ActionDialog } from "#/components/action-dialog";
@@ -16,6 +17,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { CRITERIA, ScoreRing, VerdictChip } from "#/features/cv-screening/components/cv-bits";
 import { CandidateInsight, detailsLabel } from "#/features/offers/components/candidate-insight";
 import { MoreActionsMenu, opinionLabel, type MoreAction } from "#/features/offers/components/more-actions-menu";
+import { DeleteImportedDialog } from "#/features/offers/components/import-cvs";
 import type { CvAnalysis } from "#/lib/api/offer-controller";
 import { CvChatSheet } from "#/features/cv-screening/components/cv-chat-sheet";
 import {
@@ -87,7 +89,11 @@ export function ExternalApplicationCard({
   const t = useTranslations("offers.candidate");
   const friendlyError = useFriendlyError();
   const queryClient = useQueryClient();
-  const name = `${a.firstName} ${a.lastName}`;
+  const name = `${a.firstName} ${a.lastName}`.trim();
+  // A CV the business imported: no one applied, so it says so rather than « Page carrières ».
+  const imported = a.origin === "IMPORT";
+  // Told of a decision only with an address: an imported CV may have none.
+  const told = (key: "notified" | "unretained") => (a.email ? t(key, { name }) : t("decided"));
   // Deciding is for those who hire; an Évaluateur reads and gives its opinion.
   const hire = canHire(useMember().role);
   const shortlist = useConfirmedShortlist(a.offer.id);
@@ -100,7 +106,10 @@ export function ExternalApplicationCard({
   const [analysing, setAnalysing] = useState(false);
   const [scheduling, setScheduling] = useState(false);
   const [chatting, setChatting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const score = a.analysis?.status === "SCORED" ? a.analysis.score : null;
+  // The analysis broke (the model, a timeout), not the file: it can be tried again.
+  const analysisFailed = a.analysis?.status === "FAILED";
   const insight = score !== null && !!a.analysis && hasInsight(a.analysis);
   // Chat reads the resume as Analyse de CV holds it.
   // One request per screening, shared by every card of the offer; each picks its own.
@@ -150,6 +159,10 @@ export function ExternalApplicationCard({
     ...(hire && a.status === "RETAINED"
       ? [{ key: "unretain", label: t("unretain"), icon: IconArrowBackUp, onSelect: () => setUnretaining(true) }]
       : []),
+    // A CV the business imported (a wrong file, a duplicate): taken off the offer.
+    ...(hire && imported && a.status !== "RETAINED"
+      ? [{ key: "delete", label: t("delete"), icon: IconTrash, onSelect: () => setDeleting(true), tone: "danger" as const }]
+      : []),
   ];
 
   const refreshList = () => void queryClient.invalidateQueries({ queryKey: externalApplicationsKey });
@@ -169,13 +182,13 @@ export function ExternalApplicationCard({
     onMutate: decide("REFUSED", () => setRefusing(false)),
     onSuccess: () => {
       refreshList();
-      toast.success(t("notified", { name }));
+      toast.success(told("notified"));
     },
     onError: failed(t("refuseFailed")),
   });
 
   const analyse = useMutation({
-    mutationFn: () => analyseExternalApplications(a.offer.id, a.id),
+    mutationFn: () => analyseExternalApplications(a.offer.id, a.id, analysisFailed),
     onSuccess: () => {
       refreshList();
       setAnalysing(false);
@@ -188,7 +201,7 @@ export function ExternalApplicationCard({
     onMutate: decide("RETAINED", () => setRetaining(false)),
     onSuccess: () => {
       refreshList();
-      toast.success(t("notified", { name }));
+      toast.success(told("notified"));
     },
     onError: failed(t("retainFailed")),
   });
@@ -198,7 +211,7 @@ export function ExternalApplicationCard({
     onMutate: decide("PENDING", () => setUnretaining(false)),
     onSuccess: () => {
       refreshList();
-      toast.success(t("unretained"));
+      toast.success(told("unretained"));
     },
     onError: failed(t("unretainFailed")),
   });
@@ -241,14 +254,16 @@ export function ExternalApplicationCard({
           <p className="truncate font-semibold">{name}</p>
           <p className="mt-1 flex flex-wrap gap-1.5">
             {score !== null && <VerdictChip score={score} />}
-            <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px]">{t("careersPage")}</span>
-            {a.source && a.source !== "direct" && (
+            <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px]">
+              {imported ? t("imported") : t("careersPage")}
+            </span>
+            {a.source && a.source !== "direct" && a.source !== "import-device" && (
               <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px] text-muted-foreground">{t("via", { source: sourceLabel(a.source, tLabels) })}</span>
             )}
           </p>
           {a.analysis?.status === "QUEUED" && <p className="mt-1 text-muted-foreground text-xs">{t("analysing")}</p>}
           {a.analysis && a.analysis.status !== "QUEUED" && score === null && (
-            <p className="mt-1 text-muted-foreground text-xs">{t("unreadable")}</p>
+            <p className="mt-1 text-muted-foreground text-xs">{analysisFailed ? t("analysisFailed") : t("unreadable")}</p>
           )}
         </div>
         {/* Where it stands, in the words and colours of a Rabotka applicant's card. */}
@@ -264,16 +279,26 @@ export function ExternalApplicationCard({
         </Link>
       )}
 
-      <div className="space-y-1 text-sm">
-        <a href={`mailto:${a.email}`} className="flex items-center gap-2 hover:underline">
-          <IconMail className="size-4 shrink-0 text-muted-foreground" />
-          <span className="truncate">{a.email}</span>
-        </a>
-        <a href={`tel:${a.phone}`} className="flex items-center gap-2 hover:underline">
-          <IconPhone className="size-4 shrink-0 text-muted-foreground" />
-          {a.phone}
-        </a>
-      </div>
+      {(a.email || a.phone) && (
+        <div className="space-y-1 text-sm">
+          {a.email && (
+            <a href={`mailto:${a.email}`} className="flex items-center gap-2 hover:underline">
+              <IconMail className="size-4 shrink-0 text-muted-foreground" />
+              <span className="truncate">{a.email}</span>
+            </a>
+          )}
+          {a.phone && (
+            <a href={`tel:${a.phone}`} className="flex items-center gap-2 hover:underline">
+              <IconPhone className="size-4 shrink-0 text-muted-foreground" />
+              {a.phone}
+            </a>
+          )}
+        </div>
+      )}
+      {/* An imported CV read without an address: nobody can be told by e-mail. */}
+      {imported && !a.email && a.analysis && a.analysis.status !== "QUEUED" && (
+        <p className="text-muted-foreground text-xs">{t("noEmail")}</p>
+      )}
 
       {a.analysis?.summary && <p className="line-clamp-3 text-sm leading-relaxed">{a.analysis.summary}</p>}
 
@@ -297,13 +322,14 @@ export function ExternalApplicationCard({
             <IconChevronDown className={cn("size-4 transition-transform", showDetails && "rotate-180")} />
           </button>
         )}
-        {!a.analysis && a.status === "PENDING" && recruiting(a) && a.hasCv && (
+        {(!a.analysis || analysisFailed) && a.status === "PENDING" && recruiting(a) && a.hasCv && (
           <button
             type="button"
             onClick={() => setAnalysing(true)}
-            className="inline-flex h-10 shrink-0 items-center rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70"
+            className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70"
           >
-            {t("analyse")}
+            {analysisFailed && <IconRefresh className="size-4" />}
+            {analysisFailed ? t("retryAnalysis") : t("analyse")}
           </button>
         )}
         {score !== null && (
@@ -323,7 +349,7 @@ export function ExternalApplicationCard({
               onClick={() => setRefusing(true)}
               className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 font-medium text-sm hover:bg-card/70"
             >
-              <IconX className="size-4" />
+              <UserRoundX className="size-4" />
               {t("refuse")}
             </button>
             {recruiting(a) && (
@@ -332,7 +358,7 @@ export function ExternalApplicationCard({
                 onClick={() => setRetaining(true)}
                 className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-ink px-4 font-medium text-sm text-white"
               >
-                <IconCheck className="size-4" />
+                <UserRoundCheck className="size-4" />
                 {t("retain")}
               </button>
             )}
@@ -393,9 +419,9 @@ export function ExternalApplicationCard({
       <ActionDialog
         open={analysing}
         onOpenChange={setAnalysing}
-        title={t("analyseTitle", { name })}
+        title={analysisFailed ? t("retryTitle", { name }) : t("analyseTitle", { name })}
         description={t("analyseText")}
-        confirmLabel={t("analyseConfirm")}
+        confirmLabel={analysisFailed ? t("retryAnalysis") : t("analyseConfirm")}
         pending={analyse.isPending}
         onConfirm={() => analyse.mutate()}
       />
@@ -423,11 +449,13 @@ export function ExternalApplicationCard({
         />
       )}
 
+      {imported && <DeleteImportedDialog ids={[a.id]} name={name} open={deleting} onOpenChange={setDeleting} />}
+
       <ActionDialog
         open={retaining}
         onOpenChange={setRetaining}
         title={t("retainTitle", { name })}
-        description={t("retainText")}
+        description={a.email ? t("retainText") : t("retainTextNoEmail")}
         confirmLabel={t("retain")}
         pending={retain.isPending}
         onConfirm={() => retain.mutate()}
@@ -437,7 +465,7 @@ export function ExternalApplicationCard({
         open={unretaining}
         onOpenChange={setUnretaining}
         title={t("unretainTitle", { name })}
-        description={t("unretainText")}
+        description={a.email ? t("unretainText") : t("unretainTextNoEmail")}
         confirmLabel={t("unretainConfirm")}
         tone="warning"
         pending={unretain.isPending}
@@ -448,13 +476,16 @@ export function ExternalApplicationCard({
         open={refusing}
         onOpenChange={setRefusing}
         title={t("refuseTitle", { name })}
-        description={t("refuseText")}
+        description={a.email ? t("refuseText") : t("refuseTextNoEmail")}
         confirmLabel={t("refuse")}
         tone="warning"
         pending={refuse.isPending}
         onConfirm={() => refuse.mutate()}
       >
-        <Textarea value={message} maxLength={500} onChange={(e) => setMessage(e.target.value)} placeholder={t("refuseNote")} className="rounded-xl border-0 bg-page shadow-none" />
+        {/* A word for someone who is told: with no address, nobody reads it. */}
+        {a.email && (
+          <Textarea value={message} maxLength={500} onChange={(e) => setMessage(e.target.value)} placeholder={t("refuseNote")} className="rounded-xl border-0 bg-page shadow-none" />
+        )}
       </ActionDialog>
     </li>
   );

@@ -77,7 +77,7 @@ export function ReportExportMenu({ days, onOpenPdf }: Readonly<{ days: StatsPeri
         {pending ? t("pending") : t("button")}
         <IconChevronDown className="size-4 text-muted-foreground" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64 rounded-2xl border-0 bg-card p-1.5 shadow-soft">
+      <DropdownMenuContent align="end" className="w-[min(21rem,calc(100vw-2rem))] rounded-2xl border-0 bg-card p-1.5 shadow-soft">
         <DropdownMenuItem className={ITEM} onSelect={onOpenPdf}>
           <IconFileText className="mt-0.5 size-4 shrink-0" />
           <span className="flex flex-col">

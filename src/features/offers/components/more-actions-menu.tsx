@@ -36,7 +36,14 @@ export function MoreActionsMenu({
   actions,
   name,
   className,
-}: Readonly<{ actions: MoreAction[]; name: string; className?: string }>) {
+  wide = false,
+}: Readonly<{
+  actions: MoreAction[];
+  name: string;
+  className?: string;
+  /** An offer's own menu: longer labels, each on one line. */
+  wide?: boolean;
+}>) {
   const t = useTranslations("offers.candidate");
   if (actions.length === 0) return null;
   return (
@@ -50,7 +57,13 @@ export function MoreActionsMenu({
       >
         <IconDots className="size-4" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64 rounded-2xl border-0 bg-card p-1.5 shadow-soft">
+      <DropdownMenuContent
+        align="end"
+        className={cn(
+          "rounded-2xl border-0 bg-card p-1.5 shadow-soft",
+          wide ? "w-[min(21rem,calc(100vw-2rem))]" : "w-64",
+        )}
+      >
         {actions.map((a, i) => (
           <Fragment key={a.key}>
             {a.tone === "danger" && i > 0 && actions[i - 1].tone !== "danger" && <DropdownMenuSeparator className="my-1" />}
