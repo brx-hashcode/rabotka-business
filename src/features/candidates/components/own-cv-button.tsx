@@ -10,8 +10,9 @@ import { cn } from "#/lib/utils";
 
 /**
  * « CV joint » : the CV the candidate uploaded and sent with this application.
- * It carries their phone and e-mail, so until the contact is unlocked (or the
- * application retained) it stays shut, and its contents only reach the score.
+ * It carries their phone and e-mail, so without a plan running it stays shut
+ * until the contact is unlocked (or the application retained), and its
+ * contents only reach the score.
  */
 export function OwnCvButton({
   applicationId,

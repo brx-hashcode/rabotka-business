@@ -14,14 +14,14 @@
     "none": "The candidate hasn't added a CV yet.",
     "addedOn": "Added on {date}",
     "see": "View the CV",
-    "lockedHint": "The CV shows their contact details: it opens once you have their contact.",
+    "lockedHint": "The CV shows their contact details: it opens once you have their contact, or with a plan running if they applied to one of your jobs.",
     "afterContact": "After you get the contact",
     "sheetTitle": "{name}'s CV",
     "sheetSubtitle": "Added by the candidate to their profile",
     "unavailable": "This CV couldn't be loaded."
   },
   "ownCv": {
-    "lockedHint": "The CV the candidate attached opens once you have their contact details or have hired them.",
+    "lockedHint": "The CV the candidate attached opens with a plan running, or once you have their contact details or have hired them.",
     "locked": "Candidate's CV · after you get the contact",
     "label": "Candidate's CV",
     "sheetTitle": "{name}'s CV",

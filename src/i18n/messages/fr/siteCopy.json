@@ -146,8 +146,8 @@
       "text": "Rabotka ne lit que les pièces jointes que vous choisissez et n'envoie jamais rien depuis votre messagerie."
     },
     {
-      "title": "CV supprimés à échéance",
-      "text": "Les fichiers et les coordonnées des CV analysés sont supprimés au bout de la durée prévue ; seules les notes restent."
+      "title": "Vous décidez pour les CV",
+      "text": "Les CV restent tant que l'offre recrute, puis jusqu'à ce que vous les supprimiez. Une date limite s'applique après la clôture ; les notes restent."
     },
     {
       "title": "Documents confidentiels",
@@ -241,7 +241,7 @@
     },
     {
       "q": "Combien de temps les CV sont-ils conservés ?",
-      "a": "Les fichiers et les coordonnées des CV analysés sont supprimés automatiquement au bout de la durée indiquée lors de l'analyse. Les notes et le classement restent consultables."
+      "a": "Tant que l'offre recrute, ils sont conservés. Après la clôture, ils restent jusqu'à ce que vous les supprimiez, et au plus tard jusqu'à la date limite affichée ; vous êtes prévenu un mois avant. Les notes et le classement restent consultables."
     },
     {
       "q": "Comment se passe un entretien en visio ?",

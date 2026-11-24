@@ -5,6 +5,11 @@ import type { MailAttachmentRef } from "./mailbox-controller";
 import { parseSse } from "./sse";
 import type { CvChat, CvComparison, CvScreening, CvScreeningSummary } from "./types";
 
+/** Whose CV: a Rabotka application's, a careers-page candidate's, or one of an analysis. */
+export type CvTarget =
+  | { kind: "rabotka" | "careers"; id: string }
+  | { kind: "analysis"; screeningId: string; resumeId: string };
+
 /** « Analyse de CV »: CVs the AI reads and ranks against one job. */
 class CvScreeningController extends BusinessBaseController {
   list(page = 0, limit = 20): Promise<{ items: CvScreeningSummary[]; total: number }> {
@@ -48,6 +53,17 @@ class CvScreeningController extends BusinessBaseController {
     return this.post(`/business/me/cv-screenings/${encodeURIComponent(id)}/comparisons`, { resumeIds });
   }
 
+  /** « Supprimer le CV » of one candidate: files, text and conversations; the score stays. */
+  removeCv(target: CvTarget): Promise<unknown> {
+    if (target.kind === "analysis") {
+      return this.delete(
+        `/business/me/cv-screenings/${encodeURIComponent(target.screeningId)}/resumes/${encodeURIComponent(target.resumeId)}/file`,
+      );
+    }
+    const path = target.kind === "rabotka" ? "applications" : "external-applications";
+    return this.delete(`/business/me/${path}/${encodeURIComponent(target.id)}/cv`);
+  }
+
   remove(id: string): Promise<unknown> {
     return this.delete(`/business/me/cv-screenings/${encodeURIComponent(id)}`);
   }
@@ -60,6 +76,7 @@ export const getCvScreening = controller.one.bind(controller);
 export const createCvScreening = controller.create.bind(controller);
 export const addCvScreeningFiles = controller.addFiles.bind(controller);
 export const deleteCvScreening = controller.remove.bind(controller);
+export const deleteCandidateCv = controller.removeCv.bind(controller);
 export const getCvChat = controller.chat.bind(controller);
 export const openCvComparison = controller.compare.bind(controller);
 

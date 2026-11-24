@@ -44,7 +44,7 @@
     "trialUntil": "Essai jusqu'au {date}",
     "until": "Jusqu'au {date}",
     "contacts": "Contacts inclus",
-    "contactsUsedUp": "Tous vos contacts inclus sont utilisés : les suivants sont payants.",
+    "contactsUsedUp": "Tous vos contacts inclus sont utilisés. Ceux de vos candidats restent accessibles ; pour d'autres profils, ajoutez un pack.",
     "offers": "Offres publiées",
     "cv": "CV inclus",
     "drafts": "Rédactions IA",

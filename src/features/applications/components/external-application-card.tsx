@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconAlertTriangle, IconArrowBackUp, IconCalendarPlus, IconChevronDown, IconDownload, IconFileText, IconMail, IconPhone, IconRefresh, IconStar, IconStarOff, IconTrash, IconUsers } from "@tabler/icons-react";
+import { IconAlertTriangle, IconArrowBackUp, IconCalendarPlus, IconChevronDown, IconDownload, IconFileOff, IconFileText, IconMail, IconPhone, IconRefresh, IconStar, IconStarOff, IconTrash, IconUsers } from "@tabler/icons-react";
 import { UserRoundCheck, UserRoundX } from "lucide-react";
 import { toast } from "sonner";
 
@@ -22,6 +22,7 @@ import { DeleteImportedDialog, useCvBlock } from "#/features/offers/components/i
 import { AnswerFileLink } from "#/features/offers/components/answer-file-link";
 import type { CvAnalysis } from "#/lib/api/offer-controller";
 import { CvChatSheet } from "#/features/cv-screening/components/cv-chat-sheet";
+import { DeleteCvDialog } from "#/features/cv-screening/components/delete-cv-dialog";
 import {
   analyseExternalApplications,
   externalApplicationsKey,
@@ -110,6 +111,7 @@ export function ExternalApplicationCard({
   const [scheduling, setScheduling] = useState(false);
   const [chatting, setChatting] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deletingCv, setDeletingCv] = useState(false);
   const score = a.analysis?.status === "SCORED" ? a.analysis.score : null;
   // The analysis broke (the model, a timeout), not the file: it can be tried again.
   const analysisFailed = a.analysis?.status === "FAILED";
@@ -167,6 +169,20 @@ export function ExternalApplicationCard({
     // A mistaken « Retenir », or a candidate who fell through: the post is freed.
     ...(hire && a.status === "RETAINED"
       ? [{ key: "unretain", label: t("unretain"), icon: IconArrowBackUp, onSelect: () => setUnretaining(true) }]
+      : []),
+    // Kept until the business decides otherwise: its files and what quotes them.
+    ...(hire && !a.cvRemoved && (a.hasCv || a.analysis)
+      ? [
+          {
+            key: "delete-cv",
+            label: t("deleteCv"),
+            icon: IconFileOff,
+            onSelect: () => setDeletingCv(true),
+            tone: "danger" as const,
+            // Being read: it would come back as the reading ends.
+            ...(analysingNow ? { disabled: true, hint: t("deleteCvReading") } : {}),
+          },
+        ]
       : []),
     // A CV the business imported (a wrong file, a duplicate): taken off the offer.
     ...(hire && imported && a.status !== "RETAINED"
@@ -280,6 +296,7 @@ export function ExternalApplicationCard({
           <p className="truncate font-semibold">{name}</p>
           <p className="mt-1 flex flex-wrap gap-1.5">
             {score !== null && <VerdictChip score={score} />}
+            {a.cvRemoved && <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px] text-muted-foreground">{t("cvRemoved")}</span>}
             <span className="rounded-full bg-card px-2 py-0.5 font-medium text-[11px]">
               {imported ? t("imported") : t("careersPage")}
             </span>
@@ -447,6 +464,8 @@ export function ExternalApplicationCard({
         fileName={a.cvFileName}
         unavailable={t("cvGone")}
       />
+
+      <DeleteCvDialog target={{ kind: "careers", id: a.id }} name={name} open={deletingCv} onOpenChange={setDeletingCv} />
 
       <ActionDialog
         open={analysing}

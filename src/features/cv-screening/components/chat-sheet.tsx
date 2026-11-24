@@ -47,7 +47,7 @@ export function ChatSheet({
   suggestions,
   placeholder,
   usedUp,
-  unavailable,
+  gone,
   pdfUrl,
 }: Readonly<{
   open: boolean;
@@ -65,7 +65,8 @@ export function ChatSheet({
   suggestions: string[];
   placeholder: string;
   usedUp: (limit: number) => string;
-  unavailable: string;
+  /** What is said when a CV is missing, at the top; null when they are all there. */
+  gone: (data: CvChat) => ReactNode;
   /** The conversation as a PDF; null while it can't be known yet. */
   pdfUrl?: () => string | null;
 }>) {
@@ -99,6 +100,7 @@ export function ChatSheet({
     ]),
   ].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   const remaining = data ? data.remaining - (live ? 1 : 0) : 0;
+  const notice = data ? gone(data) : null;
   const canAsk = !!data && data.available && remaining > 0 && !live;
 
   useEffect(() => {
@@ -197,7 +199,13 @@ export function ChatSheet({
               <p className="text-muted-foreground text-sm">{friendlyError(chat.error, t("loadFailed"))}</p>
             ) : (
               <div className="space-y-4">
-                {thread.length === 0 && !live && <Intro intro={intro} suggestions={suggestions} available={data.available} onPick={(q) => void ask(q)} disabled={!canAsk} />}
+                {notice && (
+                  <div role="status" className="flex gap-2.5 rounded-2xl bg-chip-amber p-4 text-chip-amber-foreground text-sm leading-relaxed">
+                    <IconInfoCircle className="mt-0.5 size-4 shrink-0" />
+                    <div className="min-w-0 space-y-1">{notice}</div>
+                  </div>
+                )}
+                {thread.length === 0 && !live && data.available && <Intro intro={intro} suggestions={suggestions} onPick={(q) => void ask(q)} disabled={!canAsk} />}
                 {thread.map((m) => (
                   <Bubble key={m.id} role={m.role} text={m.content} note={m.note} />
                 ))}
@@ -216,7 +224,7 @@ export function ChatSheet({
           <footer className="space-y-2 px-5 pt-3 pb-5 sm:px-6">
             {data && !data.available ? (
               <p className="rounded-2xl bg-page px-4 py-3 text-muted-foreground text-sm">
-                {unavailable}
+                {data.messages.length > 0 ? t("readOnly") : t("closed")}
               </p>
             ) : data && data.limit === 0 ? (
               <p className="rounded-2xl bg-page px-4 py-3 text-muted-foreground text-sm">
@@ -294,13 +302,11 @@ export function ChatSheet({
 function Intro({
   intro,
   suggestions,
-  available,
   disabled,
   onPick,
 }: Readonly<{
   intro: { title: string; text: string };
   suggestions: string[];
-  available: boolean;
   disabled: boolean;
   onPick: (q: string) => void;
 }>) {
@@ -312,21 +318,19 @@ function Intro({
           <p className="mx-auto max-w-sm text-muted-foreground text-sm">{intro.text}</p>
         </div>
       </div>
-      {available && (
-        <div className="grid gap-2 sm:grid-cols-2">
-          {suggestions.map((s) => (
-            <button
-              key={s}
-              type="button"
-              disabled={disabled}
-              onClick={() => onPick(s)}
-              className="rounded-2xl bg-card px-4 py-3 text-left text-sm transition-colors hover:bg-card/70 disabled:opacity-50"
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="grid gap-2 sm:grid-cols-2">
+        {suggestions.map((s) => (
+          <button
+            key={s}
+            type="button"
+            disabled={disabled}
+            onClick={() => onPick(s)}
+            className="rounded-2xl bg-card px-4 py-3 text-left text-sm transition-colors hover:bg-card/70 disabled:opacity-50"
+          >
+            {s}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

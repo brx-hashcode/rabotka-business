@@ -75,7 +75,12 @@ class BusinessController extends BusinessBaseController {
     return this.get("/business/me/contacts");
   }
 
-  /** Reveals a worker from the search on the plan's contact quota (free if already unlocked). */
+  /** The applicants (worker ids) whose contact opens without spending one: a plan runs. */
+  getApplicantContacts(): Promise<string[]> {
+    return this.get("/business/me/contacts/applicants");
+  }
+
+  /** Reveals a worker: an applicant free with a plan running, a profile from the search on its contacts. */
   unlockContact(workerId: string): Promise<{ contact: ContactedProfile; spent: boolean }> {
     return this.post(`/business/me/contacts/${encodeURIComponent(workerId)}`);
   }
@@ -136,6 +141,9 @@ export type CareersPage = { coverUrl: string | null; photos: string[]; benefits:
 export const getMyContacts = controller.getContacts.bind(controller);
 export const unlockWorkerContact = controller.unlockContact.bind(controller);
 export const myContactsKey = ["business", "me", "contacts"] as const;
+export const getApplicantContacts = controller.getApplicantContacts.bind(controller);
+/** Under `myContactsKey`: whatever refreshes the contacts refreshes it. */
+export const applicantContactsKey = [...myContactsKey, "applicants"] as const;
 export const getMyStats = controller.getStats.bind(controller);
 export const getMySubscription = controller.getSubscription.bind(controller);
 export const draftOffer = controller.draftOffer.bind(controller);

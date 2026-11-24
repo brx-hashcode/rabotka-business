@@ -19,7 +19,7 @@ const button =
  * « Envoyer un message » to a worker, with or without an application between
  * you: opens the pair's one conversation (or finds it) and goes there.
  * Messages are moderated server-side, so this never hands out a contact —
- * that stays what « Obtenir le contact » sells. Not for an Évaluateur, who
+ * that stays what « Obtenir le contact » is for. Not for an Évaluateur, who
  * has no messages.
  */
 export function MessageButton({ workerId, name, className }: Readonly<{ workerId: string; name: string; className?: string }>) {

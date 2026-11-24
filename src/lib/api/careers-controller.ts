@@ -82,6 +82,8 @@ export type ExternalApplication = {
   /** Where they came from: google, jooble, qr… Null before it was tracked. */
   source: string | null;
   hasCv: boolean;
+  /** « Supprimer le CV »: deleted by the business, the score stays. */
+  cvRemoved?: boolean;
   cvFileName: string;
   cvMimeType: string;
   createdAt: string;

@@ -85,7 +85,10 @@
     "delete": "Supprimer ce CV importé",
     "analysisFailed": "L'analyse n'a pas abouti.",
     "retryAnalysis": "Réessayer l'analyse",
-    "retryTitle": "Réessayer l'analyse du CV de {name} ?"
+    "retryTitle": "Réessayer l'analyse du CV de {name} ?",
+    "deleteCv": "Supprimer le CV",
+    "deleteCvReading": "Une fois l'analyse terminée",
+    "cvRemoved": "CV supprimé"
   },
   "answerFile": {
     "photo": "Photo",
@@ -334,8 +337,7 @@
     "cancelReason": "Ce qui a changé (facultatif)",
     "retainTitle": "Retenir {name} ?",
     "retainText": "Le candidat est prévenu. Vous obtenez son contact dès qu'il a confirmé.",
-    "included": "Contact inclus dans votre formule {plan}{left, select, none {.} other { : il vous restera {left} {left, plural, one {contact inclus} other {contacts inclus}}.}}",
-    "noMoreContacts": "Vous avez utilisé tous les contacts inclus dans votre formule : ce contact sera payant.",
+    "included": "Compris dans votre formule {plan} : retenir un candidat n'utilise aucun de vos contacts inclus.",
     "noPlan": "Vous n'avez pas de formule en cours : ce contact sera payant.",
     "seePlans": "Voir les formules",
     "paid": "Paiement effectué.",

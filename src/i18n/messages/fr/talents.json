@@ -72,7 +72,7 @@
     },
     "cv": {
       "empty": "Aucun CV analysé n'est conservé en ce moment.",
-      "hint": "Les CV de vos « Analyse de CV », tant que votre formule les conserve.",
+      "hint": "Les CV de vos « Analyse de CV », tant que vous ne les supprimez pas.",
       "origin": "Analysé pour <o>{title}</o>{until, select, none {} other { · conservé jusqu'au {until}}}"
     },
     "placeholder": "Un métier, une compétence, une ville, un nom… dans le CV",

@@ -85,7 +85,10 @@
     "delete": "Delete this imported CV",
     "analysisFailed": "The analysis did not go through.",
     "retryAnalysis": "Retry the analysis",
-    "retryTitle": "Retry the analysis of {name}'s CV?"
+    "retryTitle": "Retry the analysis of {name}'s CV?",
+    "deleteCv": "Delete the CV",
+    "deleteCvReading": "Once the analysis is done",
+    "cvRemoved": "CV deleted"
   },
   "answerFile": {
     "photo": "Photo",
@@ -334,8 +337,7 @@
     "cancelReason": "What changed (optional)",
     "retainTitle": "Hire {name}?",
     "retainText": "The candidate is told. You get their contact as soon as they confirm.",
-    "included": "Contact included in your {plan} plan{left, select, none {.} other {: you will have {left} {left, plural, one {included contact} other {included contacts}} left.}}",
-    "noMoreContacts": "You have used all the contacts included in your plan: this contact will be paid.",
+    "included": "Covered by your {plan} plan: hiring a candidate uses none of your included contacts.",
     "noPlan": "You have no current plan: this contact will be paid.",
     "seePlans": "See plans",
     "paid": "Payment made.",

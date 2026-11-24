@@ -101,6 +101,8 @@ export type OfferApplicant = {
    * which opens once the contact is unlocked or the application retained.
    */
   cv?: { kind: "RABOTKA" } | { kind: "UPLOADED"; fileName: string; mimeType: string; available: boolean };
+  /** « Supprimer le CV »: deleted by the business, the score stays. */
+  cvRemoved?: boolean;
   /** The candidate added (or replaced) their CV since applying: it can be read again. */
   newerCv?: boolean;
   /**
