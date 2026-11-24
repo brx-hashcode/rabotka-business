@@ -54,8 +54,14 @@
     "intro": "Who to hire first, where they differ, what to check in the interview: Rabotka answers from their CVs and the job.",
     "placeholder": "A question about these candidates…",
     "usedUp": "You've used all {limit} questions for this comparison.",
-    "gone": "These CVs were deleted at the end of their retention period: the conversation stays readable, with no new questions.",
-    "introTitle": "Compare {names}"
+    "gone": {
+      "removed": "{name}'s CV was deleted by your team.",
+      "expired": "{name}'s CV was deleted at the end of its retention period.",
+      "unreadable": "{name}'s CV can no longer be read."
+    },
+    "introTitle": "Compare {names}",
+    "others": "The comparison covers the other candidates.",
+    "notEnough": "There are not enough CVs left to compare: choose other candidates."
   },
   "chat": {
     "suggestions": [
@@ -67,7 +73,11 @@
     "intro": "Career, skills, points to check, interview questions: Rabotka answers from the CV and the job.",
     "placeholder": "A question about {name}…",
     "usedUp": "You've used all {limit} questions for this CV.",
-    "gone": "This CV was deleted at the end of its retention period: the conversation stays readable, with no new questions.",
+    "gone": {
+      "removed": "{name}'s CV was deleted by your team.",
+      "expired": "{name}'s CV was deleted at the end of its retention period.",
+      "unreadable": "{name}'s CV can no longer be read."
+    },
     "introTitle": "Ask about {name}’s CV"
   },
   "result": {
@@ -109,7 +119,7 @@
     "best": "Best score",
     "files": "Files and contact details",
     "removed": "Deleted",
-    "keptUntil": "Kept until {date}",
+    "keptUntil": "Deleted by {date} at the latest",
     "offer": "Job",
     "seeOffer": "See the job",
     "role": "The role",
@@ -148,7 +158,10 @@
     },
     "showOthers": "{count, plural, one {Show the # other CV} other {Show the # other CVs}}",
     "moreWaiting": "{count, plural, one {And # other CV waiting: it will show here once read.} other {And # other CVs waiting: they show here as they are read.}}",
-    "ask": "Ask about the CV"
+    "ask": "Ask about the CV",
+    "keptOpen": "Kept until you delete them",
+    "cvRemoved": "CV deleted by your team",
+    "deleteCv": "Delete the CV"
   },
   "list": {
     "todayAt": "Today at {time}",
@@ -207,7 +220,8 @@
     "mean": "Average",
     "unreadCount": "{count, plural, one {Not read} other {Not read}}",
     "purged": "Files deleted, scores kept",
-    "kept": "Files kept {count, plural, one {# day} other {# days}}"
+    "keptOpen": "Kept until you delete them",
+    "keptUntil": "Deleted by {date} at the latest"
   },
   "new": {
     "photo": "Photo",
@@ -245,7 +259,7 @@
     "step1": "About ten seconds per CV; you can leave the page.",
     "step2": "A notification tells you when the ranking is ready.",
     "step3": "An unreadable CV, or a file that isn't one, isn't counted.",
-    "step4": "Files and contact details are deleted after {days} days; the scores remain.",
+    "step4": "CVs stay while the job is recruiting, then until you delete them or the date shown; scores stay.",
     "hint": "PDF, Word (.docx) or photo · {mb} MB at most per file",
     "drop": "Drop the CVs here",
     "orPick": "or <u>choose them</u> on your device",
@@ -314,6 +328,15 @@
     "stop": "Stop the answer",
     "send": "Send",
     "disclaimer": "Answers are based on the CV and the job; check the key points in the interview.",
-    "reading": "Reading the CV…"
+    "reading": "Reading the CV…",
+    "readOnly": "The conversation stays readable, with no new questions.",
+    "closed": "No questions can be asked about what was deleted."
+  },
+  "remove": {
+    "title": "Delete {name}'s CV?",
+    "text": "Their CV, the files attached to their answers, their contact details in the analysis and the conversations about this CV are deleted for good. The score, the opinions and the application stay.",
+    "confirm": "Delete the CV",
+    "done": "{name}'s CV deleted.",
+    "failed": "The CV could not be deleted."
   }
 }

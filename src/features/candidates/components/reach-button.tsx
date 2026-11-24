@@ -11,21 +11,28 @@ import { toast } from "sonner";
 import { ActionDialog } from "#/components/action-dialog";
 import { Skeleton } from "#/components/ui/skeleton";
 import { ContactDialog } from "#/features/contacts/components/contact-dialog";
+import { canHire } from "#/features/team/member-access";
+import { useMember } from "#/features/team/use-member";
 import {
+  applicantContactsKey,
+  getApplicantContacts,
   getMyContacts,
   getMySubscription,
   myContactsKey,
   mySubscriptionKey,
   unlockWorkerContact,
 } from "#/lib/api/business-controller";
+import type { ContactedProfile } from "#/lib/api/types";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { cn } from "#/lib/utils";
 
 const button = "inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 font-medium text-sm transition-colors";
 
 /**
- * « Contact » for a worker already unlocked; otherwise « Débloquer », which
- * spends one contact of the plan after saying so — then shows the details.
+ * « Contact » for a worker already obtained, or an applicant while a plan runs
+ * (nothing spent); otherwise « Obtenir le contact », which spends one contact
+ * of the plan after saying so — then shows the details. Obtaining is not for
+ * an Évaluateur, who still reads the contacts already held.
  */
 /** `className`: sizing where it stands alone (a page header) rather than in a card. */
 export function ReachButton({ workerId, name, className }: Readonly<{ workerId: string; name: string; className?: string }>) {
@@ -33,13 +40,20 @@ export function ReachButton({ workerId, name, className }: Readonly<{ workerId: 
   const t = useTranslations("candidates.reach");
   const friendlyError = useFriendlyError();
   const contacts = useQuery({ queryKey: myContactsKey, queryFn: getMyContacts });
+  const applicants = useQuery({ queryKey: applicantContactsKey, queryFn: getApplicantContacts });
+  const { role } = useMember();
   const [confirm, setConfirm] = useState(false);
   const [show, setShow] = useState(false);
   const unlocked = contacts.data?.some((x) => x.workerId === workerId);
+  const included = applicants.data?.includes(workerId);
 
   const unlock = useMutation({
     mutationFn: () => unlockWorkerContact(workerId),
-    onSuccess: ({ spent }) => {
+    onSuccess: ({ contact, spent }) => {
+      // There when the dialog opens, before the list is read again.
+      queryClient.setQueryData<ContactedProfile[]>(myContactsKey, (held) =>
+        held ? [contact, ...held.filter((x) => x.workerId !== workerId)] : held,
+      );
       void queryClient.invalidateQueries({ queryKey: myContactsKey });
       void queryClient.invalidateQueries({ queryKey: mySubscriptionKey });
       // An unlocked contact opens the « CV joint » on its applications.
@@ -53,17 +67,24 @@ export function ReachButton({ workerId, name, className }: Readonly<{ workerId: 
     onError: (err) => toast.error(friendlyError(err, t("failed"))),
   });
 
+  if (!unlocked && !canHire(role)) return null;
+
   return (
     <>
-      {unlocked ? (
-        <button type="button" onClick={() => setShow(true)} className={cn(button, "bg-ink text-white hover:bg-ink/90", className)}>
+      {unlocked || included ? (
+        <button
+          type="button"
+          disabled={unlock.isPending}
+          onClick={() => (unlocked ? setShow(true) : unlock.mutate())}
+          className={cn(button, "bg-ink text-white hover:bg-ink/90 disabled:opacity-50", className)}
+        >
           <IconAddressBook className="size-4 shrink-0" />
           {t("contact")}
         </button>
       ) : (
         <button
           type="button"
-          disabled={contacts.isLoading}
+          disabled={contacts.isLoading || applicants.isLoading}
           onClick={() => setConfirm(true)}
           className={cn(button, "bg-ink text-white hover:bg-ink/90 disabled:opacity-50", className)}
         >

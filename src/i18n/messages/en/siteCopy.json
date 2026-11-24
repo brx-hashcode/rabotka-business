@@ -146,8 +146,8 @@
       "text": "Rabotka only reads the attachments you choose and never sends anything from your mailbox."
     },
     {
-      "title": "CVs deleted on schedule",
-      "text": "The files and contact details of analysed CVs are deleted at the end of the set period; only the scores remain."
+      "title": "You decide about CVs",
+      "text": "CVs stay while the job is recruiting, then until you delete them. A final date applies after closing; the scores remain."
     },
     {
       "title": "Confidential documents",
@@ -241,7 +241,7 @@
     },
     {
       "q": "How long are CVs kept?",
-      "a": "The files and contact details of analysed CVs are deleted automatically at the end of the period shown when you run the analysis. The scores and the ranking remain available."
+      "a": "While the job is recruiting, they are kept. After it closes, they stay until you delete them, and at the latest until the date shown; you are told a month before. Scores and rankings remain available."
     },
     {
       "q": "How does a video interview work?",

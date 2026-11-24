@@ -14,14 +14,14 @@
     "none": "Le candidat n'a pas encore ajouté de CV.",
     "addedOn": "Ajouté le {date}",
     "see": "Voir le CV",
-    "lockedHint": "Le CV porte ses coordonnées : il s'ouvre une fois son contact obtenu.",
+    "lockedHint": "Le CV porte ses coordonnées : il s'ouvre une fois son contact obtenu, ou avec une formule en cours si la personne a postulé chez vous.",
     "afterContact": "Après obtention du contact",
     "sheetTitle": "CV de {name}",
     "sheetSubtitle": "Ajouté par le candidat à son profil",
     "unavailable": "Ce CV n'a pas pu être chargé."
   },
   "ownCv": {
-    "lockedHint": "Le CV que le candidat a joint s'ouvre une fois son contact obtenu ou sa candidature retenue.",
+    "lockedHint": "Le CV que le candidat a joint s'ouvre avec une formule en cours, ou une fois son contact obtenu ou sa candidature retenue.",
     "locked": "CV du candidat · après déblocage",
     "label": "CV du candidat",
     "sheetTitle": "CV de {name}",

@@ -50,10 +50,6 @@ function when(iso: string, t: ListT, locale: Locale): string {
   return t("on", { date: longDate(iso, locale) });
 }
 
-function daysLeft(iso: string): number {
-  return Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / DAY_MS));
-}
-
 const FILTERS = [{ key: "all" }, { key: "running" }, { key: "done" }] as const;
 type Filter = (typeof FILTERS)[number]["key"];
 
@@ -292,7 +288,6 @@ const BANDS = [
 function ScreeningCard({ s }: Readonly<{ s: CvScreeningSummary }>) {
   const running = s.status === "PROCESSING";
   const unread = running ? 0 : s.total - s.scored;
-  const left = daysLeft(s.expiresAt);
   const t = useTranslations("cv.list");
   const locale = useLocale() as Locale;
   return (
@@ -372,7 +367,13 @@ function ScreeningCard({ s }: Readonly<{ s: CvScreeningSummary }>) {
         <div className="mt-auto flex items-center justify-between gap-3 text-muted-foreground text-xs">
           <span className="inline-flex items-center gap-1.5">
             <IconShieldLock className="size-3.5" />
-            {s.purged ? t("purged") : t("kept", { count: left })}
+            {s.purged
+              ? t("purged")
+              : s.recruiting
+                ? t("keptOpen")
+                : t("keptUntil", {
+                    date: new Date(s.expiresAt).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long", year: "numeric" }),
+                  })}
           </span>
           <IconChevronRight className="size-4 shrink-0" />
         </div>
