@@ -584,6 +584,8 @@ function cvScore(analysis: CvAnalysis | null | undefined): number | null {
 type Entry = {
   key: string;
   score: number | null;
+  /** Requirements known to be missing (byFit). */
+  missing?: number;
   analysis: CvAnalysis | null;
   /** Still waiting: it can be refused with the selection. */
   refusable: boolean;
@@ -652,6 +654,7 @@ function ApplicantsCard({
         a,
         // Its CV analysis once in: the same measure as a careers-page CV.
         score: cvScore(a.analysis) ?? scores.get(a.applicationId)?.score ?? null,
+        missing: (cvScore(a.analysis) !== null ? a.analysis : scores.get(a.applicationId))?.scoring?.missing,
         analysis: a.analysis ?? null,
         refusable: a.status === "PENDING" || a.status === "VIEWED",
         stage: applicationStage(a.status, a.shortlistedAt),
@@ -663,6 +666,7 @@ function ApplicantsCard({
         key: `e:${a.id}`,
         a,
         score: a.analysis?.status === "SCORED" ? a.analysis.score : null,
+        missing: a.analysis?.scoring?.missing,
         analysis: a.analysis,
         refusable: a.status === "PENDING",
         stage: externalStage(a),

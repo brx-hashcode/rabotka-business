@@ -27,4 +27,11 @@ describe("byFit", () => {
     const ok = c("retenu", 10);
     expect([out, ok].sort(byFit).map((x) => x.name)).toEqual(["retenu", "éliminé"]);
   });
+
+  it("puts those who miss a requirement after those who do not, whatever their score", () => {
+    const missing = { ...c("sans permis", 95), missing: 1 };
+    const meets = { ...c("avec permis", 60), missing: 0 };
+    const before = c("ancienne méthode", 70);
+    expect([missing, meets, before].sort(byFit).map((x) => x.name)).toEqual(["ancienne méthode", "avec permis", "sans permis"]);
+  });
 });
