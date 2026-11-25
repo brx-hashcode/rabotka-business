@@ -39,7 +39,7 @@ export function PipelineSteps() {
           const Icon = STEP_ICONS[i] ?? IconArrowRight;
           return (
             <li key={step.title} className="relative flex gap-4 xl:flex-col xl:items-center xl:text-center">
-              <span className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-header text-header-foreground ring-4 ring-page">
+              <span className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-lime text-brand-lime-foreground ring-4 ring-page">
                 <Icon className="size-5" />
               </span>
               <div className="min-w-0 space-y-1 pt-0.5 xl:pt-1">

@@ -26,8 +26,8 @@ export async function DemoBlock({ title, text }: Readonly<{ title?: string; text
           {/* What the demo is, each promise said and then made concrete. */}
           <ul className="space-y-3 pt-2">
             {PROMISES.map(({ icon: Icon, title: heading, text: detail }) => (
-              <li key={heading} className="flex gap-4 rounded-2xl bg-card/55 p-4">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-card text-[#0f2414]">
+              <li key={heading} className="flex gap-4 rounded-2xl bg-white/55 p-4">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-brand-lime-foreground">
                   <Icon className="size-5" />
                 </span>
                 <span className="min-w-0 space-y-1">

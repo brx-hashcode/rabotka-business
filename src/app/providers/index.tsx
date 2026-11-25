@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
@@ -11,6 +11,7 @@ import { Toaster } from "#/components/ui/sonner";
 import { setSessionExpiredHandler } from "#/lib/auth/session-client";
 import { httpStatusOf } from "#/lib/api/friendly-error";
 import { SessionProvider } from "./session-context";
+import { ThemeColor } from "./theme-color";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -53,7 +54,6 @@ type ProvidersProps = Readonly<{
 export function Providers({ children, isAuthenticated }: ProvidersProps) {
   const queryClient = getQueryClient();
   const router = useRouter();
-  const pathname = usePathname();
 
   // The session could not be refreshed (cookies already cleared by
   // /session/refresh): drop cached data and open sign-in. `next`
@@ -70,19 +70,15 @@ export function Providers({ children, isAuthenticated }: ProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <SessionProvider isAuthenticated={isAuthenticated}>
-        {/*
-          Light by default; the business space (/espace) has a toggle and
-          remembers the choice. The landing and sign-in stay light whatever
-          was chosen there: their lime band and photos are designed for it.
-        */}
+        {/* The device's theme until one is chosen (ThemeToggle), then that one, on every page. */}
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
-          enableSystem={false}
-          forcedTheme={pathname.startsWith("/espace") ? undefined : "light"}
+          defaultTheme="system"
+          enableSystem
           storageKey="theme"
           disableTransitionOnChange
         >
+          <ThemeColor />
           <NuqsAdapter>
             <TooltipProvider>
               {children}

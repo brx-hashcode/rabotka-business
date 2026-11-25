@@ -19,7 +19,7 @@ const SOURCES: Node[] = [
   { label: "Google", icon: <GoogleLogo className="size-5" /> },
   { label: "WhatsApp", icon: <IconBrandWhatsapp className="size-5 text-[#25D366]" /> },
   { label: "Gmail", icon: <GmailLogo className="size-5" /> },
-  { label: "QR code", icon: <IconQrcode className="size-5 text-foreground" /> },
+  { label: "QR code", icon: <IconQrcode className="size-5 text-brand-lime-foreground" /> },
 ];
 
 /** Where the work goes; the words are site.connections.<key>. */
@@ -27,7 +27,7 @@ const OUTPUTS: (Omit<Node, "label"> & { key: "calendar" | "video" | "files" | "t
   { key: "calendar", icon: <IconCalendarEvent className="size-5 text-[#4285F4]" /> },
   { key: "video", icon: <IconVideo className="size-5 text-whatsapp-dark" /> },
   { key: "files", icon: <IconFileTypePdf className="size-5 text-[#E5484D]" /> },
-  { key: "team", icon: <IconMail className="size-5 text-foreground" /> },
+  { key: "team", icon: <IconMail className="size-5 text-brand-lime-foreground" /> },
 ];
 
 type Point = { x: number; y: number };
@@ -111,13 +111,18 @@ function Beams({ layout, vertical, className }: Readonly<{ layout: Layout; verti
           ),
       )}
       <div className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center" style={at(center)}>
+        {/* The light around it, breathing at the beams' pace; still for those who
+            reduce motion, and fainter on the light theme's pale card. */}
+        <span aria-hidden className="absolute size-36 opacity-40 sm:size-46 dark:opacity-100">
+          <span className="block size-full rounded-full bg-[radial-gradient(circle,rgba(74,222,128,0.32)_0%,rgba(34,197,94,0.12)_42%,transparent_70%)] motion-safe:animate-[glow_3.2s_ease-in-out_infinite]" />
+        </span>
         {/* The round bubble logo on its own, glowing: no square tile in a circle. */}
         <Image
           src="/rabotka-logo.png"
           alt="Rabotka"
           width={112}
           height={112}
-          className="size-20 object-contain drop-shadow-[0_8px_24px_rgba(22,163,74,0.45)] sm:size-24"
+          className="relative size-20 object-contain drop-shadow-[0_8px_24px_rgba(22,163,74,0.45)] sm:size-24 dark:drop-shadow-[0_0_14px_rgba(74,222,128,0.4)]"
         />
       </div>
     </div>

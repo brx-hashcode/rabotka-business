@@ -57,7 +57,7 @@ export default async function AboutPage() {
                 <div className="flex h-36 items-center justify-center">
                   <Illustration name={b.illustration} className="h-full w-auto" />
                 </div>
-                <span className="flex size-10 items-center justify-center rounded-full bg-header font-semibold text-header-foreground">
+                <span className="flex size-10 items-center justify-center rounded-full bg-brand-lime font-semibold text-brand-lime-foreground">
                   {i + 1}
                 </span>
                 <h3 className="font-semibold text-xl">{b.title}</h3>
