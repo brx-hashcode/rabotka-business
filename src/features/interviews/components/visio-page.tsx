@@ -19,6 +19,7 @@ import { endInterview, interviewReportKey, interviewsKey, joinVisioAsGuest, join
 import type { VisioJoin } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { CallEnded } from "./call-ended";
+import { CallOpening, whenCallShows } from "./call-opening";
 import { InterviewReportDialog } from "./interview-report-panel";
 import { useCallCaptions, type CallCaptionsApi } from "../call-captions";
 import { InviteGuestDialog } from "./invite-guest-dialog";
@@ -73,11 +74,6 @@ const visioQuery = (room: string, host: boolean, guestToken?: string) => ({
   refetchOnWindowFocus: false,
 });
 
-/** What shows while Jitsi loads. */
-function CallSpinner() {
-  return <Bone className="size-full rounded-none" />;
-}
-
 /** Jitsi's buttons that leave: told on the click, Jitsi still does the leaving. */
 const LEAVE_BUTTONS = ["hangup", "end-meeting"];
 /** At most this long hidden but still connected, while Jitsi leaves the room. */
@@ -107,6 +103,10 @@ function Call({
   // interview's (the job's), the same for the recruiter and the candidate; when
   // the job does not tell (or an older server), the language this page is read in.
   const locale = useLocale() as Locale;
+  // Which try has something on screen: a new one starts covered again.
+  const [shown, setShown] = useState<number | null>(null);
+  const unwatch = useRef<(() => void) | null>(null);
+  useEffect(() => () => unwatch.current?.(), []);
   // Hidden by the page (« Terminer », a click outside Jitsi): gone at the latest after the grace.
   useEffect(() => {
     if (!hidden) return;
@@ -115,10 +115,13 @@ function Call({
   }, [hidden, onGone]);
 
   return (
-    <div className={cn("size-full", hidden && "hidden")}>
+    <div className={cn("relative size-full", hidden && "hidden")}>
+    {shown !== attempt && <CallOpening key={`opening-${attempt}`} />}
     <JitsiMeeting
       onApiReady={(raw) => {
         const api = raw as unknown as CallApi;
+        unwatch.current?.();
+        unwatch.current = whenCallShows(api, raw.getIFrame() as HTMLIFrameElement | null, () => setShown(attempt));
         let left = false;
         const leave = () => {
           if (left) return;
@@ -172,7 +175,6 @@ function Call({
         node.style.height = "100%";
         node.style.width = "100%";
       }}
-      spinner={CallSpinner}
       onReadyToClose={() => {
         onLeave();
         onGone();
@@ -273,7 +275,7 @@ function HostCallArea({
 }>) {
   const tv = useTranslations("interviews.visio");
   const friendlyError = useFriendlyError();
-  if (loading) return <Bone className="size-full rounded-none" />;
+  if (loading) return <div className="relative size-full"><CallOpening /></div>;
 
   if (!v) {
     return (
