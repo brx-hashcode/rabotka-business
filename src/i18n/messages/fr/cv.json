@@ -61,7 +61,16 @@
     },
     "introTitle": "Comparez {names}",
     "others": "La comparaison porte sur les autres candidats.",
-    "notEnough": "Il ne reste pas assez de CV à comparer : choisissez d'autres candidats."
+    "notEnough": "Il ne reste pas assez de CV à comparer.",
+    "closed": {
+      "title": "Pas assez de CV à comparer",
+      "text": "Il en faut au moins deux. Le score et l'analyse de chaque candidat restent sur sa fiche.",
+      "removed": "CV supprimé par votre équipe",
+      "expired": "CV supprimé à la fin de sa durée de conservation",
+      "unreadable": "CV illisible",
+      "available": "CV disponible",
+      "choose": "Choisir d'autres candidats"
+    }
   },
   "chat": {
     "suggestions": [
@@ -78,7 +87,9 @@
       "expired": "Le CV de {name} a été supprimé à la fin de sa durée de conservation.",
       "unreadable": "Le CV de {name} ne peut plus être lu."
     },
-    "introTitle": "Interrogez le CV de {name}"
+    "introTitle": "Interrogez le CV de {name}",
+    "closedTitle": "Ce CV ne peut plus être interrogé",
+    "closedText": "Son score et son analyse restent sur sa fiche."
   },
   "result": {
     "deleted": "Analyse supprimée, avec ses fichiers.",
@@ -329,8 +340,7 @@
     "send": "Envoyer",
     "disclaimer": "Les réponses s'appuient sur le CV et l'offre ; vérifiez les points importants en entretien.",
     "reading": "Lecture du CV…",
-    "readOnly": "La conversation reste lisible, sans nouvelle question.",
-    "closed": "Aucune question possible sur ce qui a été supprimé."
+    "readOnly": "La conversation reste lisible, sans nouvelle question."
   },
   "remove": {
     "title": "Supprimer le CV de {name} ?",

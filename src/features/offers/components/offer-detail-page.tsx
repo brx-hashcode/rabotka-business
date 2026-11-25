@@ -967,6 +967,10 @@ function ApplicantsCard({
               screeningId={comparedScreening}
               jobTitle={o.title}
               resumes={[...comparedResumes.data].sort((x, y) => (y.score ?? 0) - (x.score ?? 0))}
+              onChooseOthers={(gone) => {
+                const keys = comparable.filter((e) => gone.includes(e.analysis?.resumeId as string)).map((e) => e.key);
+                setSelected((s) => new Set([...s].filter((key) => !keys.includes(key))));
+              }}
             />
           )}
 

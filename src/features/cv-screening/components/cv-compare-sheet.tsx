@@ -23,6 +23,7 @@ export function CvCompareSheet({
   screeningId,
   jobTitle,
   resumes,
+  onChooseOthers,
 }: Readonly<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -30,6 +31,8 @@ export function CvCompareSheet({
   jobTitle: string;
   /** Best first, as on the page. */
   resumes: CvResume[];
+  /** « Choisir d'autres candidats »: those to untick, their CV being gone. */
+  onChooseOthers: (resumeIds: string[]) => void;
 }>) {
   const t = useTranslations("cv.compare");
   const SUGGESTIONS = t.raw("suggestions") as string[];
@@ -46,7 +49,7 @@ export function CvCompareSheet({
   };
   // The sheet's own query, read here too: the header dims those missing.
   const { data: comparison } = useQuery({ queryKey, queryFn: load, enabled: open });
-  const missing = new Set(comparison?.missing?.map((m) => m.resumeId));
+  const missing = new Map(comparison?.missing?.map((m) => [m.resumeId, m.reason]));
   const shortName = (id: string, fallback: string) => names[resumes.findIndex((r) => r.id === id)] ?? fallback;
 
   return (
@@ -88,13 +91,47 @@ export function CvCompareSheet({
         if (gone.length === 0) return null;
         return (
           <>
+            <p className="font-medium">{data.available ? t("others") : t("notEnough")}</p>
             {gone.map((m) => (
               <p key={m.resumeId}>{t(`gone.${m.reason}`, { name: shortName(m.resumeId, m.name) })}</p>
             ))}
-            <p className="font-medium">{data.available ? t("others") : t("notEnough")}</p>
           </>
         );
       }}
+      closed={() => ({
+        title: t("closed.title"),
+        text: t("closed.text"),
+        children: (
+          <>
+            <ul aria-label={t("candidates")} className="w-full space-y-2">
+              {resumes.map((r) => {
+                const reason = missing.get(r.id);
+                return (
+                  <li key={r.id} className="flex items-center gap-3 rounded-2xl bg-card p-3">
+                    <ScoreRing score={r.score ?? 0} size={40} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium text-sm">{fullName(r)}</p>
+                      <p className={cn("text-xs", reason ? "text-muted-foreground" : "text-chip-green-foreground")}>
+                        {t(`closed.${reason ?? "available"}`)}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            <button
+              type="button"
+              onClick={() => {
+                onOpenChange(false);
+                onChooseOthers([...missing.keys()]);
+              }}
+              className="inline-flex h-11 items-center rounded-full bg-ink px-5 font-medium text-sm text-white hover:bg-ink/90"
+            >
+              {t("closed.choose")}
+            </button>
+          </>
+        ),
+      })}
     />
   );
 }

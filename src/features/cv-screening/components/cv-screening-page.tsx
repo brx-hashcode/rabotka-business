@@ -229,6 +229,7 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
           screeningId={s.id}
           jobTitle={s.jobTitle}
           resumes={scored.filter((r) => selected.includes(r.id))}
+          onChooseOthers={(gone) => setSelected((ids) => ids.filter((x) => !gone.includes(x)))}
         />
       )}
 

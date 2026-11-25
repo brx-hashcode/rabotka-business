@@ -61,7 +61,16 @@
     },
     "introTitle": "Compare {names}",
     "others": "The comparison covers the other candidates.",
-    "notEnough": "There are not enough CVs left to compare: choose other candidates."
+    "notEnough": "There are not enough CVs left to compare.",
+    "closed": {
+      "title": "Not enough CVs to compare",
+      "text": "At least two are needed. Each candidate's score and analysis stay on their card.",
+      "removed": "CV deleted by your team",
+      "expired": "CV deleted at the end of its retention period",
+      "unreadable": "CV can't be read",
+      "available": "CV available",
+      "choose": "Choose other candidates"
+    }
   },
   "chat": {
     "suggestions": [
@@ -78,7 +87,9 @@
       "expired": "{name}'s CV was deleted at the end of its retention period.",
       "unreadable": "{name}'s CV can no longer be read."
     },
-    "introTitle": "Ask about {name}’s CV"
+    "introTitle": "Ask about {name}’s CV",
+    "closedTitle": "Questions can no longer be asked about this CV",
+    "closedText": "The score and analysis stay on the candidate's card."
   },
   "result": {
     "deleted": "Analysis deleted, with its files.",
@@ -329,8 +340,7 @@
     "send": "Send",
     "disclaimer": "Answers are based on the CV and the job; check the key points in the interview.",
     "reading": "Reading the CV…",
-    "readOnly": "The conversation stays readable, with no new questions.",
-    "closed": "No questions can be asked about what was deleted."
+    "readOnly": "The conversation stays readable, with no new questions."
   },
   "remove": {
     "title": "Delete {name}'s CV?",
