@@ -27,6 +27,7 @@
   },
   "theme": {
     "label": "Thème",
+    "switch": "Changer de thème",
     "dark": "Sombre",
     "light": "Clair"
   },

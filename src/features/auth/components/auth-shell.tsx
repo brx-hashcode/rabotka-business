@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
 import { BusinessLockup } from "#/components/business-lockup";
+import { ThemeButton } from "#/components/theme-toggle";
 import { PUBLIC_SITE } from "#/features/landing/content";
 import { cn } from "#/lib/utils";
 
@@ -37,9 +38,12 @@ export function AuthShell({
   return (
     <div className="grid min-h-svh bg-card lg:grid-cols-2">
       <section className="flex min-h-svh min-w-0 flex-col px-5 py-6 sm:px-10">
-        <Link href="/" aria-label={t("home")} className="self-start">
-          <BusinessLockup compact />
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link href="/" aria-label={t("home")}>
+            <BusinessLockup compact />
+          </Link>
+          <ThemeButton tone="card" className="size-9" />
+        </div>
 
         <div className={cn("mx-auto flex w-full flex-1 flex-col", wide ? "max-w-136" : "max-w-md")}>
           {children}
@@ -67,12 +71,12 @@ export function AuthShell({
   );
 }
 
-/** A few words underlined in lime, as with a highlighter; lime text on the ink card. */
+/** A few words underlined in lime, as with a highlighter; lime text on the ink card and in the dark theme, where the line would hide white letters. */
 function Mark({ children, onDark = false }: Readonly<{ children: ReactNode; onDark?: boolean }>) {
   return onDark ? (
     <span className="text-brand-lime">{children}</span>
   ) : (
-    <span className="box-decoration-clone bg-[linear-gradient(transparent_58%,var(--brand-lime)_58%)]">
+    <span className="box-decoration-clone bg-[linear-gradient(transparent_58%,var(--brand-lime)_58%)] dark:bg-none dark:text-brand-lime">
       {children}
     </span>
   );
@@ -147,7 +151,7 @@ function FeatureWall({ spotlight }: Readonly<{ spotlight?: Spotlight }>) {
         </div>
 
         <div className="flex min-h-0 flex-col gap-3">
-          <div className={cn(card, "flex-[2.5] bg-brand-lime text-ink")}>
+          <div className={cn(card, "flex-[2.5] bg-brand-lime text-brand-lime-foreground")}>
             <p className="font-bold font-display text-7xl leading-none">
               100
             </p>

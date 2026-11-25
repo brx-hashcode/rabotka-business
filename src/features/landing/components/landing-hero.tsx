@@ -28,19 +28,22 @@ export function LandingHero({
     <section className="overflow-hidden bg-header text-header-foreground">
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-4 pt-10 pb-14 sm:px-6 md:pt-16 lg:grid-cols-[1fr_1.05fr] lg:gap-16 lg:pb-20">
         <div className="space-y-6 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700">
-          <h1 className="isolate font-semibold text-4xl leading-[1.12] tracking-tight sm:text-5xl lg:text-[3.5rem]">
+          <h1 className="hero-title isolate text-4xl sm:text-5xl lg:text-[3.5rem]">
             {t.rich("title", {
               mark: (chunks) => (
-                <Highlighter action="underline" color="#FF9800" strokeWidth={3} delay={700}>
-                  {chunks}
-                </Highlighter>
+                // Kept on one line, its underline too.
+                <span className="whitespace-nowrap">
+                  <Highlighter action="underline" color="#FF9800" strokeWidth={3} delay={700}>
+                    {chunks}
+                  </Highlighter>
+                </span>
               ),
             })}
           </h1>
           <p className="isolate max-w-lg text-header-muted text-lg">
             {t.rich("text", {
               mark: (chunks) => (
-                <Highlighter action="highlight" color="#87CEFA" delay={1600}>
+                <Highlighter action="highlight" color="var(--mark)" delay={1600}>
                   {chunks}
                 </Highlighter>
               ),
@@ -107,8 +110,8 @@ export function LandingHero({
             ) : (
               <span className="group inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm shadow-soft">
                 <ProductHuntLogo className="size-5" />
-                <span className="font-medium text-foreground">{t("productHuntSoon")}</span>
-                <IconArrowRight className="size-4 text-foreground transition-transform group-hover:translate-x-0.5" />
+                <span className="font-medium text-brand-lime-foreground">{t("productHuntSoon")}</span>
+                <IconArrowRight className="size-4 text-brand-lime-foreground transition-transform group-hover:translate-x-0.5" />
               </span>
             )}
           </a>

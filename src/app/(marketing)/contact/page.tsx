@@ -65,7 +65,7 @@ export default async function ContactPage() {
                   href={w.href}
                   className={
                     w.primary
-                      ? "inline-flex h-12 w-fit items-center gap-2 rounded-full bg-ink px-6 font-medium text-white hover:bg-ink/90"
+                      ? "inline-flex h-12 w-fit items-center gap-2 rounded-full bg-cta px-6 font-medium text-cta-foreground hover:bg-cta/90"
                       : "inline-flex h-12 w-fit items-center gap-2 rounded-full bg-page px-6 font-medium hover:bg-page/70"
                   }
                 >

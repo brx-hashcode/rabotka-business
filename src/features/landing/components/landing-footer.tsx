@@ -22,6 +22,7 @@ import { useTranslations } from "next-intl";
 import { BrandLogo } from "#/components/brand-logo";
 import { LocalLink as Link } from "#/components/local-link";
 import { LanguageSwitch } from "#/components/language-switch";
+import { ThemeButton } from "#/components/theme-toggle";
 import { useSupportContact } from "#/hooks/use-support-contact";
 import type { BusinessCountryName } from "#/lib/api/catalog-server";
 import type { SocialNetwork, SupportContact } from "#/lib/api/public-controller";
@@ -150,7 +151,7 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
 
   return (
     <div className="bg-page px-2 pb-2 sm:px-3 sm:pb-3">
-      <footer className="relative isolate overflow-hidden rounded-[2rem] bg-[#0b0f0c] text-white sm:rounded-[2.5rem]">
+      <footer className="relative isolate overflow-hidden rounded-[2rem] bg-footer text-white sm:rounded-[2.5rem]">
         {/* A low lime glow rising behind the name. */}
         <div
           aria-hidden
@@ -183,11 +184,11 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
                         alt=""
                         title={c.name}
                         loading="lazy"
-                        className="size-8 rounded-full object-cover ring-2 ring-[#0b0f0c]"
+                        className="size-8 rounded-full object-cover ring-2 ring-footer"
                       />
                     ))}
                     {more > 0 && (
-                      <span className="flex size-8 items-center justify-center rounded-full bg-white/10 font-semibold text-[11px] ring-2 ring-[#0b0f0c]">
+                      <span className="flex size-8 items-center justify-center rounded-full bg-white/10 font-semibold text-[11px] ring-2 ring-footer">
                         +{more}
                       </span>
                     )}
@@ -210,7 +211,7 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
                         {...(card.href.startsWith("https:") ? { target: "_blank", rel: "noreferrer" } : {})}
                         className="inline-flex items-center gap-2 rounded-full bg-white/6 px-4 py-2.5 text-sm text-white/80 transition-colors hover:bg-white/12 hover:text-white"
                       >
-                        <card.icon className="size-4 text-header" />
+                        <card.icon className="size-4 text-brand-lime" />
                         {card.value}
                       </a>
                     </li>
@@ -229,7 +230,7 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
                           rel="noreferrer"
                           aria-label={t("on", { network: label })}
                           title={label}
-                          className="flex size-10 items-center justify-center rounded-full bg-white/6 text-white/80 transition-colors hover:bg-header hover:text-header-foreground"
+                          className="flex size-10 items-center justify-center rounded-full bg-white/6 text-white/80 transition-colors hover:bg-brand-lime hover:text-brand-lime-foreground"
                         >
                           <Glyph className="size-[18px]" stroke={1.75} />
                         </a>
@@ -277,6 +278,7 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
                 {t("privacy")}
               </a>
               <LanguageSwitch tone="inverse" />
+              <ThemeButton tone="inverse" />
               <button
                 type="button"
                 onClick={() => window.scrollTo({ top: 0 })}
@@ -321,7 +323,7 @@ export function LandingFooter({ countries }: Readonly<{ countries: BusinessCount
               lengthAdjust="spacing"
               fontSize="200"
               fontWeight="800"
-              className={layer === "outline" ? "fill-none stroke-white/30 font-sans" : "fill-[#0b0f0c] font-sans"}
+              className={layer === "outline" ? "fill-none stroke-white/30 font-sans" : "fill-footer font-sans"}
               {...(layer === "outline"
                 ? { strokeWidth: 4, strokeDasharray: "8 6", strokeLinecap: "round" as const, vectorEffect: "non-scaling-stroke" }
                 : {})}

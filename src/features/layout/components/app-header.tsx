@@ -3,10 +3,11 @@
 import { IconMenu2 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
+import { ThemeToggle } from "#/components/theme-toggle";
+
 import { AccountMenu } from "./account-menu";
 import { CommandSearch } from "./command-search";
 import { NotificationBell } from "./notification-bell";
-import { ThemeToggle } from "./theme-toggle";
 
 /** The space's top bar: page search, theme, notifications, account. */
 export function AppHeader({ onOpenMenu }: Readonly<{ onOpenMenu: () => void }>) {
