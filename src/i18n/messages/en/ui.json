@@ -18,5 +18,18 @@
   },
   "backTo": "Back: {label}",
   "close": "Close",
-  "logoAlt": "Rabotka logo"
+  "logoAlt": "Rabotka logo",
+  "whyNot": {
+    "wait": "One moment, this is in progress…",
+    "loading": "Loading…",
+    "write": "Write your text first.",
+    "complete": "Fill in the required fields.",
+    "noChange": "No changes to save.",
+    "choose": "Make a choice first.",
+    "min": "The minimum is reached.",
+    "max": "The maximum is reached.",
+    "countryFirst": "Choose a country first.",
+    "locked": "These details can no longer be changed.",
+    "notInPlan": "Not included in your plan."
+  }
 }

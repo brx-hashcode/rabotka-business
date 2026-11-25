@@ -45,6 +45,7 @@ export function CvPicker({
   room,
   maxMb,
   disabled,
+  title,
   onFiles,
   onMails,
   withMail = true,
@@ -56,6 +57,8 @@ export function CvPicker({
   room: number;
   maxMb: number;
   disabled: boolean;
+  /** Why it is disabled. */
+  title?: string;
   onFiles: (files: File[]) => void;
   onMails: (mails: MailPick[]) => void;
 }>) {
@@ -90,6 +93,7 @@ export function CvPicker({
         maxMb={maxMb}
         dragging={dragging}
         disabled={disabled}
+        title={title}
         onPick={() => input.current?.click()}
         onDragging={setDragging}
         onDrop={add}
@@ -147,6 +151,7 @@ function CvDrop({
   maxMb,
   dragging,
   disabled,
+  title,
   onPick,
   onDragging,
   onDrop,
@@ -158,6 +163,7 @@ function CvDrop({
   maxMb: number;
   dragging: boolean;
   disabled: boolean;
+  title?: string;
   onPick: () => void;
   onDragging: (on: boolean) => void;
   onDrop: (files: FileList) => void;
@@ -194,6 +200,7 @@ function CvDrop({
         type="button"
         onClick={onPick}
         disabled={disabled}
+        title={title}
         {...dropProps}
         className={cn("flex w-full flex-col items-center gap-3 rounded-3xl px-6 py-12 text-center transition-colors disabled:opacity-50", surface)}
       >
@@ -239,6 +246,7 @@ function CvDrop({
           type="button"
           onClick={onClear}
           disabled={disabled}
+          title={title}
           className="font-medium text-muted-foreground text-sm hover:text-foreground disabled:opacity-50"
         >
           {t("clear")}
@@ -268,6 +276,7 @@ function CvDrop({
                 aria-label={t("remove", { name: file.name })}
                 onClick={() => onRemove(file.key)}
                 disabled={disabled}
+                title={title}
                 className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-card hover:text-foreground"
               >
                 <IconX className="size-4" />
@@ -291,6 +300,7 @@ function CvDrop({
           type="button"
           onClick={onPick}
           disabled={disabled}
+          title={title}
           {...dropProps}
           className={cn("flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition-colors disabled:opacity-50", surface)}
         >

@@ -1,6 +1,8 @@
 import { useTranslations } from "next-intl";
 
-import { CriterionBar, Points } from "#/features/cv-screening/components/cv-bits";
+import { Points } from "#/features/cv-screening/components/cv-bits";
+import { ScoreDetails, type ScoreBar } from "#/features/cv-screening/components/score-details";
+import type { CvScoring } from "#/lib/api/types";
 import type { Translator } from "#/i18n/translator";
 
 /**
@@ -13,27 +15,24 @@ export function CandidateInsight({
   strengths,
   gaps,
   criteria,
+  musts = [],
 }: Readonly<{
   summary?: string | null;
   strengths: string[];
   gaps: string[];
-  criteria: { label: string; value: number }[];
+  criteria: ScoreBar[];
+  /** What the offer requires; none on the previous method. */
+  musts?: CvScoring["musts"];
 }>) {
   const t = useTranslations("offers.candidate");
-  if (!summary && strengths.length + gaps.length + criteria.length === 0) return null;
+  if (!summary && strengths.length + gaps.length + criteria.length + musts.length === 0) return null;
   return (
     <div className="mt-4 space-y-4">
       {summary && <p className="text-sm leading-relaxed">{summary}</p>}
       <div className="grid gap-5 md:grid-cols-[1fr_1fr_14rem]">
         <Points title={t("strengths")} items={strengths} tone="good" />
         <Points title={t("gaps")} items={gaps} tone="gap" />
-        {criteria.length > 0 && (
-          <div className="space-y-2.5 rounded-2xl bg-card p-4">
-            {criteria.map((c) => (
-              <CriterionBar key={c.label} label={c.label} value={c.value} />
-            ))}
-          </div>
-        )}
+        <ScoreDetails bars={criteria} musts={musts} className="bg-card" />
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import { useTradeName } from "#/lib/api/use-trade-name";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { IconInfoCircle, IconListCheck, IconRefresh, IconWand } from "@tabler/icons-react";
+import { IconArrowsExchange, IconInfoCircle, IconListCheck, IconRefresh, IconWand } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
 
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
@@ -12,6 +12,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { draftOffer, mySubscriptionKey } from "#/lib/api/business-controller";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import type { OfferDraft, OfferDraftInput } from "#/lib/api/types";
+import { useWhyNot } from "#/lib/use-why-not";
 
 
 /**
@@ -33,6 +34,7 @@ export function OfferAiDialog({
 }>) {
   const queryClient = useQueryClient();
   const t = useTranslations("offers.ai");
+  const whyNot = useWhyNot();
   const trade = useTradeName();
   const friendlyError = useFriendlyError();
   const EXAMPLES = t.raw("examples") as string[];
@@ -53,7 +55,7 @@ export function OfferAiDialog({
         onOpenChange(next);
       }}
     >
-      <DialogContent className="w-[calc(100vw-2rem)] max-w-xl gap-0 overflow-hidden rounded-3xl border-0 bg-card p-0 shadow-soft">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-2xl gap-0 overflow-hidden rounded-3xl border-0 bg-card p-0 shadow-soft">
         <div className="max-h-[85svh] space-y-5 overflow-y-auto px-6 pt-6 pb-2">
           <div className="space-y-1">
             <DialogTitle className="font-semibold text-xl">{t("title")}</DialogTitle>
@@ -101,6 +103,16 @@ export function OfferAiDialog({
                   {t("trade")} <span className="font-medium text-foreground">{trade(draft.categoryName)}</span>
                 </p>
               )}
+              {!!draft.changes?.length && (
+                <div className="flex gap-2 rounded-xl bg-chip-green px-3 py-2 text-chip-green-foreground text-xs">
+                  <IconArrowsExchange className="mt-px size-4 shrink-0" />
+                  <span>
+                    <span className="font-medium">{t("changes")}</span>{" "}
+                    {draft.changes.map((c) => t(`change.${c.field}`, { from: c.from, to: c.to })).join(" ; ")}.
+                    {draft.place?.city && !draft.place.countryCode && <> {t("choosePlace", { city: draft.place.city })}</>}
+                  </span>
+                </div>
+              )}
               {!!draft.toConfirm?.length && (
                 <div className="flex gap-2 rounded-xl bg-card px-3 py-2 text-xs">
                   <IconListCheck className="mt-px size-4 shrink-0 text-whatsapp-dark" />
@@ -132,6 +144,7 @@ export function OfferAiDialog({
               <button
                 type="button"
                 disabled={write.isPending || left === 0 || brief.trim().length < 3}
+                title={whyNot([write.isPending, "wait"], [left === 0, { say: t("noneLeft") }], [brief.trim().length < 3, "write"])}
                 onClick={() => write.mutate()}
                 className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-page font-medium hover:bg-page/70 disabled:opacity-40"
               >
@@ -162,6 +175,7 @@ export function OfferAiDialog({
               <button
                 type="button"
                 disabled={write.isPending || brief.trim().length < 3}
+                title={whyNot([write.isPending, "wait"], [brief.trim().length < 3, "write"])}
                 onClick={() => write.mutate()}
                 className="inline-flex h-12 flex-[2] items-center justify-center gap-2 rounded-full bg-ink font-medium text-white hover:bg-ink/90 disabled:opacity-40"
               >

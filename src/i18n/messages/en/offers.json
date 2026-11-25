@@ -88,7 +88,8 @@
     "retryTitle": "Retry the analysis of {name}'s CV?",
     "deleteCv": "Delete the CV",
     "deleteCvReading": "Once the analysis is done",
-    "cvRemoved": "CV deleted"
+    "cvRemoved": "CV deleted",
+    "cvRemovedByTeam": "CV deleted by your team"
   },
   "answerFile": {
     "photo": "Photo",
@@ -128,6 +129,7 @@
     "finishText": "You confirm your hire. The job is completed, and you can rate the people hired.",
     "republishTitle": "Republish the job",
     "noOfferLeft": "Your plan has no job left to publish this period.",
+    "dateFirst": "Choose a date first.",
     "republishText": "{needsDate, select, yes {Choose until when you accept applications: the mission can start today. } other {}}It counts as a job published on your plan.",
     "reference": "Ref. {reference}",
     "publishedOn": " · published on {date}",
@@ -368,6 +370,7 @@
     "rateTitle": "Rate {name}",
     "rateText": "Your rating counts towards their reliability and helps other employers.",
     "rateConfirm": "Save the rating",
+    "rateFirst": "Choose a rating first.",
     "score": "Rating",
     "outOf": "{n} out of 5",
     "rateNote": "A word about the mission (optional)"
@@ -529,10 +532,18 @@
     "text": "Describe the need in a few words: the AI writes the title and description, and suggests the trade. You review before publishing.",
     "failed": "The draft didn't work. Try again in a moment.",
     "trade": "Suggested trade:",
+    "changes": "Your request was followed:",
+    "change": {
+      "place": "{to} instead of {from}",
+      "employmentType": "{to} instead of {from}",
+      "quantity": "{to} people instead of {from}"
+    },
+    "choosePlace": "Choose the country of {city} in the form.",
     "toConfirm": "To fill in before publishing:",
     "toConfirmText": "{items}. The AI doesn't make them up: add them in the form, candidates look for them first.",
     "removed": "Removed from the job: {items}. These criteria rule out candidates for reasons unrelated to the role.",
     "lastOne": "That was the last draft included in your plan for this period.",
+    "noneLeft": "You have no included draft left for this period.",
     "left": "{count, plural, one {# draft left} other {# drafts left}} for this period.",
     "again": "Another version",
     "use": "Use this job post",
@@ -664,6 +675,7 @@
     "description": "CVs you already have join the candidates for “{title}”: read, scored and ranked with those who applied.",
     "note": "Each CV uses 1 included CV from your plan. Nobody is told on import; once an email address is found on the CV, the person gets your decisions like a careers-page candidate.",
     "cancel": "Cancel",
+    "pickFirst": "Add at least one CV first.",
     "sending": "Sending CVs…",
     "sendingCount": "Sending CVs… {sent} / {count}",
     "done": "{count, plural, one {# CV imported} other {# CVs imported}}: analysis in progress.",

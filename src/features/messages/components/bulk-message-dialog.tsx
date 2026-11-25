@@ -17,6 +17,7 @@ import {
   sendCandidatesMessage,
 } from "#/lib/api/message-templates-controller";
 import { cn } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 
 const BODY_MAX = 1000;
 
@@ -46,6 +47,7 @@ export function BulkMessageDialog({
   onSent?: () => void;
 }>) {
   const t = useTranslations("discussions.bulk");
+  const whyNot = useWhyNot();
   const tk = useTranslations("discussions.templates.kind");
   const friendlyError = useFriendlyError();
   const [body, setBody] = useState("");
@@ -134,6 +136,7 @@ export function BulkMessageDialog({
           <button
             type="button"
             disabled={!body.trim() || count === 0 || send.isPending}
+            title={whyNot([send.isPending, "wait"], [!body.trim(), "write"], [count === 0, { say: t("noRecipient") }])}
             onClick={() => send.mutate()}
             className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-5 font-medium text-sm text-white hover:bg-ink/90 disabled:opacity-50"
           >

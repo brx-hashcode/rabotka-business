@@ -102,7 +102,8 @@
     "toMonthly": "Switch to monthly",
     "upgrade": "Switch to {plan}",
     "schedule": "Schedule",
-    "choose": "Choose"
+    "choose": "Choose",
+    "notForSale": "This plan isn't for sale for this period."
   },
   "packs": {
     "title": {

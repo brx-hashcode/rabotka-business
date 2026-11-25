@@ -60,6 +60,7 @@
     "noContact": "· pas de téléphone, d'e-mail ni de lien pour les candidats Rabotka.",
     "previewFor": "Aperçu pour {name}",
     "firstCandidate": "le premier candidat",
+    "noRecipient": "Aucun candidat à qui écrire.",
     "cancel": "Annuler",
     "send": "{count, plural, one {Envoyer} other {Envoyer aux #}}"
   },

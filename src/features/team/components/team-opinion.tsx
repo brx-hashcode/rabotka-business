@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { useWhyNot } from "#/lib/use-why-not";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -126,6 +127,7 @@ function TeamPanel({ kind, id }: Readonly<{ kind: ApplicationKind; id: string }>
   const t = useTranslations("team.opinion");
   const tTeam = useTranslations("team");
   const tTimeline = useTranslations("team.timeline");
+  const whyNot = useWhyNot();
   const locale = useLocale();
   const friendlyError = useFriendlyError();
   const queryClient = useQueryClient();
@@ -178,6 +180,7 @@ function TeamPanel({ kind, id }: Readonly<{ kind: ApplicationKind; id: string }>
               type="button"
               aria-pressed={mine === v}
               disabled={opinions.isLoading || opinion.isPending}
+              title={whyNot([opinion.isPending, "wait"], [opinions.isLoading, "loading"])}
               onClick={() => opinion.mutate(mine === v ? null : v)}
               className={cn(
                 "inline-flex h-10 items-center justify-center gap-1.5 rounded-full font-medium text-sm transition-colors disabled:opacity-60",
@@ -263,6 +266,7 @@ function TeamPanel({ kind, id }: Readonly<{ kind: ApplicationKind; id: string }>
             <button
               type="submit"
               disabled={!draft.trim() || add.isPending}
+              title={whyNot([add.isPending, "wait"], [!draft.trim(), "write"])}
               className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-full bg-ink px-4 font-medium text-sm text-white disabled:opacity-40"
             >
               {add.isPending ? <Loader className="size-4 animate-spin" /> : <IconSend className="size-4" />}
@@ -340,6 +344,7 @@ function NoteItem({
   onChanged,
 }: Readonly<{ note: CandidateNote; kind: ApplicationKind; id: string; onChanged: () => void }>) {
   const t = useTranslations("team.opinion");
+  const whyNot = useWhyNot();
   const tLabels = useTranslations("labels");
   const locale = useLocale();
   const friendlyError = useFriendlyError();
@@ -386,6 +391,7 @@ function NoteItem({
               type="button"
               aria-label={t("deleteNote")}
               disabled={remove.isPending}
+              title={whyNot([remove.isPending, "wait"])}
               onClick={() => remove.mutate()}
               className="rounded-full p-1.5 text-muted-foreground hover:bg-card hover:text-destructive"
             >
@@ -410,6 +416,7 @@ function NoteItem({
             <button
               type="button"
               disabled={!text.trim() || save.isPending}
+              title={whyNot([save.isPending, "wait"], [!text.trim(), "write"])}
               onClick={() => save.mutate()}
               className="h-9 rounded-full bg-ink px-4 font-medium text-sm text-white disabled:opacity-50"
             >

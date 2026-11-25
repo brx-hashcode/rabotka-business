@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { useWhyNot } from "#/lib/use-why-not";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -38,9 +39,10 @@ import type { Translator } from "#/i18n/translator";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import type { CvResume, CvScreening, Interview } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
-import { CRITERIA, Career, CriterionBar, Points, ScoreRing, VerdictChip, band, duration } from "./cv-bits";
+import { CRITERIA, Career, Points, ScoreRing, VerdictChip, band, duration } from "./cv-bits";
 import { CvChatSheet } from "./cv-chat-sheet";
 import { CvCompareSheet } from "./cv-compare-sheet";
+import { ScoreDetails, scoringBars } from "./score-details";
 import { DeleteCvDialog } from "./delete-cv-dialog";
 import { InterviewLine, latestInterview } from "#/features/interviews/components/interview-bits";
 import { ScheduleInterviewDialog } from "#/features/interviews/components/schedule-interview-dialog";
@@ -66,6 +68,7 @@ const WAITING_SHOWN = 6;
 export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
   const router = useRouter();
   const t = useTranslations("cv.result");
+  const whyNot = useWhyNot();
   const tLabels = useTranslations("labels");
   const locale = useLocale() as Locale;
   const friendlyError = useFriendlyError();
@@ -142,6 +145,7 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
             type="button"
             onClick={() => exportCsv(s, t, (k) => tLabels(`criterion.${k}`), (score) => tLabels(`verdict.${band(score).level}`), locale)}
             disabled={scored.length === 0}
+            title={whyNot([scored.length === 0, { say: t("nothingToExport") }])}
             className="inline-flex h-11 items-center gap-2 rounded-full bg-card px-4 font-medium text-sm hover:bg-card/70 disabled:opacity-40"
           >
             <IconDownload className="size-4" />
@@ -528,7 +532,9 @@ function ResumeCard({
         <button
           type="button"
           onClick={() => setChatOpen(true)}
-          className="hidden h-10 shrink-0 items-center gap-2 rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm transition-colors hover:bg-brand-lime/80 sm:inline-flex"
+          disabled={r.removed}
+          title={r.removed ? t("cvRemoved") : undefined}
+          className="hidden h-10 shrink-0 items-center gap-2 rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm transition-colors not-disabled:hover:bg-brand-lime/80 disabled:opacity-60 sm:inline-flex"
         >
           {t("ask")}
         </button>
@@ -537,7 +543,9 @@ function ResumeCard({
       <button
         type="button"
         onClick={() => setChatOpen(true)}
-        className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full bg-brand-lime font-medium text-[#0f2414] text-sm transition-colors hover:bg-brand-lime/80 sm:hidden"
+        disabled={r.removed}
+        title={r.removed ? t("cvRemoved") : undefined}
+        className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full bg-brand-lime font-medium text-[#0f2414] text-sm transition-colors not-disabled:hover:bg-brand-lime/80 disabled:opacity-60 sm:hidden"
       >
         {t("ask")}
       </button>
@@ -549,7 +557,7 @@ function ResumeCard({
           jobTitle={jobTitle}
         />
       )}
-      <CvChatSheet open={chatOpen} onOpenChange={setChatOpen} screeningId={screeningId} jobTitle={jobTitle} resume={r} />
+      <CvChatSheet open={chatOpen} onOpenChange={setChatOpen} screeningId={screeningId} jobTitle={jobTitle} resume={{ id: r.id, score: r.score, name }} />
       <DeleteCvDialog
         target={{ kind: "analysis", screeningId, resumeId: r.id }}
         name={name}
@@ -563,11 +571,19 @@ function ResumeCard({
         <div className="mt-5 grid gap-5 md:grid-cols-2 2xl:grid-cols-[1fr_1fr_15rem]">
           <Points title={t("strengths")} items={r.strengths} tone="good" />
           <Points title={t("gaps")} items={r.gaps} tone="gap" />
-          <div className="space-y-2.5 rounded-2xl bg-page p-4 md:col-span-2 2xl:col-span-1">
-            {CRITERIA.filter((k) => typeof r.criteria?.[k.key] === "number").map((k) => (
-              <CriterionBar key={k.key} label={tLabels(`criterion.${k.key}`)} value={r.criteria?.[k.key] ?? 0} />
-            ))}
-          </div>
+          <ScoreDetails
+            className="bg-page md:col-span-2 2xl:col-span-1"
+            bars={
+              r.scoring
+                ? scoringBars(r.scoring)
+                : CRITERIA.filter((k) => typeof r.criteria?.[k.key] === "number").map((k) => ({
+                    key: k.key,
+                    label: tLabels(`criterion.${k.key}`),
+                    value: r.criteria?.[k.key] ?? 0,
+                  }))
+            }
+            musts={r.scoring?.musts}
+          />
           {!!c?.experiences?.length && (
             <div className="md:col-span-2 2xl:col-span-3">
               <Career experiences={c.experiences} totalMonths={c.experienceMonths ?? null} relevantMonths={c.relevantMonths ?? null} />
@@ -669,9 +685,11 @@ function exportCsv(
   locale: Locale,
 ) {
   const cell = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  // The offer's own criteria, or the usual five for those scored before.
+  const own = s.resumes.find((r) => r.scoring)?.scoring?.criteria ?? null;
   const header = [
     ...(t.raw("csv.header") as string[]),
-    ...CRITERIA.map((k) => criterion(k.key)),
+    ...(own ? own.map((c) => c.label) : CRITERIA.map((k) => criterion(k.key))),
     ...(t.raw("csv.tail") as string[]),
   ];
   const rows = s.resumes
@@ -681,7 +699,9 @@ function exportCsv(
       r.candidate?.name,
       r.score,
       verdict(r.score ?? 0),
-      ...CRITERIA.map((k) => r.criteria?.[k.key] ?? ""),
+      ...(own
+        ? own.map((c) => r.scoring?.criteria.find((x) => x.key === c.key)?.mark ?? "")
+        : CRITERIA.map((k) => r.criteria?.[k.key] ?? "")),
       r.candidate?.currentTitle,
       r.candidate?.city,
       r.candidate?.yearsExperience,

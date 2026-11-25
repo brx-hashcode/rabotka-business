@@ -17,6 +17,7 @@ import {
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
 import { cn } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 
 /** Borderless fields on the grey page tint, as the sign-in form. */
 export const FIELD_CLASS =
@@ -104,6 +105,7 @@ export function StepActions({
   continueLabel,
   pending,
   disabled,
+  reason,
   type = "submit",
   onContinue,
 }: Readonly<{
@@ -111,14 +113,17 @@ export function StepActions({
   continueLabel?: string;
   pending?: boolean;
   disabled?: boolean;
+  /** Why it is disabled, when not just pending. */
+  reason?: string;
   type?: "submit" | "button";
   onContinue?: () => void;
 }>) {
   const t = useTranslations("signUp.form");
+  const whyNot = useWhyNot();
   return (
     <div className={cn("flex items-center gap-3 pt-2", onBack ? "justify-between" : "justify-end")}>
       {onBack && (
-        <Button type="button" variant="ghost" onClick={onBack} disabled={pending} className="h-12 rounded-full px-5 hover:bg-page sm:h-12">
+        <Button type="button" variant="ghost" onClick={onBack} disabled={pending} title={whyNot([pending, "wait"])} className="h-12 rounded-full px-5 hover:bg-page sm:h-12">
           <IconArrowLeft />
           {t("back")}
         </Button>
@@ -127,6 +132,7 @@ export function StepActions({
         type={type}
         onClick={onContinue}
         disabled={disabled || pending}
+        title={whyNot([pending, "wait"], [disabled, reason ? { say: reason } : "complete"])}
         aria-busy={pending || undefined}
         className={cn(
           "h-12 min-w-44 rounded-full border-0 bg-ink px-6 text-[15px] text-white shadow-none hover:bg-ink/90 hover:brightness-100 sm:h-12 sm:text-[15px]",

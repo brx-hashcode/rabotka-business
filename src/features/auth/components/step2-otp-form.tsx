@@ -16,6 +16,7 @@ import {
   FormItem,
   FormMessage,
 } from "#/components/ui/form";
+import { useWhyNot } from "#/lib/use-why-not";
 import { otpSchema } from "#/lib/validations/auth";
 
 type Step2OtpFormProps = {
@@ -60,6 +61,7 @@ export function Step2OtpForm({
 
   const t = useTranslations("auth.codeForm");
   const tValidation = useTranslations("auth.validation");
+  const whyNot = useWhyNot();
   const form = useForm<{ otp: string }>({
     resolver: zodResolver(z.object({ otp: otpSchema(tValidation("otp")) })),
     defaultValues: { otp: "" },
@@ -184,6 +186,7 @@ export function Step2OtpForm({
                         onKeyDown={(e) => handleKeyDown(index, e)}
                         onPaste={(e) => handlePaste(e, field.onChange)}
                         disabled={isVerifying || isResending}
+                        title={whyNot([isVerifying || isResending, "wait"])}
                         className="h-14 w-full rounded-2xl border-0 bg-page text-center font-bold text-xl shadow-none focus-visible:ring-2 focus-visible:ring-whatsapp/40"
                         autoFocus={index === 0}
                         autoComplete={index === 0 ? "one-time-code" : "off"}
@@ -203,6 +206,7 @@ export function Step2OtpForm({
               // The ink pill of the sign-up's buttons, as the auth pages' main action.
               className="h-12 w-full rounded-full border-0 bg-ink text-[15px] text-white shadow-none hover:bg-ink/90 hover:brightness-100 sm:h-12 sm:text-[15px]"
               disabled={isVerifying || isResending}
+              title={whyNot([isVerifying || isResending, "wait"])}
             >
               {isVerifying ? (
                 <>
@@ -219,6 +223,7 @@ export function Step2OtpForm({
               className="w-full rounded-full text-sm"
               onClick={handleResend}
               disabled={isVerifying || isResending || resendCooldown > 0}
+              title={whyNot([isVerifying || isResending, "wait"], [resendCooldown > 0, { say: t("resendIn", { time: formatTime(resendCooldown) }) }])}
             >
               {resendButtonContent}
             </Button>
@@ -228,6 +233,7 @@ export function Step2OtpForm({
               className="w-full rounded-full text-sm text-muted-foreground"
               onClick={onBack}
               disabled={isVerifying || isResending}
+              title={whyNot([isVerifying || isResending, "wait"])}
             >
               {t("changeEmail")}
             </Button>

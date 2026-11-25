@@ -20,11 +20,12 @@ export function CvChatSheet({
   onOpenChange: (open: boolean) => void;
   screeningId: string;
   jobTitle: string;
-  resume: CvResume;
+  /** Only what the conversation shows: a card knows it without loading the whole analysis. */
+  resume: Pick<CvResume, "id" | "score"> & { name: string };
 }>) {
   const t = useTranslations("cv.chat");
   const SUGGESTIONS = t.raw("suggestions") as string[];
-  const name = resume.candidate?.name ?? resume.fileName;
+  const name = resume.name;
   return (
     <ChatSheet
       open={open}

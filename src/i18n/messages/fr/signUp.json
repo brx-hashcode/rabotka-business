@@ -159,6 +159,7 @@
     "previewGone": "L'aperçu n'est plus disponible. Le document est bien enregistré."
   },
   "review": {
+    "acceptFirst": "Acceptez d'abord les conditions d'utilisation.",
     "title": "Vérifiez vos informations",
     "text": "Relisez avant l'envoi : nos équipes vérifieront votre organisation sur la base de ces éléments.",
     "holder": "Responsable du compte",

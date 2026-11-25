@@ -25,6 +25,7 @@ import {
 import type { ContactedProfile } from "#/lib/api/types";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { cn } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 
 const button = "inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 font-medium text-sm transition-colors";
 
@@ -38,6 +39,7 @@ const button = "inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-
 export function ReachButton({ workerId, name, className }: Readonly<{ workerId: string; name: string; className?: string }>) {
   const queryClient = useQueryClient();
   const t = useTranslations("candidates.reach");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
   const contacts = useQuery({ queryKey: myContactsKey, queryFn: getMyContacts });
   const applicants = useQuery({ queryKey: applicantContactsKey, queryFn: getApplicantContacts });
@@ -75,6 +77,7 @@ export function ReachButton({ workerId, name, className }: Readonly<{ workerId: 
         <button
           type="button"
           disabled={unlock.isPending}
+          title={whyNot([unlock.isPending, "wait"])}
           onClick={() => (unlocked ? setShow(true) : unlock.mutate())}
           className={cn(button, "bg-ink text-white hover:bg-ink/90 disabled:opacity-50", className)}
         >
@@ -85,6 +88,7 @@ export function ReachButton({ workerId, name, className }: Readonly<{ workerId: 
         <button
           type="button"
           disabled={contacts.isLoading || applicants.isLoading}
+          title={whyNot([contacts.isLoading || applicants.isLoading, "loading"])}
           onClick={() => setConfirm(true)}
           className={cn(button, "bg-ink text-white hover:bg-ink/90 disabled:opacity-50", className)}
         >
@@ -113,6 +117,7 @@ function UnlockConfirm({
   onConfirm,
 }: Readonly<{ open: boolean; name: string; pending: boolean; onOpenChange: (o: boolean) => void; onConfirm: () => void }>) {
   const t = useTranslations("candidates.reach");
+  const tWhy = useTranslations("ui.whyNot");
   const sub = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription, enabled: open });
   const e = sub.data?.entitlements;
   const left = e?.unlocksRemaining;
@@ -126,6 +131,7 @@ function UnlockConfirm({
       description={t("confirmText")}
       confirmLabel={t("obtain")}
       confirmDisabled={!covered}
+      confirmDisabledReason={!e ? tWhy("loading") : e.plan ? t("usedUp") : t("needPlan")}
       pending={pending}
       onConfirm={onConfirm}
     >

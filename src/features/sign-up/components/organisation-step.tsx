@@ -15,6 +15,7 @@ import type { Locale } from "#/i18n/config";
 import { cn } from "#/lib/utils";
 import { IDENTIFIER_KEYS, officialIdentifiers } from "../required-documents";
 import { Combobox, type ComboboxOption } from "./combobox";
+import { useWhyNot } from "#/lib/use-why-not";
 import { FieldLabel, StepActions, StepHeading, TextField } from "./form-bits";
 
 const optional = (max: number) => z.string().trim().max(max).optional().or(z.literal(""));
@@ -149,6 +150,7 @@ export function OrganisationStep({
 }>) {
   const t = useTranslations("signUp.organisation");
   const tForm = useTranslations("signUp.form");
+  const whyNot = useWhyNot();
   const locale = useLocale();
   const schema = useMemo(() => organisationSchema(t), [t]);
   const form = useForm<OrganisationValues>({
@@ -241,6 +243,7 @@ export function OrganisationStep({
             placeholder={t("namePlaceholder")}
             autoFocus={heading}
             disabled={lockIdentity}
+            title={whyNot([lockIdentity, "locked"])}
           />
           <ComboboxField
             control={form.control}
@@ -250,6 +253,7 @@ export function OrganisationStep({
             searchPlaceholder={t("categorySearch")}
             options={categoryOptions}
             disabled={lockIdentity}
+            title={whyNot([lockIdentity, "locked"])}
           />
           <ComboboxField
             control={form.control}
@@ -258,6 +262,7 @@ export function OrganisationStep({
             optional
             placeholder={category ? t("legalFormPlaceholder") : t("legalFormFirst")}
             disabled={lockIdentity || !category}
+            title={whyNot([lockIdentity, "locked"], [!category, { say: t("legalFormFirst") }])}
             options={legalFormOptions}
           />
           <SizeField control={form.control} sizes={catalog.sizes} />
@@ -283,6 +288,7 @@ export function OrganisationStep({
                     className={shownIdentifiers.length % 2 === 1 && name === shownIdentifiers.at(-1) ? "sm:col-span-2" : undefined}
                     placeholder={lockIdentity ? t("notProvided") : field?.placeholder}
                     disabled={lockIdentity}
+                    title={whyNot([lockIdentity, "locked"])}
                   />
                 );
               })}
@@ -308,6 +314,7 @@ export function OrganisationStep({
               searchPlaceholder={t("countrySearch")}
               // Its papers are that country's: verified, it changes on request (Aide).
               disabled={lockIdentity}
+              title={whyNot([lockIdentity, "locked"])}
               options={countryOptions(catalog.countries, defaultValues?.country, locale)}
             />
             <ComboboxField
@@ -318,6 +325,7 @@ export function OrganisationStep({
               placeholder={country ? t("cityPlaceholder") : t("cityFirst")}
               searchPlaceholder={t("citySearch")}
               disabled={!country}
+              title={whyNot([!country, "countryFirst"])}
               options={(cities ?? []).map((c) => ({ value: c, label: c }))}
             />
           </div>
@@ -390,6 +398,7 @@ function ComboboxField({
   searchPlaceholder?: string;
   options: ComboboxOption[];
   disabled?: boolean;
+  title?: string;
 }>) {
   return (
     <FormField

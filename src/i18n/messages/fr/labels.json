@@ -80,6 +80,13 @@
     "partial": "Partiel",
     "low": "Peu adapté"
   },
+  "notShown": "Non indiqué",
+  "must": {
+    "title": "Exigences",
+    "MET": "remplie",
+    "MISSING": "manquante",
+    "UNCLEAR": "à vérifier"
+  },
   "criterion": {
     "skills": "Compétences",
     "experience": "Expérience",

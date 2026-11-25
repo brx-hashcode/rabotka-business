@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useWhyNot } from "#/lib/use-why-not";
 import { useEffect, useMemo, useRef } from "react";
 import {
   IconBug,
@@ -85,6 +86,7 @@ export function ImagePicker({
   compact,
 }: Readonly<{ files: File[]; onChange: (files: File[]) => void; disabled?: boolean; compact?: boolean }>) {
   const t = useTranslations("claims.photos");
+  const whyNot = useWhyNot();
   const input = useRef<HTMLInputElement>(null);
   const previews = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files]);
   useEffect(() => () => previews.forEach((u) => URL.revokeObjectURL(u)), [previews]);
@@ -116,6 +118,7 @@ export function ImagePicker({
             type="button"
             aria-label={t("remove")}
             disabled={disabled}
+            title={whyNot([disabled, "wait"])}
             onClick={() => onChange(files.filter((_, j) => j !== i))}
             className="absolute top-1 right-1 flex size-6 items-center justify-center rounded-full bg-black/60 text-white"
           >
@@ -127,6 +130,7 @@ export function ImagePicker({
         <button
           type="button"
           disabled={disabled}
+          title={whyNot([disabled, "wait"])}
           onClick={() => input.current?.click()}
           aria-label={t("add")}
           className={cn(

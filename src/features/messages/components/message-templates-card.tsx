@@ -25,6 +25,7 @@ import {
   type MessageTemplateInput,
 } from "#/lib/api/message-templates-controller";
 import { cn } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 
 const KINDS: MessageKind[] = ["INVITATION", "INFORMATION", "REFUSAL", "OTHER"];
 const TITLE_MAX = 60;
@@ -166,6 +167,7 @@ function TemplateEditor({
   onSaved,
 }: Readonly<{ initial: { id?: string; input: MessageTemplateInput }; onClose: () => void; onSaved: () => void }>) {
   const t = useTranslations("discussions.templates");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
   const [input, setInput] = useState(initial.input);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
@@ -261,6 +263,7 @@ function TemplateEditor({
           <button
             type="button"
             disabled={!valid || save.isPending}
+            title={whyNot([save.isPending, "wait"], [!valid, "complete"])}
             onClick={() => save.mutate()}
             className="h-10 rounded-full bg-ink px-5 font-medium text-sm text-white hover:bg-ink/90 disabled:opacity-50"
           >

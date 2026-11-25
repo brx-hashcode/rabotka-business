@@ -17,6 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "#/components/ui/form";
+import { useWhyNot } from "#/lib/use-why-not";
 import { emailSchema } from "#/lib/validations/auth";
 
 type Step1EmailFormProps = {
@@ -34,6 +35,7 @@ export function Step1EmailForm({
   serverError,
 }: Readonly<Step1EmailFormProps>) {
   const t = useTranslations("auth");
+  const whyNot = useWhyNot();
   const form = useForm<{ email: string }>({
     resolver: zodResolver(z.object({ email: emailSchema(t("validation.email")) })),
     defaultValues: { email: defaultEmail ?? "" },
@@ -66,6 +68,7 @@ export function Step1EmailForm({
                   placeholder={t("emailForm.placeholder")}
                   autoComplete="email"
                   disabled={isLoading}
+                  title={whyNot([isLoading, "wait"])}
                   autoFocus
                   className="h-12 rounded-full border-0 bg-page px-5 text-base shadow-none md:text-[15px] focus-visible:ring-2 focus-visible:ring-whatsapp/40"
                 />
@@ -80,6 +83,7 @@ export function Step1EmailForm({
           // The ink pill of the sign-up's buttons, as the auth pages' main action.
           className="h-12 w-full rounded-full border-0 bg-ink text-[15px] text-white shadow-none hover:bg-ink/90 hover:brightness-100 sm:h-12 sm:text-[15px]"
           disabled={isLoading}
+          title={whyNot([isLoading, "wait"])}
         >
           {isLoading ? (
             <>

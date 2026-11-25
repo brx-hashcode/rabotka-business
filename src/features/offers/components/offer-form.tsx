@@ -25,6 +25,7 @@ import { INTL_LOCALE, type Locale } from "#/i18n/config";
 import { contentLocale } from "#/i18n/content";
 import type { Translator } from "#/i18n/translator";
 import { cn } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 import { AVAILABLE_EMPLOYMENT_TYPES, EMPLOYMENT_TYPES, isDatedMission, PAYMENT_FLOWS } from "../offer-labels";
 import { cleanQuestions, questionProblem } from "../offer-questions";
 import { OfferAiDialog } from "./offer-ai-dialog";
@@ -190,6 +191,7 @@ export function OfferForm({
 }>) {
   const tLabels = useTranslations("labels");
   const t = useTranslations("offers.form");
+  const whyNot = useWhyNot();
   const tv = useTranslations("offers.form.v");
   const locale = useLocale() as Locale;
   const schema = useMemo(() => offerSchema(tv, locale), [tv, locale]);
@@ -283,7 +285,8 @@ export function OfferForm({
               onOpenChange={setWriting}
               context={{
                 title: form.getValues("title") || undefined,
-                employmentType: type,
+                // Only once chosen: its default says nothing of the job.
+                employmentType: form.formState.dirtyFields.employmentType ? type : undefined,
                 city: remote ? undefined : city || undefined,
                 isRemote: remote,
                 quantity: Number(form.getValues("quantity")) || undefined,
@@ -294,13 +297,25 @@ export function OfferForm({
                 form.setValue("description", draft.description, set);
                 // The trade and the type only where the business has not chosen.
                 if (draft.categoryId && !form.getValues("categoryId")) form.setValue("categoryId", draft.categoryId, set);
+                // What the request says, the form follows, or the offer would say one
+                // thing and be published as another.
+                const asked = (field: "place" | "employmentType" | "quantity") => draft.changes?.some((c) => c.field === field);
                 if (
                   draft.employmentType &&
                   draft.employmentType !== type &&
                   AVAILABLE_EMPLOYMENT_TYPES.includes(draft.employmentType) &&
-                  !form.formState.dirtyFields.employmentType
+                  (!form.formState.dirtyFields.employmentType || asked("employmentType"))
                 ) {
                   form.setValue("employmentType", draft.employmentType, set);
+                }
+                if (draft.quantity) form.setValue("quantity", String(draft.quantity), set);
+                if (draft.place?.remote) {
+                  form.setValue("isRemote", true, set);
+                } else if (draft.place?.city) {
+                  form.setValue("isRemote", false, set);
+                  // A city several countries have: the business picks, rather than keep the wrong one.
+                  form.setValue("countryCode", draft.place.countryCode ?? "", set);
+                  form.setValue("city", draft.place.countryCode ? draft.place.city : "", set);
                 }
               }}
             />
@@ -430,6 +445,7 @@ export function OfferForm({
                   placeholder={country ? t("cityPlaceholder") : t("cityFirst")}
                   options={(cities ?? []).map((c) => ({ value: c, label: c }))}
                   disabled={!country}
+                  title={whyNot([!country, "countryFirst"])}
                 />
               </div>
             )}
@@ -526,6 +542,7 @@ function ComboField({
   placeholder: string;
   options: ComboboxOption[];
   disabled?: boolean;
+  title?: string;
 }>) {
   return (
     <FormField

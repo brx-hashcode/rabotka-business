@@ -7,6 +7,7 @@ import { IconChevronLeft, IconChevronRight, IconDownload, IconMinus, IconPlus, I
 import { Dialog as SheetPrimitive } from "radix-ui";
 import { toast } from "sonner";
 import { cn } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 import { DocumentPageSkeleton } from "./page-skeletons";
 
 const PdfPages = dynamic(() => import("./pdf-pages"), { ssr: false });
@@ -51,6 +52,7 @@ export function PreviewSheet({
   nav?: { label: string; onPrev: () => void; onNext: () => void };
 }>) {
   const t = useTranslations("ui.preview");
+  const whyNot = useWhyNot();
   const file = useBlobUrl(open ? src : undefined, kind);
   const shown = kind ?? previewKindOf(file.type);
   const [zoom, setZoom] = useState(1);
@@ -154,7 +156,7 @@ export function PreviewSheet({
                     type="button"
                     onClick={() => step(-1)}
                     disabled={zoom === ZOOMS[0]}
-                    aria-label={t("zoomOut")}
+                    title={whyNot([zoom === ZOOMS[0], "min"])}
                     className="flex size-8 items-center justify-center rounded-full hover:bg-card disabled:opacity-40"
                   >
                     <IconMinus className="size-4" />
@@ -164,7 +166,7 @@ export function PreviewSheet({
                     type="button"
                     onClick={() => step(1)}
                     disabled={zoom === ZOOMS.at(-1)}
-                    aria-label={t("zoomIn")}
+                    title={whyNot([zoom === ZOOMS.at(-1), "max"])}
                     className="flex size-8 items-center justify-center rounded-full hover:bg-card disabled:opacity-40"
                   >
                     <IconPlus className="size-4" />

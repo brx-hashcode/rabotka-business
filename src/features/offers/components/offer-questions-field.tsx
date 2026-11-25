@@ -44,10 +44,10 @@ const INPUT = "h-11 rounded-xl border-0 bg-card px-4 text-base shadow-none md:te
 function Toggle({
   on,
   label,
-  hint,
+  title,
   disabled,
   onChange,
-}: Readonly<{ on: boolean; label: string; hint?: string; disabled?: boolean; onChange: (on: boolean) => void }>) {
+}: Readonly<{ on: boolean; label: string; title?: string; disabled?: boolean; onChange: (on: boolean) => void }>) {
   return (
     <button
       type="button"
@@ -55,7 +55,7 @@ function Toggle({
       aria-checked={on}
       disabled={disabled}
       onClick={() => onChange(!on)}
-      title={hint}
+      title={title}
       className="inline-flex items-center gap-2 text-sm disabled:opacity-50"
     >
       <span className={cn("relative h-5 w-9 shrink-0 rounded-full transition-colors", on ? "bg-whatsapp-dark" : "bg-foreground/15")}>
@@ -269,7 +269,7 @@ export function OfferQuestionsField({
                   on={q.knockout ? true : q.required}
                   disabled={q.knockout}
                   label={t("required")}
-                  hint={q.knockout ? t("alwaysAsked") : undefined}
+                  title={q.knockout ? t("alwaysAsked") : undefined}
                   onChange={(required) => set(i, { ...q, required })}
                 />
                 {CAN_KNOCK_OUT.includes(q.kind) && (

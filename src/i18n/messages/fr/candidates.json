@@ -113,6 +113,7 @@
     "anyRating": "Toute note",
     "ratingMin": "{n} ★ et plus",
     "reset": "Réinitialiser",
+    "nothingToReset": "Aucun filtre à effacer.",
     "suggested": "Suggérés pour vous",
     "fromOffers": "d'après vos offres",
     "results": "Résultats",

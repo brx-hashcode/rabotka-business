@@ -57,6 +57,7 @@ import { CandidateCard } from "#/features/candidates/components/candidate-card";
 import { CvCompareSheet } from "#/features/cv-screening/components/cv-compare-sheet";
 import { CvChatSheet } from "#/features/cv-screening/components/cv-chat-sheet";
 import { DeleteCvDialog } from "#/features/cv-screening/components/delete-cv-dialog";
+import { scoringBars } from "#/features/cv-screening/components/score-details";
 import { ScheduleInterviewDialog } from "#/features/interviews/components/schedule-interview-dialog";
 import { CandidateInsight, detailsLabel } from "./candidate-insight";
 import { byFit } from "../rank-candidates";
@@ -125,6 +126,7 @@ import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
 import { TeamOpinionButton } from "#/features/team/components/team-opinion";
 import { getOfferOpinions, offerOpinionsKey, type Verdict } from "#/lib/api/candidate-notes-controller";
+import { useWhyNot } from "#/lib/use-why-not";
 import { pollEvery } from "#/features/layout/socket-status";
 
 /**
@@ -445,6 +447,7 @@ export function OfferDetailPage({ id }: Readonly<{ id: string }>) {
         description={noOfferLeft ? t("noOfferLeft") : t("republishText", { needsDate: needsDate ? "yes" : "no" })}
         confirmLabel={t("republish")}
         confirmDisabled={(needsDate && !newDate) || noOfferLeft}
+        confirmDisabledReason={noOfferLeft ? t("noOfferLeft") : t("dateFirst")}
         pending={republish.isPending}
         onConfirm={() => republish.mutate()}
       >
@@ -581,6 +584,8 @@ function cvScore(analysis: CvAnalysis | null | undefined): number | null {
 type Entry = {
   key: string;
   score: number | null;
+  /** Requirements known to be missing (byFit). */
+  missing?: number;
   analysis: CvAnalysis | null;
   /** Still waiting: it can be refused with the selection. */
   refusable: boolean;
@@ -595,6 +600,7 @@ function ApplicantsCard({
   loading,
 }: Readonly<{ offer: Offer; applicants?: OfferApplicant[]; outsiders: ExternalApplication[]; loading: boolean }>) {
   const t = useTranslations("offers.applicants");
+  const whyNot = useWhyNot();
   // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
   const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS.map((x) => x.key)).withDefault("all"));
   // The list, or the board (one column per step); in the URL too.
@@ -648,6 +654,7 @@ function ApplicantsCard({
         a,
         // Its CV analysis once in: the same measure as a careers-page CV.
         score: cvScore(a.analysis) ?? scores.get(a.applicationId)?.score ?? null,
+        missing: (cvScore(a.analysis) !== null ? a.analysis : scores.get(a.applicationId))?.scoring?.missing,
         analysis: a.analysis ?? null,
         refusable: a.status === "PENDING" || a.status === "VIEWED",
         stage: applicationStage(a.status, a.shortlistedAt),
@@ -659,6 +666,7 @@ function ApplicantsCard({
         key: `e:${a.id}`,
         a,
         score: a.analysis?.status === "SCORED" ? a.analysis.score : null,
+        missing: a.analysis?.scoring?.missing,
         analysis: a.analysis,
         refusable: a.status === "PENDING",
         stage: externalStage(a),
@@ -884,6 +892,7 @@ function ApplicantsCard({
                   <button
                     type="button"
                     disabled={shortlist.isPending}
+                    title={whyNot([shortlist.isPending, "wait"])}
                     onClick={() =>
                       shortlist.ask({
                         targets: shortlistTargets(shortlistAction === "add" ? toShortlist : waitingPicked),
@@ -1136,20 +1145,28 @@ function ApplicantRow({
         summary: analysed.summary,
         strengths: analysed.strengths ?? [],
         gaps: analysed.gaps ?? [],
-        criteria: CRITERIA.filter((k) => typeof analysed.criteria?.[k.key] === "number").map((k) => ({
-          label: tLabels(`criterion.${k.key}`),
-          value: analysed.criteria?.[k.key] ?? 0,
-        })),
+        criteria: analysed.scoring
+          ? scoringBars(analysed.scoring)
+          : CRITERIA.filter((k) => typeof analysed.criteria?.[k.key] === "number").map((k) => ({
+              key: k.key,
+              label: tLabels(`criterion.${k.key}`),
+              value: analysed.criteria?.[k.key] ?? 0,
+            })),
+        musts: analysed.scoring?.musts,
       }
     : assessment
       ? {
           summary: assessment.summary,
           strengths: assessment.strengths,
           gaps: assessment.gaps,
-          criteria: APPLICANT_CRITERIA.filter((k) => typeof assessment.criteria?.[k] === "number").map((k) => ({
-            label: tLabels(`criterion.${APPLICANT_CRITERION_KEY[k]}`),
-            value: assessment.criteria?.[k] ?? 0,
-          })),
+          criteria: assessment.scoring
+            ? scoringBars(assessment.scoring)
+            : APPLICANT_CRITERIA.filter((k) => typeof assessment.criteria?.[k] === "number").map((k) => ({
+                key: k,
+                label: tLabels(`criterion.${APPLICANT_CRITERION_KEY[k]}`),
+                value: assessment.criteria?.[k] ?? 0,
+              })),
+          musts: assessment.scoring?.musts,
         }
       : null;
   const answers = a.answers ?? [];
@@ -1229,7 +1246,7 @@ function ApplicantRow({
           </button>
         )}
         {a.newerCv && recruiting && <ReanalyseButton offerId={offerId} applicationId={a.applicationId} />}
-        <ApplicantCvAnalysis jobTitle={jobTitle} analysis={a.analysis ?? null} />
+        <ApplicantCvAnalysis jobTitle={jobTitle} name={name} analysis={a.analysis ?? null} removed={!!a.cvRemoved} />
         <ApplicationActions applicant={a} name={name} recruiting={recruiting} hideChat />
         <MoreActionsMenu name={name} actions={more} />
       </div>
@@ -1319,22 +1336,20 @@ function ReanalyseButton({ offerId, applicationId }: Readonly<{ offerId: string;
  */
 function ApplicantCvAnalysis({
   jobTitle,
+  name,
   analysis,
+  removed,
 }: Readonly<{
   jobTitle: string;
+  name: string;
   analysis: CvAnalysis | null;
+  /** « Supprimer le CV »: nothing left to ask about. */
+  removed: boolean;
 }>) {
   const [chatting, setChatting] = useState(false);
   const t = useTranslations("offers.row");
   const tc = useTranslations("offers.candidate");
   const scored = analysis?.status === "SCORED";
-  // One request per screening, shared by every candidate of the offer; each picks its own.
-  const resume = useQuery({
-    queryKey: [...cvScreeningsKey, analysis?.screeningId],
-    queryFn: () => getCvScreening(analysis?.screeningId as string),
-    select: (s) => s.resumes.find((r) => r.id === analysis?.resumeId) ?? null,
-    enabled: scored,
-  });
 
   if (analysis?.status === "QUEUED") {
     return <AnalysingChip />;
@@ -1344,19 +1359,20 @@ function ApplicantCvAnalysis({
       <>
         <button
           type="button"
-          disabled={!resume.data}
+          disabled={removed}
+          title={removed ? tc("cvRemovedByTeam") : undefined}
           onClick={() => setChatting(true)}
           className="inline-flex h-10 shrink-0 items-center rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm disabled:opacity-60"
         >
           {tc("ask")}
         </button>
-        {chatting && resume.data && (
+        {chatting && (
           <CvChatSheet
             open={chatting}
             onOpenChange={setChatting}
             screeningId={analysis.screeningId}
             jobTitle={jobTitle}
-            resume={{ ...resume.data, score: analysis.score }}
+            resume={{ id: analysis.resumeId, score: analysis.score, name }}
           />
         )}
       </>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { useWhyNot } from "#/lib/use-why-not";
 import { useEffect, useRef, useState } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog as SheetPrimitive } from "radix-ui";
@@ -129,6 +130,7 @@ export function MailImport({
   onChange: (picks: MailPick[]) => void;
 }>) {
   const t = useTranslations("cv.mail");
+  const whyNot = useWhyNot();
   const boxes = useQuery({ queryKey: mailboxesKey, queryFn: listMailboxes, staleTime: 60_000 });
   const queryClient = useQueryClient();
   const [openId, setOpenId] = useState<string | null>(null);
@@ -161,6 +163,7 @@ export function MailImport({
               key={provider}
               type="button"
               disabled={disabled || pending !== null}
+              title={whyNot([disabled || pending !== null, "wait"])}
               onClick={() => (box ? setOpenId(box.id) : void connect(provider))}
               className="group flex min-w-0 items-center gap-3 rounded-2xl bg-page p-3 text-left transition-colors hover:bg-page/70 disabled:opacity-50"
             >
@@ -243,6 +246,7 @@ export function MailCvSheet({
   const t = useTranslations("cv.mail");
   const tc = useTranslations("cv");
   const tCommon = useTranslations("common");
+  const whyNot = useWhyNot();
   const locale = useLocale();
   const friendlyError = useFriendlyError();
   const [q, setQ] = useState("");
@@ -300,7 +304,7 @@ export function MailCvSheet({
             <button
               type="button"
               aria-label={t("refreshLabel")}
-              title={t("refresh")}
+              title={whyNot([refreshing, "wait"], [mails.isLoading, "loading"], [expired, { say: t("expired", { provider: PROVIDER_LABEL[mailbox.provider] }) }]) ?? t("refresh")}
               disabled={refreshing || mails.isLoading || expired}
               onClick={() => void mails.refetch()}
               className="flex size-9 shrink-0 items-center justify-center rounded-full bg-page text-muted-foreground hover:text-foreground disabled:opacity-60"
@@ -310,6 +314,7 @@ export function MailCvSheet({
             <button
               type="button"
               disabled={disconnect.isPending}
+              title={whyNot([disconnect.isPending, "wait"])}
               onClick={() => setConfirmDisconnect(true)}
               className="hidden h-9 shrink-0 items-center gap-1.5 rounded-full bg-page px-3.5 font-medium text-muted-foreground text-sm hover:text-foreground disabled:opacity-50 sm:inline-flex"
             >
@@ -335,6 +340,7 @@ export function MailCvSheet({
             <button
               type="button"
               disabled={disconnect.isPending}
+              title={whyNot([disconnect.isPending, "wait"])}
               onClick={() => setConfirmDisconnect(true)}
               className="inline-flex items-center gap-1.5 font-medium text-muted-foreground text-xs hover:text-foreground disabled:opacity-50 sm:hidden"
             >
@@ -404,6 +410,7 @@ export function MailCvSheet({
                               role="checkbox"
                               aria-checked={on}
                               disabled={full}
+                              title={whyNot([full, "max"])}
                               onClick={() => setChosen((c) => togglePick(c, pick, total))}
                               className={cn(
                                 "flex min-w-0 flex-1 items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors disabled:opacity-40",
@@ -449,6 +456,7 @@ export function MailCvSheet({
                   <button
                     type="button"
                     disabled={mails.isFetchingNextPage}
+                    title={whyNot([mails.isFetchingNextPage, "wait"])}
                     onClick={() => void mails.fetchNextPage()}
                     className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-page font-medium text-sm hover:bg-page/70 disabled:opacity-60"
                   >
@@ -489,6 +497,7 @@ export function MailCvSheet({
               <button
                 type="button"
                 disabled={action && (action.pending || chosen.length === 0)}
+                title={whyNot([action?.pending, "wait"], [action && chosen.length === 0, "choose"])}
                 onClick={() => onDone(chosen)}
                 className="inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-ink px-6 font-medium text-white hover:bg-ink/90 disabled:opacity-40"
               >

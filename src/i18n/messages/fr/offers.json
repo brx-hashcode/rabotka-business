@@ -88,7 +88,8 @@
     "retryTitle": "Réessayer l'analyse du CV de {name} ?",
     "deleteCv": "Supprimer le CV",
     "deleteCvReading": "Une fois l'analyse terminée",
-    "cvRemoved": "CV supprimé"
+    "cvRemoved": "CV supprimé",
+    "cvRemovedByTeam": "CV supprimé par votre équipe"
   },
   "answerFile": {
     "photo": "Photo",
@@ -128,6 +129,7 @@
     "finishText": "Vous confirmez votre recrutement. L'offre est terminée, et vous pouvez noter les personnes recrutées.",
     "republishTitle": "Republier l'offre",
     "noOfferLeft": "Votre formule n'a plus d'offre à publier sur cette période.",
+    "dateFirst": "Choisissez d'abord une date.",
     "republishText": "{needsDate, select, yes {Choisissez jusqu'à quand vous acceptez des candidatures : la mission peut commencer aujourd'hui. } other {}}Elle compte comme une offre publiée sur votre formule.",
     "reference": "Réf. {reference}",
     "publishedOn": " · publiée le {date}",
@@ -368,6 +370,7 @@
     "rateTitle": "Noter {name}",
     "rateText": "Votre note compte pour sa fiabilité et aide les autres employeurs.",
     "rateConfirm": "Enregistrer la note",
+    "rateFirst": "Choisissez d'abord une note.",
     "score": "Note",
     "outOf": "{n} sur 5",
     "rateNote": "Un mot sur la mission (facultatif)"
@@ -529,10 +532,18 @@
     "text": "Décrivez le besoin en quelques mots : l'IA rédige l'intitulé et la description, et propose le métier. Vous relisez avant de publier.",
     "failed": "La rédaction n'a pas abouti. Réessayez dans un instant.",
     "trade": "Métier proposé :",
+    "changes": "Votre demande a été suivie :",
+    "change": {
+      "place": "{to} au lieu de {from}",
+      "employmentType": "le type {to} au lieu de {from}",
+      "quantity": "{to} personnes au lieu de {from}"
+    },
+    "choosePlace": "Choisissez le pays de {city} dans le formulaire.",
     "toConfirm": "À préciser avant de publier :",
     "toConfirmText": "{items}. L'IA ne les invente pas : ajoutez-les dans le formulaire, les candidats les recherchent en premier.",
     "removed": "Retiré de l'offre : {items}. Ces critères écartent des candidats pour des raisons sans rapport avec le poste.",
     "lastOne": "C'était la dernière rédaction incluse dans votre formule pour cette période.",
+    "noneLeft": "Vous n'avez plus de rédaction incluse pour cette période.",
     "left": "{count, plural, one {# rédaction restante} other {# rédactions restantes}} pour cette période.",
     "again": "Autre version",
     "use": "Utiliser cette offre",
@@ -664,6 +675,7 @@
     "description": "Les CV que vous avez déjà rejoignent les candidats de « {title} » : lus, notés et classés avec ceux qui ont postulé.",
     "note": "Chaque CV utilise 1 CV inclus de votre formule. Personne n'est prévenu à l'import ; une fois l'adresse e-mail trouvée sur le CV, la personne reçoit vos décisions comme un candidat de la page carrières.",
     "cancel": "Annuler",
+    "pickFirst": "Ajoutez d'abord au moins un CV.",
     "sending": "Envoi des CV…",
     "sendingCount": "Envoi des CV… {sent} / {count}",
     "done": "{count, plural, one {# CV importé} other {# CV importés}} : analyse en cours.",

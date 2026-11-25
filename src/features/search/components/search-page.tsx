@@ -20,6 +20,7 @@ import { httpStatusOf } from "#/lib/api/friendly-error";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { getJobCategories } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 
 const PAGE = 24;
 const ANY = "any";
@@ -45,6 +46,7 @@ function useDebounced<T>(value: T, ms = 350): T {
  */
 export function SearchPage() {
   const t = useTranslations("candidates.search");
+  const whyNot = useWhyNot();
   const locale = useLocale();
   const friendlyError = useFriendlyError();
   const [{ q, categoryId, city, minReliability, minRating }, setFilters] = useQueryStates({
@@ -183,6 +185,7 @@ export function SearchPage() {
                 type="button"
                 onClick={reset}
                 disabled={!asking}
+                title={whyNot([!asking, { say: t("nothingToReset") }])}
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-full px-4 font-medium text-muted-foreground text-sm hover:text-foreground disabled:opacity-40"
               >
                 <IconRefresh className="size-4" />
@@ -242,6 +245,7 @@ export function SearchPage() {
                   type="button"
                   onClick={() => void results.fetchNextPage()}
                   disabled={results.isFetchingNextPage}
+                  title={whyNot([results.isFetchingNextPage, "wait"])}
                   className={cn("rounded-full bg-page px-5 py-2.5 font-medium text-sm hover:bg-page/70")}
                 >
                   {results.isFetchingNextPage ? t("loading") : t("more", { count: total - items.length })}

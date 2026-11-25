@@ -566,3 +566,11 @@ html:has([data-site-header]) {
 .rough-annotation {
   z-index: -1;
 }
+
+/* What cannot be used says so: the cursor here, the reason in its `title`
+   (use-why-not). Unlayered, so it beats every cursor-* utility. */
+:disabled,
+[aria-disabled="true"],
+[data-disabled]:not([data-disabled="false"]) {
+  cursor: not-allowed;
+}

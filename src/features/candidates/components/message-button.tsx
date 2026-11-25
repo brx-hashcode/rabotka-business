@@ -11,6 +11,7 @@ import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { cn } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 
 const button =
   "inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 font-medium text-sm transition-colors";
@@ -25,6 +26,7 @@ const button =
 export function MessageButton({ workerId, name, className }: Readonly<{ workerId: string; name: string; className?: string }>) {
   const router = useRouter();
   const t = useTranslations("candidates.message");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
   const { role } = useMember();
   const open = useOpenDiscussionWithProfile();
@@ -34,6 +36,7 @@ export function MessageButton({ workerId, name, className }: Readonly<{ workerId
     <button
       type="button"
       disabled={open.isPending}
+      title={whyNot([open.isPending, "wait"])}
       onClick={() =>
         open.mutate(workerId, {
           onSuccess: ({ conversation }) => router.push(`/espace/discussions/${conversation.id}`),

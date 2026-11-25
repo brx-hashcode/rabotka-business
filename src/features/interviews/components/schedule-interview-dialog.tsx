@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useWhyNot } from "#/lib/use-why-not";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IconLock, IconPlus, IconVideo, IconX } from "@tabler/icons-react";
@@ -68,6 +69,7 @@ export function ScheduleInterviewDialog({
 }>) {
   const queryClient = useQueryClient();
   const t = useTranslations("interviews.schedule");
+  const whyNot = useWhyNot();
   const ti = useTranslations("interviews");
   const friendlyError = useFriendlyError();
   const business = useQuery({ queryKey: myBusinessKey, queryFn: getMyBusiness, enabled: open });
@@ -258,7 +260,7 @@ export function ScheduleInterviewDialog({
               ) : (
                 !videoPlan.loading && (
                   // Not in the plan, and not clickable: a Meet or Zoom link above still works.
-                  <span aria-disabled className="inline-flex cursor-not-allowed items-center gap-1.5 pt-1 font-medium text-muted-foreground/70 text-sm">
+                  <span aria-disabled title={whyNot([true, "notInPlan"])} className="inline-flex cursor-not-allowed items-center gap-1.5 pt-1 font-medium text-muted-foreground/70 text-sm">
                     <IconLock className="size-4" />
                     {t("createLink")}
                     <span className="font-normal">{t("higherPlans")}</span>
@@ -294,6 +296,7 @@ export function ScheduleInterviewDialog({
             type="button"
             onClick={() => onOpenChange(false)}
             disabled={save.isPending}
+            title={whyNot([save.isPending, "wait"])}
             className="h-12 flex-1 rounded-full bg-page font-medium hover:bg-page/70"
           >
             {t("cancel")}
@@ -302,6 +305,7 @@ export function ScheduleInterviewDialog({
             type="button"
             onClick={() => save.mutate()}
             disabled={save.isPending || !complete}
+            title={whyNot([save.isPending, "wait"], [!complete, "complete"])}
             className="h-12 flex-[2] rounded-full bg-ink font-medium text-white hover:bg-ink/90 disabled:opacity-40"
           >
             {save.isPending ? t("sending") : existing ? t("saveNotify") : t("send")}
