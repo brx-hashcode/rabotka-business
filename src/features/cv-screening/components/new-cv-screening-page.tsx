@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useWhyNot } from "#/lib/use-why-not";
 import { trialLocks } from "#/features/subscription/trial-lock";
 import { cvOutOfReach } from "#/features/subscription/packs";
 import { usePackOnSale } from "#/features/subscription/use-packs";
@@ -34,6 +35,7 @@ import { CvPicker } from "./cv-picker";
 export function NewCvScreeningPage() {
   const router = useRouter();
   const t = useTranslations("cv.new");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
   const queryClient = useQueryClient();
   const subscription = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
@@ -146,6 +148,7 @@ export function NewCvScreeningPage() {
                     searchPlaceholder={t("searchOffer")}
                     emptyText={t("noOffer")}
                     disabled={offers.isLoading}
+                    title={whyNot([offers.isLoading, "loading"])}
                   />
                   <p className="text-muted-foreground text-xs">{t("offerHint")}</p>
                 </div>
@@ -190,6 +193,7 @@ export function NewCvScreeningPage() {
                 room={room === Number.POSITIVE_INFINITY ? e.cvBatchMax : room}
                 maxMb={e.cvFileMaxMb}
                 disabled={start.isPending}
+                title={whyNot([start.isPending, "wait"])}
                 onFiles={setFiles}
                 onMails={setMails}
               />
@@ -202,6 +206,7 @@ export function NewCvScreeningPage() {
               <button
                 type="submit"
                 disabled={!jobReady || count === 0 || start.isPending}
+                title={whyNot([start.isPending, "wait"], [!jobReady, "complete"], [count === 0, { say: t("addCv") }])}
                 className="inline-flex h-12 items-center justify-center rounded-full bg-ink px-6 font-medium text-white hover:bg-ink/90 disabled:opacity-40"
               >
                 {start.isPending

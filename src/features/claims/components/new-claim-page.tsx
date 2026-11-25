@@ -29,6 +29,7 @@ import type { Translator } from "#/i18n/translator";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { listOffers, listReceivedApplications, offersKey } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 import { ImagePicker, TOPICS, type Topic } from "./claim-bits";
 
 
@@ -52,6 +53,7 @@ export function NewClaimPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const t = useTranslations("claims.form");
+  const whyNot = useWhyNot();
   const tc = useTranslations("claims");
   const friendlyError = useFriendlyError();
   const [files, setFiles] = useState<File[]>([]);
@@ -178,6 +180,7 @@ export function NewClaimPage() {
                           placeholder={t("offerPlaceholder")}
                           searchPlaceholder={t("offerSearch")}
                           disabled={offers.isLoading}
+                          title={whyNot([offers.isLoading, "loading"])}
                         />
                       </FormItem>
                     )}
@@ -196,6 +199,7 @@ export function NewClaimPage() {
                           searchPlaceholder={t("candidateSearch")}
                           emptyText={t("candidateEmpty")}
                           disabled={applications.isLoading}
+                          title={whyNot([applications.isLoading, "loading"])}
                         />
                       </FormItem>
                     )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useWhyNot } from "#/lib/use-why-not";
 import { useRef, useState } from "react";
 import { IconEye, IconFileText, IconPlus, IconRefresh } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
@@ -200,6 +201,7 @@ function UploadButton({
   onUploaded: (next: MyBusiness) => void;
 }>) {
   const t = useTranslations("organisation.documents");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
   const input = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState(false);
@@ -242,6 +244,7 @@ function UploadButton({
         type="button"
         onClick={() => input.current?.click()}
         disabled={pending}
+        title={whyNot([pending, "wait"])}
         className={cn(
           "inline-flex h-9 items-center gap-1.5 rounded-full px-4 font-medium text-sm transition-colors disabled:opacity-100",
           primary ? "bg-ink text-white hover:bg-ink/90" : "bg-card hover:bg-card/70",

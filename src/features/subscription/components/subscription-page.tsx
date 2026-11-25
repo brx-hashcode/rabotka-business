@@ -36,6 +36,7 @@ import {
 import { INTL_LOCALE, type Locale } from "#/i18n/config";
 import type { Translator } from "#/i18n/translator";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
+import { useWhyNot } from "#/lib/use-why-not";
 import { getPaymentGateways } from "#/lib/api/payment-controller";
 import { featuredPlanId } from "../featured-plan";
 import { runningBillingPeriod } from "../running-period";
@@ -353,6 +354,7 @@ function UpcomingPeriods({
   const queryClient = useQueryClient();
   const t = useTranslations("subscription.upcoming");
   const ts = useTranslations("subscription");
+  const whyNot = useWhyNot();
   const locale = useLocale();
   const friendlyError = useFriendlyError();
   const [confirm, setConfirm] = useState<SubscriptionPeriod | null>(null);
@@ -445,6 +447,7 @@ function UpcomingPeriods({
                 <button
                   type="button"
                   disabled={start.isPending}
+                  title={whyNot([start.isPending, "wait"])}
                   onClick={() => setConfirm(null)}
                   className="h-12 flex-1 rounded-full bg-page font-medium hover:bg-page/70 disabled:opacity-50"
                 >
@@ -453,6 +456,7 @@ function UpcomingPeriods({
                 <button
                   type="button"
                   disabled={start.isPending}
+                  title={whyNot([start.isPending, "wait"])}
                   onClick={() => start.mutate(confirm.id)}
                   className="inline-flex h-12 flex-[1.4] items-center justify-center gap-2 rounded-full bg-ink font-medium text-white hover:bg-ink/90 disabled:opacity-60"
                 >
@@ -541,6 +545,7 @@ function PlanChooser({ data, focused = false }: Readonly<{ data: MySubscription;
   const router = useRouter();
   const t = useTranslations("subscription.chooser");
   const ts = useTranslations("subscription");
+  const whyNot = useWhyNot();
   const locale = useLocale();
   const friendlyError = useFriendlyError();
   // In the organisation's country's currency (dollars in the DRC).
@@ -690,6 +695,7 @@ function PlanChooser({ data, focused = false }: Readonly<{ data: MySubscription;
                 type="button"
                 onClick={() => buy.mutate(plan)}
                 disabled={buy.isPending || price <= 0}
+                title={whyNot([buy.isPending, "wait"], [price <= 0, { say: t("notForSale") }])}
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-ink px-6 font-medium text-[15px] text-white transition-colors hover:bg-ink/90 disabled:opacity-60"
               >
                 {pending ? <Loader className="size-5 animate-spin text-white" /> : isCurrent ? t("renew") : switching ? (period === "ANNUAL" ? t("toAnnual") : t("toMonthly")) : change === "up" ? t("upgrade", { plan: plan.name }) : change === "down" ? t("schedule") : t("choose")}

@@ -102,7 +102,8 @@
     "toMonthly": "Passer au mensuel",
     "upgrade": "Passer à {plan}",
     "schedule": "Programmer",
-    "choose": "Choisir"
+    "choose": "Choisir",
+    "notForSale": "Cette formule n'est pas à acheter pour cette durée."
   },
   "packs": {
     "title": {

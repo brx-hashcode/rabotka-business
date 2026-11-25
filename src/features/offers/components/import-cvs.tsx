@@ -21,6 +21,7 @@ import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-control
 import { deleteImportedCvs, externalApplicationsKey, importOfferCvs } from "#/lib/api/careers-controller";
 import { listMailboxes, mailboxesKey, type Mailboxes } from "#/lib/api/mailbox-controller";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
+import { useWhyNot } from "#/lib/use-why-not";
 
 /**
  * « Importer des CV » on an offer: CVs the business already has (its
@@ -93,6 +94,7 @@ export function ImportCvsDialog({
   onOpenChange,
 }: Readonly<{ offerId: string; offerTitle: string; open: boolean; onOpenChange: (open: boolean) => void }>) {
   const t = useTranslations("offers.importCvs");
+  const whyNot = useWhyNot();
   const packOnSale = usePackOnSale("CV");
   const { e, room, loading } = useCvRoom();
   const [files, setFiles] = useState<File[]>([]);
@@ -137,6 +139,7 @@ export function ImportCvsDialog({
                 room={room}
                 maxMb={e.cvFileMaxMb}
                 disabled={send.isPending}
+                title={whyNot([send.isPending, "wait"])}
                 onFiles={setFiles}
                 onMails={() => undefined}
                 withMail={false}
@@ -146,6 +149,7 @@ export function ImportCvsDialog({
                 <button
                   type="button"
                   disabled={send.isPending}
+                  title={whyNot([send.isPending, "wait"])}
                   onClick={close}
                   className="inline-flex h-11 items-center justify-center rounded-full bg-page px-5 font-medium hover:bg-page/70 disabled:opacity-50"
                 >
@@ -154,6 +158,7 @@ export function ImportCvsDialog({
                 <button
                   type="submit"
                   disabled={count === 0 || send.isPending}
+                  title={whyNot([send.isPending, "wait"], [count === 0, { say: t("pickFirst") }])}
                   className="inline-flex h-11 items-center justify-center rounded-full bg-ink px-5 font-medium text-white hover:bg-ink/90 disabled:opacity-40"
                 >
                   {send.isPending

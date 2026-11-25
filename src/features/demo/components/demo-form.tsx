@@ -23,6 +23,7 @@ import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { requestDemo } from "#/lib/api/public-controller";
 import { dialCode } from "#/lib/phone";
 import { cn } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 import { DEMO_INTERESTS, DEMO_SIZES } from "../demo-options";
 
 const required = (message: string, max = 120) => z.string().trim().min(1, message).max(max);
@@ -56,6 +57,7 @@ export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryNam
   const [sent, setSent] = useState<{ firstName: string; email: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const t = useTranslations("site.demoForm");
+  const whyNot = useWhyNot();
   const locale = useLocale() as Locale;
   const friendlyError = useFriendlyError();
   const schema = useMemo(() => demoSchema(t), [t]);
@@ -253,6 +255,7 @@ export function DemoForm({ countries }: Readonly<{ countries: BusinessCountryNam
             type="submit"
             variant="ghost"
             disabled={pending}
+            title={whyNot([pending, "wait"])}
             aria-busy={pending || undefined}
             className="h-12 w-full rounded-full bg-ink text-[15px] text-white hover:bg-ink/90 disabled:opacity-100 sm:h-12 sm:text-[15px]"
           >

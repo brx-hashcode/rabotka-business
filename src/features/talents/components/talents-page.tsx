@@ -40,6 +40,7 @@ import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { listOffers, offersKey } from "#/lib/api/offer-controller";
 import { inviteTalent, listTalents, removeTalent, saveTalent, talentsKey, type Talent } from "#/lib/api/talent-controller";
 import { cn, getInitials } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 import { PoolCandidatesSection } from "./pool-candidates-section";
 
 const fold = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
@@ -196,6 +197,7 @@ export function TalentsPage() {
 
 function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
   const tt = useTranslations("talents.page");
+  const whyNot = useWhyNot();
   const trade = useTradeName();
   const tCard = useTranslations("candidates.card");
   const locale = useLocale();
@@ -321,6 +323,7 @@ function TalentCard({ talent: t }: Readonly<{ talent: Talent }>) {
         <button
           type="button"
           disabled={!t.available}
+          title={whyNot([!t.available, { say: tt("notAvailable") }])}
           onClick={() => setDialog("invite")}
           className="inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm hover:bg-brand-lime/80 disabled:opacity-50"
         >
@@ -356,6 +359,7 @@ function NoteDialog({
 }: Readonly<{ talent: Talent; name: string; open: boolean; onOpenChange: (o: boolean) => void }>) {
   const queryClient = useQueryClient();
   const tt = useTranslations("talents.page");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
   const [note, setNote] = useState(t.note ?? "");
   const [tags, setTags] = useState<string[]>(t.tags);
@@ -418,6 +422,7 @@ function NoteDialog({
             maxLength={30}
             placeholder={tags.length < 8 ? tt("addTag") : tt("maxTags", { max: 8 })}
             disabled={tags.length >= 8}
+            title={whyNot([tags.length >= 8, { say: tt("maxTags", { max: 8 }) }])}
             className="min-w-32 flex-1 bg-transparent px-1.5 py-1 text-sm outline-none placeholder:text-muted-foreground"
           />
         </div>
@@ -461,6 +466,7 @@ function InviteDialog({
       description={tt("inviteDescription")}
       confirmLabel={tt("sendInvite")}
       confirmDisabled={!offerId}
+      confirmDisabledReason={tt("chooseOffer")}
       pending={invite.isPending}
       onConfirm={() => invite.mutate()}
     >

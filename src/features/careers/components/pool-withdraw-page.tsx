@@ -6,6 +6,7 @@ import { IconCheck } from "@tabler/icons-react";
 import { BusinessLockup } from "#/components/business-lockup";
 import { withdrawFromPool } from "#/lib/api/careers-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
+import { useWhyNot } from "#/lib/use-why-not";
 
 /**
  * The candidate takes back « garder ma candidature »: one button rather than
@@ -13,6 +14,7 @@ import { friendlyError } from "#/lib/api/friendly-error";
  * nobody. Their application itself is not withdrawn.
  */
 export function PoolWithdrawPage({ token }: Readonly<{ token: string }>) {
+  const whyNot = useWhyNot();
   const withdraw = useMutation({ mutationFn: () => withdrawFromPool(token) });
   return (
     <main className="min-h-svh bg-page px-4 py-8 sm:py-14">
@@ -44,6 +46,7 @@ export function PoolWithdrawPage({ token }: Readonly<{ token: string }>) {
               <button
                 type="button"
                 disabled={withdraw.isPending}
+                title={whyNot([withdraw.isPending, "wait"])}
                 onClick={() => withdraw.mutate()}
                 className="h-12 w-full rounded-full bg-ink font-medium text-white hover:bg-ink/90 disabled:opacity-40"
               >

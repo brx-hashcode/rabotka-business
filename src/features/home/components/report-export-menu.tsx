@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   IconChevronDown,
   IconDownload,
-  IconFileCertificate,
   IconFileSpreadsheet,
   IconFileText,
   IconLock,
@@ -27,6 +26,7 @@ import { appConfig } from "#/config";
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
 import { downloadFile } from "#/lib/api/download";
 import type { StatsPeriod } from "#/lib/api/types";
+import { useWhyNot } from "#/lib/use-why-not";
 
 const ITEM = "cursor-pointer items-start gap-3 rounded-xl px-3 py-2.5 focus:bg-page";
 
@@ -36,6 +36,7 @@ const ITEM = "cursor-pointer items-start gap-3 rounded-xl px-3 py-2.5 focus:bg-p
  */
 export function ReportExportMenu({ days, onOpenPdf }: Readonly<{ days: StatsPeriod; onOpenPdf: () => void }>) {
   const t = useTranslations("home.export");
+  const whyNot = useWhyNot();
   const [pending, setPending] = useState<string | null>(null);
   const router = useRouter();
   const { data: subscription } = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
@@ -71,6 +72,7 @@ export function ReportExportMenu({ days, onOpenPdf }: Readonly<{ days: StatsPeri
     <DropdownMenu>
       <DropdownMenuTrigger
         disabled={pending !== null}
+        title={whyNot([pending !== null, "wait"])}
         className="inline-flex h-11 items-center gap-2 rounded-full bg-page px-4 font-medium text-sm outline-none hover:bg-page/70 disabled:opacity-60"
       >
         <IconDownload className="size-4" />
@@ -111,15 +113,6 @@ export function ReportExportMenu({ days, onOpenPdf }: Readonly<{ days: StatsPeri
             <span className="font-medium text-sm">{t("staffRegister")}</span>
             <span className="text-muted-foreground text-xs">
               {hrExports ? t("staffRegisterHint") : t("higherPlans")}
-            </span>
-          </span>
-        </DropdownMenuItem>
-        <DropdownMenuItem className={ITEM} onSelect={() => hrExport("acpe", "offres-acpe.xlsx")}>
-          <IconFileCertificate className="mt-0.5 size-4 shrink-0" />
-          <span className="flex flex-col">
-            <span className="font-medium text-sm">{t("acpe")}</span>
-            <span className="text-muted-foreground text-xs">
-              {hrExports ? t("acpeHint") : t("higherPlans")}
             </span>
           </span>
         </DropdownMenuItem>

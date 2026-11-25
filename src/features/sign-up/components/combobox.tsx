@@ -46,6 +46,7 @@ export function Combobox({
   searchPlaceholder,
   emptyText,
   disabled,
+  title,
   invalid,
   clearable,
   id,
@@ -57,6 +58,8 @@ export function Combobox({
   searchPlaceholder?: string;
   emptyText?: string;
   disabled?: boolean;
+  /** Why it is disabled. */
+  title?: string;
   invalid?: boolean;
   /** An optional field: choosing the selected option again empties it. */
   clearable?: boolean;
@@ -77,6 +80,7 @@ export function Combobox({
       <PopoverTrigger
         id={id}
         disabled={disabled}
+        title={disabled ? title : undefined}
         aria-invalid={invalid || undefined}
         className={cn(
           "flex h-12 w-full items-center justify-between gap-3 rounded-xl bg-page px-4 text-left text-base outline-none transition-shadow md:text-[15px]",

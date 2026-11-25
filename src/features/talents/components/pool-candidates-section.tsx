@@ -29,6 +29,7 @@ import {
   type PoolKind,
 } from "#/lib/api/talent-controller";
 import { cn, getInitials } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 
 /**
  * « Mes profils » beyond Rabotka: careers-page candidates kept with their
@@ -37,6 +38,7 @@ import { cn, getInitials } from "#/lib/utils";
  */
 export function PoolCandidatesSection({ source }: Readonly<{ source: PoolKind }>) {
   const t = useTranslations("talents.pool");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
   const [q, setQ] = useState("");
   const [query, setQuery] = useState("");
@@ -109,6 +111,7 @@ export function PoolCandidatesSection({ source }: Readonly<{ source: PoolKind }>
               <button
                 type="button"
                 disabled={results.isFetchingNextPage}
+                title={whyNot([results.isFetchingNextPage, "wait"])}
                 onClick={() => void results.fetchNextPage()}
                 className="h-10 rounded-full bg-page px-5 font-medium text-sm hover:bg-page/70 disabled:opacity-50"
               >
@@ -324,6 +327,7 @@ function PoolInviteDialog({
       description={t("inviteDescription")}
       confirmLabel={t("sendInvite")}
       confirmDisabled={!offerId}
+      confirmDisabledReason={t("chooseOffer")}
       pending={invite.isPending}
       onConfirm={() => invite.mutate()}
     >

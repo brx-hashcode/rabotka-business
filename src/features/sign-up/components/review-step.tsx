@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
+import { useWhyNot } from "#/lib/use-why-not";
 import type { BusinessCatalog } from "#/lib/api/types";
 import { PUBLIC_SITE } from "#/features/landing/content";
 import type { AccountValues } from "./account-step";
@@ -134,7 +135,7 @@ export function ReviewStep({
       />
 
       <FormError message={error} />
-      <StepActions onBack={onBack} continueLabel={t("submit")} pending={pending} disabled={!accepted} />
+      <StepActions onBack={onBack} continueLabel={t("submit")} pending={pending} disabled={!accepted} reason={t("acceptFirst")} />
     </form>
   );
 }
@@ -176,6 +177,7 @@ function Row({ label, children }: Readonly<{ label: string; children: ReactNode 
 export function SignUpDone({ email, signInRequired }: Readonly<{ email: string; signInRequired: boolean }>) {
   const leaving = useLeaving();
   const t = useTranslations("signUp.done");
+  const whyNot = useWhyNot();
 
   // A full page load, not a client-side navigation: the request then carries
   // the session cookies just set, and if there were none the gate's redirect
@@ -219,6 +221,7 @@ export function SignUpDone({ email, signInRequired }: Readonly<{ email: string; 
           variant="ghost"
           onClick={enter}
           disabled={leaving.active}
+          title={whyNot([leaving.active, "wait"])}
           aria-busy={leaving.active || undefined}
           className="h-12 rounded-full border-0 bg-ink px-6 text-[15px] text-white hover:bg-ink/90 disabled:opacity-100 sm:h-12 sm:text-[15px]"
         >

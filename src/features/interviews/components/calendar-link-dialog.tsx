@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IconBrandApple, IconBrandGoogle, IconBrandWindows, IconCheck, IconCopy, IconRefresh } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { useWhyNot } from "#/lib/use-why-not";
 
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#/components/ui/dialog";
 import { Skeleton } from "#/components/ui/skeleton";
@@ -41,6 +42,7 @@ function addLinks(link: InterviewCalendarLink, t: (key: "google" | "apple" | "ou
 export function CalendarLinkDialog({ open, onOpenChange }: Readonly<{ open: boolean; onOpenChange: (open: boolean) => void }>) {
   const queryClient = useQueryClient();
   const t = useTranslations("interviews.agenda");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
   const link = useQuery({ queryKey: interviewCalendarKey, queryFn: getInterviewCalendar, enabled: open, staleTime: Infinity });
   const [copied, setCopied] = useState(false);
@@ -144,6 +146,7 @@ export function CalendarLinkDialog({ open, onOpenChange }: Readonly<{ open: bool
                     <button
                       type="button"
                       disabled={reset.isPending}
+                      title={whyNot([reset.isPending, "wait"])}
                       onClick={() => reset.mutate()}
                       className="h-10 flex-1 rounded-full bg-ink font-medium text-white hover:bg-ink/90 disabled:opacity-60"
                     >

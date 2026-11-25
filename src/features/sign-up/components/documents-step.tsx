@@ -19,6 +19,7 @@ import type { BusinessCatalog } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { requiredDocuments } from "../required-documents";
 import { DocumentPreviewDialog } from "./document-preview";
+import { useWhyNot } from "#/lib/use-why-not";
 import { FormError, StepActions, StepHeading } from "./form-bits";
 
 export type UploadedDocument = { url: string; key: string; fileName: string; mimeType?: string };
@@ -185,6 +186,7 @@ export function DocumentsStep({
         onBack={onBack}
         onContinue={onDone}
         disabled={missing.length > 0}
+        reason={t("documents.missing", { list: missingText })}
       />
     </div>
   );
@@ -216,6 +218,7 @@ function DocumentRow({
   const input = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const t = useTranslations("signUp.documents");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
 
   async function upload(file: File) {
@@ -242,9 +245,10 @@ function DocumentRow({
       <button
         type="button"
         disabled={!doc}
+        title={whyNot([!doc, { say: t("noFile") }])}
         onClick={() => onView(type)}
         aria-label={doc ? t("previewOf", { title }) : undefined}
-        className="group flex min-w-0 flex-1 items-center gap-4 rounded-xl text-left disabled:cursor-default"
+        className="group flex min-w-0 flex-1 items-center gap-4 rounded-xl text-left"
       >
         <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-xl", doc ? "bg-whatsapp text-white" : "bg-card")}>
           {doc ? <IconCircleCheckFilled className="size-5" /> : <IconFileText className="size-5 text-muted-foreground" />}

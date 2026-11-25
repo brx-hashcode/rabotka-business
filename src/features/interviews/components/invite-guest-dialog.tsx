@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { useWhyNot } from "#/lib/use-why-not";
 import { IconLink, IconLock, IconX } from "@tabler/icons-react";
 
 import { ActionDialog } from "#/components/action-dialog";
@@ -61,6 +62,7 @@ export function InviteGuestDialog({
 }>) {
   const queryClient = useQueryClient();
   const t = useTranslations("interviews.guests");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
   const { member } = useMember();
   const key = interviewGuestsKey(i.id);
@@ -143,7 +145,7 @@ export function InviteGuestDialog({
                 maxLength={80}
                 className="h-12 flex-1 rounded-2xl border-0 bg-page px-4"
               />
-              <Button type="submit" className="h-12 rounded-full px-6 sm:h-12" disabled={!name.trim() || full} loading={invite.isPending}>
+              <Button type="submit" className="h-12 rounded-full px-6 sm:h-12" disabled={!name.trim() || full} title={whyNot([invite.isPending, "wait"], [full, { say: t("full", { max: MAX_GUESTS }) }], [!name.trim(), "complete"])} loading={invite.isPending}>
                 {again ? t("resend") : t("send")}
               </Button>
             </div>
@@ -194,7 +196,7 @@ export function InviteGuestDialog({
         </section>
 
         <div className="flex items-center justify-between gap-3">
-          <Button type="button" variant="ghost" className="h-11 rounded-full bg-page px-5 sm:h-11" onClick={() => void copy()} disabled={!i.location}>
+          <Button type="button" variant="ghost" className="h-11 rounded-full bg-page px-5 sm:h-11" onClick={() => void copy()} disabled={!i.location} title={whyNot([!i.location, { say: t("noLink") }])}>
             <IconLink className="size-4" />
             {t("copyLink")}
           </Button>

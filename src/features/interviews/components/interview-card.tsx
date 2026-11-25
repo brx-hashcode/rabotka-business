@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { useWhyNot } from "#/lib/use-why-not";
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -62,6 +63,7 @@ export function InterviewCard({ interview: i, past, focused = false }: Readonly<
   const queryClient = useQueryClient();
   const t = useTranslations("interviews.card");
   const ti = useTranslations("interviews");
+  const whyNot = useWhyNot();
   const locale = useLocale() as Locale;
   const friendlyError = useFriendlyError();
   const [moving, setMoving] = useState(false);
@@ -236,7 +238,7 @@ export function InterviewCard({ interview: i, past, focused = false }: Readonly<
                     </DropdownMenuItem>
                   )}
                   {editable && join?.internal && (
-                    <DropdownMenuItem disabled={!videoPlan.allowed} onSelect={() => setInviting(true)} className={MENU_ITEM}>
+                    <DropdownMenuItem disabled={!videoPlan.allowed} title={whyNot([videoPlan.loading, "loading"], [!videoPlan.allowed, "notInPlan"])} onSelect={() => setInviting(true)} className={MENU_ITEM}>
                       {videoPlan.allowed ? <IconUserPlus className="size-4" /> : <IconLock className="size-4" />}
                       {t("shareVideo")}
                     </DropdownMenuItem>

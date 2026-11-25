@@ -11,6 +11,7 @@ import { friendlyError } from "#/lib/api/friendly-error";
 import { answerInvitation, getInvitation } from "#/lib/api/interview-controller";
 import type { InterviewAnswer, InterviewInvitation } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 import { MODES } from "./interview-bits";
 
 const longWhen = (iso: string) => {
@@ -31,6 +32,7 @@ const ANSWERED: Partial<Record<InterviewInvitation["status"], { title: string; t
  * invitation e-mail: when, how, where, and three answers. No account needed.
  */
 export function InvitationPage({ token }: Readonly<{ token: string }>) {
+  const whyNot = useWhyNot();
   const queryClient = useQueryClient();
   const key = ["invitation", token];
   const query = useQuery({ queryKey: key, queryFn: () => getInvitation(token), retry: false });
@@ -194,6 +196,7 @@ export function InvitationPage({ token }: Readonly<{ token: string }>) {
                         <button
                           type="button"
                           disabled={answer.isPending || !note.trim()}
+                          title={whyNot([answer.isPending, "wait"], [!note.trim(), "write"])}
                           onClick={() => answer.mutate("RESCHEDULE_REQUESTED")}
                           className="h-12 flex-[2] rounded-full bg-ink font-medium text-white hover:bg-ink/90 disabled:opacity-40"
                         >
@@ -202,10 +205,10 @@ export function InvitationPage({ token }: Readonly<{ token: string }>) {
                       </div>
                       {done && (
                         <div className="flex gap-2 pt-1">
-                          <button type="button" disabled={answer.isPending} onClick={() => answer.mutate("CONFIRMED")} className="h-11 flex-1 rounded-full bg-page font-medium text-sm hover:bg-page/70">
+                          <button type="button" disabled={answer.isPending} title={whyNot([answer.isPending, "wait"])} onClick={() => answer.mutate("CONFIRMED")} className="h-11 flex-1 rounded-full bg-page font-medium text-sm hover:bg-page/70">
                             {confirmLabel}
                           </button>
-                          <button type="button" disabled={answer.isPending} onClick={() => answer.mutate("DECLINED")} className="h-11 flex-1 rounded-full bg-page font-medium text-sm hover:bg-page/70">
+                          <button type="button" disabled={answer.isPending} title={whyNot([answer.isPending, "wait"])} onClick={() => answer.mutate("DECLINED")} className="h-11 flex-1 rounded-full bg-page font-medium text-sm hover:bg-page/70">
                             Je décline
                           </button>
                         </div>
@@ -216,6 +219,7 @@ export function InvitationPage({ token }: Readonly<{ token: string }>) {
                       <button
                         type="button"
                         disabled={answer.isPending}
+                        title={whyNot([answer.isPending, "wait"])}
                         onClick={() => answer.mutate("CONFIRMED")}
                         className="h-12 w-full rounded-full bg-ink font-medium text-white hover:bg-ink/90 disabled:opacity-40"
                       >
@@ -228,6 +232,7 @@ export function InvitationPage({ token }: Readonly<{ token: string }>) {
                         <button
                           type="button"
                           disabled={answer.isPending}
+                          title={whyNot([answer.isPending, "wait"])}
                           onClick={() => answer.mutate("DECLINED")}
                           className="h-12 flex-1 rounded-full bg-page font-medium text-muted-foreground hover:bg-page/70 hover:text-foreground"
                         >

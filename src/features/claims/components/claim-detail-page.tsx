@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { useWhyNot } from "#/lib/use-why-not";
 import { useLayoutEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IconHeadset, IconLock, IconSend2 } from "@tabler/icons-react";
@@ -37,6 +38,7 @@ export function ClaimDetailPage({ id }: Readonly<{ id: string }>) {
   const queryClient = useQueryClient();
   const t = useTranslations("claims.detail");
   const tc = useTranslations("claims");
+  const whyNot = useWhyNot();
   const locale = useLocale();
   const friendlyError = useFriendlyError();
   const claim = useQuery({ queryKey: [...claimsKey, id], queryFn: () => getClaim(id), refetchInterval: 30_000 });
@@ -145,6 +147,7 @@ export function ClaimDetailPage({ id }: Readonly<{ id: string }>) {
                     type="submit"
                     aria-label={t("send")}
                     disabled={(!text.trim() && files.length === 0) || send.isPending}
+                    title={whyNot([send.isPending, "wait"], [!text.trim() && files.length === 0, "write"])}
                     className="flex size-12 shrink-0 items-center justify-center rounded-full bg-ink text-white hover:bg-ink/90 disabled:opacity-40"
                   >
                     <IconSend2 className="size-5" />

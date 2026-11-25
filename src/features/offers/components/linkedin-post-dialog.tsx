@@ -23,6 +23,7 @@ import {
   postOnLinkedin,
 } from "#/lib/api/linkedin-controller";
 import { cn, getInitials } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 import { defaultLinkedinText, linkedinDialogState, type LinkedinOfferText } from "../linkedin-post";
 import { offerShareLinks, offerShareUrl } from "../share-url";
 
@@ -46,6 +47,7 @@ export function LinkedinPostDialog({
 }: Readonly<{ open: boolean; onOpenChange: (open: boolean) => void; offer: LinkedinOffer; slug: string }>) {
   const queryClient = useQueryClient();
   const t = useTranslations("offers.linkedin");
+  const whyNot = useWhyNot();
   const locale = useLocale() as Locale;
   const friendlyError = useFriendlyError();
   const info = useQuery({ queryKey: linkedinKey, queryFn: getLinkedin, enabled: open });
@@ -175,7 +177,7 @@ export function LinkedinPostDialog({
                 <p className="text-sm">
                   {state === "expired" ? t("expired") : t("connectOnce")}
                 </p>
-                <button type="button" onClick={() => void connect()} disabled={connecting} className={`${BUTTON} ${LINKEDIN_BLUE} w-full`}>
+                <button type="button" onClick={() => void connect()} disabled={connecting} title={whyNot([connecting, "wait"])} className={`${BUTTON} ${LINKEDIN_BLUE} w-full`}>
                   {connecting ? <IconLoader2 className="size-4 animate-spin" /> : <IconBrandLinkedin className="size-4" />}
                   {state === "expired" ? t("reconnect") : t("connect")}
                 </button>
@@ -302,7 +304,7 @@ export function LinkedinPostDialog({
                     <p className="truncate font-medium">{account.name}</p>
                     <p className="text-muted-foreground text-xs">
                       {t("onFeed")}{" "}
-                      <button type="button" onClick={() => disconnect.mutate()} disabled={disconnect.isPending} className="underline underline-offset-2 hover:text-foreground">
+                      <button type="button" onClick={() => disconnect.mutate()} disabled={disconnect.isPending} title={whyNot([disconnect.isPending, "wait"])} className="underline underline-offset-2 hover:text-foreground">
                         {t("disconnect")}
                       </button>
                     </p>
@@ -313,6 +315,7 @@ export function LinkedinPostDialog({
                 type="button"
                 onClick={() => publish.mutate()}
                 disabled={publish.isPending || state === "pending" || !text.trim()}
+                title={whyNot([publish.isPending, "wait"], [state === "pending", { say: t("posting") }], [!text.trim(), "write"])}
                 className={`${BUTTON} ${LINKEDIN_BLUE} sm:min-w-52`}
               >
                 {publish.isPending ? <IconLoader2 className="size-4 animate-spin" /> : <IconBrandLinkedin className="size-4" />}

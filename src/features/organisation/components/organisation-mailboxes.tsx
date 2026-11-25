@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useWhyNot } from "#/lib/use-why-not";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IconPlus } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
@@ -19,6 +20,7 @@ import { disconnectMailbox, listMailboxes, mailboxesKey, PROVIDER_LABEL, type Ma
  */
 export function OrganisationMailboxes() {
   const t = useTranslations("organisation.mailboxes");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
   const queryClient = useQueryClient();
   const boxes = useQuery({ queryKey: mailboxesKey, queryFn: listMailboxes });
@@ -64,6 +66,7 @@ export function OrganisationMailboxes() {
                   <button
                     type="button"
                     disabled={pending !== null}
+                    title={whyNot([pending !== null, "wait"])}
                     onClick={() => void connect(box.provider)}
                     className="font-medium text-sm underline underline-offset-2 hover:no-underline disabled:opacity-50"
                   >
@@ -73,6 +76,7 @@ export function OrganisationMailboxes() {
                 <button
                   type="button"
                   disabled={disconnect.isPending}
+                  title={whyNot([disconnect.isPending, "wait"])}
                   onClick={() => setConfirm(box)}
                   className="font-medium text-muted-foreground text-sm hover:text-foreground disabled:opacity-50"
                 >
@@ -91,6 +95,7 @@ export function OrganisationMailboxes() {
               key={provider}
               type="button"
               disabled={pending !== null}
+              title={whyNot([pending !== null, "wait"])}
               onClick={() => void connect(provider)}
               className="group flex w-full items-center gap-3 rounded-2xl bg-page p-3 text-left transition-colors hover:bg-page/70 disabled:opacity-50"
             >
@@ -128,6 +133,7 @@ export function OrganisationMailboxes() {
                 <button
                   type="button"
                   disabled={disconnect.isPending}
+                  title={whyNot([disconnect.isPending, "wait"])}
                   onClick={() => setConfirm(null)}
                   className="h-12 flex-1 rounded-full bg-page font-medium hover:bg-page/70 disabled:opacity-50"
                 >
@@ -136,6 +142,7 @@ export function OrganisationMailboxes() {
                 <button
                   type="button"
                   disabled={disconnect.isPending}
+                  title={whyNot([disconnect.isPending, "wait"])}
                   onClick={() => disconnect.mutate(confirm.id)}
                   className="inline-flex h-12 flex-[1.4] items-center justify-center gap-2 rounded-full bg-destructive font-medium text-white hover:bg-destructive/90 disabled:opacity-60"
                 >

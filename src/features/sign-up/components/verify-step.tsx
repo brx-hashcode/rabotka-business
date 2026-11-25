@@ -8,6 +8,7 @@ import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { sendSignUpCode, verifySignUpCode } from "#/lib/api/signup-controller";
 import type { AccountValues } from "./account-step";
 import { CodeInput, completeCode } from "./code-input";
+import { useWhyNot } from "#/lib/use-why-not";
 import { FormError, StepActions, StepHeading } from "./form-bits";
 
 const RESEND_SECONDS = 60;
@@ -23,6 +24,7 @@ export function VerifyStep({
   onDone: (signupToken: string) => void;
 }>) {
   const t = useTranslations("signUp");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -86,6 +88,7 @@ export function VerifyStep({
           type="button"
           onClick={() => void resend()}
           disabled={cooldown > 0}
+          title={whyNot([cooldown > 0, { say: t("code.resendIn", { seconds: cooldown }) }])}
           className="font-medium underline-offset-4 hover:underline disabled:text-muted-foreground disabled:no-underline"
         >
           {cooldown > 0 ? t("code.resendIn", { seconds: cooldown }) : t("code.resend")}
