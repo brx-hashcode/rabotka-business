@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 
 import { BusinessLockup } from "#/components/business-lockup";
 import { LanguageSwitch } from "#/components/language-switch";
+import { ThemeButton, ThemeToggle } from "#/components/theme-toggle";
 import { LocalLink as Link } from "#/components/local-link";
 import { Button } from "#/components/ui/button";
 import {
@@ -55,10 +56,10 @@ export function LandingHeader() {
   const t = useTranslations("site.header");
   const { menus: MENUS, pages: PAGES } = useNav();
   return (
-    <header data-site-header className="bg-header/95 text-header-foreground backdrop-blur">
+    <header data-site-header className="on-lime bg-header/95 text-header-foreground backdrop-blur dark:bg-header">
       <div className="mx-auto flex h-18 w-full max-w-7xl items-center gap-6 px-4 sm:px-6">
         <Link href="/" aria-label={t("home")} className="shrink-0">
-          <BusinessLockup compact />
+          <BusinessLockup compact band />
         </Link>
 
         <nav aria-label={t("nav")} className="hidden items-center gap-1 lg:flex">
@@ -69,7 +70,7 @@ export function LandingHeader() {
             <Link
               key={page.href}
               href={page.href}
-              className="rounded-full px-3 py-2 font-medium text-sm transition-colors hover:bg-black/5"
+              className="whitespace-nowrap rounded-full px-3 py-2 font-medium text-sm transition-colors hover:bg-header-foreground/8"
             >
               {page.label}
             </Link>
@@ -77,24 +78,18 @@ export function LandingHeader() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          <ThemeButton className="hidden sm:inline-flex" />
           <Button
             variant="ghost"
             render={<Link href={SIGN_IN_HREF} />}
-            className="hidden h-12 rounded-full px-5 py-3 text-[15px] hover:bg-black/5 xl:inline-flex xl:h-12 xl:text-[15px]"
+            className="hidden h-12 rounded-full px-5 py-3 text-[15px] text-header-foreground hover:bg-header-foreground/8 hover:text-header-foreground md:inline-flex md:h-12 md:text-[15px] lg:hidden min-[72.5rem]:inline-flex"
           >
             {t("signIn")}
           </Button>
           <Button
             variant="ghost"
-            render={<Link href={SIGN_UP_HREF} />}
-            className="hidden h-12 rounded-full bg-card/70 px-5 py-3 text-[15px] hover:bg-card md:inline-flex md:h-12 md:text-[15px]"
-          >
-            {t("signUp")}
-          </Button>
-          <Button
-            variant="ghost"
             render={<Link href={DEMO_HREF} />}
-            className="h-10 rounded-full bg-ink px-4 py-2 text-sm text-white hover:bg-ink/90 sm:h-12 sm:px-6 sm:py-3 sm:text-[15px]"
+            className="h-10 rounded-full bg-cta px-4 py-2 text-sm text-cta-foreground hover:bg-cta/90 sm:h-12 sm:px-6 sm:py-3 sm:text-[15px]"
           >
             <span className="sm:hidden">{t("demoShort")}</span>
             <span className="hidden sm:inline">{t("demo")}</span>
@@ -109,7 +104,7 @@ export function LandingHeader() {
 function DesktopMenu({ label, links, wide }: Readonly<{ label: string; links: NavLink[]; wide?: boolean }>) {
   return (
     <DropdownMenu modal={false}>
-      <DropdownMenuTrigger className="group inline-flex items-center gap-1 rounded-full px-3 py-2 font-medium text-sm outline-none transition-colors hover:bg-black/5 focus-visible:ring-2 focus-visible:ring-ink/40 data-[state=open]:bg-black/5">
+      <DropdownMenuTrigger className="group inline-flex items-center gap-1 rounded-full px-3 py-2 font-medium text-sm outline-none transition-colors hover:bg-header-foreground/8 focus-visible:ring-2 focus-visible:ring-ink/40 data-[state=open]:bg-black/5">
         {label}
         <IconChevronDown className="size-4 transition-transform group-data-[state=open]:rotate-180" />
       </DropdownMenuTrigger>
@@ -137,7 +132,7 @@ function SolutionsPanel() {
           {GROUPS.map((group) => (
             <div key={group.step} className="space-y-1.5">
               <p className="flex items-center gap-2 px-2.5 pb-1">
-                <span className="flex h-5 min-w-7 items-center justify-center rounded-full bg-header px-1.5 font-semibold text-[10px] text-header-foreground tabular-nums">
+                <span className="flex h-5 min-w-7 items-center justify-center rounded-full bg-brand-lime px-1.5 font-semibold text-[10px] text-brand-lime-foreground tabular-nums">
                   {group.number}
                 </span>
                 <span className="font-semibold text-xs uppercase tracking-wide">{group.step}</span>
@@ -189,7 +184,7 @@ function SolutionsPanel() {
 
       <DropdownMenuItem
         asChild
-        className="group relative cursor-pointer flex-col items-stretch justify-between overflow-hidden rounded-2xl bg-ink p-4 text-white focus:bg-ink focus:text-white"
+        className="group relative cursor-pointer flex-col items-stretch justify-between overflow-hidden rounded-2xl bg-brand-lime-foreground p-4 text-white focus:bg-brand-lime-foreground focus:text-white"
       >
         <Link href={DEMO_HREF}>
           <Image
@@ -200,13 +195,13 @@ function SolutionsPanel() {
             className="object-cover opacity-90 transition-transform duration-500 group-hover:scale-105"
           />
           <span className="absolute inset-0 bg-linear-to-t from-black/90 via-black/45 to-black/10" />
-          <span className="relative w-fit rounded-full bg-header px-2.5 py-1 font-semibold text-[11px] text-header-foreground">
+          <span className="relative w-fit rounded-full bg-brand-lime px-2.5 py-1 font-semibold text-[11px] text-brand-lime-foreground">
             {t("nextGen")}
           </span>
           <span className="relative space-y-3">
             <span className="block font-semibold text-lg leading-snug">{t("demoTitle")}</span>
             <span className="block text-white/75 text-xs leading-snug">{t("demoText")}</span>
-            <span className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-full bg-white font-medium text-ink text-sm">
+            <span className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-full bg-white font-medium text-brand-lime-foreground text-sm">
               {t("demo")}
               <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </span>
@@ -259,7 +254,7 @@ function ResourcesPanel({ links }: Readonly<{ links: NavLink[] }>) {
         className="group cursor-pointer flex-col items-stretch justify-between gap-6 rounded-2xl bg-header p-4 text-header-foreground focus:bg-header focus:text-header-foreground"
       >
         <Link href={`/ressources/${guide.slug}`}>
-          <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-card/70 px-2.5 py-1 font-medium text-[11px]">
+          <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-1 font-medium text-[11px]">
             <IconClock className="size-3.5" />
             {t("guideMinutes", { minutes: guide.minutes })}
           </span>
@@ -281,6 +276,7 @@ function MobileMenu() {
   const [open, setOpen] = useState(false);
   const t = useTranslations("site.header");
   const tLanguage = useTranslations("common.language");
+  const tTheme = useTranslations("layout.theme");
   const GROUPS = stages(useSiteCopy());
   const { menus: MENUS, pages: PAGES } = useNav();
 
@@ -288,7 +284,7 @@ function MobileMenu() {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         aria-label={t("menu")}
-        className="inline-flex size-10 items-center justify-center rounded-full hover:bg-black/5 lg:hidden"
+        className="inline-flex size-10 items-center justify-center rounded-full hover:bg-header-foreground/8 lg:hidden"
       >
         <IconMenu2 className="size-5" />
       </SheetTrigger>
@@ -301,12 +297,16 @@ function MobileMenu() {
               <LanguageSwitch size="lg" />
             </div>
           )}
+          <div className="flex items-center justify-between pl-3">
+            <p className="font-medium text-muted-foreground text-xs">{tTheme("label")}</p>
+            <ThemeToggle className="bg-page" />
+          </div>
           <div className="space-y-3">
             <p className="px-3 font-medium text-muted-foreground text-xs">{t("features")}</p>
             {GROUPS.map((group) => (
               <div key={group.step} className="space-y-0.5">
                 <p className="flex items-center gap-2 px-3 pb-0.5">
-                  <span className="flex h-5 min-w-7 items-center justify-center rounded-full bg-header px-1.5 font-semibold text-[10px] text-header-foreground tabular-nums">
+                  <span className="flex h-5 min-w-7 items-center justify-center rounded-full bg-brand-lime px-1.5 font-semibold text-[10px] text-brand-lime-foreground tabular-nums">
                     {group.number}
                   </span>
                   <span className="font-semibold text-[11px] uppercase tracking-wide">{group.step}</span>
@@ -365,7 +365,7 @@ function MobileMenu() {
             <Button
               variant="ghost"
               render={<Link href={DEMO_HREF} onClick={() => setOpen(false)} />}
-              className="h-11 w-full rounded-full bg-ink text-base text-white hover:bg-ink/90"
+              className="h-11 w-full rounded-full bg-cta text-base text-cta-foreground hover:bg-cta/90"
             >
               {t("demo")}
             </Button>

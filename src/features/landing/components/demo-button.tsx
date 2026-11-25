@@ -14,7 +14,7 @@ export function DemoButton({ className, label }: Readonly<{ className?: string; 
       variant="ghost"
       size="xl"
       render={<Link href={DEMO_HREF} />}
-      className={cn("rounded-full bg-ink px-6 text-white hover:bg-ink/90", className)}
+      className={cn("rounded-full bg-cta px-6 text-cta-foreground hover:bg-cta/90 hover:text-cta-foreground", className)}
     >
       {label ?? t("demo")}
       <IconArrowRight />
@@ -30,7 +30,7 @@ export function SignUpButton({ className, label }: Readonly<{ className?: string
       variant="ghost"
       size="xl"
       render={<Link href={SIGN_UP_HREF} />}
-      className={cn("rounded-full bg-card/70 px-6 hover:bg-card", className)}
+      className={cn("rounded-full bg-cta-soft/70 px-6 text-cta-soft-foreground hover:bg-cta-soft hover:text-cta-soft-foreground", className)}
     >
       {label ?? t("signUp")}
     </Button>

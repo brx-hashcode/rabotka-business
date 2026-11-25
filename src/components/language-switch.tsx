@@ -49,7 +49,7 @@ export function LanguageSwitch({
               "rounded-full font-medium transition-colors",
               size === "sm" ? "px-3 py-1 text-xs uppercase" : "h-10 flex-1 px-4 text-[15px]",
               on && tone === "card" && "bg-selected text-selected-foreground",
-              on && tone === "inverse" && "bg-header text-header-foreground",
+              on && tone === "inverse" && "bg-brand-lime text-brand-lime-foreground",
               !on && tone === "card" && "text-muted-foreground hover:text-foreground",
               !on && tone === "inverse" && "text-white/70 hover:text-white",
             )}

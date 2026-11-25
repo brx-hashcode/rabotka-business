@@ -58,7 +58,7 @@
   --radius: 0.625rem;
   /* App shell: light grey page under the header band. */
   --page: #f1f4f8;
-  /* Brand lime band (header, hero, sign-in panel) with dark text on it. */
+  /* Brand lime band (the site's header and heroes) with dark text on it, in both themes. */
   --header: #cbffa5;
   /* Behind the phone browser's bars and on overscroll: the header's lime,
      so the status bar continues the band. Keep theme-color (layout.tsx) equal. */
@@ -67,9 +67,18 @@
   --header-muted: #3f5f3a;
   /* Dark ink for fills that need white on top (ticked checkboxes, active tabs). */
   --ink: #0f2414;
-  /* The brand lime as a fill (brand marks, accents), the same in both
-     themes — unlike --header, which darkens with the dark theme. */
+  /* The brand lime as a fill (brand marks, accents), the same in both themes. */
   --brand-lime: #cbffa5;
+  --brand-lime-foreground: #0f2414;
+  /* The site's main button, and the quieter one beside it. */
+  --cta: #0f2414;
+  --cta-foreground: #ffffff;
+  --cta-soft: #ffffff;
+  --cta-soft-foreground: oklch(0.145 0 0);
+  /* The site's footer, dark in both themes. */
+  --footer: #0b0f0c;
+  /* A marker stroke behind a few words of the hero. */
+  --mark: #87cefa;
   /* What is selected (active nav item, tab, toggle): the lime in the light
      theme, a quiet grey in the dark one, as in the admin. */
   --selected: #cbffa5;
@@ -324,6 +333,18 @@ a {
 }
 
 /* Brand loader (route loading): a bar sweeping left to right. */
+@keyframes glow {
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
 @keyframes loader-sweep {
   from {
     transform: translateX(-100%);
@@ -394,6 +415,12 @@ a {
   --color-header-muted: var(--header-muted);
   --color-ink: var(--ink);
   --color-brand-lime: var(--brand-lime);
+  --color-brand-lime-foreground: var(--brand-lime-foreground);
+  --color-cta: var(--cta);
+  --color-cta-foreground: var(--cta-foreground);
+  --color-cta-soft: var(--cta-soft);
+  --color-cta-soft-foreground: var(--cta-soft-foreground);
+  --color-footer: var(--footer);
   --color-chrome: var(--chrome);
   --color-selected: var(--selected);
   --color-selected-foreground: var(--selected-foreground);
@@ -450,7 +477,11 @@ a {
   --page: oklch(0.145 0 0);
   /* Buttons filled with ink stay readable on the dark page. */
   --ink: #2c7a45;
-  --header: oklch(0.12 0 0);
+  --cta: #cbffa5;
+  --cta-foreground: #0f2414;
+  --cta-soft: oklch(0.269 0 0);
+  --cta-soft-foreground: oklch(0.985 0 0);
+  --footer: oklch(0.185 0.006 150);
   --chrome: oklch(0.12 0 0);
   --selected: oklch(0.269 0 0);
   --selected-foreground: oklch(0.985 0 0);
@@ -495,6 +526,29 @@ a {
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
   --destructive-foreground: var(--color-red-400);
+}
+
+/* The site's main titles, in the logo's face. */
+@utility hero-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+/* On the lime band a lime button would vanish: the light theme's buttons. */
+.dark .bg-header,
+.dark .on-lime {
+  --cta: #0f2414;
+  --cta-foreground: #ffffff;
+  --cta-soft: #ffffff;
+  --cta-soft-foreground: #0f2414;
+}
+
+/* The site's phone bars continue its lime header, whatever the theme. */
+:root:has([data-site-header]) {
+  --chrome: var(--brand-lime);
 }
 
 /* Hide every scrollbar; scrolling (wheel, touch, keyboard) still works. */

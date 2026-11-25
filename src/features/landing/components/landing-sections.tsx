@@ -79,7 +79,7 @@ export function AudiencesSection() {
           ))}
           <Link
             href={SIGN_UP_HREF}
-            className="group relative isolate flex min-h-72 flex-col justify-end overflow-hidden rounded-3xl bg-ink p-6 text-white sm:p-7"
+            className="group relative isolate flex min-h-72 flex-col justify-end overflow-hidden rounded-3xl bg-brand-lime-foreground p-6 text-white sm:p-7"
           >
             <Image
               src={AUDIENCE_PHOTO}
@@ -88,10 +88,10 @@ export function AudiencesSection() {
               sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
               className="-z-10 object-cover transition-transform duration-700 group-hover:scale-105"
             />
-            <span aria-hidden className="absolute inset-0 -z-10 bg-linear-to-t from-ink via-ink/70 to-ink/10" />
+            <span aria-hidden className="absolute inset-0 -z-10 bg-linear-to-t from-brand-lime-foreground via-brand-lime-foreground/70 to-brand-lime-foreground/10" />
             <p className="font-semibold text-xl tracking-tight">{t("otherTitle")}</p>
             <p className="mt-2 text-sm text-white/80">{t("otherText")}</p>
-            <span className="mt-5 inline-flex items-center gap-1.5 self-start rounded-full bg-white px-4 py-2 font-medium text-ink text-sm">
+            <span className="mt-5 inline-flex items-center gap-1.5 self-start rounded-full bg-white px-4 py-2 font-medium text-brand-lime-foreground text-sm">
               {t("otherCta")}
               <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </span>

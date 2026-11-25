@@ -21,7 +21,7 @@ export function PageHero({
       >
         <div className={aside ? "space-y-6" : "mx-auto max-w-3xl space-y-6"}>
           {before}
-          <h1 className="font-semibold text-4xl leading-[1.08] tracking-tight sm:text-5xl">{title}</h1>
+          <h1 className="hero-title text-4xl sm:text-5xl">{title}</h1>
           <p className="text-header-muted text-lg">{text}</p>
           {actions && (
             <div className={aside ? "flex flex-wrap gap-3" : "flex flex-wrap justify-center gap-3"}>
