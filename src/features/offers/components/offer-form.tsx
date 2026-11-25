@@ -25,6 +25,7 @@ import { INTL_LOCALE, type Locale } from "#/i18n/config";
 import { contentLocale } from "#/i18n/content";
 import type { Translator } from "#/i18n/translator";
 import { cn } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 import { AVAILABLE_EMPLOYMENT_TYPES, EMPLOYMENT_TYPES, isDatedMission, PAYMENT_FLOWS } from "../offer-labels";
 import { cleanQuestions, questionProblem } from "../offer-questions";
 import { OfferAiDialog } from "./offer-ai-dialog";
@@ -190,6 +191,7 @@ export function OfferForm({
 }>) {
   const tLabels = useTranslations("labels");
   const t = useTranslations("offers.form");
+  const whyNot = useWhyNot();
   const tv = useTranslations("offers.form.v");
   const locale = useLocale() as Locale;
   const schema = useMemo(() => offerSchema(tv, locale), [tv, locale]);
@@ -430,6 +432,7 @@ export function OfferForm({
                   placeholder={country ? t("cityPlaceholder") : t("cityFirst")}
                   options={(cities ?? []).map((c) => ({ value: c, label: c }))}
                   disabled={!country}
+                  title={whyNot([!country, "countryFirst"])}
                 />
               </div>
             )}
@@ -526,6 +529,7 @@ function ComboField({
   placeholder: string;
   options: ComboboxOption[];
   disabled?: boolean;
+  title?: string;
 }>) {
   return (
     <FormField

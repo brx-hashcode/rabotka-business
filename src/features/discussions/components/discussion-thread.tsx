@@ -21,6 +21,7 @@ import type { DiscussionMessage } from "#/lib/api/discussions-controller";
 import { getMySubscription, mySubscriptionKey } from "#/lib/api/business-controller";
 import { INTL_LOCALE, type Locale } from "#/i18n/config";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
+import { useWhyNot } from "#/lib/use-why-not";
 import { useDiscussionsContent } from "../content";
 import { mergeThread } from "../merge-thread";
 import {
@@ -56,6 +57,7 @@ export function DiscussionThread({ id }: Readonly<{ id: string }>) {
   const discussionsContent = useDiscussionsContent();
   const content = discussionsContent.thread;
   const t = useTranslations("discussions");
+  const whyNot = useWhyNot();
   const tTime = useTranslations("common.time");
   const locale = useLocale();
   const friendlyError = useFriendlyError();
@@ -195,6 +197,7 @@ export function DiscussionThread({ id }: Readonly<{ id: string }>) {
                   <button
                     type="button"
                     disabled={history.isFetching}
+                    title={whyNot([history.isFetching, "wait"])}
                     onClick={() => {
                       stickToBottom.current = false;
                       if (historyWanted) void history.fetchNextPage();
@@ -271,6 +274,7 @@ export function DiscussionThread({ id }: Readonly<{ id: string }>) {
             type="submit"
             aria-label={content.send}
             disabled={!draft.trim() || send.isPending}
+            title={whyNot([send.isPending, "wait"], [!draft.trim(), "write"])}
             className="flex size-12 shrink-0 items-center justify-center rounded-full bg-ink text-white transition-opacity hover:bg-ink/90 disabled:opacity-40"
           >
             <IconSend2 className="size-5" />

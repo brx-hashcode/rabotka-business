@@ -4,6 +4,7 @@ import { useRef, type ClipboardEvent, type KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
 
 import { cn } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 
 export const CODE_LENGTH = 6;
 
@@ -28,6 +29,7 @@ export function CodeInput({
 }>) {
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
   const t = useTranslations("signUp.code");
+  const whyNot = useWhyNot();
   const digits = Array.from({ length: CODE_LENGTH }, (_, i) => value[i]?.trim() ?? "");
 
   function setAt(index: number, char: string) {
@@ -70,6 +72,7 @@ export function CodeInput({
           maxLength={1}
           aria-label={t("digit", { n: i + 1 })}
           disabled={disabled}
+          title={whyNot([disabled, "wait"])}
           className={cn(
             "size-12 shrink-0 rounded-xl bg-page text-center font-semibold text-lg outline-none transition-shadow sm:size-14 sm:text-xl",
             "focus-visible:ring-2 focus-visible:ring-whatsapp/40",

@@ -12,6 +12,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { draftOffer, mySubscriptionKey } from "#/lib/api/business-controller";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import type { OfferDraft, OfferDraftInput } from "#/lib/api/types";
+import { useWhyNot } from "#/lib/use-why-not";
 
 
 /**
@@ -33,6 +34,7 @@ export function OfferAiDialog({
 }>) {
   const queryClient = useQueryClient();
   const t = useTranslations("offers.ai");
+  const whyNot = useWhyNot();
   const trade = useTradeName();
   const friendlyError = useFriendlyError();
   const EXAMPLES = t.raw("examples") as string[];
@@ -132,6 +134,7 @@ export function OfferAiDialog({
               <button
                 type="button"
                 disabled={write.isPending || left === 0 || brief.trim().length < 3}
+                title={whyNot([write.isPending, "wait"], [left === 0, { say: t("noneLeft") }], [brief.trim().length < 3, "write"])}
                 onClick={() => write.mutate()}
                 className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-page font-medium hover:bg-page/70 disabled:opacity-40"
               >
@@ -162,6 +165,7 @@ export function OfferAiDialog({
               <button
                 type="button"
                 disabled={write.isPending || brief.trim().length < 3}
+                title={whyNot([write.isPending, "wait"], [brief.trim().length < 3, "write"])}
                 onClick={() => write.mutate()}
                 className="inline-flex h-12 flex-[2] items-center justify-center gap-2 rounded-full bg-ink font-medium text-white hover:bg-ink/90 disabled:opacity-40"
               >

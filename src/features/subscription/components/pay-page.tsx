@@ -23,6 +23,7 @@ import { BackLink } from "#/components/back-link";
 import { getMyPacks, getMySubscription, myBusinessKey, myPacksKey, mySubscriptionKey } from "#/lib/api/business-controller";
 import type { Translator } from "#/i18n/translator";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
+import { useWhyNot } from "#/lib/use-why-not";
 import { getPaymentByToken, getPaymentGateways, initiatePayment } from "#/lib/api/payment-controller";
 import type { BusinessPlan, PaymentOperator } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
@@ -73,6 +74,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
   const queryClient = useQueryClient();
   const t = useTranslations("subscription.pay");
   const ts = useTranslations("subscription");
+  const whyNot = useWhyNot();
   const locale = useLocale();
   const friendlyError = useFriendlyError();
   const payment = useQuery({ queryKey: ["payment", token], queryFn: () => getPaymentByToken(token), retry: false });
@@ -348,6 +350,7 @@ export function PayPage({ token }: Readonly<{ token: string }>) {
                     type="button"
                     onClick={() => void pay()}
                     disabled={sending || !gateways.data?.active}
+                    title={whyNot([sending, "wait"], [gateways.isPending, "loading"], [!gateways.data?.active, { say: t("unavailable") }])}
                     className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-ink font-semibold text-base text-white transition-colors hover:bg-ink/90 disabled:opacity-60"
                   >
                     {sending ? (

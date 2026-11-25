@@ -42,6 +42,7 @@ import { copyText } from "#/lib/clipboard";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import type { MyBusiness, UpdateMyBusiness } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 import { CareersPreview } from "./careers-preview";
 
 const MAX_PHOTOS = 6;
@@ -392,12 +393,14 @@ function DistributeSwitch({
   onChange,
 }: Readonly<{ on: boolean; pending: boolean; onChange: (on: boolean) => void }>) {
   const t = useTranslations("careersEditor");
+  const whyNot = useWhyNot();
   return (
     <button
       type="button"
       role="switch"
       aria-checked={on}
       disabled={pending}
+      title={whyNot([pending, "wait"])}
       onClick={() => onChange(!on)}
       className="flex w-full items-start gap-3 rounded-2xl bg-page p-4 text-left disabled:opacity-60"
     >
@@ -435,6 +438,7 @@ function CoverSection({
   onRemove,
 }: Readonly<{ coverUrl: string | null; busy: Busy | undefined; onUpload: (file: File) => void; onRemove: () => void }>) {
   const t = useTranslations("careersEditor");
+  const whyNot = useWhyNot();
   const picker = usePicker(onUpload);
   const working = busy === "cover";
   return (
@@ -449,6 +453,7 @@ function CoverSection({
               type="button"
               onClick={picker.open}
               disabled={!!busy}
+              title={whyNot([!!busy, "wait"])}
               className="inline-flex h-9 items-center gap-1.5 rounded-full bg-card/90 px-3.5 font-medium text-sm backdrop-blur disabled:opacity-60"
             >
               <IconPhotoPlus className="size-4" />
@@ -459,6 +464,7 @@ function CoverSection({
               aria-label={t("cover.remove")}
               onClick={onRemove}
               disabled={!!busy}
+              title={whyNot([!!busy, "wait"])}
               className="inline-flex size-9 items-center justify-center rounded-full bg-card/90 backdrop-blur disabled:opacity-60"
             >
               <IconTrash className="size-4" />
@@ -470,6 +476,7 @@ function CoverSection({
           type="button"
           onClick={picker.open}
           disabled={!!busy}
+          title={whyNot([!!busy, "wait"])}
           className="relative flex aspect-[4/1] w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl bg-page text-muted-foreground transition-colors hover:text-foreground"
         >
           {working ? (
@@ -496,6 +503,7 @@ function PresentationSection({
   onSave,
 }: Readonly<{ description: string; pending: boolean; onSave: (text: string) => void }>) {
   const t = useTranslations("careersEditor");
+  const whyNot = useWhyNot();
   const [text, setText] = useState(description);
   const dirty = text.trim() !== description.trim();
   return (
@@ -518,6 +526,7 @@ function PresentationSection({
               type="button"
               onClick={() => setText(description)}
               disabled={pending}
+              title={whyNot([pending, "wait"])}
               className="h-10 rounded-full px-4 font-medium text-muted-foreground text-sm hover:text-foreground"
             >
               {t("cancel")}
@@ -527,6 +536,7 @@ function PresentationSection({
             type="button"
             onClick={() => onSave(text.trim())}
             disabled={!dirty || pending}
+            title={whyNot([pending, "wait"], [!dirty, "noChange"])}
             className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-5 font-medium text-sm text-white disabled:opacity-50"
           >
             {pending && <Spinner className="size-4" />}
@@ -545,6 +555,7 @@ function PhotosSection({
   onRemove,
 }: Readonly<{ photos: string[]; busy: Busy | undefined; onAdd: (file: File) => void; onRemove: (index: number) => void }>) {
   const t = useTranslations("careersEditor");
+  const whyNot = useWhyNot();
   const picker = usePicker(onAdd);
   return (
     <Section
@@ -563,6 +574,7 @@ function PhotosSection({
               aria-label={t("photos.remove", { n: i + 1 })}
               onClick={() => onRemove(i)}
               disabled={!!busy}
+              title={whyNot([!!busy, "wait"])}
               className="absolute top-2 right-2 inline-flex size-8 items-center justify-center rounded-full bg-card/90 backdrop-blur transition-opacity disabled:opacity-60 sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
             >
               <IconTrash className="size-4" />
@@ -574,6 +586,7 @@ function PhotosSection({
             type="button"
             onClick={picker.open}
             disabled={!!busy}
+            title={whyNot([!!busy, "wait"])}
             className="flex aspect-[4/3] flex-col items-center justify-center gap-1.5 rounded-2xl bg-page text-muted-foreground transition-colors hover:text-foreground"
           >
             {busy === "photo" ? (
@@ -606,6 +619,7 @@ function BenefitsSection({
   language: Locale;
 }>) {
   const t = useTranslations("careersEditor");
+  const whyNot = useWhyNot();
   const [text, setText] = useState("");
   const full = benefits.length >= MAX_BENEFITS;
   const has = (b: string) => benefits.some((x) => x.toLowerCase() === b.toLowerCase());
@@ -639,6 +653,7 @@ function BenefitsSection({
                 aria-label={t("benefits.remove", { name: b })}
                 onClick={() => onChange(benefits.filter((x) => x !== b))}
                 disabled={pending}
+                title={whyNot([pending, "wait"])}
                 className="rounded-full p-0.5 hover:bg-black/10"
               >
                 <IconX className="size-3.5" />
@@ -666,6 +681,7 @@ function BenefitsSection({
             <button
               type="submit"
               disabled={!text.trim() || pending}
+              title={whyNot([pending, "wait"], [!text.trim(), "write"])}
               className="h-11 shrink-0 rounded-xl bg-ink px-4 font-medium text-sm text-white disabled:opacity-50"
             >
               {t("add")}
@@ -681,6 +697,7 @@ function BenefitsSection({
                     type="button"
                     onClick={() => add(b)}
                     disabled={pending}
+                    title={whyNot([pending, "wait"])}
                     className="inline-flex items-center gap-1 rounded-full bg-page py-1.5 pr-3 pl-2 text-muted-foreground text-sm hover:text-foreground disabled:opacity-60"
                   >
                     <IconPlus className="size-3.5" />

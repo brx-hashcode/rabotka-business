@@ -18,5 +18,18 @@
   },
   "backTo": "Retour : {label}",
   "close": "Fermer",
-  "logoAlt": "Logo Rabotka"
+  "logoAlt": "Logo Rabotka",
+  "whyNot": {
+    "wait": "Un instant, c'est en cours…",
+    "loading": "Chargement en cours…",
+    "write": "Écrivez d'abord votre texte.",
+    "complete": "Complétez les champs obligatoires.",
+    "noChange": "Aucun changement à enregistrer.",
+    "choose": "Faites d'abord un choix.",
+    "min": "Le minimum est atteint.",
+    "max": "Le maximum est atteint.",
+    "countryFirst": "Choisissez d'abord un pays.",
+    "locked": "Ces informations ne peuvent plus être modifiées.",
+    "notInPlan": "Non inclus dans votre formule."
+  }
 }

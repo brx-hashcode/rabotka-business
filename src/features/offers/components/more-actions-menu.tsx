@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import type { Translator } from "#/i18n/translator";
+import { useWhyNot } from "#/lib/use-why-not";
 import { cn } from "#/lib/utils";
 
 export type MoreAction = {
@@ -45,6 +46,7 @@ export function MoreActionsMenu({
   wide?: boolean;
 }>) {
   const t = useTranslations("offers.candidate");
+  const whyNot = useWhyNot();
   if (actions.length === 0) return null;
   return (
     <DropdownMenu modal={false}>
@@ -69,11 +71,12 @@ export function MoreActionsMenu({
             {a.tone === "danger" && i > 0 && actions[i - 1].tone !== "danger" && <DropdownMenuSeparator className="my-1" />}
             <DropdownMenuItem
               disabled={a.disabled}
+              title={a.disabled ? (a.hint ?? whyNot([true, "wait"])) : undefined}
               onSelect={a.onSelect}
               className={cn(
                 "cursor-pointer items-start gap-2.5 rounded-xl px-3 py-2.5 text-sm focus:bg-page",
                 a.tone === "danger" && "text-destructive focus:bg-destructive/10 focus:text-destructive",
-                a.disabled && "cursor-default opacity-60",
+                a.disabled && "opacity-60",
               )}
             >
               <a.icon className="mt-0.5 size-4 shrink-0" />

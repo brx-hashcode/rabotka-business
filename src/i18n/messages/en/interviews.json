@@ -221,6 +221,7 @@
     "onInvitation": "By invitation",
     "onInvitationText": "Everyone joins with their own link, without an account, from the day before the interview to 2 hours after it ends. Your team joins from its workspace.",
     "copyLink": "Copy the link",
+    "noLink": "This interview has no link yet.",
     "removeTitle": "Remove {name}'s access?",
     "removeText": "Their link will no longer work: they won't be able to join the call. You can add them again.",
     "remove": "Remove access",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useWhyNot } from "#/lib/use-why-not";
 import { useRef, useState } from "react";
 import { IconBuilding, IconCamera } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
@@ -23,6 +24,7 @@ export function OrganisationLogo({
   onUploaded,
 }: Readonly<{ name: string; logoUrl: string | null; onUploaded: (url: string) => void }>) {
   const t = useTranslations("organisation.logo");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
   const input = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState(false);
@@ -61,6 +63,7 @@ export function OrganisationLogo({
           type="button"
           onClick={() => input.current?.click()}
           disabled={pending}
+          title={whyNot([pending, "wait"])}
           aria-label={t("change")}
           className="absolute -right-1 -bottom-1 flex size-8 items-center justify-center rounded-full bg-ink text-white transition-colors hover:bg-ink/90 disabled:opacity-100"
         >

@@ -113,6 +113,7 @@
     "anyRating": "Any rating",
     "ratingMin": "{n} ★ and up",
     "reset": "Reset",
+    "nothingToReset": "No filter to clear.",
     "suggested": "Suggested for you",
     "fromOffers": "based on your jobs",
     "results": "Results",

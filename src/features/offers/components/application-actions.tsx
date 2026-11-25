@@ -38,6 +38,7 @@ import { INTL_LOCALE, type Locale } from "#/i18n/config";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { offersKey, type OfferApplicant } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 import { showApplicationStatus } from "../application-cache";
 import { fcfa } from "../offer-labels";
 import { canHire } from "#/features/team/member-access";
@@ -142,6 +143,7 @@ function Actions({
   const router = useRouter();
   const openChat = useOpenDiscussion();
   const t = useTranslations("offers.actions");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
   const [dialog, setDialog] = useState<Dialog>(null);
   // Set during render, not in an effect: each new request opens its dialog once.
@@ -236,6 +238,7 @@ function Actions({
     <button
       type="button"
       disabled={openChat.isPending}
+      title={whyNot([openChat.isPending, "wait"])}
       onClick={() =>
         openChat.mutate(chatId, {
           onSuccess: ({ conversation }) => router.push(`/espace/discussions/${conversation.id}`),
@@ -557,6 +560,7 @@ function RateDialog({
       description={t("rateText")}
       confirmLabel={t("rateConfirm")}
       confirmDisabled={score === 0}
+      confirmDisabledReason={t("rateFirst")}
       pending={pending}
       onConfirm={() => onConfirm(score, note.trim() || undefined)}
     >

@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useWhyNot } from "#/lib/use-why-not";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
 import { IconArrowUp, IconFileOff, IconFileTypePdf, IconInfoCircle, IconPlayerStopFilled, IconX } from "@tabler/icons-react";
@@ -76,6 +77,7 @@ export function ChatSheet({
   const queryClient = useQueryClient();
   const t = useTranslations("cv.sheet");
   const tCommon = useTranslations("common");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
   const key = queryKey;
   const chat = useQuery({ queryKey: key, queryFn: load, enabled: open });
@@ -212,7 +214,7 @@ export function ChatSheet({
                     <div className="min-w-0 space-y-1">{notice}</div>
                   </div>
                 )}
-                {thread.length === 0 && !live && data.available && <Intro intro={intro} suggestions={suggestions} onPick={(q) => void ask(q)} disabled={!canAsk} />}
+                {thread.length === 0 && !live && data.available && <Intro intro={intro} suggestions={suggestions} onPick={(q) => void ask(q)} disabled={!canAsk} title={whyNot([!!live, "wait"], [remaining <= 0, { say: t("noneLeft") }])} />}
                 {thread.map((m) => (
                   <Bubble key={m.id} role={m.role} text={m.content} note={m.note} />
                 ))}
@@ -266,6 +268,7 @@ export function ChatSheet({
                   placeholder={placeholder}
                   aria-label={t("questionLabel")}
                   disabled={!data}
+                  title={whyNot([!data, "loading"])}
                   className="field-sizing-content max-h-36 min-h-10 flex-1 resize-none bg-transparent px-3 py-2 text-[15px] outline-none placeholder:text-muted-foreground"
                 />
                 {live ? (
@@ -282,6 +285,7 @@ export function ChatSheet({
                     type="submit"
                     aria-label={t("send")}
                     disabled={!canAsk || !draft.trim()}
+                    title={whyNot([!data, "loading"], [!data?.available, "notInPlan"], [remaining <= 0, { say: t("noneLeft") }], [!draft.trim(), "write"])}
                     className="flex size-10 shrink-0 items-center justify-center rounded-full bg-ink text-white hover:bg-ink/90 disabled:opacity-30"
                   >
                     <IconArrowUp className="size-5" />
@@ -324,11 +328,13 @@ function Intro({
   intro,
   suggestions,
   disabled,
+  title,
   onPick,
 }: Readonly<{
   intro: { title: string; text: string };
   suggestions: string[];
   disabled: boolean;
+  title?: string;
   onPick: (q: string) => void;
 }>) {
   return (
@@ -345,6 +351,7 @@ function Intro({
             key={s}
             type="button"
             disabled={disabled}
+            title={title}
             onClick={() => onPick(s)}
             className="rounded-2xl bg-card px-4 py-3 text-left text-sm transition-colors hover:bg-card/70 disabled:opacity-50"
           >

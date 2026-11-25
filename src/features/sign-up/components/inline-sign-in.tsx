@@ -10,6 +10,7 @@ import { sendOtp } from "#/lib/api/auth-controller";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { verifySession } from "#/lib/auth/session-client";
 import { CodeInput, completeCode } from "./code-input";
+import { useWhyNot } from "#/lib/use-why-not";
 import { FormError, StepActions } from "./form-bits";
 
 const RESEND_SECONDS = 60;
@@ -23,6 +24,7 @@ const RESEND_SECONDS = 60;
 export function InlineSignIn({ email }: Readonly<{ email: string }>) {
   const queryClient = useQueryClient();
   const t = useTranslations("signUp");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -102,6 +104,7 @@ export function InlineSignIn({ email }: Readonly<{ email: string }>) {
         type="button"
         onClick={() => void resend()}
         disabled={cooldown > 0}
+        title={whyNot([cooldown > 0, { say: t("code.resendIn", { seconds: cooldown }) }])}
         className="font-medium text-sm underline-offset-4 hover:underline disabled:text-muted-foreground disabled:no-underline"
       >
         {cooldown > 0 ? t("code.resendIn", { seconds: cooldown }) : t("code.resend")}

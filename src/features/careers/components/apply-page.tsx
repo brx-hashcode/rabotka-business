@@ -24,6 +24,7 @@ import { SOURCE_KEY } from "#/features/careers/candidate-source";
 import { applyToOffer, getCareersOffer, type CareersQuestion } from "#/lib/api/careers-controller";
 import { friendlyError } from "#/lib/api/friendly-error";
 import { cn } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 import { appConfig } from "#/config";
 import { CareersShell, CompanyLogo } from "./careers-shell";
 
@@ -46,6 +47,7 @@ function sentFrom(param: string | null): string {
 }
 
 export function ApplyPage({ slug, reference }: Readonly<{ slug: string; reference: string }>) {
+  const whyNot = useWhyNot();
   const query = useQuery({
     queryKey: ["careers", slug, reference],
     queryFn: () => getCareersOffer(slug, reference),
@@ -256,6 +258,7 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
             <button
               type="submit"
               disabled={!ready || send.isPending}
+              title={whyNot([send.isPending, "wait"], [!ready, "complete"])}
               className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-ink font-semibold text-[17px] text-white disabled:opacity-50"
             >
               {send.isPending && <Loader className="size-5 animate-spin" />}

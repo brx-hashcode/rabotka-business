@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { useWhyNot } from "#/lib/use-why-not";
 import { useState } from "react";
 import Link from "next/link";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -273,6 +274,7 @@ function MemberRow({
 }: Readonly<{ member: TeamMember; seats: Team["seats"]; onRemove: () => void; onChanged: () => void }>) {
   const t = useTranslations("team.members");
   const tTeam = useTranslations("team");
+  const whyNot = useWhyNot();
   const tLabels = useTranslations("labels");
   const locale = useLocale();
   const friendlyError = useFriendlyError();
@@ -338,6 +340,7 @@ function MemberRow({
                 <DropdownMenuItem
                   key={r}
                   disabled={full || role.isPending}
+                  title={whyNot([role.isPending, "wait"], [full, { say: t("seatsTaken") }])}
                   onSelect={() => role.mutate(r)}
                   className="cursor-pointer flex-col items-start gap-0 rounded-xl px-3 py-2"
                 >
@@ -349,6 +352,7 @@ function MemberRow({
             {invited && (
               <DropdownMenuItem
                 disabled={resend.isPending}
+                title={whyNot([resend.isPending, "wait"])}
                 onSelect={() => resend.mutate()}
                 className="cursor-pointer gap-2 rounded-xl px-3 py-2 text-sm"
               >
@@ -374,6 +378,7 @@ function InviteDialog({
   onInvited,
 }: Readonly<{ open: boolean; onOpenChange: (open: boolean) => void; seats: Team["seats"]; onInvited: () => void }>) {
   const t = useTranslations("team.invite");
+  const whyNot = useWhyNot();
   const tTeam = useTranslations("team");
   const tLabels = useTranslations("labels");
   const friendlyError = useFriendlyError();
@@ -403,6 +408,7 @@ function InviteDialog({
       description={t("text")}
       confirmLabel={t("confirm")}
       confirmDisabled={!valid}
+      confirmDisabledReason={free(role) ? undefined : tTeam("members.seatsTaken")}
       pending={invite.isPending}
       onConfirm={() => valid && invite.mutate()}
     >
@@ -432,6 +438,7 @@ function InviteDialog({
               role="radio"
               aria-checked={role === r}
               disabled={!free(r)}
+              title={whyNot([!free(r), { say: tTeam("members.seatsTaken") }])}
               onClick={() => setRole(r)}
               className={cn(
                 "space-y-0.5 rounded-2xl p-3 text-left transition-colors disabled:opacity-50",
@@ -454,6 +461,7 @@ function InviteDialog({
 
 function Activity() {
   const t = useTranslations("team.activity");
+  const whyNot = useWhyNot();
   const tCommon = useTranslations("common");
   const locale = useLocale();
   const team = useQuery({ queryKey: teamKey, queryFn: getTeam });
@@ -531,6 +539,7 @@ function Activity() {
           type="button"
           onClick={() => void activity.fetchNextPage()}
           disabled={activity.isFetchingNextPage}
+          title={whyNot([activity.isFetchingNextPage, "wait"])}
           className="mx-auto flex h-10 items-center gap-2 rounded-full bg-card px-5 font-medium text-sm"
         >
           <IconPlus className="size-4" />

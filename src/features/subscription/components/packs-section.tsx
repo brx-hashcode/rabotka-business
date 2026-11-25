@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { buyPack } from "#/lib/api/business-controller";
 import { INTL_LOCALE, type Locale } from "#/i18n/config";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
+import { useWhyNot } from "#/lib/use-why-not";
 import type { MySubscription, PackKind } from "#/lib/api/types";
 import { PACK_KINDS, packUnits } from "../packs";
 import { usePacks } from "../use-packs";
@@ -87,6 +88,7 @@ function PackCard({ kind, quantity, priceFcfa }: Readonly<{ kind: PackKind; quan
   // In the organisation's country's currency; the total converted as a
   // whole, as checkout charges it, not unit by unit.
   const t = useTranslations("subscription");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
   const { price, ready } = useDisplayCurrency();
   const router = useRouter();
@@ -119,6 +121,7 @@ function PackCard({ kind, quantity, priceFcfa }: Readonly<{ kind: PackKind; quan
             type="button"
             aria-label={t("packs.less")}
             disabled={count <= 1 || buy.isPending}
+            title={whyNot([buy.isPending, "wait"], [count <= 1, "min"])}
             onClick={() => setCount((n) => Math.max(1, n - 1))}
             className="flex size-9 items-center justify-center rounded-xl bg-card hover:bg-card/70 disabled:opacity-40"
           >
@@ -135,6 +138,7 @@ function PackCard({ kind, quantity, priceFcfa }: Readonly<{ kind: PackKind; quan
             type="button"
             aria-label={t("packs.more")}
             disabled={count >= MAX_COUNT || buy.isPending}
+            title={whyNot([buy.isPending, "wait"], [count >= MAX_COUNT, "max"])}
             onClick={() => setCount((n) => Math.min(MAX_COUNT, n + 1))}
             className="flex size-9 items-center justify-center rounded-xl bg-card hover:bg-card/70 disabled:opacity-40"
           >
@@ -145,6 +149,7 @@ function PackCard({ kind, quantity, priceFcfa }: Readonly<{ kind: PackKind; quan
           type="button"
           onClick={() => buy.mutate()}
           disabled={buy.isPending}
+          title={whyNot([buy.isPending, "wait"])}
           className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-ink px-6 font-medium text-[15px] text-white transition-colors hover:bg-ink/90 disabled:opacity-60"
         >
           {buy.isPending ? <Loader className="size-5 animate-spin text-white" /> : ready ? t("packs.buyFor", { price: price(priceFcfa * count) }) : t("packs.buy")}

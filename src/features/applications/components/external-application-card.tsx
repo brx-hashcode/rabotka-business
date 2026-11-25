@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import Link from "next/link";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconAlertTriangle, IconArrowBackUp, IconCalendarPlus, IconChevronDown, IconDownload, IconFileOff, IconFileText, IconMail, IconPhone, IconRefresh, IconStar, IconStarOff, IconTrash, IconUsers } from "@tabler/icons-react";
 import { UserRoundCheck, UserRoundX } from "lucide-react";
 import { toast } from "sonner";
@@ -31,7 +31,6 @@ import {
   unretainExternalApplication,
   type ExternalApplication,
 } from "#/lib/api/careers-controller";
-import { cvScreeningsKey, getCvScreening } from "#/lib/api/cv-screening-controller";
 import { mySubscriptionKey } from "#/lib/api/business-controller";
 import { sourceLabel } from "#/features/careers/candidate-source";
 import { showExternalStatus } from "#/features/offers/application-cache";
@@ -46,6 +45,7 @@ import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
 import { TeamOpinionButton } from "#/features/team/components/team-opinion";
 import type { Verdict } from "#/lib/api/candidate-notes-controller";
+import { useWhyNot } from "#/lib/use-why-not";
 
 /** The analysis has more to show than its score and summary. */
 export function hasInsight(a: CvAnalysis) {
@@ -91,6 +91,7 @@ export function ExternalApplicationCard({
 }>) {
   const tLabels = useTranslations("labels");
   const t = useTranslations("offers.candidate");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
   const queryClient = useQueryClient();
   const name = `${a.firstName} ${a.lastName}`.trim();
@@ -122,14 +123,6 @@ export function ExternalApplicationCard({
   const canAnalyse = (!a.analysis || analysisFailed) && !analysingNow && a.status === "PENDING" && recruiting(a) && a.hasCv;
   const blocked = canAnalyse && cvBlock !== null;
   const insight = score !== null && !!a.analysis && hasInsight(a.analysis);
-  // Chat reads the resume as Analyse de CV holds it.
-  // One request per screening, shared by every card of the offer; each picks its own.
-  const resume = useQuery({
-    queryKey: [...cvScreeningsKey, a.analysis?.screeningId],
-    queryFn: () => getCvScreening(a.analysis?.screeningId as string),
-    select: (s) => s.resumes.find((r) => r.id === a.analysis?.resumeId) ?? null,
-    enabled: score !== null,
-  });
   const [message, setMessage] = useState("");
   const [reading, setReading] = useState(false);
   const cvUrl = `/api/v1/business/me/external-applications/${encodeURIComponent(a.id)}/cv`;
@@ -273,6 +266,7 @@ export function ExternalApplicationCard({
             <Checkbox
               checked={compare.selected}
               disabled={compare.disabled}
+              title={whyNot([compare.disabled, "max"])}
               onCheckedChange={compare.onToggle}
               aria-label={t("compareAria", { name })}
               className="size-5 rounded-md"
@@ -380,7 +374,8 @@ export function ExternalApplicationCard({
         {score !== null && (
           <button
             type="button"
-            disabled={!resume.data}
+            disabled={a.cvRemoved}
+            title={a.cvRemoved ? t("cvRemovedByTeam") : undefined}
             onClick={() => setChatting(true)}
             className="inline-flex h-10 shrink-0 items-center rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm disabled:opacity-60"
           >
@@ -477,13 +472,13 @@ export function ExternalApplicationCard({
         onConfirm={() => analyse.mutate()}
       />
 
-      {chatting && a.analysis && resume.data && (
+      {chatting && a.analysis && (
         <CvChatSheet
           open={chatting}
           onOpenChange={setChatting}
           screeningId={a.analysis.screeningId}
           jobTitle={a.offer.title}
-          resume={{ ...resume.data, score }}
+          resume={{ id: a.analysis.resumeId, score, name }}
         />
       )}
 

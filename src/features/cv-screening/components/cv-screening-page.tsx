@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { useWhyNot } from "#/lib/use-why-not";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -66,6 +67,7 @@ const WAITING_SHOWN = 6;
 export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
   const router = useRouter();
   const t = useTranslations("cv.result");
+  const whyNot = useWhyNot();
   const tLabels = useTranslations("labels");
   const locale = useLocale() as Locale;
   const friendlyError = useFriendlyError();
@@ -142,6 +144,7 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
             type="button"
             onClick={() => exportCsv(s, t, (k) => tLabels(`criterion.${k}`), (score) => tLabels(`verdict.${band(score).level}`), locale)}
             disabled={scored.length === 0}
+            title={whyNot([scored.length === 0, { say: t("nothingToExport") }])}
             className="inline-flex h-11 items-center gap-2 rounded-full bg-card px-4 font-medium text-sm hover:bg-card/70 disabled:opacity-40"
           >
             <IconDownload className="size-4" />
@@ -528,7 +531,9 @@ function ResumeCard({
         <button
           type="button"
           onClick={() => setChatOpen(true)}
-          className="hidden h-10 shrink-0 items-center gap-2 rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm transition-colors hover:bg-brand-lime/80 sm:inline-flex"
+          disabled={r.removed}
+          title={r.removed ? t("cvRemoved") : undefined}
+          className="hidden h-10 shrink-0 items-center gap-2 rounded-full bg-brand-lime px-4 font-medium text-[#0f2414] text-sm transition-colors not-disabled:hover:bg-brand-lime/80 disabled:opacity-60 sm:inline-flex"
         >
           {t("ask")}
         </button>
@@ -537,7 +542,9 @@ function ResumeCard({
       <button
         type="button"
         onClick={() => setChatOpen(true)}
-        className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full bg-brand-lime font-medium text-[#0f2414] text-sm transition-colors hover:bg-brand-lime/80 sm:hidden"
+        disabled={r.removed}
+        title={r.removed ? t("cvRemoved") : undefined}
+        className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full bg-brand-lime font-medium text-[#0f2414] text-sm transition-colors not-disabled:hover:bg-brand-lime/80 disabled:opacity-60 sm:hidden"
       >
         {t("ask")}
       </button>
@@ -549,7 +556,7 @@ function ResumeCard({
           jobTitle={jobTitle}
         />
       )}
-      <CvChatSheet open={chatOpen} onOpenChange={setChatOpen} screeningId={screeningId} jobTitle={jobTitle} resume={r} />
+      <CvChatSheet open={chatOpen} onOpenChange={setChatOpen} screeningId={screeningId} jobTitle={jobTitle} resume={{ id: r.id, score: r.score, name }} />
       <DeleteCvDialog
         target={{ kind: "analysis", screeningId, resumeId: r.id }}
         name={name}

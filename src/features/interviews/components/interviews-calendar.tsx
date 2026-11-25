@@ -5,6 +5,7 @@ import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useQuery } from "@tanstack/react-query";
 import { format, isSameDay, isSameMonth, isToday } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
+import { useWhyNot } from "#/lib/use-why-not";
 import { IconCalendarEvent, IconChevronLeft, IconChevronRight, IconDownload, IconVideo } from "@tabler/icons-react";
 import { toast } from "sonner";
 
@@ -49,6 +50,7 @@ const hhmm = (d: Date) => format(d, "HH:mm");
 /** The interviews in a month or a week; a click opens the same card as the list. */
 export function InterviewsCalendar() {
   const t = useTranslations("interviews.calendar");
+  const whyNot = useWhyNot();
   const ti = useTranslations("interviews");
   const locale = useLocale() as Locale;
   const friendlyError = useFriendlyError();
@@ -103,6 +105,7 @@ export function InterviewsCalendar() {
         <button
           type="button"
           disabled={!query.data}
+          title={whyNot([!query.data, "loading"])}
           onClick={exportPeriod}
           className="inline-flex h-9 items-center gap-2 rounded-full bg-page px-4 font-medium text-sm hover:bg-page/70 disabled:opacity-50"
         >

@@ -221,6 +221,7 @@
     "onInvitation": "Sur invitation",
     "onInvitationText": "Chacun entre avec son propre lien, sans compte, de la veille de l'entretien à 2 heures après la fin. Votre équipe rejoint depuis son espace.",
     "copyLink": "Copier le lien",
+    "noLink": "Cet entretien n'a pas encore de lien.",
     "removeTitle": "Retirer l'accès de {name} ?",
     "removeText": "Son lien ne fonctionnera plus : il ne pourra pas rejoindre la visio. Vous pourrez l'ajouter à nouveau.",
     "remove": "Retirer l'accès",

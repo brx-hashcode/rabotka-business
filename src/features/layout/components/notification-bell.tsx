@@ -20,6 +20,7 @@ import {
 } from "#/lib/api/notification-controller";
 import { INTL_LOCALE, type Locale } from "#/i18n/config";
 import { cn } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 import { notificationLook } from "../notification-look";
 import { useNotificationsSocket } from "../use-notifications-socket";
 import { pollEvery } from "../socket-status";
@@ -34,6 +35,7 @@ const PAGE = 20;
 export function NotificationBell() {
   const router = useRouter();
   const t = useTranslations();
+  const whyNot = useWhyNot();
   const queryClient = useQueryClient();
   useNotificationsSocket();
   const [open, setOpen] = useState(false);
@@ -124,6 +126,7 @@ export function NotificationBell() {
               type="button"
               onClick={() => readAll.mutate()}
               disabled={readAll.isPending}
+              title={whyNot([readAll.isPending, "wait"])}
               className="-mr-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-medium text-muted-foreground text-xs transition-colors hover:bg-page hover:text-foreground disabled:opacity-60"
             >
               <IconChecks className="size-4" />
@@ -139,6 +142,7 @@ export function NotificationBell() {
                 type="button"
                 onClick={() => setLimit((l) => l + PAGE)}
                 disabled={feed.isFetching}
+                title={whyNot([feed.isFetching, "loading"])}
                 className="w-full rounded-full bg-page py-2.5 font-medium text-sm transition-colors hover:bg-page/70 disabled:opacity-60"
               >
                 {feed.isFetching ? t("common.loading") : t("common.seeMore")}

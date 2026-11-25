@@ -15,6 +15,7 @@ import type { Translator } from "#/i18n/translator";
 import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { listOffers, offersKey, type OfferListItem, type OfferStatus } from "#/lib/api/offer-controller";
 import { cn } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 import { fcfa, offerChip, offerDate } from "../offer-labels";
 import { offersFull, offersUsed } from "#/features/subscription/offers-quota";
 import { canHire } from "#/features/team/member-access";
@@ -41,6 +42,7 @@ export function OffersPage() {
   const locale = useLocale() as Locale;
   const friendlyError = useFriendlyError();
   const tCommon = useTranslations("common");
+  const whyNot = useWhyNot();
   // The tab lives in the URL (?onglet=), so a reload or a shared link keeps it.
   const [tab, setTab] = useQueryState("onglet", parseAsStringLiteral(TABS.map((x) => x.key)).withDefault("all"));
   const statuses = TABS.find((x) => x.key === tab)?.statuses;
@@ -164,6 +166,7 @@ export function OffersPage() {
             type="button"
             onClick={() => void fetchNextPage()}
             disabled={isFetchingNextPage}
+            title={whyNot([isFetchingNextPage, "wait"])}
             className="rounded-full bg-card px-5 py-2 font-medium text-sm hover:bg-card/70"
           >
             {isFetchingNextPage ? tCommon("loading") : tCommon("seeMore")}

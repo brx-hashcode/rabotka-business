@@ -206,7 +206,7 @@ export type BusinessPlan = {
   priorityVisibility: boolean;
   /** « Publier sur LinkedIn » from Rabotka. Absent before the service. */
   linkedinPosting?: boolean;
-  /** « Exports RH »: candidates, staff register, ACPE. Absent before the service. */
+  /** « Exports RH »: candidates, staff register. Absent before the service. */
   hrExports?: boolean;
   /** « Visio dans Rabotka »: link made in Rabotka, guests, transcription. Absent before the service. */
   videoInterviews?: boolean;
@@ -269,7 +269,7 @@ export type MySubscription = {
     priorityVisibility: boolean;
     /** « Publier sur LinkedIn » from Rabotka (the share link is open to all). */
     linkedinPosting?: boolean;
-    /** « Exports RH »: candidates, staff register, ACPE declaration. */
+    /** « Exports RH »: candidates, staff register. */
     hrExports?: boolean;
     /** « Visio dans Rabotka »: link made in Rabotka, guests, transcription. */
     videoInterviews?: boolean;

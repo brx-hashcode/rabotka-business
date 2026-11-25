@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { useWhyNot } from "#/lib/use-why-not";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -324,6 +325,7 @@ function HostCallArea({
 
 export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
   const tv = useTranslations("interviews.visio");
+  const whyNot = useWhyNot();
   const locale = useLocale() as Locale;
   const friendlyError = useFriendlyError();
   const [left, setLeft] = useState(false);
@@ -406,6 +408,7 @@ export function InterviewVisioPage({ room }: Readonly<{ room: string }>) {
                 className="h-10 shrink-0 rounded-full bg-card px-4 text-sm sm:h-10"
                 aria-label={tv("share")}
                 disabled={!videoPlan.allowed}
+                title={whyNot([!videoPlan.allowed, { say: tv("shareLocked") }])}
                 onClick={() => setSharing(true)}
               >
                 {videoPlan.allowed ? <IconUserPlus className="size-4" /> : <IconLock className="size-4" />}

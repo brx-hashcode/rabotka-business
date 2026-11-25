@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { useWhyNot } from "#/lib/use-why-not";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -63,6 +64,7 @@ type Props = {
 export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: Readonly<Props>) {
   const queryClient = useQueryClient();
   const tr = useTranslations("interviews.report");
+  const whyNot = useWhyNot();
   const locale = useLocale() as Locale;
   const friendlyError = useFriendlyError();
   const key = interviewReportKey(interviewId);
@@ -249,12 +251,12 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
           )}
           {reportLocked ? (
             // Not clickable, the reason said in the button itself.
-            <Button type="button" variant="ghost" className="h-11 flex-1 rounded-full bg-page text-sm sm:h-11" disabled>
+            <Button type="button" variant="ghost" className="h-11 flex-1 rounded-full bg-page text-sm sm:h-11" disabled title={whyNot([true, "notInPlan"])}>
               <IconLock className="size-4" />
               {tr("locked")}
             </Button>
           ) : (
-            <Button type="button" className="h-11 flex-1 rounded-full text-sm sm:h-11" disabled={!enough || writing} loading={write.isPending} onClick={() => write.mutate()}>
+            <Button type="button" className="h-11 flex-1 rounded-full text-sm sm:h-11" disabled={!enough || writing} title={whyNot([writing, "wait"], [!enough, { say: tr("notEnough") }])} loading={write.isPending} onClick={() => write.mutate()}>
               {report ? <IconRefresh className={cn("size-4", writing && "animate-spin")} /> : <IconFileText className="size-4" />}
               {writing ? tr("writing") : report ? tr("rewrite") : tr("write")}
             </Button>
@@ -327,12 +329,14 @@ export function InterviewReportPanel({ interviewId, candidateName, jobTitle }: R
                 <WritingNotice again />
               </div>
             )}
-            <div className={cn("min-h-0 flex-1 px-5 pb-5 lg:overflow-y-auto", writing && "pointer-events-none opacity-50")}>
+            <div aria-disabled={writing || undefined} title={whyNot([writing, "wait"])} className="min-h-0 flex-1 px-5 pb-5 lg:overflow-y-auto">
+              <div className={cn(writing && "pointer-events-none opacity-50")}>
               {editing ? (
                 <ReportEditor value={editing} onChange={setEditing} onCancel={() => setEditing(null)} onSave={() => edit.mutate(editing)} pending={edit.isPending} />
               ) : (
                 <ReportView report={report} />
               )}
+              </div>
             </div>
           </>
         )}
@@ -641,6 +645,7 @@ function SendDialog({
 }: Readonly<{ interviewId: string; onClose: () => void; onSent: (r: InterviewReport) => void }>) {
   const team = useQuery({ queryKey: teamKey, queryFn: getTeam });
   const tr = useTranslations("interviews.report");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
   const members = (team.data?.members ?? []).filter((m) => m.status === "ACTIVE");
   const [picked, setPicked] = useState<Set<string> | null>(null);
@@ -688,7 +693,7 @@ function SendDialog({
           <Button type="button" variant="ghost" className="h-10 rounded-full bg-page px-4" onClick={onClose}>
             {tr("cancel")}
           </Button>
-          <Button type="button" className="h-10 rounded-full px-4" disabled={chosen.size === 0} loading={send.isPending} onClick={() => send.mutate()}>
+          <Button type="button" className="h-10 rounded-full px-4" disabled={chosen.size === 0} title={whyNot([send.isPending, "wait"], [chosen.size === 0, "choose"])} loading={send.isPending} onClick={() => send.mutate()}>
             {tr("sendButton")}
           </Button>
         </div>

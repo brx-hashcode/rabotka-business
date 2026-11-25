@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { useWhyNot } from "#/lib/use-why-not";
 import { trialLocks } from "#/features/subscription/trial-lock";
 import { cvOutOfReach, packCredits, PACKS_HREF } from "#/features/subscription/packs";
 import { usePackOnSale } from "#/features/subscription/use-packs";
@@ -58,6 +59,7 @@ const SORTS = [{ key: "recent" }, { key: "best" }] as const;
 /** « Analyse de CV »: the figures first, then the analyses, findable and sortable. */
 export function CvScreeningsPage() {
   const t = useTranslations("cv.list");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
   const subscription = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription });
   const screenings = useQuery({ queryKey: [...cvScreeningsKey, "list"], queryFn: () => listCvScreenings(0, 50) });
@@ -96,7 +98,12 @@ export function CvScreeningsPage() {
           <Link
             href="/espace/analyse-cv/nouvelle"
             aria-disabled={e?.cvRemaining === 0}
-            className="inline-flex h-12 items-center gap-2 rounded-full bg-ink px-5 font-medium text-white hover:bg-ink/90 aria-disabled:pointer-events-none aria-disabled:opacity-40"
+            title={whyNot([e?.cvRemaining === 0, { say: t("allUsed") }])}
+            tabIndex={e?.cvRemaining === 0 ? -1 : undefined}
+            onClick={(ev) => {
+              if (e?.cvRemaining === 0) ev.preventDefault();
+            }}
+            className="inline-flex h-12 items-center gap-2 rounded-full bg-ink px-5 font-medium text-white hover:bg-ink/90 aria-disabled:opacity-40"
           >
             <IconPlus className="size-4" />
             {t("new")}

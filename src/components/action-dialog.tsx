@@ -6,6 +6,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 
 import { Button } from "#/components/ui/button";
 import { cn } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 
 /**
  * Confirmation for an action. A centred card on desktop, a sheet rising
@@ -23,6 +24,7 @@ export function ActionDialog({
   onConfirm,
   pending,
   confirmDisabled,
+  confirmDisabledReason,
   tone = "default",
   hideCancel = false,
 }: Readonly<{
@@ -36,11 +38,14 @@ export function ActionDialog({
   onConfirm: () => void;
   pending?: boolean;
   confirmDisabled?: boolean;
+  /** Why the confirm button is disabled; « Complétez les champs obligatoires » when not said. */
+  confirmDisabledReason?: string;
   tone?: "default" | "warning";
   /** A result to acknowledge, not a choice: a single full-width button. */
   hideCancel?: boolean;
 }>) {
   const t = useTranslations("ui");
+  const whyNot = useWhyNot();
   return (
     <DialogPrimitive.Root
       open={open}
@@ -94,7 +99,7 @@ export function ActionDialog({
 
           <div className={cn("grid gap-2", !hideCancel && "grid-cols-2")}>
             {!hideCancel && (
-              <DialogPrimitive.Close asChild disabled={pending}>
+              <DialogPrimitive.Close asChild disabled={pending} title={whyNot([pending, "wait"])}>
                 <Button size="lg" variant="secondary" className="rounded-full">
                   {t("cancel")}
                 </Button>
@@ -105,6 +110,7 @@ export function ActionDialog({
               className="rounded-full"
               loading={pending}
               disabled={confirmDisabled}
+              title={whyNot([pending, "wait"], [confirmDisabled, confirmDisabledReason ? { say: confirmDisabledReason } : "complete"])}
               onClick={onConfirm}
             >
               {confirmLabel}

@@ -26,6 +26,7 @@ import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { externalApplicationsKey, listExternalApplications } from "#/lib/api/careers-controller";
 import { listReceivedApplications, offersKey, type ReceivedApplication } from "#/lib/api/offer-controller";
 import { cn, getInitials } from "#/lib/utils";
+import { useWhyNot } from "#/lib/use-why-not";
 import { TeamOpinionButton } from "#/features/team/components/team-opinion";
 import { canHire } from "#/features/team/member-access";
 import { useMember } from "#/features/team/use-member";
@@ -44,6 +45,7 @@ const TABS: { key: "all" | ApplicationStage }[] = [{ key: "new" }, { key: "viewe
  */
 export function ApplicationsPage() {
   const t = useTranslations("applications");
+  const whyNot = useWhyNot();
   const friendlyError = useFriendlyError();
   const query = useInfiniteQuery({
     queryKey: [...offersKey, "received"],
@@ -215,6 +217,7 @@ export function ApplicationsPage() {
               type="button"
               onClick={() => void query.fetchNextPage()}
               disabled={query.isFetchingNextPage}
+              title={whyNot([query.isFetchingNextPage, "wait"])}
               className="rounded-full bg-page px-5 py-2 font-medium text-sm hover:bg-page/70"
             >
               {query.isFetchingNextPage ? t("loadingMore") : t("loadOlder", { count: total - all.length })}
