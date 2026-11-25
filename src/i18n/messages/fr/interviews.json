@@ -228,6 +228,10 @@
     "removeOf": "Retirer l'accès de {name}"
   },
   "visio": {
+    "opening": "Ouverture de la visio…",
+    "openingHint": "La première fois, cela peut prendre quelques secondes.",
+    "openingSlow": "C'est plus long que d'habitude. Vérifiez votre connexion, puis réessayez.",
+    "retry": "Réessayer",
     "newTab": "La visio s'ouvre dans un nouvel onglet.",
     "join": "Rejoindre la visio",
     "ended": "Entretien terminé.",

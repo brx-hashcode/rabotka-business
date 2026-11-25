@@ -39,6 +39,7 @@ import { ScheduleInterviewDialog } from "./schedule-interview-dialog";
 import { InviteGuestDialog } from "./invite-guest-dialog";
 import { InterviewReportDialog } from "./interview-report-panel";
 import { useVideoPlan } from "../use-video-plan";
+import { isRabotkaVisio } from "../visio-warm";
 
 /** « aujourd'hui », « demain », or the weekday: the card already shows the date. */
 function dayWord(at: Date, t: (key: "today" | "tomorrow") => string, locale: Locale): string {
@@ -308,11 +309,3 @@ async function copyLink(url: string, rabotka: boolean, t: (key: "candidateLink" 
 const JOIN =
   "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-primary px-3 font-medium text-primary-foreground text-xs transition-colors hover:bg-primary/90";
 
-/** A room made by « Créer un lien de visio »: opened here, not in a new tab. */
-function isRabotkaVisio(location: string): boolean {
-  try {
-    return new URL(location).pathname.startsWith("/visio/Rabotka-");
-  } catch {
-    return false;
-  }
-}
