@@ -430,6 +430,29 @@ export type CvScreeningSummary = {
   bands: { very: number; good: number; partial: number; low: number };
 };
 
+/** Where a mark was read: the CV's own words, or an answer's. */
+export type CvQuote = { text: string; from: "CV" | "ANSWER" };
+
+/** « Pourquoi ce score », on the offer's own criteria. Null: scored by the previous method. */
+export type CvScoring = {
+  gridId: string;
+  version: number;
+  missing: number;
+  criteria: {
+    key: string;
+    family: string;
+    label: string;
+    importance: number;
+    /** Null: the CV does not show it; it counts 0. */
+    mark: number | null;
+    points: number;
+    max: number;
+    quote: CvQuote | null;
+    asked?: { label: string; found: boolean; quote: CvQuote | null }[];
+  }[];
+  musts: { key: string; family: string; label: string; status: "MET" | "MISSING" | "UNCLEAR"; quote: CvQuote | null }[];
+};
+
 export type CvResume = {
   id: string;
   /**
@@ -448,6 +471,8 @@ export type CvResume = {
   status: CvResumeStatus;
   score: number | null;
   criteria: Partial<Record<CvCriterion, number>> | null;
+  /** Absent from an older backend. */
+  scoring?: CvScoring | null;
   summary: string | null;
   strengths: string[];
   gaps: string[];
@@ -635,6 +660,11 @@ export type OfferDraft = {
   categoryId: string | null;
   categoryName: string | null;
   employmentType: "MISSION" | "CDD" | "CDI" | "STAGE" | "CONSULTANT" | "INTERIM" | "APPRENTISSAGE" | "VOLONTARIAT" | null;
+  /** The place the request names, as the pickers list it; no code: to choose. Absent from an older backend. */
+  place?: { remote: boolean; city: string | null; countryCode: string | null } | null;
+  quantity?: number | null;
+  /** Where the request and the form differ: the request was followed. */
+  changes?: { field: "place" | "employmentType" | "quantity"; from: string; to: string }[];
   /** What was left out on purpose (a discriminatory criterion asked for). */
   removed: string[];
   /** What candidates look for and the request did not say (never invented). Absent from an older backend. */

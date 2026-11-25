@@ -285,7 +285,8 @@ export function OfferForm({
               onOpenChange={setWriting}
               context={{
                 title: form.getValues("title") || undefined,
-                employmentType: type,
+                // Only once chosen: its default says nothing of the job.
+                employmentType: form.formState.dirtyFields.employmentType ? type : undefined,
                 city: remote ? undefined : city || undefined,
                 isRemote: remote,
                 quantity: Number(form.getValues("quantity")) || undefined,
@@ -296,13 +297,25 @@ export function OfferForm({
                 form.setValue("description", draft.description, set);
                 // The trade and the type only where the business has not chosen.
                 if (draft.categoryId && !form.getValues("categoryId")) form.setValue("categoryId", draft.categoryId, set);
+                // What the request says, the form follows, or the offer would say one
+                // thing and be published as another.
+                const asked = (field: "place" | "employmentType" | "quantity") => draft.changes?.some((c) => c.field === field);
                 if (
                   draft.employmentType &&
                   draft.employmentType !== type &&
                   AVAILABLE_EMPLOYMENT_TYPES.includes(draft.employmentType) &&
-                  !form.formState.dirtyFields.employmentType
+                  (!form.formState.dirtyFields.employmentType || asked("employmentType"))
                 ) {
                   form.setValue("employmentType", draft.employmentType, set);
+                }
+                if (draft.quantity) form.setValue("quantity", String(draft.quantity), set);
+                if (draft.place?.remote) {
+                  form.setValue("isRemote", true, set);
+                } else if (draft.place?.city) {
+                  form.setValue("isRemote", false, set);
+                  // A city several countries have: the business picks, rather than keep the wrong one.
+                  form.setValue("countryCode", draft.place.countryCode ?? "", set);
+                  form.setValue("city", draft.place.countryCode ? draft.place.city : "", set);
                 }
               }}
             />
