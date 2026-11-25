@@ -26,6 +26,8 @@ import { CalendarLinkDialog } from "./calendar-link-dialog";
 import { InterviewCard } from "./interview-card";
 import { InterviewReportDialog } from "./interview-report-panel";
 import { InterviewsCalendar } from "./interviews-calendar";
+import { useVideoPlan } from "../use-video-plan";
+import { useVisioWarm } from "../visio-warm";
 
 const VIEWS = [
   { key: "calendrier", icon: IconCalendarMonth },
@@ -45,6 +47,7 @@ export function InterviewsPage() {
   const [view, setView] = useQueryState("vue", parseAsStringLiteral(["calendrier", "liste"] as const).withDefault("calendrier"));
   // The upcoming ones feed the tiles whatever the tab.
   const upcoming = useQuery({ queryKey: [...interviewsKey, "upcoming"], queryFn: () => listInterviews({ scope: "upcoming" }) });
+  useVisioWarm(upcoming.data, useVideoPlan().allowed);
   // « Votre compte rendu est prêt » links here (?compte-rendu=): that report, opened over the page.
   const [reportId, setReportId] = useQueryState("compte-rendu");
   const past = useQuery({

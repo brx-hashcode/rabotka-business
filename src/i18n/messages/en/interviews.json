@@ -228,6 +228,10 @@
     "removeOf": "Remove {name}'s access"
   },
   "visio": {
+    "opening": "Opening the video call…",
+    "openingHint": "The first time, this can take a few seconds.",
+    "openingSlow": "This is taking longer than usual. Check your connection, then try again.",
+    "retry": "Try again",
     "newTab": "The video call opens in a new tab.",
     "join": "Join the video call",
     "ended": "Interview ended.",
