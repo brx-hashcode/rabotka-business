@@ -22,6 +22,7 @@ import { DeleteImportedDialog, useCvBlock } from "#/features/offers/components/i
 import { AnswerFileLink } from "#/features/offers/components/answer-file-link";
 import type { CvAnalysis } from "#/lib/api/offer-controller";
 import { CvChatSheet } from "#/features/cv-screening/components/cv-chat-sheet";
+import { scoringBars } from "#/features/cv-screening/components/score-details";
 import { DeleteCvDialog } from "#/features/cv-screening/components/delete-cv-dialog";
 import {
   analyseExternalApplications,
@@ -49,7 +50,7 @@ import { useWhyNot } from "#/lib/use-why-not";
 
 /** The analysis has more to show than its score and summary. */
 export function hasInsight(a: CvAnalysis) {
-  return (a.strengths?.length ?? 0) + (a.gaps?.length ?? 0) > 0 || Object.keys(a.criteria ?? {}).length > 0;
+  return (a.strengths?.length ?? 0) + (a.gaps?.length ?? 0) > 0 || Object.keys(a.criteria ?? {}).length > 0 || !!a.scoring;
 }
 
 /** The offer still takes decisions; once it ended, only reading is left. */
@@ -437,10 +438,16 @@ export function ExternalApplicationCard({
         <CandidateInsight
           strengths={a.analysis.strengths ?? []}
           gaps={a.analysis.gaps ?? []}
-          criteria={CRITERIA.filter((k) => typeof a.analysis?.criteria?.[k.key] === "number").map((k) => ({
-            label: tLabels(`criterion.${k.key}`),
-            value: a.analysis?.criteria?.[k.key] ?? 0,
-          }))}
+          criteria={
+            a.analysis.scoring
+              ? scoringBars(a.analysis.scoring)
+              : CRITERIA.filter((k) => typeof a.analysis?.criteria?.[k.key] === "number").map((k) => ({
+                  key: k.key,
+                  label: tLabels(`criterion.${k.key}`),
+                  value: a.analysis?.criteria?.[k.key] ?? 0,
+                }))
+          }
+          musts={a.analysis.scoring?.musts}
         />
       )}
 

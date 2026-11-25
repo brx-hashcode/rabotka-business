@@ -532,6 +532,13 @@
     "text": "Décrivez le besoin en quelques mots : l'IA rédige l'intitulé et la description, et propose le métier. Vous relisez avant de publier.",
     "failed": "La rédaction n'a pas abouti. Réessayez dans un instant.",
     "trade": "Métier proposé :",
+    "changes": "Votre demande a été suivie :",
+    "change": {
+      "place": "{to} au lieu de {from}",
+      "employmentType": "le type {to} au lieu de {from}",
+      "quantity": "{to} personnes au lieu de {from}"
+    },
+    "choosePlace": "Choisissez le pays de {city} dans le formulaire.",
     "toConfirm": "À préciser avant de publier :",
     "toConfirmText": "{items}. L'IA ne les invente pas : ajoutez-les dans le formulaire, les candidats les recherchent en premier.",
     "removed": "Retiré de l'offre : {items}. Ces critères écartent des candidats pour des raisons sans rapport avec le poste.",

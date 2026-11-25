@@ -90,15 +90,17 @@ export function ScoreRing({ score, size = 56 }: Readonly<{ score: number; size?:
 }
 
 /** One criterion's mark, as a thin bar. */
-export function CriterionBar({ label, value }: Readonly<{ label: string; value: number }>) {
+/** `value` null: the CV does not show it. `title`: the words the mark rests on. */
+export function CriterionBar({ label, value, title }: Readonly<{ label: string; value: number | null; title?: string }>) {
+  const t = useTranslations("labels");
   return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-xs">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="font-medium tabular-nums">{value}</span>
+    <div className="space-y-1" title={title}>
+      <div className="flex justify-between gap-3 text-xs">
+        <span className="min-w-0 text-muted-foreground">{label}</span>
+        <span className="shrink-0 font-medium tabular-nums">{value ?? t("notShown")}</span>
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-card">
-        <div className={cn("h-full rounded-full bg-current", band(value).ring)} style={{ width: `${value}%` }} />
+        {value !== null && <div className={cn("h-full rounded-full bg-current", band(value).ring)} style={{ width: `${value}%` }} />}
       </div>
     </div>
   );

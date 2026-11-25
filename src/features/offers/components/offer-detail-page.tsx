@@ -57,6 +57,7 @@ import { CandidateCard } from "#/features/candidates/components/candidate-card";
 import { CvCompareSheet } from "#/features/cv-screening/components/cv-compare-sheet";
 import { CvChatSheet } from "#/features/cv-screening/components/cv-chat-sheet";
 import { DeleteCvDialog } from "#/features/cv-screening/components/delete-cv-dialog";
+import { scoringBars } from "#/features/cv-screening/components/score-details";
 import { ScheduleInterviewDialog } from "#/features/interviews/components/schedule-interview-dialog";
 import { CandidateInsight, detailsLabel } from "./candidate-insight";
 import { byFit } from "../rank-candidates";
@@ -1140,20 +1141,28 @@ function ApplicantRow({
         summary: analysed.summary,
         strengths: analysed.strengths ?? [],
         gaps: analysed.gaps ?? [],
-        criteria: CRITERIA.filter((k) => typeof analysed.criteria?.[k.key] === "number").map((k) => ({
-          label: tLabels(`criterion.${k.key}`),
-          value: analysed.criteria?.[k.key] ?? 0,
-        })),
+        criteria: analysed.scoring
+          ? scoringBars(analysed.scoring)
+          : CRITERIA.filter((k) => typeof analysed.criteria?.[k.key] === "number").map((k) => ({
+              key: k.key,
+              label: tLabels(`criterion.${k.key}`),
+              value: analysed.criteria?.[k.key] ?? 0,
+            })),
+        musts: analysed.scoring?.musts,
       }
     : assessment
       ? {
           summary: assessment.summary,
           strengths: assessment.strengths,
           gaps: assessment.gaps,
-          criteria: APPLICANT_CRITERIA.filter((k) => typeof assessment.criteria?.[k] === "number").map((k) => ({
-            label: tLabels(`criterion.${APPLICANT_CRITERION_KEY[k]}`),
-            value: assessment.criteria?.[k] ?? 0,
-          })),
+          criteria: assessment.scoring
+            ? scoringBars(assessment.scoring)
+            : APPLICANT_CRITERIA.filter((k) => typeof assessment.criteria?.[k] === "number").map((k) => ({
+                key: k,
+                label: tLabels(`criterion.${APPLICANT_CRITERION_KEY[k]}`),
+                value: assessment.criteria?.[k] ?? 0,
+              })),
+          musts: assessment.scoring?.musts,
         }
       : null;
   const answers = a.answers ?? [];

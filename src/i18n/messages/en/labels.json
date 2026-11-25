@@ -80,6 +80,13 @@
     "partial": "Partial fit",
     "low": "Weak fit"
   },
+  "notShown": "Not shown",
+  "must": {
+    "title": "Requirements",
+    "MET": "met",
+    "MISSING": "missing",
+    "UNCLEAR": "to check"
+  },
   "criterion": {
     "skills": "Skills",
     "experience": "Experience",

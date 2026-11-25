@@ -1,6 +1,6 @@
 import { appConfig } from "#/config";
 import { BusinessBaseController } from "./base-controller";
-import type { CvCriterion } from "./types";
+import type { CvCriterion, CvScoring } from "./types";
 
 export type OfferStatus =
   | "DRAFT"
@@ -81,6 +81,8 @@ export type CvAnalysis = {
   strengths?: string[];
   gaps?: string[];
   criteria?: Partial<Record<CvCriterion, number>> | null;
+  /** On the offer's own criteria; absent from an older backend. */
+  scoring?: CvScoring | null;
 };
 
 /** One applicant on an offer — public fields only, never a phone. */
@@ -327,6 +329,7 @@ export type ApplicantAssessment = {
   applicationId: string;
   score: number | null;
   criteria: Partial<Record<"trade" | "experience" | "location" | "reliability", number>> | null;
+  scoring?: CvScoring | null;
   summary: string | null;
   strengths: string[];
   gaps: string[];

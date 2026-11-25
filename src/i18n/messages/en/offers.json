@@ -532,6 +532,13 @@
     "text": "Describe the need in a few words: the AI writes the title and description, and suggests the trade. You review before publishing.",
     "failed": "The draft didn't work. Try again in a moment.",
     "trade": "Suggested trade:",
+    "changes": "Your request was followed:",
+    "change": {
+      "place": "{to} instead of {from}",
+      "employmentType": "{to} instead of {from}",
+      "quantity": "{to} people instead of {from}"
+    },
+    "choosePlace": "Choose the country of {city} in the form.",
     "toConfirm": "To fill in before publishing:",
     "toConfirmText": "{items}. The AI doesn't make them up: add them in the form, candidates look for them first.",
     "removed": "Removed from the job: {items}. These criteria rule out candidates for reasons unrelated to the role.",
