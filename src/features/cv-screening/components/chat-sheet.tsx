@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
-import { IconArrowUp, IconFileTypePdf, IconInfoCircle, IconPlayerStopFilled, IconX } from "@tabler/icons-react";
+import { IconArrowUp, IconFileOff, IconFileTypePdf, IconInfoCircle, IconPlayerStopFilled, IconX } from "@tabler/icons-react";
 import { Loader } from "lucide-react";
 import { Dialog as SheetPrimitive } from "radix-ui";
 import { toast } from "sonner";
@@ -47,7 +47,8 @@ export function ChatSheet({
   suggestions,
   placeholder,
   usedUp,
-  unavailable,
+  gone,
+  closed,
   pdfUrl,
 }: Readonly<{
   open: boolean;
@@ -65,7 +66,10 @@ export function ChatSheet({
   suggestions: string[];
   placeholder: string;
   usedUp: (limit: number) => string;
-  unavailable: string;
+  /** What is said when a CV is missing, at the top; null when they are all there. */
+  gone: (data: CvChat) => ReactNode;
+  /** In place of everything when nothing can be asked and nothing ever was. */
+  closed: (data: CvChat) => { title: string; text: string; children?: ReactNode };
   /** The conversation as a PDF; null while it can't be known yet. */
   pdfUrl?: () => string | null;
 }>) {
@@ -99,6 +103,9 @@ export function ChatSheet({
     ]),
   ].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   const remaining = data ? data.remaining - (live ? 1 : 0) : 0;
+  // Nothing to ask and nothing to read back: said once, in the middle.
+  const empty = data && !data.available && data.messages.length === 0 ? closed(data) : null;
+  const notice = data && !empty ? gone(data) : null;
   const canAsk = !!data && data.available && remaining > 0 && !live;
 
   useEffect(() => {
@@ -163,9 +170,9 @@ export function ChatSheet({
             <div className="min-w-0 flex-1 space-y-1">
               <SheetPrimitive.Title className="truncate font-semibold text-lg leading-tight">{title}</SheetPrimitive.Title>
               <p className="truncate text-muted-foreground text-sm">{subtitle}</p>
-              {meta && <div className="flex flex-wrap items-center gap-2 pt-1">{meta}</div>}
+              {meta && !empty && <div className="flex flex-wrap items-center gap-2 pt-1">{meta}</div>}
             </div>
-            {pdfUrl && (
+            {pdfUrl && !empty && (
               <button
                 type="button"
                 onClick={() => void exportPdf()}
@@ -195,9 +202,17 @@ export function ChatSheet({
               </div>
             ) : !data ? (
               <p className="text-muted-foreground text-sm">{friendlyError(chat.error, t("loadFailed"))}</p>
+            ) : empty ? (
+              <Closed {...empty} />
             ) : (
               <div className="space-y-4">
-                {thread.length === 0 && !live && <Intro intro={intro} suggestions={suggestions} available={data.available} onPick={(q) => void ask(q)} disabled={!canAsk} />}
+                {notice && (
+                  <div role="status" className="flex gap-2.5 rounded-2xl bg-chip-amber p-4 text-chip-amber-foreground text-sm leading-relaxed">
+                    <IconInfoCircle className="mt-0.5 size-4 shrink-0" />
+                    <div className="min-w-0 space-y-1">{notice}</div>
+                  </div>
+                )}
+                {thread.length === 0 && !live && data.available && <Intro intro={intro} suggestions={suggestions} onPick={(q) => void ask(q)} disabled={!canAsk} />}
                 {thread.map((m) => (
                   <Bubble key={m.id} role={m.role} text={m.content} note={m.note} />
                 ))}
@@ -213,11 +228,9 @@ export function ChatSheet({
             )}
           </div>
 
-          <footer className="space-y-2 px-5 pt-3 pb-5 sm:px-6">
+          {!empty && <footer className="space-y-2 px-5 pt-3 pb-5 sm:px-6">
             {data && !data.available ? (
-              <p className="rounded-2xl bg-page px-4 py-3 text-muted-foreground text-sm">
-                {unavailable}
-              </p>
+              <p className="rounded-2xl bg-page px-4 py-3 text-muted-foreground text-sm">{t("readOnly")}</p>
             ) : data && data.limit === 0 ? (
               <p className="rounded-2xl bg-page px-4 py-3 text-muted-foreground text-sm">
                 {chatTrialLocked
@@ -284,23 +297,37 @@ export function ChatSheet({
               )}
               {t("disclaimer")}
             </p>
-          </footer>
+          </footer>}
         </SheetPrimitive.Content>
       </SheetPrimitive.Portal>
     </SheetPrimitive.Root>
   );
 }
 
+/** No CV left to ask about: why, and what to do instead. */
+function Closed({ title, text, children }: Readonly<{ title: string; text: string; children?: ReactNode }>) {
+  return (
+    <div role="status" className="mx-auto flex min-h-full w-full max-w-md flex-col items-center justify-center gap-5 py-6">
+      <span className="flex size-14 items-center justify-center rounded-full bg-chip-amber text-chip-amber-foreground">
+        <IconFileOff className="size-6" />
+      </span>
+      <div className="space-y-1.5 text-center">
+        <p className="text-balance font-semibold text-lg leading-tight">{title}</p>
+        <p className="text-pretty text-muted-foreground text-sm leading-relaxed">{text}</p>
+      </div>
+      {children}
+    </div>
+  );
+}
+
 function Intro({
   intro,
   suggestions,
-  available,
   disabled,
   onPick,
 }: Readonly<{
   intro: { title: string; text: string };
   suggestions: string[];
-  available: boolean;
   disabled: boolean;
   onPick: (q: string) => void;
 }>) {
@@ -312,21 +339,19 @@ function Intro({
           <p className="mx-auto max-w-sm text-muted-foreground text-sm">{intro.text}</p>
         </div>
       </div>
-      {available && (
-        <div className="grid gap-2 sm:grid-cols-2">
-          {suggestions.map((s) => (
-            <button
-              key={s}
-              type="button"
-              disabled={disabled}
-              onClick={() => onPick(s)}
-              className="rounded-2xl bg-card px-4 py-3 text-left text-sm transition-colors hover:bg-card/70 disabled:opacity-50"
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="grid gap-2 sm:grid-cols-2">
+        {suggestions.map((s) => (
+          <button
+            key={s}
+            type="button"
+            disabled={disabled}
+            onClick={() => onPick(s)}
+            className="rounded-2xl bg-card px-4 py-3 text-left text-sm transition-colors hover:bg-card/70 disabled:opacity-50"
+          >
+            {s}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

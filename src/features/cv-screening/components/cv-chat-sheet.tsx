@@ -44,7 +44,8 @@ export function CvChatSheet({
       suggestions={SUGGESTIONS}
       placeholder={t("placeholder", { name: name.split(" ")[0] })}
       usedUp={(limit) => t("usedUp", { limit })}
-      unavailable={t("gone")}
+      gone={(data) => (data.available ? null : <p>{t(`gone.${data.reason ?? "expired"}`, { name })}</p>)}
+      closed={(data) => ({ title: t("closedTitle"), text: `${t(`gone.${data.reason ?? "expired"}`, { name })} ${t("closedText")}` })}
     />
   );
 }

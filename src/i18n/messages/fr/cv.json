@@ -54,8 +54,23 @@
     "intro": "Qui retenir en premier, sur quels points ils se distinguent, que vérifier en entretien : Rabotka répond d'après leurs CV et l'offre.",
     "placeholder": "Une question sur ces candidats…",
     "usedUp": "Vous avez posé les {limit} questions prévues pour cette comparaison.",
-    "gone": "Ces CV ont été supprimés à la fin de leur durée de conservation : la conversation reste lisible, sans nouvelle question.",
-    "introTitle": "Comparez {names}"
+    "gone": {
+      "removed": "Le CV de {name} a été supprimé par votre équipe.",
+      "expired": "Le CV de {name} a été supprimé à la fin de sa durée de conservation.",
+      "unreadable": "Le CV de {name} ne peut plus être lu."
+    },
+    "introTitle": "Comparez {names}",
+    "others": "La comparaison porte sur les autres candidats.",
+    "notEnough": "Il ne reste pas assez de CV à comparer.",
+    "closed": {
+      "title": "Pas assez de CV à comparer",
+      "text": "Il en faut au moins deux. Le score et l'analyse de chaque candidat restent sur sa fiche.",
+      "removed": "CV supprimé par votre équipe",
+      "expired": "CV supprimé à la fin de sa durée de conservation",
+      "unreadable": "CV illisible",
+      "available": "CV disponible",
+      "choose": "Choisir d'autres candidats"
+    }
   },
   "chat": {
     "suggestions": [
@@ -67,8 +82,14 @@
     "intro": "Parcours, compétences, points à vérifier, questions d'entretien : Rabotka répond d'après le CV et l'offre.",
     "placeholder": "Une question sur {name}…",
     "usedUp": "Vous avez posé les {limit} questions prévues pour ce CV.",
-    "gone": "Ce CV a été supprimé à la fin de sa durée de conservation : la conversation reste lisible, sans nouvelle question.",
-    "introTitle": "Interrogez le CV de {name}"
+    "gone": {
+      "removed": "Le CV de {name} a été supprimé par votre équipe.",
+      "expired": "Le CV de {name} a été supprimé à la fin de sa durée de conservation.",
+      "unreadable": "Le CV de {name} ne peut plus être lu."
+    },
+    "introTitle": "Interrogez le CV de {name}",
+    "closedTitle": "Ce CV ne peut plus être interrogé",
+    "closedText": "Son score et son analyse restent sur sa fiche."
   },
   "result": {
     "deleted": "Analyse supprimée, avec ses fichiers.",
@@ -109,7 +130,7 @@
     "best": "Meilleur score",
     "files": "Fichiers et coordonnées",
     "removed": "Supprimés",
-    "keptUntil": "Conservés jusqu'au {date}",
+    "keptUntil": "Supprimés au plus tard le {date}",
     "offer": "Offre",
     "seeOffer": "Voir l'offre",
     "role": "Le poste",
@@ -148,7 +169,10 @@
     },
     "showOthers": "Afficher les {count} autres CV",
     "moreWaiting": "Et {count} autres CV en attente : ils arrivent ici au fil de la lecture.",
-    "ask": "Interroger le CV"
+    "ask": "Interroger le CV",
+    "keptOpen": "Conservés jusqu'à ce que vous les supprimiez",
+    "cvRemoved": "CV supprimé par votre équipe",
+    "deleteCv": "Supprimer le CV"
   },
   "list": {
     "todayAt": "Aujourd'hui à {time}",
@@ -207,7 +231,8 @@
     "mean": "Moyenne",
     "unreadCount": "{count, plural, one {Non lu} other {Non lus}}",
     "purged": "Fichiers supprimés, notes conservées",
-    "kept": "Fichiers conservés {count, plural, one {# jour} other {# jours}}"
+    "keptOpen": "Conservés jusqu'à ce que vous les supprimiez",
+    "keptUntil": "Supprimés au plus tard le {date}"
   },
   "new": {
     "photo": "Photo",
@@ -245,7 +270,7 @@
     "step1": "Une dizaine de secondes par CV ; vous pouvez quitter la page.",
     "step2": "Une notification vous prévient quand le classement est prêt.",
     "step3": "Un CV illisible ou qui n'en est pas un n'est pas décompté.",
-    "step4": "Les fichiers et les coordonnées sont supprimés au bout de {days} jours ; les notes restent.",
+    "step4": "Les CV restent tant que l'offre recrute, puis jusqu'à ce que vous les supprimiez ou à la date limite affichée ; les notes restent.",
     "hint": "PDF, Word (.docx) ou photo · {mb} Mo au plus par fichier",
     "drop": "Déposez les CV ici",
     "orPick": "ou <u>choisissez-les</u> sur votre appareil",
@@ -314,6 +339,14 @@
     "stop": "Arrêter la réponse",
     "send": "Envoyer",
     "disclaimer": "Les réponses s'appuient sur le CV et l'offre ; vérifiez les points importants en entretien.",
-    "reading": "Lecture du CV…"
+    "reading": "Lecture du CV…",
+    "readOnly": "La conversation reste lisible, sans nouvelle question."
+  },
+  "remove": {
+    "title": "Supprimer le CV de {name} ?",
+    "text": "Son CV, les fichiers joints à ses réponses, ses coordonnées dans l'analyse et les conversations sur ce CV sont supprimés pour de bon. Le score, les avis et la candidature restent.",
+    "confirm": "Supprimer le CV",
+    "done": "CV de {name} supprimé.",
+    "failed": "Le CV n'a pas pu être supprimé."
   }
 }

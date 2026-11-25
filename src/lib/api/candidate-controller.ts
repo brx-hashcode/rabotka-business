@@ -23,8 +23,8 @@ export type Candidate = {
 
 /**
  * The CV a candidate added to their profile (« Mon CV »). It has their phone
- * and e-mail on it: it opens once the contact is obtained, or one of their
- * applications retained.
+ * and e-mail on it: it opens once the contact is obtained or one of their
+ * applications retained, and for an applicant while a plan runs.
  */
 export type CandidateCv = {
   fileName: string;

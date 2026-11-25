@@ -19,6 +19,7 @@ const K = {
   outsiders: ["external-applications"],
   business: ["business", "me"],
   stats: ["business", "me", "stats"],
+  contacts: ["business", "me", "contacts"],
   subscription: ["business", "me", "subscription"],
   interviews: ["interviews"],
   interviewReports: ["interview-report"],
@@ -52,9 +53,9 @@ export function refreshKeysFor(n: PushedNotification): QueryKey[] {
   const offerKeys = (): QueryKey[] => (offer ? [["offers", offer], K.offerLists, K.received] : [K.offers]);
   switch (n.type) {
     // A candidate applied, from the app or the careers page: both lists, the
-    // scores, the counts, the team's opinions on that offer.
+    // scores, the counts, the contacts that open (an applicant's), the team's opinions on that offer.
     case "NEW_APPLICATION":
-      add(...offerKeys(), K.outsiders, K.stats, offer ? ["offer-opinions", offer] : K.opinions);
+      add(...offerKeys(), K.outsiders, K.stats, K.contacts, offer ? ["offer-opinions", offer] : K.opinions);
       break;
     case "APPLICATION_CANCELLED":
     case "MISSION_COMPLETED":
@@ -66,7 +67,7 @@ export function refreshKeysFor(n: PushedNotification): QueryKey[] {
     case "CONTACT_UNLOCKED":
     case "PAYMENT_SUCCEEDED":
     case "PAYMENT_FAILED":
-      add(K.offers, K.stats, K.subscription, K.invoices, K.interviews);
+      add(K.offers, K.stats, K.contacts, K.subscription, K.invoices, K.interviews);
       if (application) add(["application", application]);
       break;
     case "INTERVIEW_ANSWERED":

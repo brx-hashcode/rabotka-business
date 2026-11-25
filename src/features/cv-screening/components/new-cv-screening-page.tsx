@@ -236,7 +236,7 @@ export function NewCvScreeningPage() {
                 <Step icon={IconClock}>{t("step1")}</Step>
                 <Step icon={IconBell}>{t("step2")}</Step>
                 <Step icon={IconFileText}>{t("step3")}</Step>
-                <Step icon={IconShieldLock}>{t("step4", { days: e.cvRetentionDays })}</Step>
+                <Step icon={IconShieldLock}>{t("step4")}</Step>
               </ul>
             </section>
           </aside>

@@ -399,7 +399,7 @@ function ReasonField({ value, onChange, placeholder }: Readonly<{ value: string;
   );
 }
 
-/** Retaining starts the contact unlock: say what it costs before, from the plan. */
+/** Retaining starts the contact unlock: covered by a running plan, paid without one. */
 function AcceptDialog({
   open,
   name,
@@ -410,7 +410,6 @@ function AcceptDialog({
   const subscription = useQuery({ queryKey: mySubscriptionKey, queryFn: getMySubscription, enabled: open });
   const t = useTranslations("offers.actions");
   const e = subscription.data?.entitlements;
-  const covered = e?.plan && (e.unlocksRemaining === null || e.unlocksRemaining > 0);
 
   return (
     <ActionDialog
@@ -425,13 +424,13 @@ function AcceptDialog({
     >
       {!e ? (
         <Skeleton className="h-16 rounded-2xl" />
-      ) : covered ? (
+      ) : e.plan ? (
         <p className="rounded-2xl bg-chip-green p-4 text-chip-green-foreground text-sm">
-          {t("included", { plan: e.plan!.name, left: e.unlocksRemaining === null ? "none" : e.unlocksRemaining - 1 })}
+          {t("included", { plan: e.plan.name })}
         </p>
       ) : (
         <p className="rounded-2xl bg-chip-amber p-4 text-chip-amber-foreground text-sm">
-          {e.plan ? t("noMoreContacts") : t("noPlan")}{" "}
+          {t("noPlan")}{" "}
           <Link href="/espace/abonnement" className="font-medium underline">
             {t("seePlans")}
           </Link>

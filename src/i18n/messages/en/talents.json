@@ -72,7 +72,7 @@
     },
     "cv": {
       "empty": "No analysed CV is being kept right now.",
-      "hint": "The CVs from your “CV analysis”, for as long as your plan keeps them.",
+      "hint": "The CVs from your “CV analysis”, until you delete them.",
       "origin": "Analysed for <o>{title}</o>{until, select, none {} other { · kept until {until}}}"
     },
     "placeholder": "A trade, a skill, a city, a name… in the CV",

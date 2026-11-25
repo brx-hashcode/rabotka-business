@@ -41,6 +41,7 @@ import { cn } from "#/lib/utils";
 import { CRITERIA, Career, CriterionBar, Points, ScoreRing, VerdictChip, band, duration } from "./cv-bits";
 import { CvChatSheet } from "./cv-chat-sheet";
 import { CvCompareSheet } from "./cv-compare-sheet";
+import { DeleteCvDialog } from "./delete-cv-dialog";
 import { InterviewLine, latestInterview } from "#/features/interviews/components/interview-bits";
 import { ScheduleInterviewDialog } from "#/features/interviews/components/schedule-interview-dialog";
 import { interviewsKey, listInterviews } from "#/lib/api/interview-controller";
@@ -228,6 +229,7 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
           screeningId={s.id}
           jobTitle={s.jobTitle}
           resumes={scored.filter((r) => selected.includes(r.id))}
+          onChooseOthers={(gone) => setSelected((ids) => ids.filter((x) => !gone.includes(x)))}
         />
       )}
 
@@ -239,7 +241,7 @@ export function CvScreeningPage({ id }: Readonly<{ id: string }>) {
         src={preview?.hasFile ? cvFileUrl(s.id, preview.id) : undefined}
         kind={previewKindOf(preview?.mimeType) ?? "pdf"}
         fileName={preview?.fileName}
-        unavailable={t("cvGone")}
+        unavailable={preview?.removed ? t("cvRemoved") : t("cvGone")}
       />
 
       <ActionDialog
@@ -391,7 +393,7 @@ function JobAside({ s, scored, unread }: Readonly<{ s: CvScreening; scored: numb
           <Meta
             icon={IconShieldLock}
             label={t("files")}
-            value={s.purged ? t("removed") : t("keptUntil", { date: date(s.expiresAt, locale) })}
+            value={s.purged ? t("removed") : s.recruiting ? t("keptOpen") : t("keptUntil", { date: date(s.expiresAt, locale) })}
           />
           {s.offerId && (
             <Meta
@@ -477,6 +479,7 @@ function ResumeCard({
   const [open, setOpen] = useState(r.rank === 1);
   const [chatOpen, setChatOpen] = useState(false);
   const [planning, setPlanning] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const hire = canHire(useMember().role);
   const c = r.candidate;
   const name = c?.name ?? r.fileName;
@@ -547,6 +550,12 @@ function ResumeCard({
         />
       )}
       <CvChatSheet open={chatOpen} onOpenChange={setChatOpen} screeningId={screeningId} jobTitle={jobTitle} resume={r} />
+      <DeleteCvDialog
+        target={{ kind: "analysis", screeningId, resumeId: r.id }}
+        name={name}
+        open={deleting}
+        onOpenChange={setDeleting}
+      />
 
       {r.summary && <p className="mt-4 text-sm leading-relaxed">{r.summary}</p>}
 
@@ -616,6 +625,23 @@ function ResumeCard({
               {t("view")}
             </button>
           ))}
+        {r.removed ? (
+          <span className="inline-flex h-10 items-center gap-1.5 rounded-full bg-page px-4 text-muted-foreground text-sm">
+            <IconTrash className="size-4" />
+            {t("cvRemoved")}
+          </span>
+        ) : (
+          hire && (
+            <button
+              type="button"
+              onClick={() => setDeleting(true)}
+              className="inline-flex h-10 items-center gap-1.5 rounded-full bg-page px-4 font-medium text-muted-foreground text-sm hover:text-destructive"
+            >
+              <IconTrash className="size-4" />
+              {t("deleteCv")}
+            </button>
+          )
+        )}
         {c?.phone && (
           <a href={`tel:${c.phone.replace(/\s/g, "")}`} className="inline-flex h-10 items-center gap-1.5 rounded-full bg-page px-4 text-sm hover:bg-page/70">
             <IconPhone className="size-4" />

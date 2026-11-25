@@ -47,6 +47,7 @@ const LOOK: Record<string, Look> = {
   CONTACT_UNLOCKED: { icon: IconLockOpen, tone: GOOD },
   UNLOCK_CONVERTED_TO_CREDIT: { icon: IconLockOpen, tone: GOOD },
   CV_SCREENING_DONE: { icon: IconFileSearch, tone: CANDIDATE },
+  CV_EXPIRING: { icon: IconHourglassFilled, tone: WATCH },
   LINKEDIN_POST: { icon: IconBrandLinkedinFilled, tone: LINKEDIN },
   INTERVIEW_INVITED: { icon: IconCalendarFilled, tone: INTERVIEW },
   INTERVIEW_ANSWERED: { icon: IconMessageCircleQuestion, tone: INTERVIEW },

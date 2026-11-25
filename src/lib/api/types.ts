@@ -416,6 +416,8 @@ export type CvScreeningSummary = {
   createdAt: string;
   /** When the files and contact details go; the scores stay. */
   expiresAt: string;
+  /** Its offer takes candidates: its CVs do not expire meanwhile. */
+  recruiting?: boolean;
   purged: boolean;
   total: number;
   done: number;
@@ -441,6 +443,8 @@ export type CvResume = {
   mimeType: string;
   sizeBytes: number;
   hasFile: boolean;
+  /** « Supprimer le CV »: deleted by the business, the score stays. */
+  removed?: boolean;
   status: CvResumeStatus;
   score: number | null;
   criteria: Partial<Record<CvCriterion, number>> | null;
@@ -486,12 +490,22 @@ export type CvChat = {
   /** Questions the plan allows per CV, and those left for this one. */
   limit: number;
   remaining: number;
-  /** False once the CV's file was purged: the conversation stays readable, no new question. */
+  /** False once the CV is gone for good: the conversation stays readable, no new question. */
   available: boolean;
+  /** Why, when it is one CV's conversation. */
+  reason?: CvGoneReason | null;
 };
 
+/** Deleted by the business, gone at the end of its time, or a scan nobody could read. */
+export type CvGoneReason = "removed" | "expired" | "unreadable";
+
 /** A conversation comparing 2 to 5 CVs of one analysis (one per selection). */
-export type CvComparison = CvChat & { id: string; resumeIds: string[] };
+export type CvComparison = CvChat & {
+  id: string;
+  resumeIds: string[];
+  /** Those that cannot be compared any more; the others are. */
+  missing?: { resumeId: string; name: string; reason: CvGoneReason }[];
+};
 
 /** « Entretiens » (`business/me/interviews`). */
 export type InterviewMode = "IN_PERSON" | "PHONE" | "VIDEO";

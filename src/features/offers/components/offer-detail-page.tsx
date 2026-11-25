@@ -56,6 +56,7 @@ import { offersFull } from "#/features/subscription/offers-quota";
 import { CandidateCard } from "#/features/candidates/components/candidate-card";
 import { CvCompareSheet } from "#/features/cv-screening/components/cv-compare-sheet";
 import { CvChatSheet } from "#/features/cv-screening/components/cv-chat-sheet";
+import { DeleteCvDialog } from "#/features/cv-screening/components/delete-cv-dialog";
 import { ScheduleInterviewDialog } from "#/features/interviews/components/schedule-interview-dialog";
 import { CandidateInsight, detailsLabel } from "./candidate-insight";
 import { byFit } from "../rank-candidates";
@@ -966,6 +967,10 @@ function ApplicantsCard({
               screeningId={comparedScreening}
               jobTitle={o.title}
               resumes={[...comparedResumes.data].sort((x, y) => (y.score ?? 0) - (x.score ?? 0))}
+              onChooseOthers={(gone) => {
+                const keys = comparable.filter((e) => gone.includes(e.analysis?.resumeId as string)).map((e) => e.key);
+                setSelected((s) => new Set([...s].filter((key) => !keys.includes(key))));
+              }}
             />
           )}
 
@@ -1059,7 +1064,7 @@ function ApplicantRow({
   const locale = useLocale() as Locale;
   const name = `${a.worker.firstName} ${a.worker.lastName}`.trim();
   // What « ⋯ » opens: the CVs, the team's opinions; « Message » goes straight there.
-  const [panel, setPanel] = useState<"own-cv" | "rabotka-cv" | "opinion" | "interview" | null>(null);
+  const [panel, setPanel] = useState<"own-cv" | "rabotka-cv" | "opinion" | "interview" | "delete-cv" | null>(null);
   const chat = useApplicationChat(a);
   const hire = canHire(useMember().role);
   const shortlist = useConfirmedShortlist(offerId);
@@ -1106,6 +1111,20 @@ function ApplicantRow({
     // Invited by e-mail and in the app, as from « Candidatures ».
     ...(hire && recruiting && applicationStage(a.status) !== "closed"
       ? [{ key: "interview", label: tc("schedule"), icon: IconCalendarPlus, onSelect: () => setPanel("interview") }]
+      : []),
+    // Kept until the business decides otherwise: its files and what quotes them.
+    ...(hire && !a.cvRemoved && (a.cv?.kind === "UPLOADED" || a.analysis)
+      ? [
+          {
+            key: "delete-cv",
+            label: tc("deleteCv"),
+            icon: IconTrash,
+            onSelect: () => setPanel("delete-cv"),
+            tone: "danger" as const,
+            // Being read: it would come back as the reading ends.
+            ...(a.analysis?.status === "QUEUED" ? { disabled: true, hint: tc("deleteCvReading") } : {}),
+          },
+        ]
       : []),
   ];
   // The CV analysis, once in, speaks for the candidate as it does for a
@@ -1169,6 +1188,11 @@ function ApplicantRow({
             <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="truncate font-medium group-hover:underline">{name}</span>
               {score !== null && <VerdictChip score={score} />}
+              {a.cvRemoved && (
+                <span className="rounded-full bg-foreground/[0.07] px-2.5 py-1 font-medium text-muted-foreground text-xs">
+                  {tc("cvRemoved")}
+                </span>
+              )}
               {failed ? (
                 <span className="rounded-full bg-chip-amber px-2.5 py-1 font-medium text-chip-amber-foreground text-xs">
                   {t("fails", { what: failed })}
@@ -1226,6 +1250,12 @@ function ApplicantRow({
         summary={opinions}
         open={panel === "opinion"}
         onOpenChange={(o) => setPanel(o ? "opinion" : null)}
+      />
+      <DeleteCvDialog
+        target={{ kind: "rabotka", id: a.applicationId }}
+        name={name}
+        open={panel === "delete-cv"}
+        onOpenChange={(o) => setPanel(o ? "delete-cv" : null)}
       />
       {panel === "interview" && (
         <ScheduleInterviewDialog

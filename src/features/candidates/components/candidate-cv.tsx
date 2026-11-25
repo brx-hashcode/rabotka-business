@@ -16,7 +16,8 @@ export const candidateCvKey = (workerId: string) => ["candidate", workerId, "cv"
 /**
  * « CV du candidat » on their profile: the CV they added themselves, whether or
  * not they applied with it. Shut until the contact is obtained (it has their
- * phone and e-mail on it), and said so, rather than hidden.
+ * phone and e-mail on it), but for an applicant while a plan runs; and said so,
+ * rather than hidden.
  */
 export function CandidateCvSection({ workerId, name }: Readonly<{ workerId: string; name: string }>) {
   const { data, isLoading } = useQuery({
