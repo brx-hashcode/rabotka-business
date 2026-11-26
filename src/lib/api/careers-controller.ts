@@ -48,6 +48,8 @@ export type CareersOffer = CareersOfferSummary & {
   paymentFlow: PaymentFlow | null;
   categoryName: string | null;
   questions: CareersQuestion[];
+  /** The language the offer is written in: its pages speak it. Absent from an older backend. */
+  language?: "fr" | "en";
 };
 
 export type ApplyInput = {

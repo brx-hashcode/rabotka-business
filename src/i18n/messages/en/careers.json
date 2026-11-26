@@ -1,0 +1,77 @@
+{
+  "shell": {
+    "poweredBy": "Powered by Rabotka · www.rabotka.work"
+  },
+  "place": {
+    "remote": "Remote"
+  },
+  "description": {
+    "labelled": "{label}: "
+  },
+  "closed": {
+    "title": "This job is no longer open",
+    "hint": "It may have been filled or withdrawn.",
+    "seeOthers": "See other jobs"
+  },
+  "recruits": " is hiring",
+  "offer": {
+    "allOffers": "All jobs at {company}",
+    "published": "Posted on {date}",
+    "theJob": "The job",
+    "share": "Share this job",
+    "linkCopied": "Job link copied.",
+    "apply": "Apply for this job",
+    "facts": {
+      "place": "Location",
+      "type": "Type",
+      "pay": "Pay",
+      "applications": "Applications",
+      "labelled": "{label}: "
+    },
+    "type": "{type} · {quantity, plural, one {# position} other {# positions}}",
+    "toDiscuss": "To be discussed",
+    "amount": "{amount} FCFA",
+    "amountWithSuffix": "{amount} FCFA {suffix}",
+    "until": "Until {date}"
+  },
+  "apply": {
+    "back": "Back to the job",
+    "title": "Your application",
+    "lastName": "Last name",
+    "firstName": "First name",
+    "email": "Email",
+    "phone": "Phone",
+    "cv": "CV",
+    "removeCv": "Remove this CV",
+    "addCv": "Add your CV",
+    "cvHint": "PDF or Word, 10 MB at most",
+    "tooBig": "This file is larger than 10 MB.",
+    "removeFile": "Remove this file",
+    "attach": "Attach a file",
+    "attachHint": "PDF, Word or photo, 10 MB at most",
+    "yes": "Yes",
+    "no": "No",
+    "choose": "Choose",
+    "charCount": "{count} / {max}",
+    "consent": "I agree that {company} may process this information for my application.",
+    "privacy": "Privacy",
+    "keep": "I agree that {company} may keep my application to suggest other jobs to me.",
+    "keepHint": "Optional; you can withdraw it at any time.",
+    "failed": "Your application could not be sent. Please try again.",
+    "submit": "Send my application",
+    "sent": {
+      "title": "Application sent",
+      "body": "{company} has received your application. A confirmation email has been sent to you.",
+      "seeOthers": "See other jobs at {company}"
+    },
+    "join": {
+      "title": "Don't miss the next jobs",
+      "body": "Create your Rabotka account and get your profile verified: jobs that suit you arrive on your phone, and recruiters can find you.",
+      "step1": "Message Rabotka on WhatsApp: your account is created in a few messages.",
+      "step2": "Complete your profile: your trades, your experience, your city.",
+      "step3": "Get your profile verified: recruiters trust you more.",
+      "cta": "Create my account",
+      "note": "On WhatsApp · free · no app to install"
+    }
+  }
+}
