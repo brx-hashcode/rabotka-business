@@ -641,23 +641,6 @@ function ResumeCard({
               {t("view")}
             </button>
           ))}
-        {r.removed ? (
-          <span className="inline-flex h-10 items-center gap-1.5 rounded-full bg-page px-4 text-muted-foreground text-sm">
-            <IconTrash className="size-4" />
-            {t("cvRemoved")}
-          </span>
-        ) : (
-          hire && (
-            <button
-              type="button"
-              onClick={() => setDeleting(true)}
-              className="inline-flex h-10 items-center gap-1.5 rounded-full bg-page px-4 font-medium text-muted-foreground text-sm hover:text-destructive"
-            >
-              <IconTrash className="size-4" />
-              {t("deleteCv")}
-            </button>
-          )
-        )}
         {c?.phone && (
           <a href={`tel:${c.phone.replace(/\s/g, "")}`} className="inline-flex h-10 items-center gap-1.5 rounded-full bg-page px-4 text-sm hover:bg-page/70">
             <IconPhone className="size-4" />
@@ -669,6 +652,24 @@ function ResumeCard({
             <IconMail className="size-4 shrink-0" />
             <span className="truncate">{c.email}</span>
           </a>
+        )}
+        {/* Last, and apart: the one action that cannot be undone, away from the ones used every day. */}
+        {r.removed ? (
+          <span className="inline-flex h-10 items-center gap-1.5 rounded-full bg-page px-4 text-muted-foreground text-sm sm:ml-auto">
+            <IconTrash className="size-4" />
+            {t("cvRemoved")}
+          </span>
+        ) : (
+          hire && (
+            <button
+              type="button"
+              onClick={() => setDeleting(true)}
+              className="inline-flex h-10 items-center gap-1.5 rounded-full bg-page px-4 font-medium text-muted-foreground text-sm hover:text-destructive sm:ml-auto"
+            >
+              <IconTrash className="size-4" />
+              {t("deleteCv")}
+            </button>
+          )
         )}
       </div>
     </article>
