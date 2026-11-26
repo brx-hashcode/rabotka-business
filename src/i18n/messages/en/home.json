@@ -109,6 +109,9 @@
   "sources": {
     "title": "Sources",
     "hired": "{count, plural, one {# hired} other {# hired}}",
+    "other": "Others",
+    "total": "{count, plural, one {application} other {applications}}",
+    "chartLabel": "Where the period's {total} applications came from",
     "note": "Where the period's applications come from."
   },
   "nextSteps": {
