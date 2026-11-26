@@ -109,6 +109,9 @@
   "sources": {
     "title": "Provenance",
     "hired": "{count, plural, one {# retenu} other {# retenus}}",
+    "other": "Autres",
+    "total": "{count, plural, one {candidature} other {candidatures}}",
+    "chartLabel": "Provenance des {total} candidatures de la période",
     "note": "D'où viennent les candidatures de la période."
   },
   "nextSteps": {
