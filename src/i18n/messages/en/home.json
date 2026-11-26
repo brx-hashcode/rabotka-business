@@ -82,12 +82,14 @@
     "contacts": "Contacts included",
     "offers": "Jobs published",
     "cvs": "CVs included",
+    "drafts": "AI drafts",
     "unlocked": "{count, plural, one {# contact obtained} other {# contacts obtained}} over the last {days} days.",
     "daysLeftLabel": "{left, plural, one {# day left} other {# days left}} out of {total}",
     "daysLeft": "{left, plural, one {day<br></br>left} other {days<br></br>left}}",
     "unlimited": "unlimited",
     "overContacts": "{used} contacts for {limit, plural, one {# included} other {# included}}: change plan to go beyond.",
     "overOffers": "{used} jobs for {limit, plural, one {# included} other {# included}}: change plan to go beyond.",
+    "overDrafts": "{used} AI drafts for {limit, plural, one {# included} other {# included}}: change plan to go beyond.",
     "overCvs": "{used} CVs for {limit, plural, one {# included} other {# included}}: change plan to go beyond."
   },
   "offers": {
@@ -107,6 +109,9 @@
   "sources": {
     "title": "Sources",
     "hired": "{count, plural, one {# hired} other {# hired}}",
+    "other": "Others",
+    "total": "{count, plural, one {application} other {applications}}",
+    "chartLabel": "Where the period's {total} applications came from",
     "note": "Where the period's applications come from."
   },
   "nextSteps": {

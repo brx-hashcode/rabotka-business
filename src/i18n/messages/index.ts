@@ -18,6 +18,7 @@ import enOrganisation from "./en/organisation.json";
 import enSubscription from "./en/subscription.json";
 import enClaims from "./en/claims.json";
 import enCareersEditor from "./en/careersEditor.json";
+import enCareers from "./en/careers.json";
 import enDiscussions from "./en/discussions.json";
 import enPages from "./en/pages.json";
 import enUi from "./en/ui.json";
@@ -41,6 +42,7 @@ import frOrganisation from "./fr/organisation.json";
 import frSubscription from "./fr/subscription.json";
 import frClaims from "./fr/claims.json";
 import frCareersEditor from "./fr/careersEditor.json";
+import frCareers from "./fr/careers.json";
 import frDiscussions from "./fr/discussions.json";
 import frPages from "./fr/pages.json";
 import frUi from "./fr/ui.json";
@@ -72,6 +74,7 @@ const fr = {
   subscription: frSubscription,
   claims: frClaims,
   careersEditor: frCareersEditor,
+  careers: frCareers,
   discussions: frDiscussions,
   pages: frPages,
   ui: frUi,
@@ -102,6 +105,7 @@ export const MESSAGES: Record<Locale, Messages> = {
     subscription: enSubscription,
     claims: enClaims,
     careersEditor: enCareersEditor,
+    careers: enCareers,
     discussions: enDiscussions,
     pages: enPages,
     ui: enUi,

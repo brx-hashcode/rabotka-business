@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 
+import { OfferLanguage } from "#/features/careers/components/offer-language";
 import { OfferPage } from "#/features/careers/components/offer-page";
 import { jobPostingLd, ldScript } from "#/features/careers/job-posting-ld";
 import { EMPLOYMENT_LABEL } from "#/features/offers/offer-labels";
@@ -43,7 +44,13 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     ].filter((k): k is string => Boolean(k)),
     robots: indexed && page.company.indexable ? { index: true, follow: true } : NOINDEX,
     alternates: { canonical: `/carrieres/${page.company.slug}/${reference}` },
-    openGraph: { type: "website", siteName: "Rabotka", locale: "fr_FR", title, description },
+    openGraph: {
+      type: "website",
+      siteName: "Rabotka",
+      locale: page.offer.language === "en" ? "en_GB" : "fr_FR",
+      title,
+      description,
+    },
   };
 }
 
@@ -68,7 +75,9 @@ export default async function Page({ params }: Params) {
   return (
     <>
       {ld && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldScript(ld) }} />}
-      <OfferPage slug={slug} reference={reference} initial={page ?? undefined} />
+      <OfferLanguage language={page?.offer.language}>
+        <OfferPage slug={slug} reference={reference} initial={page ?? undefined} />
+      </OfferLanguage>
     </>
   );
 }

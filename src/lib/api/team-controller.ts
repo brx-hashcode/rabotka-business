@@ -1,8 +1,14 @@
 import { BusinessBaseController } from "./base-controller";
 
-/** The account holder is the one administrator; it invites the others. */
+/**
+ * The account holder — who created the account — stays its one holder, and
+ * may add administrators; only it manages them. Any administrator invites
+ * recruiters and evaluators.
+ */
 export type MemberRole = "ADMIN" | "RECRUITER" | "REVIEWER";
-export type InvitedRole = Exclude<MemberRole, "ADMIN">;
+export type InvitedRole = MemberRole;
+/** The plan's seats, one limit a role; the holder takes none. */
+export type SeatRole = MemberRole;
 export type MemberStatus = "INVITED" | "ACTIVE" | "REMOVED";
 
 export type TeamMember = {
@@ -22,7 +28,8 @@ export type TeamMember = {
 export type Me = TeamMember & { businessName: string };
 
 export type Seats = { used: number; limit: number | null };
-export type Team = { members: TeamMember[]; seats: Record<InvitedRole, Seats> };
+/** `ADMIN` absent from a backend older than the administrators' own limit. */
+export type Team = { members: TeamMember[]; seats: Partial<Record<SeatRole, Seats>> };
 
 export type ActivityItem = {
   id: string;

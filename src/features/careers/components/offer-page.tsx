@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -18,32 +19,50 @@ import {
 
 import { Bone } from "#/components/page-skeletons";
 import { DescriptionText } from "#/features/careers/components/description-text";
-import { EMPLOYMENT_LABEL, PAYMENT_SUFFIX } from "#/features/offers/offer-labels";
 import { candidateSource, SOURCE_KEY } from "#/features/careers/candidate-source";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import type { Translator } from "#/i18n/translator";
 import { getCareersOffer } from "#/lib/api/careers-controller";
 import { CareersShell, CompanyLogo, offerPlace } from "./careers-shell";
 
-const longDate = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-const fcfa = (n: number) => `${n.toLocaleString("fr-FR")} FCFA`;
+const longDate = (iso: string, locale: Locale) =>
+  new Date(iso).toLocaleDateString(INTL_LOCALE[locale], { day: "numeric", month: "long", year: "numeric" });
 
 type Offer = NonNullable<Awaited<ReturnType<typeof getCareersOffer>>>["offer"];
 
 /** The offer's essentials, once: on the chips under the title, and beside « Postuler ». */
-function facts(o: Offer): { icon: TablerIcon; label: string; text: string }[] {
+function facts(
+  o: Offer,
+  t: Translator<"careers">,
+  labels: Translator<"labels">,
+  locale: Locale,
+): { icon: TablerIcon; label: string; text: string }[] {
+  const amount = (n: number) => n.toLocaleString(INTL_LOCALE[locale]);
   return [
-    { icon: IconMapPin, label: "Lieu", text: offerPlace(o) },
-    { icon: IconBriefcase, label: "Type", text: `${EMPLOYMENT_LABEL[o.employmentType]} · ${o.quantity} poste${o.quantity > 1 ? "s" : ""}` },
+    { icon: IconMapPin, label: t("offer.facts.place"), text: offerPlace(o, t("place.remote")) },
+    {
+      icon: IconBriefcase,
+      label: t("offer.facts.type"),
+      text: t("offer.type", { type: labels(`employmentType.${o.employmentType}`), quantity: o.quantity }),
+    },
     {
       icon: IconCash,
-      label: "Rémunération",
-      text: o.amount === null ? "À discuter" : `${fcfa(o.amount)}${o.paymentFlow ? ` ${PAYMENT_SUFFIX[o.paymentFlow]}` : ""}`,
+      label: t("offer.facts.pay"),
+      text:
+        o.amount === null
+          ? t("offer.toDiscuss")
+          : o.paymentFlow
+            ? t("offer.amountWithSuffix", { amount: amount(o.amount), suffix: labels(`paymentSuffix.${o.paymentFlow}`) })
+            : t("offer.amount", { amount: amount(o.amount) }),
     },
-    ...(o.closesAt ? [{ icon: IconCalendarEvent, label: "Candidatures", text: `Jusqu'au ${longDate(o.closesAt)}` }] : []),
+    ...(o.closesAt
+      ? [{ icon: IconCalendarEvent, label: t("offer.facts.applications"), text: t("offer.until", { date: longDate(o.closesAt, locale) }) }]
+      : []),
   ].filter((r) => r.text);
 }
 
 /** The phone's own share sheet, or the link copied where there is none. */
-async function share(title: string) {
+async function share(title: string, copied: string) {
   const url = window.location.href.split("?")[0] ?? window.location.href;
   try {
     if (navigator.share) {
@@ -51,7 +70,7 @@ async function share(title: string) {
       return;
     }
     await navigator.clipboard.writeText(url);
-    toast.success("Lien de l'offre copié.");
+    toast.success(copied);
   } catch {
     // Share sheet closed: nothing to say.
   }
@@ -67,6 +86,9 @@ export function OfferPage({
   reference,
   initial,
 }: Readonly<{ slug: string; reference: string; initial?: Awaited<ReturnType<typeof getCareersOffer>> }>) {
+  const t = useTranslations("careers");
+  const labels = useTranslations("labels");
+  const locale = useLocale() as Locale;
   // Started from what the server read: the description is in the HTML, and
   // the offer is not asked for a second time.
   const query = useQuery({
@@ -103,10 +125,10 @@ export function OfferPage({
     return (
       <CareersShell>
         <section className="space-y-3 rounded-3xl bg-card p-6 text-center sm:p-10">
-          <h1 className="font-semibold text-lg">Cette offre n&apos;est plus ouverte</h1>
-          <p className="text-muted-foreground text-sm">Elle a peut-être été pourvue ou retirée.</p>
+          <h1 className="font-semibold text-lg">{t("closed.title")}</h1>
+          <p className="text-muted-foreground text-sm">{t("closed.hint")}</p>
           <Link href={`/carrieres/${slug}`} className="inline-block font-medium text-sm underline underline-offset-2">
-            Voir les autres offres
+            {t("closed.seeOthers")}
           </Link>
         </section>
       </CareersShell>
@@ -114,7 +136,7 @@ export function OfferPage({
   }
 
   const company = page.company;
-  const rows = facts(o);
+  const rows = facts(o, t, labels, locale);
 
   return (
     <CareersShell>
@@ -125,8 +147,8 @@ export function OfferPage({
             <div className="flex items-center gap-3">
               <Link
                 href={`/carrieres/${slug}`}
-                aria-label={`Toutes les offres de ${company.name}`}
-                title={`Toutes les offres de ${company.name}`}
+                aria-label={t("offer.allOffers", { company: company.name })}
+                title={t("offer.allOffers", { company: company.name })}
                 className="flex size-10 shrink-0 items-center justify-center rounded-full bg-page text-foreground transition-colors hover:bg-page/70"
               >
                 <IconArrowLeft className="size-5" />
@@ -135,14 +157,14 @@ export function OfferPage({
                 <CompanyLogo company={company} size="sm" />
                 <span className="min-w-0 truncate text-sm">
                   <span className="font-semibold">{company.name}</span>
-                  <span className="text-muted-foreground"> recrute</span>
+                  <span className="text-muted-foreground">{t("recruits")}</span>
                 </span>
               </Link>
             </div>
             <div className="space-y-2">
               <h1 className="font-semibold text-2xl leading-tight tracking-tight sm:text-3xl">{o.title}</h1>
               <p className="text-muted-foreground text-sm">
-                Publiée le {longDate(o.publishedAt)}
+                {t("offer.published", { date: longDate(o.publishedAt, locale) })}
                 {o.categoryName ? ` · ${o.categoryName}` : ""}
               </p>
             </div>
@@ -152,7 +174,7 @@ export function OfferPage({
                   <span className="flex size-7 items-center justify-center rounded-full bg-brand-lime text-[#0f2414]">
                     <r.icon className="size-4" />
                   </span>
-                  <span className="sr-only">{r.label} : </span>
+                  <span className="sr-only">{t("offer.facts.labelled", { label: r.label })}</span>
                   {r.text}
                 </li>
               ))}
@@ -160,7 +182,7 @@ export function OfferPage({
           </header>
 
           <section className="space-y-3">
-            <h2 className="font-semibold text-xl">Le poste</h2>
+            <h2 className="font-semibold text-xl">{t("offer.theJob")}</h2>
             <DescriptionText text={o.description} className="text-[15px]" />
           </section>
 
@@ -172,9 +194,9 @@ export function OfferPage({
         <div className="mx-auto flex max-w-2xl gap-2">
           <button
             type="button"
-            aria-label="Partager l'offre"
-            title="Partager l'offre"
-            onClick={() => void share(o.title)}
+            aria-label={t("offer.share")}
+            title={t("offer.share")}
+            onClick={() => void share(o.title, t("offer.linkCopied"))}
             className="flex size-14 shrink-0 items-center justify-center rounded-full bg-card shadow-soft transition-colors hover:bg-card/80"
           >
             <IconShare className="size-5" />
@@ -183,7 +205,7 @@ export function OfferPage({
             href={apply}
             className="flex h-14 flex-1 items-center justify-center gap-2 rounded-full bg-ink font-semibold text-[17px] text-white shadow-soft transition-opacity hover:opacity-90"
           >
-            Postuler à cette offre
+            {t("offer.apply")}
             <IconArrowRight className="size-5" />
           </Link>
         </div>

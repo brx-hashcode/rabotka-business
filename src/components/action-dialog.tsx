@@ -27,6 +27,7 @@ export function ActionDialog({
   confirmDisabledReason,
   tone = "default",
   hideCancel = false,
+  wide = false,
 }: Readonly<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -43,6 +44,8 @@ export function ActionDialog({
   tone?: "default" | "warning";
   /** A result to acknowledge, not a choice: a single full-width button. */
   hideCancel?: boolean;
+  /** Room for a form with choices (the team's invitation): wider on desktop. */
+  wide?: boolean;
 }>) {
   const t = useTranslations("ui");
   const whyNot = useWhyNot();
@@ -62,7 +65,8 @@ export function ActionDialog({
             "max-md:inset-x-0 max-md:bottom-0 max-md:max-h-[90svh] max-md:overflow-y-auto max-md:rounded-t-3xl max-md:px-5 max-md:pt-3 max-md:pb-8",
             "max-md:data-[state=open]:animate-in max-md:data-[state=open]:slide-in-from-bottom",
             // Desktop: centred card.
-            "md:top-1/2 md:left-1/2 md:w-full md:max-w-md md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-3xl md:p-6 md:shadow-soft",
+            "md:top-1/2 md:left-1/2 md:w-full md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-3xl md:p-6 md:shadow-soft",
+            wide ? "md:max-w-xl" : "md:max-w-md",
             "md:data-[state=open]:animate-in md:data-[state=open]:fade-in-0 md:data-[state=open]:zoom-in-95",
           )}
         >

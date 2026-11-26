@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { parseDescription } from "#/features/careers/description";
 import { cn } from "#/lib/utils";
 
@@ -7,6 +9,7 @@ import { cn } from "#/lib/utils";
  * Size and colour come from the caller.
  */
 export function DescriptionText({ text, className }: Readonly<{ text: string; className?: string }>) {
+  const t = useTranslations("careers.description");
   return (
     <div className={cn("space-y-3 leading-relaxed", className)}>
       {parseDescription(text).map((block, i) =>
@@ -20,7 +23,7 @@ export function DescriptionText({ text, className }: Readonly<{ text: string; cl
               <li key={j} className="flex gap-3">
                 <span aria-hidden className="mt-[0.65em] size-1.5 shrink-0 rounded-full bg-whatsapp-dark" />
                 <span className="min-w-0 break-words">
-                  {item.label && <strong className="font-semibold">{item.label} : </strong>}
+                  {item.label && <strong className="font-semibold">{t("labelled", { label: item.label })}</strong>}
                   {item.text}
                 </span>
               </li>

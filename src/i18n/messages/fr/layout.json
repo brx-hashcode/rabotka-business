@@ -34,7 +34,7 @@
   "refused": {
     "title": "Cette page est réservée",
     "reviewer": "Un évaluateur lit les candidatures et donne son avis ; cette page est pour ceux qui recrutent.",
-    "admin": "Elle est réservée à l'administrateur de votre organisation.",
+    "admin": "Elle est réservée aux administrateurs de votre organisation.",
     "back": "Retour au tableau de bord"
   },
   "account": {

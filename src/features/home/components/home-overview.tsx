@@ -36,14 +36,15 @@ import {
   myStatsKey,
   mySubscriptionKey,
 } from "#/lib/api/business-controller";
-import { sourceLabel } from "#/features/careers/candidate-source";
 import type { BusinessStats, MyBusiness, MySubscription, StatsPeriod } from "#/lib/api/types";
 import { cn } from "#/lib/utils";
 import { formatDelay, trend, type Trend } from "../stats-format";
 import { ApplicationsChart } from "./applications-chart";
 import { ReportExportMenu } from "./report-export-menu";
+import { SourcesDonut } from "./sources-donut";
 import { StatTile } from "./stat-tile";
 import { offersUsed } from "#/features/subscription/offers-quota";
+import { packCredits, planShare } from "#/features/subscription/packs";
 
 const PERIODS: StatsPeriod[] = [7, 30, 90];
 
@@ -176,8 +177,8 @@ export function HomeOverview() {
           <div className="grid gap-6 lg:grid-cols-3">
             <OffersCard offers={st.topOffers} />
             <div className="flex flex-col gap-6">
-              <CategoriesCard categories={st.categories} />
               <SourcesCard sources={st.sources ?? []} />
+              <CategoriesCard categories={st.categories} />
             </div>
           </div>
         </>
@@ -467,6 +468,20 @@ function SubscriptionCard({
     { label: t("contacts"), used: e.unlocksUsed, limit: e.unlocksQuota, over: "overContacts" as const },
     { label: t("offers"), used: offersUsed(e), limit: e.activeOffersLimit, over: "overOffers" as const },
     ...(e.cvQuota !== 0 ? [{ label: t("cvs"), used: e.cvUsed, limit: e.cvQuota, over: "overCvs" as const }] : []),
+    // The plan's own drafts this period, packs aside, as on the subscription page.
+    ...(e.offerDraftsQuota !== undefined && e.offerDraftsQuota !== 0
+      ? [
+          {
+            label: t("drafts"),
+            used:
+              e.offerDraftsQuota === null
+                ? 0
+                : e.offerDraftsQuota - (planShare(e.offerDraftsRemaining, packCredits(e, "OFFER_DRAFT")) ?? 0),
+            limit: e.offerDraftsQuota,
+            over: "overDrafts" as const,
+          },
+        ]
+      : []),
   ];
   return (
     <Card title={t("title")} action={<CardLink href="/espace/abonnement">{t("manage")}</CardLink>}>
@@ -552,7 +567,12 @@ function Meter({
   used,
   limit,
   over: overKey,
-}: Readonly<{ label: string; used: number; limit: number | null; over: "overContacts" | "overOffers" | "overCvs" }>) {
+}: Readonly<{
+  label: string;
+  used: number;
+  limit: number | null;
+  over: "overContacts" | "overOffers" | "overCvs" | "overDrafts";
+}>) {
   const t = useTranslations("home.subscription");
   const ratio = limit === null || limit === 0 ? 0 : used / limit;
   const over = limit !== null && used > limit;
@@ -665,28 +685,13 @@ function CategoriesCard({ categories }: Readonly<{ categories: BusinessStats["ca
 }
 
 function SourcesCard({ sources }: Readonly<{ sources: NonNullable<BusinessStats["sources"]> }>) {
-  const max = Math.max(0, ...sources.map((s) => s.received));
   const t = useTranslations("home");
-  const tLabels = useTranslations("labels");
   return (
     <Card title={t("sources.title")} href="/espace/candidatures?onglet=all">
-      {sources.length === 0 ? (
+      {sources.every((s) => s.received === 0) ? (
         <p className="text-muted-foreground text-sm">{t("funnel.empty")}</p>
       ) : (
-        <ul className="space-y-4">
-          {sources.slice(0, 6).map((s) => (
-            <li key={s.source} className="space-y-1.5">
-              <div className="flex items-baseline justify-between gap-3 text-sm">
-                <span className="truncate font-medium">{sourceLabel(s.source, tLabels)}</span>
-                <span className="shrink-0 tabular-nums">
-                  {s.received}
-                  {s.hired > 0 && <span className="text-muted-foreground"> · {t("sources.hired", { count: s.hired })}</span>}
-                </span>
-              </div>
-              <Bar value={s.received} max={max} />
-            </li>
-          ))}
-        </ul>
+        <SourcesDonut sources={sources} />
       )}
       <p className="mt-auto text-muted-foreground text-xs">{t("sources.note")}</p>
     </Card>

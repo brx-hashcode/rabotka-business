@@ -6,8 +6,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  IconBriefcase,
+  IconCheck,
   IconCrown,
   IconDots,
+  IconMessageCircle,
+  IconShieldCheck,
   IconLock,
   IconMail,
   IconPlus,
@@ -24,6 +28,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { Input } from "#/components/ui/input";
@@ -39,6 +44,7 @@ import {
   setMemberRole,
   teamKey,
   type InvitedRole,
+  type SeatRole,
   type Seats,
   type Team,
   type TeamMember,
@@ -48,12 +54,32 @@ import { activityLabel, activityOfferId } from "../activity-labels";
 import { isAdmin } from "../member-access";
 import { useMember } from "../use-member";
 
-const INVITED: InvitedRole[] = ["RECRUITER", "REVIEWER"];
+/** The plan's seats, as the places bar shows them: one limit a role. */
+const SEATS: SeatRole[] = ["ADMIN", "RECRUITER", "REVIEWER"];
+
+/** In the invite dialog: the role most given first, the widest last. */
+const ROLE_ORDER: InvitedRole[] = ["RECRUITER", "REVIEWER", "ADMIN"];
+
+const ROLE_ICON: Record<InvitedRole, typeof IconBriefcase> = {
+  RECRUITER: IconBriefcase,
+  REVIEWER: IconMessageCircle,
+  ADMIN: IconShieldCheck,
+};
+
+/** The list's order: the holder, then administrators, recruiters, evaluators; by name within each. */
+const RANK: Record<InvitedRole, number> = { ADMIN: 0, RECRUITER: 1, REVIEWER: 2 };
+const byRank = (a: TeamMember, b: TeamMember) =>
+  Number(b.isOwner) - Number(a.isOwner) || RANK[a.role] - RANK[b.role] || a.name.localeCompare(b.name);
+
+/** The roles someone may give: administrators are the holder's to make. */
+const rolesFor = (isOwner: boolean): InvitedRole[] =>
+  isOwner ? ["ADMIN", "RECRUITER", "REVIEWER"] : ["RECRUITER", "REVIEWER"];
 
 /**
  * « Équipe »: the people who work in the space, and who did what. The account
- * holder is the one administrator; it invites Recruteurs and Évaluateurs,
- * each up to its plan's limit.
+ * holder — who created the account — may add administrators, and only it
+ * manages them; any administrator invites Recruteurs and Évaluateurs. Each
+ * takes a place of the plan, an administrator a recruiter's.
  */
 export function TeamPage() {
   const t = useTranslations("team.page");
@@ -145,7 +171,7 @@ function Members() {
           {t("heading")} <span className="font-normal text-muted-foreground">({members.length})</span>
         </p>
         <ul className="divide-y divide-page">
-          {members.map((m) => (
+          {[...members].sort(byRank).map((m) => (
             <MemberRow key={m.id} member={m} seats={seats} onRemove={() => setRemoving(m)} onChanged={refresh} />
           ))}
         </ul>
@@ -179,7 +205,15 @@ function Members() {
   );
 }
 
-const hasPlace = (s: Seats) => s.limit === null || s.used < s.limit;
+/** No seat known (a backend older than the role's limit): no place to give. */
+const hasPlace = (s: Seats | undefined) => !!s && (s.limit === null || s.used < s.limit);
+
+/** The roles the backend sends seats for, with their seats. */
+const seatsOf = (seats: Team["seats"]) =>
+  SEATS.flatMap((role) => {
+    const s = seats[role];
+    return s ? [{ role, ...s }] : [];
+  });
 
 /** « Inviter », beside the tabs: off when the plan has no place left. */
 function InviteButton() {
@@ -188,7 +222,7 @@ function InviteButton() {
   const team = useQuery({ queryKey: teamKey, queryFn: getTeam });
   const [open, setOpen] = useState(false);
   const seats = team.data?.seats;
-  const anyPlace = !!seats && INVITED.some((r) => hasPlace(seats[r]));
+  const anyPlace = !!seats && SEATS.some((r) => hasPlace(seats[r]));
   return (
     <>
       <button
@@ -220,17 +254,18 @@ function InviteButton() {
  */
 function Places({ seats }: Readonly<{ seats: Team["seats"] }>) {
   const t = useTranslations("team.members");
-  const anyPlace = INVITED.some((r) => hasPlace(seats[r]));
-  const none = INVITED.every((r) => seats[r].limit === 0);
-  const over = INVITED.map((r) => ({ role: r, extra: seats[r].limit === null ? 0 : seats[r].used - seats[r].limit! })).filter(
+  const known = seatsOf(seats);
+  const anyPlace = known.some((s) => hasPlace(s));
+  const none = known.every((s) => s.limit === 0);
+  const over = known.map((s) => ({ role: s.role, extra: s.limit === null ? 0 : s.used - s.limit })).filter(
     (o) => o.extra > 0,
   );
   return (
     <section className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-3xl bg-card px-5 py-4">
       <p className="font-medium text-sm">{t("places")}</p>
       <div className="flex flex-wrap gap-2">
-        {INVITED.map((r) => (
-          <SeatPill key={r} role={r} used={seats[r].used} limit={seats[r].limit} />
+        {known.map((r) => (
+          <SeatPill key={r.role} role={r.role} used={r.used} limit={r.limit} />
         ))}
       </div>
       {over.length > 0 && (
@@ -250,7 +285,7 @@ function Places({ seats }: Readonly<{ seats: Team["seats"] }>) {
   );
 }
 
-function SeatPill({ role, used, limit }: Readonly<{ role: InvitedRole; used: number; limit: number | null }>) {
+function SeatPill({ role, used, limit }: Readonly<{ role: SeatRole; used: number; limit: number | null }>) {
   const t = useTranslations("team");
   const full = limit !== null && used >= limit;
   return (
@@ -275,23 +310,34 @@ function MemberRow({
   const t = useTranslations("team.members");
   const tTeam = useTranslations("team");
   const whyNot = useWhyNot();
-  const tLabels = useTranslations("labels");
   const locale = useLocale();
   const friendlyError = useFriendlyError();
+  const { member: me } = useMember();
   const resend = useMutation({
     mutationFn: () => resendInvite(member.id),
-    onSuccess: () => toast.success(t("resent", { email: member.email })),
+    onSuccess: () => {
+      toast.success(t("resent", { email: member.email }));
+      setAsked(null);
+    },
     onError: (err) => toast.error(friendlyError(err, t("resendFailed"))),
   });
+  // What the menu asked for, confirmed in a dialog before it is done.
+  const [asked, setAsked] = useState<{ kind: "role"; role: InvitedRole } | { kind: "resend" } | null>(null);
   const role = useMutation({
     mutationFn: (next: InvitedRole) => setMemberRole(member.id, next),
     onSuccess: (m) => {
       toast.success(t("roleChanged", { name: m.name, role: m.role }));
+      setAsked(null);
       onChanged();
     },
     onError: (err) => toast.error(friendlyError(err, t("roleFailed"))),
   });
   const invited = member.status === "INVITED";
+  // Nobody changes the holder or themselves, and administrators are the
+  // holder's to manage: the API refuses the rest, so the menu doesn't offer it.
+  const meIsOwner = me?.isOwner ?? false;
+  const canManage = !member.isOwner && member.id !== me?.id && (meIsOwner || member.role !== "ADMIN");
+  const seatFull = (r: InvitedRole) => !hasPlace(seats[r]);
 
   return (
     <li className="flex items-center gap-3 px-4 py-3.5 sm:px-5">
@@ -304,6 +350,11 @@ function MemberRow({
         <p className="flex items-center gap-1.5 truncate font-medium">
           <span className="truncate">{member.name}</span>
           {member.isOwner && <IconCrown className="size-4 shrink-0 text-chip-amber-foreground" aria-label={t("owner")} />}
+          {member.id === me?.id && (
+            <span className="shrink-0 rounded-full bg-selected px-2 py-0.5 font-medium text-[11px] text-selected-foreground">
+              {t("you")}
+            </span>
+          )}
         </p>
         <p className="truncate text-muted-foreground text-xs">
           {member.email}
@@ -317,15 +368,10 @@ function MemberRow({
               : t("active")}
         </p>
       </div>
-      <span
-        className={cn(
-          "hidden shrink-0 rounded-full px-2.5 py-1 font-medium text-xs sm:inline",
-          invited ? "bg-chip-amber text-chip-amber-foreground" : "bg-page text-muted-foreground",
-        )}
-      >
-        {invited ? t("inviteSent") : member.isOwner ? t("owner") : tLabels(`role.${member.role}`)}
-      </span>
-      {!member.isOwner && (
+      <RoleBadge member={member} />
+      {/* The menu's place is kept when there is none, so every badge lines up. */}
+      {!canManage && <span aria-hidden className="size-9 shrink-0" />}
+      {canManage && (
         <DropdownMenu>
           <DropdownMenuTrigger
             aria-label={t("actionsFor", { name: member.name })}
@@ -333,41 +379,107 @@ function MemberRow({
           >
             <IconDots className="size-4" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-64 rounded-2xl border-0 bg-card p-1.5 shadow-soft">
-            {INVITED.filter((r) => r !== member.role).map((r) => {
-              const full = seats[r].limit !== null && seats[r].used >= seats[r].limit!;
-              return (
-                <DropdownMenuItem
-                  key={r}
-                  disabled={full || role.isPending}
-                  title={whyNot([role.isPending, "wait"], [full, { say: t("seatsTaken") }])}
-                  onSelect={() => role.mutate(r)}
-                  className="cursor-pointer flex-col items-start gap-0 rounded-xl px-3 py-2"
-                >
-                  <span className="font-medium text-sm">{t("makeRole", { role: r })}</span>
-                  <span className="text-muted-foreground text-xs">{full ? t("seatsTaken") : tTeam(`roleHint.${r}`)}</span>
-                </DropdownMenuItem>
-              );
-            })}
+          <DropdownMenuContent align="end" className="w-72 rounded-2xl border-0 bg-card p-1.5 shadow-soft">
+            {[...rolesFor(meIsOwner)]
+              .sort((a, b) => ROLE_ORDER.indexOf(a) - ROLE_ORDER.indexOf(b))
+              .filter((r) => r !== member.role)
+              .map((r) => {
+                const full = seatFull(r);
+                const Icon = ROLE_ICON[r];
+                return (
+                  <DropdownMenuItem
+                    key={r}
+                    disabled={full}
+                    title={whyNot([full, { say: t("seatsTaken") }])}
+                    onSelect={() => setAsked({ kind: "role", role: r })}
+                    className="cursor-pointer items-start gap-3 rounded-xl px-2.5 py-2"
+                  >
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-page">
+                      <Icon className="size-4" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block font-medium text-sm">{t("makeRole", { role: r })}</span>
+                      <span className="block text-muted-foreground text-xs">
+                        {full ? t("seatsTaken") : tTeam(`roleHint.${r}`)}
+                      </span>
+                    </span>
+                  </DropdownMenuItem>
+                );
+              })}
+            <DropdownMenuSeparator className="mx-2 my-1.5 bg-page" />
             {invited && (
               <DropdownMenuItem
-                disabled={resend.isPending}
-                title={whyNot([resend.isPending, "wait"])}
-                onSelect={() => resend.mutate()}
-                className="cursor-pointer gap-2 rounded-xl px-3 py-2 text-sm"
+                onSelect={() => setAsked({ kind: "resend" })}
+                className="cursor-pointer gap-3 rounded-xl px-2.5 py-2 text-sm"
               >
-                <IconSend className="size-4" />
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-page">
+                  <IconSend className="size-4" />
+                </span>
                 {t("resend")}
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem onSelect={onRemove} className="cursor-pointer gap-2 rounded-xl px-3 py-2 text-destructive text-sm focus:text-destructive">
-              <IconUserMinus className="size-4" />
+            <DropdownMenuItem
+              onSelect={onRemove}
+              className="cursor-pointer gap-3 rounded-xl px-2.5 py-2 text-destructive text-sm focus:text-destructive"
+            >
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-destructive/10">
+                <IconUserMinus className="size-4" />
+              </span>
               {t("removeFromTeam")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )}
+
+      {asked?.kind === "role" && (
+        <ActionDialog
+          open
+          onOpenChange={(open) => !open && setAsked(null)}
+          tone={asked.role === "ADMIN" ? "warning" : "default"}
+          icon={(() => {
+            const Icon = ROLE_ICON[asked.role];
+            return <Icon className="size-5" />;
+          })()}
+          title={t("roleTitle", { name: member.name, role: asked.role })}
+          description={t("roleText", { role: asked.role })}
+          confirmLabel={t("makeRole", { role: asked.role })}
+          pending={role.isPending}
+          onConfirm={() => role.mutate(asked.role)}
+        />
+      )}
+      {asked?.kind === "resend" && (
+        <ActionDialog
+          open
+          onOpenChange={(open) => !open && setAsked(null)}
+          icon={<IconSend className="size-5" />}
+          title={t("resendTitle", { email: member.email })}
+          description={t("resendText")}
+          confirmLabel={t("resend")}
+          pending={resend.isPending}
+          onConfirm={() => resend.mutate()}
+        />
+      )}
     </li>
+  );
+}
+
+/** The role, with the icon the invitation shows it with; « Invitation envoyée » until they join. */
+function RoleBadge({ member }: Readonly<{ member: TeamMember }>) {
+  const t = useTranslations("team.members");
+  const tLabels = useTranslations("labels");
+  if (member.status === "INVITED") {
+    return (
+      <span className="hidden shrink-0 rounded-full bg-chip-amber px-2.5 py-1 font-medium text-chip-amber-foreground text-xs sm:inline">
+        {t("inviteSent")}
+      </span>
+    );
+  }
+  const Icon = member.isOwner ? IconCrown : ROLE_ICON[member.role];
+  return (
+    <span className="hidden shrink-0 items-center gap-1.5 rounded-full bg-page px-2.5 py-1 font-medium text-muted-foreground text-xs sm:inline-flex">
+      <Icon className="size-3.5" />
+      {member.isOwner ? t("owner") : tLabels(`role.${member.role}`)}
+    </span>
   );
 }
 
@@ -382,7 +494,9 @@ function InviteDialog({
   const tTeam = useTranslations("team");
   const tLabels = useTranslations("labels");
   const friendlyError = useFriendlyError();
-  const free = (r: InvitedRole) => seats[r].limit === null || seats[r].used < seats[r].limit!;
+  const { member: me } = useMember();
+  const roles = rolesFor(me?.isOwner ?? false);
+  const free = (r: InvitedRole) => hasPlace(seats[r]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<InvitedRole>(free("RECRUITER") ? "RECRUITER" : "REVIEWER");
@@ -403,6 +517,7 @@ function InviteDialog({
     <ActionDialog
       open={open}
       onOpenChange={onOpenChange}
+      wide
       icon={<IconMail className="size-5" />}
       title={t("title")}
       description={t("text")}
@@ -430,27 +545,53 @@ function InviteDialog({
           aria-label={t("email")}
           className="h-12 rounded-xl border-0 bg-page px-4 shadow-none"
         />
-        <div role="radiogroup" aria-label={t("role")} className="grid gap-2 sm:grid-cols-2">
-          {INVITED.map((r) => (
-            <button
-              key={r}
-              type="button"
-              role="radio"
-              aria-checked={role === r}
-              disabled={!free(r)}
-              title={whyNot([!free(r), { say: tTeam("members.seatsTaken") }])}
-              onClick={() => setRole(r)}
-              className={cn(
-                "space-y-0.5 rounded-2xl p-3 text-left transition-colors disabled:opacity-50",
-                role === r ? "bg-selected text-selected-foreground" : "bg-page hover:bg-page/70",
-              )}
-            >
-              <span className="block font-medium text-sm">{tLabels(`role.${r}`)}</span>
-              <span className={cn("block text-xs", role === r ? "opacity-80" : "text-muted-foreground")}>
-                {free(r) ? tTeam(`roleHint.${r}`) : tTeam("members.seatsTaken")}
-              </span>
-            </button>
-          ))}
+        <div role="radiogroup" aria-label={t("role")} className="space-y-2 pt-1">
+          <p className="px-1 font-medium text-muted-foreground text-xs">{t("role")}</p>
+          {/* One row a role, the one most given first: three cards side by
+              side wrapped every hint over four lines. */}
+          {[...roles].sort((a, b) => ROLE_ORDER.indexOf(a) - ROLE_ORDER.indexOf(b)).map((r) => {
+            const Icon = ROLE_ICON[r];
+            const on = role === r;
+            return (
+              <button
+                key={r}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                disabled={!free(r)}
+                title={whyNot([!free(r), { say: tTeam("members.seatsTaken") }])}
+                onClick={() => setRole(r)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-2xl p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+                  on ? "bg-selected text-selected-foreground" : "bg-page hover:bg-page/70",
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex size-10 shrink-0 items-center justify-center rounded-xl",
+                    on ? "bg-brand-lime text-brand-lime-foreground" : "bg-card",
+                  )}
+                >
+                  <Icon className="size-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-medium text-sm">{tLabels(`role.${r}`)}</span>
+                  <span className={cn("block text-xs", on ? "opacity-80" : "text-muted-foreground")}>
+                    {free(r) ? tTeam(`roleHint.${r}`) : tTeam("members.seatsTaken")}
+                  </span>
+                </span>
+                <span
+                  aria-hidden
+                  className={cn(
+                    "flex size-5 shrink-0 items-center justify-center rounded-full",
+                    on ? "bg-brand-lime text-brand-lime-foreground" : "bg-card",
+                  )}
+                >
+                  {on && <IconCheck className="size-3.5" stroke={3} />}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </ActionDialog>

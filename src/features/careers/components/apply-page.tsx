@@ -3,6 +3,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { parseAsBoolean, useQueryState } from "nuqs";
 import {
@@ -22,7 +23,8 @@ import { Textarea } from "#/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { SOURCE_KEY } from "#/features/careers/candidate-source";
 import { applyToOffer, getCareersOffer, type CareersQuestion } from "#/lib/api/careers-controller";
-import { friendlyError } from "#/lib/api/friendly-error";
+import { INTL_LOCALE, type Locale } from "#/i18n/config";
+import { useFriendlyError } from "#/lib/api/use-friendly-error";
 import { cn } from "#/lib/utils";
 import { useWhyNot } from "#/lib/use-why-not";
 import { appConfig } from "#/config";
@@ -47,6 +49,8 @@ function sentFrom(param: string | null): string {
 }
 
 export function ApplyPage({ slug, reference }: Readonly<{ slug: string; reference: string }>) {
+  const t = useTranslations("careers");
+  const friendlyError = useFriendlyError();
   const whyNot = useWhyNot();
   const query = useQuery({
     queryKey: ["careers", slug, reference],
@@ -90,7 +94,7 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
   function pick(file: File | undefined) {
     if (!file) return;
     if (file.size > MAX_BYTES) {
-      setCvError("Ce fichier dépasse 10 Mo.");
+      setCvError(t("apply.tooBig"));
       return;
     }
     setCvError("");
@@ -112,23 +116,23 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
           </div>
         ) : !page ? (
           <div className="space-y-3 text-center">
-            <h1 className="font-semibold text-lg">Cette offre n&apos;est plus ouverte</h1>
+            <h1 className="font-semibold text-lg">{t("closed.title")}</h1>
             <Link href={`/carrieres/${slug}`} className="inline-block font-medium text-sm underline underline-offset-2">
-              Voir les autres offres
+              {t("closed.seeOthers")}
             </Link>
           </div>
         ) : send.isSuccess || sent ? (
           // Flat, full width: on a phone, boxes inside the card squeezed the text.
           <div className="space-y-8">
             <div className="space-y-3">
-              <h1 className="font-semibold text-2xl tracking-tight">Candidature envoyée</h1>
+              <h1 className="font-semibold text-2xl tracking-tight">{t("apply.sent.title")}</h1>
               <p className="text-[15px] text-foreground/80 leading-relaxed">
-                {page.company.name} a bien reçu votre dossier. Un e-mail de confirmation vous a été envoyé.
+                {t("apply.sent.body", { company: page.company.name })}
               </p>
             </div>
             <JoinRabotka />
             <Link href={`/carrieres/${slug}`} className="inline-block font-medium text-sm underline underline-offset-2">
-              Voir les autres offres de {page.company.name}
+              {t("apply.sent.seeOthers", { company: page.company.name })}
             </Link>
           </div>
         ) : (
@@ -137,8 +141,8 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
             <div className="flex items-center gap-3">
               <Link
                 href={`/carrieres/${slug}/${reference}`}
-                aria-label="Retour à l'offre"
-                title="Retour à l'offre"
+                aria-label={t("apply.back")}
+                title={t("apply.back")}
                 className="flex size-10 shrink-0 items-center justify-center rounded-full bg-page text-foreground transition-colors hover:bg-page/70"
               >
                 <IconArrowLeft className="size-5" />
@@ -150,25 +154,25 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
                 <CompanyLogo company={page.company} size="sm" />
                 <span className="min-w-0 truncate text-sm">
                   <span className="font-semibold">{page.company.name}</span>
-                  <span className="text-muted-foreground"> recrute</span>
+                  <span className="text-muted-foreground">{t("recruits")}</span>
                 </span>
               </Link>
             </div>
             <div className="space-y-1">
-              <h1 className="font-semibold text-2xl leading-tight tracking-tight sm:text-3xl">Votre candidature</h1>
+              <h1 className="font-semibold text-2xl leading-tight tracking-tight sm:text-3xl">{t("apply.title")}</h1>
               <p className="text-muted-foreground">{page.offer.title}</p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               {/* Nom first, as people here write their name (and as the CV and the ID do). */}
-              <TextField title="Nom" autoComplete="family-name" value={details.lastName} onChange={(v) => setDetails({ ...details, lastName: v })} />
-              <TextField title="Prénom" autoComplete="given-name" value={details.firstName} onChange={(v) => setDetails({ ...details, firstName: v })} />
-              <TextField title="E-mail" type="email" autoComplete="email" value={details.email} onChange={(v) => setDetails({ ...details, email: v })} />
-              <TextField title="Téléphone" type="tel" autoComplete="tel" value={details.phone} onChange={(v) => setDetails({ ...details, phone: v })} />
+              <TextField title={t("apply.lastName")} autoComplete="family-name" value={details.lastName} onChange={(v) => setDetails({ ...details, lastName: v })} />
+              <TextField title={t("apply.firstName")} autoComplete="given-name" value={details.firstName} onChange={(v) => setDetails({ ...details, firstName: v })} />
+              <TextField title={t("apply.email")} type="email" autoComplete="email" value={details.email} onChange={(v) => setDetails({ ...details, email: v })} />
+              <TextField title={t("apply.phone")} type="tel" autoComplete="tel" value={details.phone} onChange={(v) => setDetails({ ...details, phone: v })} />
             </div>
 
             <div className="space-y-1.5">
-              <p className={label}>CV</p>
+              <p className={label}>{t("apply.cv")}</p>
               <input ref={input} type="file" accept={ACCEPT} className="hidden" onChange={(e) => pick(e.target.files?.[0])} />
               {cv ? (
                 <div className="flex items-center gap-3 rounded-xl bg-page p-3">
@@ -178,7 +182,7 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
                   <span className="min-w-0 flex-1 truncate font-medium text-sm">{cv.name}</span>
                   <button
                     type="button"
-                    aria-label="Retirer ce CV"
+                    aria-label={t("apply.removeCv")}
                     onClick={() => {
                       setCv(null);
                       if (input.current) input.current.value = "";
@@ -195,8 +199,8 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
                   className="flex w-full flex-col items-center gap-1.5 rounded-xl bg-page px-4 py-7 text-center transition-colors hover:bg-page/70"
                 >
                   <IconUpload className="size-6" />
-                  <span className="font-medium">Ajouter votre CV</span>
-                  <span className="text-foreground/60 text-xs">PDF ou Word, 10 Mo au plus</span>
+                  <span className="font-medium">{t("apply.addCv")}</span>
+                  <span className="text-foreground/60 text-xs">{t("apply.cvHint")}</span>
                 </button>
               )}
               {cvError && <p className="text-destructive text-sm">{cvError}</p>}
@@ -236,9 +240,9 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
             <label className="flex items-start gap-3 text-sm">
               <Checkbox checked={consent} onCheckedChange={(c) => setConsent(c === true)} className="mt-0.5" />
               <span>
-                J&apos;accepte que {page.company.name} traite ces informations pour ma candidature.{" "}
+                {t("apply.consent", { company: page.company.name })}{" "}
                 <a href="https://www.rabotka.work/privacy" target="_blank" rel="noreferrer" className="underline underline-offset-2">
-                  Confidentialité
+                  {t("apply.privacy")}
                 </a>
               </span>
             </label>
@@ -246,13 +250,13 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
             <label className="flex items-start gap-3 text-sm">
               <Checkbox checked={keep} onCheckedChange={(c) => setKeep(c === true)} className="mt-0.5" />
               <span>
-                J&apos;accepte que {page.company.name} garde ma candidature pour me proposer d&apos;autres postes.{" "}
-                <span className="text-muted-foreground">Facultatif ; vous pourrez la retirer à tout moment.</span>
+                {t("apply.keep", { company: page.company.name })}{" "}
+                <span className="text-muted-foreground">{t("apply.keepHint")}</span>
               </span>
             </label>
 
             {send.isError && (
-              <p className="text-destructive text-sm">{friendlyError(send.error, "La candidature n'a pas pu être envoyée. Réessayez.")}</p>
+              <p className="text-destructive text-sm">{friendlyError(send.error, t("apply.failed"))}</p>
             )}
 
             <button
@@ -262,7 +266,7 @@ export function ApplyPage({ slug, reference }: Readonly<{ slug: string; referenc
               className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-ink font-semibold text-[17px] text-white disabled:opacity-50"
             >
               {send.isPending && <Loader className="size-5 animate-spin" />}
-              Envoyer ma candidature
+              {t("apply.submit")}
             </button>
           </form>
         )}
@@ -310,6 +314,7 @@ function FileQuestionField({
   file,
   onChange,
 }: Readonly<{ question: CareersQuestion; file: File | null; onChange: (file: File | null) => void }>) {
+  const t = useTranslations("careers.apply");
   const input = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
   return (
@@ -328,7 +333,7 @@ function FileQuestionField({
           e.target.value = "";
           if (!picked) return;
           if (picked.size > MAX_BYTES) {
-            setError("Ce fichier dépasse 10 Mo.");
+            setError(t("tooBig"));
             return;
           }
           setError("");
@@ -341,7 +346,7 @@ function FileQuestionField({
             <IconPaperclip className="size-5" />
           </span>
           <span className="min-w-0 flex-1 truncate font-medium text-sm">{file.name}</span>
-          <button type="button" aria-label="Retirer ce fichier" onClick={() => onChange(null)} className="rounded-lg p-2 hover:bg-card">
+          <button type="button" aria-label={t("removeFile")} onClick={() => onChange(null)} className="rounded-lg p-2 hover:bg-card">
             <IconX className="size-4" />
           </button>
         </div>
@@ -353,8 +358,8 @@ function FileQuestionField({
         >
           <IconUpload className="size-5 shrink-0" />
           <span className="min-w-0">
-            <span className="block font-medium text-sm">Joindre un fichier</span>
-            <span className="block text-foreground/60 text-xs">PDF, Word ou photo, 10 Mo au plus</span>
+            <span className="block font-medium text-sm">{t("attach")}</span>
+            <span className="block text-foreground/60 text-xs">{t("attachHint")}</span>
           </span>
         </button>
       )}
@@ -368,6 +373,8 @@ function QuestionField({
   value,
   onChange,
 }: Readonly<{ question: CareersQuestion; value: string; onChange: (v: string) => void }>) {
+  const t = useTranslations("careers.apply");
+  const locale = useLocale() as Locale;
   const title = (
     <p className={label}>
       {q.label}
@@ -380,8 +387,8 @@ function QuestionField({
         {title}
         <div className="flex gap-2">
           {[
-            { value: "yes", text: "Oui" },
-            { value: "no", text: "Non" },
+            { value: "yes", text: t("yes") },
+            { value: "no", text: t("no") },
           ].map((o) => (
             <button
               key={o.value}
@@ -406,7 +413,7 @@ function QuestionField({
         {title}
         <Select value={value} onValueChange={onChange}>
           <SelectTrigger className={cn(field, "w-full")}>
-            <SelectValue placeholder="Choisir" />
+            <SelectValue placeholder={t("choose")} />
           </SelectTrigger>
           <SelectContent>
             {q.options.map((o) => (
@@ -431,7 +438,7 @@ function QuestionField({
           aria-label={q.label}
           className="min-h-40 rounded-2xl border-0 bg-page px-4 py-3 text-base shadow-none md:text-[15px]"
         />
-        <p className="text-right text-muted-foreground text-xs tabular-nums">{value.length} / 3 000</p>
+        <p className="text-right text-muted-foreground text-xs tabular-nums">{t("charCount", { count: value.length, max: (3000).toLocaleString(INTL_LOCALE[locale]) })}</p>
       </div>
     );
   }
@@ -458,17 +465,13 @@ function QuestionField({
  * matching offers to their phone, and let recruiters find them.
  */
 function JoinRabotka() {
-  const steps = [
-    "Écrivez à Rabotka sur WhatsApp : votre compte se crée en quelques messages.",
-    "Complétez votre profil : vos métiers, votre expérience, votre ville.",
-    "Faites valider votre profil : les recruteurs vous font davantage confiance.",
-  ];
+  const t = useTranslations("careers.apply.join");
+  const steps = [t("step1"), t("step2"), t("step3")];
   return (
     <section className="space-y-4">
-      <h2 className="font-semibold text-lg">Ne manquez plus les prochaines offres</h2>
+      <h2 className="font-semibold text-lg">{t("title")}</h2>
       <p className="text-[15px] text-foreground/80 leading-relaxed">
-        Créez votre compte Rabotka et faites valider votre profil : les offres qui vous correspondent arrivent sur votre téléphone, et les
-        recruteurs peuvent vous trouver.
+        {t("body")}
       </p>
       <ol className="space-y-2.5">
         {steps.map((text, i) => (
@@ -487,9 +490,9 @@ function JoinRabotka() {
         className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#25d366] px-6 font-medium text-[#0b3d20] hover:bg-[#1ebe5b] sm:w-auto"
       >
         <IconBrandWhatsapp className="size-5 shrink-0" />
-        Créer mon compte
+        {t("cta")}
       </a>
-      <p className="text-muted-foreground text-xs">Sur WhatsApp · gratuit · sans application à installer</p>
+      <p className="text-muted-foreground text-xs">{t("note")}</p>
     </section>
   );
 }

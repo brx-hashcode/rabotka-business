@@ -1,0 +1,77 @@
+{
+  "shell": {
+    "poweredBy": "Propulsé par Rabotka · www.rabotka.work"
+  },
+  "place": {
+    "remote": "À distance"
+  },
+  "description": {
+    "labelled": "{label} : "
+  },
+  "closed": {
+    "title": "Cette offre n'est plus ouverte",
+    "hint": "Elle a peut-être été pourvue ou retirée.",
+    "seeOthers": "Voir les autres offres"
+  },
+  "recruits": " recrute",
+  "offer": {
+    "allOffers": "Toutes les offres de {company}",
+    "published": "Publiée le {date}",
+    "theJob": "Le poste",
+    "share": "Partager l'offre",
+    "linkCopied": "Lien de l'offre copié.",
+    "apply": "Postuler à cette offre",
+    "facts": {
+      "place": "Lieu",
+      "type": "Type",
+      "pay": "Rémunération",
+      "applications": "Candidatures",
+      "labelled": "{label} : "
+    },
+    "type": "{type} · {quantity, plural, one {# poste} other {# postes}}",
+    "toDiscuss": "À discuter",
+    "amount": "{amount} FCFA",
+    "amountWithSuffix": "{amount} FCFA {suffix}",
+    "until": "Jusqu'au {date}"
+  },
+  "apply": {
+    "back": "Retour à l'offre",
+    "title": "Votre candidature",
+    "lastName": "Nom",
+    "firstName": "Prénom",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "cv": "CV",
+    "removeCv": "Retirer ce CV",
+    "addCv": "Ajouter votre CV",
+    "cvHint": "PDF ou Word, 10 Mo au plus",
+    "tooBig": "Ce fichier dépasse 10 Mo.",
+    "removeFile": "Retirer ce fichier",
+    "attach": "Joindre un fichier",
+    "attachHint": "PDF, Word ou photo, 10 Mo au plus",
+    "yes": "Oui",
+    "no": "Non",
+    "choose": "Choisir",
+    "charCount": "{count} / {max}",
+    "consent": "J'accepte que {company} traite ces informations pour ma candidature.",
+    "privacy": "Confidentialité",
+    "keep": "J'accepte que {company} garde ma candidature pour me proposer d'autres postes.",
+    "keepHint": "Facultatif ; vous pourrez la retirer à tout moment.",
+    "failed": "La candidature n'a pas pu être envoyée. Réessayez.",
+    "submit": "Envoyer ma candidature",
+    "sent": {
+      "title": "Candidature envoyée",
+      "body": "{company} a bien reçu votre dossier. Un e-mail de confirmation vous a été envoyé.",
+      "seeOthers": "Voir les autres offres de {company}"
+    },
+    "join": {
+      "title": "Ne manquez plus les prochaines offres",
+      "body": "Créez votre compte Rabotka et faites valider votre profil : les offres qui vous correspondent arrivent sur votre téléphone, et les recruteurs peuvent vous trouver.",
+      "step1": "Écrivez à Rabotka sur WhatsApp : votre compte se crée en quelques messages.",
+      "step2": "Complétez votre profil : vos métiers, votre expérience, votre ville.",
+      "step3": "Faites valider votre profil : les recruteurs vous font davantage confiance.",
+      "cta": "Créer mon compte",
+      "note": "Sur WhatsApp · gratuit · sans application à installer"
+    }
+  }
+}
