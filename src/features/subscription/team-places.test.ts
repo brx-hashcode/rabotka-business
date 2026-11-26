@@ -13,6 +13,12 @@ describe("teamLine", () => {
     expect(teamLine({ recruitersLimit: 2, reviewersLimit: 1 }, fr)).toBe("Équipe : 2 recruteurs et 1 évaluateur");
     expect(teamLine({ recruitersLimit: null, reviewersLimit: 0 }, fr)).toBe("Équipe : recruteurs illimités");
     expect(teamLine({ recruitersLimit: 2, reviewersLimit: 1 }, en)).toBe("Team: 2 recruiters and 1 reviewer");
+    expect(teamLine({ adminsLimit: 1, recruitersLimit: 2, reviewersLimit: 1 }, fr)).toBe(
+      "Équipe : 1 administrateur, 2 recruteurs et 1 évaluateur",
+    );
+    expect(teamLine({ adminsLimit: null, recruitersLimit: 0, reviewersLimit: 0 }, en)).toBe(
+      "Team: unlimited administrators",
+    );
   });
 
   it("says nothing for a plan without a team, or a backend without the field", () => {
