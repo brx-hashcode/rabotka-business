@@ -210,7 +210,8 @@ export type BusinessPlan = {
   hrExports?: boolean;
   /** « Visio dans Rabotka »: link made in Rabotka, guests, transcription. Absent before the service. */
   videoInterviews?: boolean;
-  /** Team places (the holder is the one administrator). Null: unlimited; 0: none. Absent before the team. */
+  /** Team places, the account holder aside. Null: unlimited; 0: none. Absent before the team. */
+  adminsLimit?: number | null;
   recruitersLimit?: number | null;
   reviewersLimit?: number | null;
   /** Made for this business alone (« sur mesure »). */
@@ -273,9 +274,11 @@ export type MySubscription = {
     hrExports?: boolean;
     /** « Visio dans Rabotka »: link made in Rabotka, guests, transcription. */
     videoInterviews?: boolean;
-    /** Team places and who fills them now (invited or active). Absent before the team. */
+    /** Team places and who fills them now (invited or active), the holder aside. Absent before the team. */
+    adminsLimit?: number | null;
     recruitersLimit?: number | null;
     reviewersLimit?: number | null;
+    admins?: number;
     recruiters?: number;
     reviewers?: number;
     /** AI features the plan has but the running trial leaves out (their quotas read 0). */

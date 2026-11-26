@@ -2,8 +2,8 @@
   "page": {
     "title": "Équipe",
     "intro": "Invitez vos collègues : chacun se connecte avec sa propre adresse e-mail, avec le rôle que vous lui donnez.",
-    "adminOnly": "Réservé à l'administrateur",
-    "adminOnlyText": "Le responsable du compte gère l'équipe et les rôles.",
+    "adminOnly": "Réservé aux administrateurs",
+    "adminOnlyText": "Le responsable du compte et les administrateurs gèrent l'équipe et les rôles.",
     "tabs": {
       "members": "Membres",
       "activity": "Activité"
@@ -15,6 +15,7 @@
     "REVIEWER": "Consulte les candidats et donne son avis"
   },
   "rolePlural": {
+    "ADMIN": "Administrateurs",
     "RECRUITER": "Recruteurs",
     "REVIEWER": "Évaluateurs"
   },
@@ -30,14 +31,14 @@
     "loadFailed": "L'équipe n'a pas pu être chargée.",
     "heading": "Membres",
     "alone": "Vous êtes seul dans l'espace",
-    "aloneText": "Un recruteur publie et trie avec vous ; un évaluateur donne son avis sur les candidats.",
+    "aloneText": "Un administrateur gère l'espace avec vous ; un recruteur publie et trie ; un évaluateur donne son avis sur les candidats.",
     "removeTitle": "Retirer {name} de l'équipe ?",
     "removeText": "Sa session s'arrête aussitôt. Ce qu'il a fait reste : offres, décisions, notes.",
     "remove": "Retirer",
     "allTaken": "Toutes les places de votre formule sont prises",
     "invite": "Inviter un collègue",
     "places": "Places dans votre équipe",
-    "overOne": "{role, select, RECRUITER {{count, plural, one {# recruteur} other {# recruteurs}}} other {{count, plural, one {# évaluateur} other {# évaluateurs}}}} en trop",
+    "overOne": "{role, select, ADMIN {{count, plural, one {# administrateur} other {# administrateurs}}} RECRUITER {{count, plural, one {# recruteur} other {# recruteurs}}} other {{count, plural, one {# évaluateur} other {# évaluateurs}}}} en trop",
     "over": "Votre équipe dépasse votre formule ({list}). Retirez des membres ou changez de formule.",
     "noSeats": "Votre formule n'inclut pas de membres d'équipe.",
     "full": "Toutes les places sont prises : retirez un membre pour en libérer une, ou changez de formule.",
@@ -47,6 +48,7 @@
     "resendFailed": "L'invitation n'a pas pu être renvoyée.",
     "roleChanged": "{name} est maintenant {role, select, RECRUITER {recruteur} REVIEWER {évaluateur} other {administrateur}}.",
     "roleFailed": "Le rôle n'a pas pu être changé.",
+    "you": "Vous",
     "owner": "Responsable du compte",
     "invitedAgo": "invité {ago}",
     "invitedNoDate": "invité",
@@ -54,9 +56,13 @@
     "active": "actif",
     "inviteSent": "Invitation envoyée",
     "actionsFor": "Actions pour {name}",
-    "makeRole": "{role, select, RECRUITER {Passer recruteur} other {Passer évaluateur}}",
+    "makeRole": "{role, select, ADMIN {Passer administrateur} RECRUITER {Passer recruteur} other {Passer évaluateur}}",
     "seatsTaken": "Toutes les places sont prises",
     "resend": "Renvoyer l'invitation",
+    "resendTitle": "Renvoyer l'invitation à {email} ?",
+    "resendText": "Un nouvel e-mail part, avec le lien pour rejoindre l'espace. Le précédent reste valable.",
+    "roleTitle": "Passer {name} {role, select, ADMIN {administrateur} RECRUITER {recruteur} other {évaluateur}} ?",
+    "roleText": "{role, select, ADMIN {Il pourra tout faire, dont l'abonnement, les factures, l'organisation et l'équipe des recruteurs et évaluateurs.} RECRUITER {Il publiera les offres, triera les candidats, organisera les entretiens et échangera avec eux, sans accès à l'abonnement ni à l'équipe.} other {Il pourra seulement consulter les candidats et donner son avis.}} Le changement s'applique à sa prochaine action.",
     "removeFromTeam": "Retirer de l'équipe"
   },
   "invite": {

@@ -2,8 +2,8 @@
   "page": {
     "title": "Team",
     "intro": "Invite your colleagues: each one signs in with their own email address, with the role you give them.",
-    "adminOnly": "For the administrator only",
-    "adminOnlyText": "The account holder manages the team and its roles.",
+    "adminOnly": "For administrators only",
+    "adminOnlyText": "The account holder and the administrators manage the team and its roles.",
     "tabs": {
       "members": "Members",
       "activity": "Activity"
@@ -15,6 +15,7 @@
     "REVIEWER": "Reads candidates and gives an opinion"
   },
   "rolePlural": {
+    "ADMIN": "Administrators",
     "RECRUITER": "Recruiters",
     "REVIEWER": "Reviewers"
   },
@@ -30,14 +31,14 @@
     "loadFailed": "The team could not be loaded.",
     "heading": "Members",
     "alone": "You are the only one in the workspace",
-    "aloneText": "A recruiter publishes and sorts with you; a reviewer gives an opinion on candidates.",
+    "aloneText": "An administrator runs the space with you; a recruiter publishes and sorts; a reviewer gives an opinion on candidates.",
     "removeTitle": "Remove {name} from the team?",
     "removeText": "Their session stops at once. What they did stays: jobs, decisions, notes.",
     "remove": "Remove",
     "allTaken": "All the seats in your plan are taken",
     "invite": "Invite a colleague",
     "places": "Seats in your team",
-    "overOne": "{role, select, RECRUITER {{count, plural, one {# recruiter} other {# recruiters}}} other {{count, plural, one {# reviewer} other {# reviewers}}}} too many",
+    "overOne": "{role, select, ADMIN {{count, plural, one {# administrator} other {# administrators}}} RECRUITER {{count, plural, one {# recruiter} other {# recruiters}}} other {{count, plural, one {# reviewer} other {# reviewers}}}} too many",
     "over": "Your team is larger than your plan allows ({list}). Remove members or change plan.",
     "noSeats": "Your plan doesn't include team members.",
     "full": "All the seats are taken: remove a member to free one, or change plan.",
@@ -47,6 +48,7 @@
     "resendFailed": "The invitation could not be sent again.",
     "roleChanged": "{name} is now {role, select, RECRUITER {a recruiter} REVIEWER {a reviewer} other {an administrator}}.",
     "roleFailed": "The role could not be changed.",
+    "you": "You",
     "owner": "Account holder",
     "invitedAgo": "invited {ago}",
     "invitedNoDate": "invited",
@@ -54,9 +56,13 @@
     "active": "active",
     "inviteSent": "Invitation sent",
     "actionsFor": "Actions for {name}",
-    "makeRole": "{role, select, RECRUITER {Make recruiter} other {Make reviewer}}",
+    "makeRole": "{role, select, ADMIN {Make administrator} RECRUITER {Make recruiter} other {Make reviewer}}",
     "seatsTaken": "All the seats are taken",
     "resend": "Send the invitation again",
+    "resendTitle": "Send the invitation to {email} again?",
+    "resendText": "A new email goes out with the link to join the space. The previous one still works.",
+    "roleTitle": "Make {name} {role, select, ADMIN {an administrator} RECRUITER {a recruiter} other {a reviewer}}?",
+    "roleText": "{role, select, ADMIN {They will be able to do everything, including the subscription, invoices, the organisation and the team of recruiters and reviewers.} RECRUITER {They will publish jobs, sort candidates, organise interviews and talk with them, without access to the subscription or the team.} other {They will only view candidates and give their opinion.}} The change applies from their next action.",
     "removeFromTeam": "Remove from the team"
   },
   "invite": {

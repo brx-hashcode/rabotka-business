@@ -34,7 +34,7 @@
   "refused": {
     "title": "This page is restricted",
     "reviewer": "A reviewer reads applications and gives an opinion; this page is for those who hire.",
-    "admin": "Only your organisation's administrator can open it.",
+    "admin": "Only your organisation's administrators can open it.",
     "back": "Back to the dashboard"
   },
   "account": {

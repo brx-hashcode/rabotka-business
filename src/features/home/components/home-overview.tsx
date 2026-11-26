@@ -44,6 +44,7 @@ import { ApplicationsChart } from "./applications-chart";
 import { ReportExportMenu } from "./report-export-menu";
 import { StatTile } from "./stat-tile";
 import { offersUsed } from "#/features/subscription/offers-quota";
+import { packCredits, planShare } from "#/features/subscription/packs";
 
 const PERIODS: StatsPeriod[] = [7, 30, 90];
 
@@ -467,6 +468,20 @@ function SubscriptionCard({
     { label: t("contacts"), used: e.unlocksUsed, limit: e.unlocksQuota, over: "overContacts" as const },
     { label: t("offers"), used: offersUsed(e), limit: e.activeOffersLimit, over: "overOffers" as const },
     ...(e.cvQuota !== 0 ? [{ label: t("cvs"), used: e.cvUsed, limit: e.cvQuota, over: "overCvs" as const }] : []),
+    // The plan's own drafts this period, packs aside, as on the subscription page.
+    ...(e.offerDraftsQuota !== undefined && e.offerDraftsQuota !== 0
+      ? [
+          {
+            label: t("drafts"),
+            used:
+              e.offerDraftsQuota === null
+                ? 0
+                : e.offerDraftsQuota - (planShare(e.offerDraftsRemaining, packCredits(e, "OFFER_DRAFT")) ?? 0),
+            limit: e.offerDraftsQuota,
+            over: "overDrafts" as const,
+          },
+        ]
+      : []),
   ];
   return (
     <Card title={t("title")} action={<CardLink href="/espace/abonnement">{t("manage")}</CardLink>}>
@@ -552,7 +567,12 @@ function Meter({
   used,
   limit,
   over: overKey,
-}: Readonly<{ label: string; used: number; limit: number | null; over: "overContacts" | "overOffers" | "overCvs" }>) {
+}: Readonly<{
+  label: string;
+  used: number;
+  limit: number | null;
+  over: "overContacts" | "overOffers" | "overCvs" | "overDrafts";
+}>) {
   const t = useTranslations("home.subscription");
   const ratio = limit === null || limit === 0 ? 0 : used / limit;
   const over = limit !== null && used > limit;

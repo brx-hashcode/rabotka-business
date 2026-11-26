@@ -16,6 +16,7 @@ import {
   IconInfoCircle,
   IconLockOpen,
   IconPlayerPlay,
+  IconShieldCheck,
   IconUserCheck,
   IconUserSearch,
   IconWand,
@@ -286,6 +287,9 @@ function CurrentPlan({ data, focused }: Readonly<{ data: MySubscription; focused
           />
         )}
         {/* Added this period, like the offers: a new period frees them, the team stays. */}
+        {e.adminsLimit !== undefined && e.adminsLimit !== 0 && (
+          <Meter icon={IconShieldCheck} label={t("admins")} used={e.admins ?? 0} limit={e.adminsLimit} hint={<TeamHint />} />
+        )}
         {e.recruitersLimit !== undefined && e.recruitersLimit !== 0 && (
           <Meter icon={IconUserCheck} label={t("recruiters")} used={e.recruiters ?? 0} limit={e.recruitersLimit} hint={<TeamHint />} />
         )}

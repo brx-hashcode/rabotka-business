@@ -82,12 +82,14 @@
     "contacts": "Contacts inclus",
     "offers": "Offres publiées",
     "cvs": "CV inclus",
+    "drafts": "Rédactions IA",
     "unlocked": "{count, plural, one {# contact obtenu} other {# contacts obtenus}} sur les {days} derniers jours.",
     "daysLeftLabel": "{left, plural, one {# jour restant} other {# jours restants}} sur {total}",
     "daysLeft": "{left, plural, one {jour<br></br>restant} other {jours<br></br>restants}}",
     "unlimited": "illimité",
     "overContacts": "{used} contacts pour {limit, plural, one {# inclus} other {# inclus}} : changez de formule pour aller au-delà.",
     "overOffers": "{used} offres pour {limit, plural, one {# incluse} other {# incluses}} : changez de formule pour aller au-delà.",
+    "overDrafts": "{used} rédactions IA pour {limit, plural, one {# incluse} other {# incluses}} : changez de formule pour aller au-delà.",
     "overCvs": "{used} CV pour {limit, plural, one {# inclus} other {# inclus}} : changez de formule pour aller au-delà."
   },
   "offers": {
