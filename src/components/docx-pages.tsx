@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { renderAsync } from "docx-preview";
+import { parseAsync, renderDocument, type Options } from "docx-preview";
+
+import { SAFE_DOCX_OPTIONS, makeDocxSafe } from "#/lib/safe-docx";
 
 /**
  * A Word file (.docx) drawn in the page, from the local copy the preview
  * panel already fetched. Rendered in the browser: the CV is never sent to
- * an outside viewer. Pages keep their layout; `zoom` scales them.
+ * an outside viewer. The file is untrusted, so it goes through
+ * `makeDocxSafe` first. Pages keep their layout; `zoom` scales them.
  */
 export default function DocxPages({
   file,
@@ -23,14 +26,20 @@ export default function DocxPages({
         const blob = await (await fetch(file)).blob();
         if (cancelled || !body.current) return;
         body.current.innerHTML = "";
-        await renderAsync(blob, body.current, styles.current ?? undefined, {
+        const options: Partial<Options> = {
           className: "docx",
           inWrapper: true,
           breakPages: true,
           ignoreLastRenderedPageBreak: true,
           renderHeaders: true,
           renderFooters: true,
-        });
+          ...SAFE_DOCX_OPTIONS,
+        };
+        // A candidate's file: cleaned of anything that could run here
+        // before a single element is drawn.
+        const document = makeDocxSafe(await parseAsync(blob, options));
+        if (cancelled || !body.current) return;
+        await renderDocument(document, body.current, styles.current ?? undefined, options);
       } catch {
         if (!cancelled) onError();
       }
