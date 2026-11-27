@@ -74,9 +74,10 @@
     "lastNamePlaceholder": "Mabiala",
     "email": "Work email address",
     "emailPlaceholder": "firstname.lastname@organisation.com",
-    "phone": "Phone",
+    "phone": "Phone (WhatsApp)",
     "phonePlaceholder": "06 123 45 67 (or with the country code, +237…)",
-    "submit": "Get the code"
+    "submit": "Get the code",
+    "phoneHint": "A code will be sent to it on WhatsApp before the account is created."
   },
   "verify": {
     "title": "Verify your email address",
@@ -203,5 +204,13 @@
     "title": "Go to your workspace",
     "text": "We just sent a sign-in code to <strong>{email}</strong>.",
     "submit": "Sign in"
+  },
+  "phoneProof": {
+    "title": "Confirm the organisation's number",
+    "text": "We sent a 6-digit code on WhatsApp to {phone}. It protects this number: nobody else will be able to use it on Rabotka.",
+    "sending": "Sending the code on WhatsApp to {phone}…",
+    "sendFailed": "The code could not be sent to this number. Try again.",
+    "confirm": "Confirm",
+    "changeNumber": "Change the number"
   }
 }

@@ -17,7 +17,10 @@ export function safeRedirectPath(raw: string | null | undefined): string | null 
     if (url.pathname === "/auth" || url.pathname.startsWith("/auth/")) {
       return null;
     }
-    return `${url.pathname}${url.search}${url.hash}`;
+    // Checked as navigated to: `/.//evil.example` normalises to the pathname
+    // `//evil.example`, another host for the browser (security audit run 2).
+    const target = `${url.pathname}${url.search}${url.hash}`;
+    return target.startsWith("//") || target.startsWith("/\\") ? null : target;
   } catch {
     return null;
   }

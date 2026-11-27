@@ -27,7 +27,8 @@ export type AccountValues = z.infer<ReturnType<typeof accountSchema>>;
 /**
  * Who holds the account, and the professional email it signs in with. The
  * wizard sends the code on submit (or not, when the email was already
- * verified); the phone is kept for the profile, unverified.
+ * verified). The phone is proven by a WhatsApp code before the account is
+ * created (the wizard's submit): it becomes the account's phone.
  */
 export function AccountStep({
   defaultValues,
@@ -77,6 +78,7 @@ export function AccountStep({
             control={form.control}
             name="phone"
             label={t("phone")}
+            hint={t("phoneHint")}
             type="tel"
             autoComplete="tel"
             // The organisation's country, chosen next, gives the prefix.

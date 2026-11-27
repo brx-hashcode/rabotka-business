@@ -20,6 +20,7 @@ import { AccountStep } from "./account-step";
 import { DocumentsStep } from "./documents-step";
 import { IDENTIFIER_KEYS, officialIdentifiers, requiredDocuments } from "../required-documents";
 import { emptyOrganisation, OrganisationStep } from "./organisation-step";
+import { PhoneProofDialog } from "./phone-proof-dialog";
 import { ReviewStep, SignUpDone } from "./review-step";
 import { AuthShell } from "#/features/auth/components/auth-shell";
 import { ProgressHeader } from "./sign-up-chrome";
@@ -54,6 +55,8 @@ export function SignUpWizard({ visitorCountry }: Readonly<{ visitorCountry?: str
   const [submitError, setSubmitError] = useState<string | null>(null);
   /** Where to go once the email is verified again (an expired token). */
   const [resumeAt, setResumeAt] = useState<StepId | null>(null);
+  /** The number waiting for its WhatsApp code before the account is created. */
+  const [phoneToProve, setPhoneToProve] = useState<string | null>(null);
 
   // sessionStorage is read after the first render (see the store).
   useEffect(() => {
@@ -133,11 +136,18 @@ export function SignUpWizard({ visitorCountry }: Readonly<{ visitorCountry?: str
       go(reachable);
       return;
     }
-    setSubmitting(true);
-    setSubmitError(null);
     // The organisation's country, known by now: a number typed in Cameroon
     // is Cameroon's, not Congo's.
     const phone = toInternational(account.phone, organisation.country);
+    // The number becomes a WhatsApp sign-in: proven first, by a code sent to
+    // it. Read from the store, not this render: the dialog has just set it.
+    if (useSignUpStore.getState().provenPhone !== phone) {
+      setSubmitError(null);
+      setPhoneToProve(phone);
+      return;
+    }
+    setSubmitting(true);
+    setSubmitError(null);
     const countryName = catalog?.countries.find((c) => c.code === organisation.country)?.name ?? organisation.country;
     // The street, then the city: both optional for an organisation online.
     const street = [organisation.address?.trim(), organisation.city].filter(Boolean).join(", ");
@@ -188,6 +198,13 @@ export function SignUpWizard({ visitorCountry }: Readonly<{ visitorCountry?: str
       // rule) re-sent a code and looped on the e-mail step.
       // TODO(i18n): told apart by the backend's French sentence; once its
       // errors follow the language, it needs a code to match instead.
+      // A number the backend does not hold as proven (a token from before the
+      // check): its code, then the account.
+      if (httpStatusOf(err) === 403 && /code reçu sur WhatsApp/i.test(errorText(err))) {
+        store.setProvenPhone(null);
+        setPhoneToProve(phone);
+        return;
+      }
       if (httpStatusOf(err) === 403 && /avant de créer votre compte/i.test(errorText(err))) {
         store.setToken(null);
         setResumeAt("review");
@@ -330,6 +347,25 @@ export function SignUpWizard({ visitorCountry }: Readonly<{ visitorCountry?: str
           onBack={hydrated && step > 0 ? () => go(step - 1) : undefined}
         />
       </div>
+
+      {token && (
+        <PhoneProofDialog
+          phone={phoneToProve}
+          signupToken={token}
+          onOpenChange={(open) => {
+            if (!open) setPhoneToProve(null);
+          }}
+          onProven={() => {
+            store.setProvenPhone(phoneToProve);
+            setPhoneToProve(null);
+            void submit();
+          }}
+          onChangeNumber={() => {
+            setPhoneToProve(null);
+            go(0);
+          }}
+        />
+      )}
 
       <div className="flex-1 pt-8 pb-10 lg:pt-[5vh]">
         <div
