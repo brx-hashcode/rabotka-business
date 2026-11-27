@@ -30,6 +30,7 @@ import {
 import { cn } from "#/lib/utils";
 import { initials, kindFromName, looksLikeCv, pickKey, togglePick, toPick, type MailPick } from "../mail-picks";
 import { fileSize } from "./cv-bits";
+import { refreshSession } from "#/lib/auth/session-client";
 
 
 const KIND_TILE = {
@@ -68,6 +69,10 @@ export function useConnectMailbox(onConnected: (provider: MailProviderSlug) => v
     const popup = window.open("", "rabotka-mailbox", "width=520,height=680");
     setPending(provider);
     try {
+      // The provider sends the browser back to us with this session's
+      // cookie, and the backend connects only for it: fresh, it outlasts
+      // the consent screen.
+      await refreshSession();
       const { url } = await connectMailbox(provider);
       if (!popup) {
         window.location.assign(url);

@@ -26,6 +26,7 @@ import { cn, getInitials } from "#/lib/utils";
 import { useWhyNot } from "#/lib/use-why-not";
 import { defaultLinkedinText, linkedinDialogState, type LinkedinOfferText } from "../linkedin-post";
 import { offerShareLinks, offerShareUrl } from "../share-url";
+import { refreshSession } from "#/lib/auth/session-client";
 
 const LINKEDIN_BLUE = "bg-[#0a66c2] text-white hover:bg-[#0a66c2]/90";
 const BUTTON = "inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 font-medium text-sm disabled:opacity-50";
@@ -372,6 +373,8 @@ function useLinkedinConnect() {
     const popup = window.open("", "rabotka-linkedin", "width=520,height=680");
     setConnecting(true);
     try {
+      // As for a mailbox: the callback needs this session, still valid.
+      await refreshSession();
       const { url } = await connectLinkedin();
       if (!popup) {
         window.location.assign(url);
