@@ -9,6 +9,8 @@ type SignUpState = {
   account?: AccountValues;
   /** From signup/verify-otp; an hour, then the email is verified again. */
   token: string | null;
+  /** The number (international) whose WhatsApp code was entered on this token. */
+  provenPhone: string | null;
   organisation?: OrganisationValues;
   documents: DocumentsValue;
   /** Local previews of the files picked this session, by storage key. */
@@ -21,6 +23,7 @@ type SignUpState = {
 
   setAccount: (account: AccountValues) => void;
   setToken: (token: string | null) => void;
+  setProvenPhone: (phone: string | null) => void;
   setOrganisation: (organisation: OrganisationValues) => void;
   setDocuments: (documents: DocumentsValue) => void;
   setPreview: (key: string, url: string) => void;
@@ -31,6 +34,7 @@ type SignUpState = {
 const INITIAL = {
   account: undefined,
   token: null,
+  provenPhone: null,
   organisation: undefined,
   documents: {},
   previews: {},
@@ -57,7 +61,9 @@ export const useSignUpStore = create<SignUpState>()(
     (set, get) => ({
       ...INITIAL,
       setAccount: (account) => set({ account }),
-      setToken: (token) => set({ token }),
+      // A new token proves no number yet.
+      setToken: (token) => set({ token, provenPhone: null }),
+      setProvenPhone: (provenPhone) => set({ provenPhone }),
       setOrganisation: (organisation) => set({ organisation }),
       setDocuments: (documents) => set({ documents }),
       setPreview: (key, url) => set({ previews: { ...get().previews, [key]: url } }),

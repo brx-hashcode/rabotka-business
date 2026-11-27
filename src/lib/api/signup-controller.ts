@@ -68,6 +68,16 @@ class SignUpController extends BusinessBaseController {
     return this.post("/auth/signup/verify-otp", { email, code });
   }
 
+  /** A WhatsApp code to the organisation's number (international), once the email is verified. */
+  sendPhoneCode(phone: string, signupToken: string): Promise<{ success: true }> {
+    return this.post("/auth/signup/phone/send-otp", { phone }, { [SIGNUP_TOKEN_HEADER]: signupToken });
+  }
+
+  /** The code checks out: the account can be created with this number. */
+  verifyPhoneCode(phone: string, code: string, signupToken: string): Promise<{ success: true }> {
+    return this.post("/auth/signup/phone/verify-otp", { phone, code }, { [SIGNUP_TOKEN_HEADER]: signupToken });
+  }
+
   uploadDocument(file: File, signupToken: string): Promise<UploadedFile> {
     const form = new FormData();
     form.append("file", file);
@@ -89,5 +99,7 @@ const controller = new SignUpController();
 export const getBusinessCatalog = controller.getCatalog.bind(controller);
 export const sendSignUpCode = controller.sendCode.bind(controller);
 export const verifySignUpCode = controller.verifyCode.bind(controller);
+export const sendSignUpPhoneCode = controller.sendPhoneCode.bind(controller);
+export const verifySignUpPhoneCode = controller.verifyPhoneCode.bind(controller);
 export const uploadSignUpDocument = controller.uploadDocument.bind(controller);
 export const reportSignUpProgress = controller.reportProgress.bind(controller);

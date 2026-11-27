@@ -74,9 +74,10 @@
     "lastNamePlaceholder": "Mabiala",
     "email": "Adresse e-mail professionnelle",
     "emailPlaceholder": "prenom.nom@organisation.cg",
-    "phone": "Téléphone",
+    "phone": "Téléphone (WhatsApp)",
     "phonePlaceholder": "06 123 45 67 (ou avec l'indicatif, +237…)",
-    "submit": "Recevoir le code"
+    "submit": "Recevoir le code",
+    "phoneHint": "Un code vous sera envoyé par WhatsApp avant la création du compte."
   },
   "verify": {
     "title": "Vérifiez votre adresse e-mail",
@@ -203,5 +204,13 @@
     "title": "Accédez à votre espace",
     "text": "Nous venons d'envoyer un code de connexion à <strong>{email}</strong>.",
     "submit": "Se connecter"
+  },
+  "phoneProof": {
+    "title": "Confirmez le numéro de l'organisation",
+    "text": "Nous avons envoyé un code à 6 chiffres par WhatsApp au {phone}. Il protège ce numéro : personne d'autre ne pourra l'utiliser sur Rabotka.",
+    "sending": "Envoi du code par WhatsApp au {phone}…",
+    "sendFailed": "Impossible d'envoyer le code à ce numéro. Réessayez.",
+    "confirm": "Confirmer",
+    "changeNumber": "Modifier le numéro"
   }
 }
